@@ -1,0 +1,14 @@
+# backend
+backend/target/
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+
+# ide
+.idea/
+.vscode/
+*.iml
+
+# os
+.DS_Store
