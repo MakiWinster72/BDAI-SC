@@ -15,3 +15,8 @@ spring:
 
 server:
   port: 8080
+
+security:
+  jwt:
+    secret: gcsc-student-center-jwt-secret-key-change-in-production-2026
+    expires-minutes: 120

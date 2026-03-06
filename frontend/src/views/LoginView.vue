@@ -83,6 +83,7 @@ async function handleLogin() {
       'gcsc_user',
       JSON.stringify({ username: data.username, displayName: data.displayName })
     )
+    localStorage.setItem('gcsc_token', data.token || '')
     router.push('/home')
   } catch (error) {
     feedback.text = parseError(error)

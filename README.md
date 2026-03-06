@@ -39,6 +39,8 @@ npm run dev
   - 请求体：`displayName`、`username`、`password`
 - `POST /api/auth/login`
   - 请求体：`username`、`password`
+- `GET /api/auth/me`
+  - 需携带请求头：`Authorization: Bearer <token>`
 
 ## 5. Git 提交规范（建议）
 

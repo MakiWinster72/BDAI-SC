@@ -94,9 +94,14 @@ async function handleRegister() {
     const { data } = await register(form)
     feedback.text = data.message || '注册成功'
     feedback.type = 'success'
+    localStorage.setItem(
+      'gcsc_user',
+      JSON.stringify({ username: data.username, displayName: data.displayName })
+    )
+    localStorage.setItem('gcsc_token', data.token || '')
 
     setTimeout(() => {
-      router.push({ path: '/login', query: { username: form.username } })
+      router.push('/home')
     }, 600)
   } catch (error) {
     feedback.text = parseError(error)

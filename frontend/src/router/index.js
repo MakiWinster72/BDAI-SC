@@ -14,7 +14,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const isLoggedIn = Boolean(localStorage.getItem('gcsc_user'))
+  const isLoggedIn = Boolean(localStorage.getItem('gcsc_token'))
   if (to.meta.requiresAuth && !isLoggedIn) {
     return '/login'
   }
