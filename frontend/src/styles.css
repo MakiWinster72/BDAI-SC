@@ -147,10 +147,8 @@ body {
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  background: linear-gradient(98deg, #036b72, #a5ffd6 45%, #c5d9e2);
-  background-size: 220% 220%;
-  transition: transform 220ms ease, box-shadow 220ms ease;
-  animation: glowMove 6s linear infinite;
+  background: #036b72;
+  transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
 }
 
 .action-button:hover {
