@@ -23,6 +23,15 @@ mvn spring-boot:run
 
 后端默认地址：`http://localhost:8080`
 
+若启动时报 `Unable to determine Dialect without JDBC metadata`，按下面检查：
+- 确认 MySQL 已启动，并且 `gcsc` 库存在。
+- 确认连接用户是 `gcsc`，不是 `gcsc@localhost:3306` 这样的完整串。
+- 用下面命令手工验证连接：
+
+```bash
+mysql -ugcsc -pgcsc -h127.0.0.1 -P3306 -e "use gcsc; show tables;"
+```
+
 ## 3. 启动前端
 
 ```bash
