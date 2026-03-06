@@ -4,6 +4,7 @@
 - `backend/`：Java 17 + Spring Boot + Maven + MySQL
 - `frontend/`：Vue 3 + Vite
 - 功能：用户名/密码登录、显示名称+用户名+密码注册
+- 鉴权：JWT（登录/注册返回 `token`，前端自动携带 `Authorization`）
 
 ## 1. 数据库准备
 
@@ -51,7 +52,28 @@ npm run dev
 - `GET /api/auth/me`
   - 需携带请求头：`Authorization: Bearer <token>`
 
-## 5. Git 提交规范（建议）
+## 5. 前后端如何连接
+
+- 前端请求地址在 `frontend/src/api/auth.js`：
+  - `baseURL` 指向 `http://localhost:8080`
+  - 请求拦截器会读取 `localStorage` 的 `gcsc_token` 并自动加到 `Authorization` 头
+- 后端 CORS 已放行 `http://localhost:5173`（`backend/src/main/java/com/gcsc/studentcenter/config/SecurityConfig.java`）
+- 登录/注册成功后，后端返回 `token`，前端保存到 `localStorage` 并跳转首页
+- 首页会调用 `/api/auth/me` 验证 token 是否有效，过期则跳回登录页
+
+## 6. 实现说明（简要）
+
+- 后端
+  - 用户表：`backend/src/main/java/com/gcsc/studentcenter/entity/AppUser.java`
+  - 注册/登录：`backend/src/main/java/com/gcsc/studentcenter/service/AuthService.java`
+  - JWT：`backend/src/main/java/com/gcsc/studentcenter/service/JwtService.java`
+  - 认证过滤器：`backend/src/main/java/com/gcsc/studentcenter/config/JwtAuthenticationFilter.java`
+- 前端
+  - 登录页：`frontend/src/views/LoginView.vue`
+  - 注册页：`frontend/src/views/RegisterView.vue`
+  - 首页：`frontend/src/views/HomeView.vue`
+
+## 7. Git 提交规范（建议）
 
 - `feat:` 新功能
 - `style:` 仅样式改动

@@ -1,5 +1,8 @@
 # backend
 backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
 
 # frontend
 frontend/node_modules/
