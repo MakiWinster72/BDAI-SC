@@ -460,17 +460,22 @@
           </div>
         </div>
 
-        <textarea
-          ref="composerInput"
-          v-model="composer.content"
-          class="publisher-input"
-          maxlength="2000"
-          placeholder="支持 Markdown：标题、引用、列表、表格、加粗、斜体..."
-        />
+        <div class="publisher-body">
+          <div class="publisher-section-title">内容</div>
+          <div class="publisher-section-divider"></div>
+          <textarea
+            ref="composerInput"
+            v-model="composer.content"
+            class="publisher-input"
+            maxlength="2000"
+            placeholder="支持 Markdown：标题、引用、列表、表格、加粗、斜体..."
+          />
 
-        <div v-if="hasPreview" class="publisher-preview">
-          <div class="preview-title">预览</div>
-          <div class="preview-body post-content" v-html="previewHtml"></div>
+          <div v-if="hasPreview" class="publisher-preview">
+            <div class="publisher-section-title">预览</div>
+            <div class="publisher-section-divider"></div>
+            <div class="preview-body post-content" v-html="previewHtml"></div>
+          </div>
         </div>
 
         <div v-if="composer.media.length" class="publisher-media">
@@ -827,30 +832,21 @@ function applyHeading(level) {
   if (!sel) {
     return;
   }
-  const { input, start, end } = sel;
+  const { input, start } = sel;
   const value = composer.content || "";
   const prefix = "#".repeat(level) + " ";
   headingMenuOpen.value = false;
 
-  if (start === end) {
-    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
-    composer.content = replaceRange(value, lineStart, lineStart, prefix);
-    nextTick(() => {
-      const cursor = start + prefix.length;
-      input.setSelectionRange(cursor, cursor);
-      input.focus();
-    });
-    return;
-  }
-
-  const selected = value.slice(start, end);
-  const replaced = selected
-    .split("\n")
-    .map((line) => prefix + line.replace(/^#{1,6}\s+/, ""))
-    .join("\n");
-  composer.content = replaceRange(value, start, end, replaced);
+  const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+  const lineEnd = value.indexOf("\n", start);
+  const endIndex = lineEnd === -1 ? value.length : lineEnd;
+  const currentLine = value.slice(lineStart, endIndex);
+  const cleanedLine = currentLine.replace(/^#{1,6}\s+/, "");
+  const replacedLine = prefix + cleanedLine;
+  composer.content = replaceRange(value, lineStart, endIndex, replacedLine);
   nextTick(() => {
-    input.setSelectionRange(start, start + replaced.length);
+    const cursor = lineStart + prefix.length;
+    input.setSelectionRange(cursor, cursor);
     input.focus();
   });
 }
@@ -1234,7 +1230,9 @@ function renderMarkdown(text) {
       paragraph.push(l);
       i += 1;
     }
-    out.push(`<p>${inline(paragraph.join("<br>"))}</p>`);
+    out.push(
+      `<div class="md-paragraph">${inline(paragraph.join("<br>"))}</div>`,
+    );
   }
 
   return out.join("");
