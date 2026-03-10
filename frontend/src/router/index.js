@@ -9,6 +9,8 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/home' },
     { path: '/home', name: 'home', component: HomeView, meta: { requiresAuth: true } },
+    { path: '/congra', name: 'congra', component: HomeView, meta: { requiresAuth: true } },
+    { path: '/memory', name: 'memory', component: HomeView, meta: { requiresAuth: true } },
     { path: '/achievements', name: 'achievements', component: AchievementsView, meta: { requiresAuth: true } },
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } }

@@ -241,6 +241,14 @@ function handleMenuClick(key) {
   if (key === "achievements") {
     return;
   }
+  if (key === "good-news") {
+    router.push("/congra");
+    return;
+  }
+  if (key === "records") {
+    router.push("/memory");
+    return;
+  }
   router.push("/home");
 }
 

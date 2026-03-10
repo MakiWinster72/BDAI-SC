@@ -595,11 +595,12 @@ import {
   ref,
   watch,
 } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { getMe } from "../api/auth";
 import { createPost, deletePost, getPosts, uploadMedia } from "../api/posts";
 
 const router = useRouter();
+const route = useRoute();
 const API_BASE = "http://localhost:8080";
 
 const menuItems = computed(() => [
@@ -692,6 +693,26 @@ const footerActionText = computed(() => {
 });
 
 const visiblePosts = computed(() => posts.value);
+
+function syncMenuFromRoute() {
+  if (route.path === "/congra") {
+    activeMenu.value = "good-news";
+    return;
+  }
+  if (route.path === "/memory") {
+    activeMenu.value = "records";
+    return;
+  }
+  activeMenu.value = "campus";
+}
+
+watch(
+  () => route.path,
+  () => {
+    syncMenuFromRoute();
+  },
+  { immediate: true },
+);
 
 watch(activeMenu, () => {
   if (isFeedMenu.value) {
@@ -799,7 +820,15 @@ function handleMenuClick(key) {
     router.push("/achievements");
     return;
   }
-  activeMenu.value = key;
+  if (key === "good-news") {
+    router.push("/congra");
+    return;
+  }
+  if (key === "records") {
+    router.push("/memory");
+    return;
+  }
+  router.push("/home");
 }
 
 function resetComposerState() {
