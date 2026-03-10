@@ -1090,6 +1090,7 @@ body {
 .post-content .md-quote-text {
   display: inline-block;
   width: 100%;
+  white-space: pre-line;
 }
 
 .post-content ul,
@@ -1100,6 +1101,7 @@ body {
 
 .post-content .md-paragraph {
   margin: 0 0 8px;
+  white-space: pre-line;
 }
 
 .post-content li {

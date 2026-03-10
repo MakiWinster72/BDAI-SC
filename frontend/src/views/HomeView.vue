@@ -1195,7 +1195,7 @@ function renderMarkdown(text) {
       }
       out.push(
         `<blockquote class="md-quote"><span class="md-quote-text">${inline(
-          q.join("<br>"),
+          q.join("\n"),
         )}</span></blockquote>`,
       );
       continue;
@@ -1231,7 +1231,7 @@ function renderMarkdown(text) {
       i += 1;
     }
     out.push(
-      `<div class="md-paragraph">${inline(paragraph.join("<br>"))}</div>`,
+      `<div class="md-paragraph">${inline(paragraph.join("\n"))}</div>`,
     );
   }
 
