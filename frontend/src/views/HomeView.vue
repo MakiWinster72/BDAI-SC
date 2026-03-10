@@ -597,22 +597,14 @@ import {
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getMe } from "../api/auth";
+import { MENU_ITEMS, isMenuEnabled } from "../constants/menu";
 import { createPost, deletePost, getPosts, uploadMedia } from "../api/posts";
 
 const router = useRouter();
 const route = useRoute();
 const API_BASE = "http://localhost:8080";
 
-const menuItems = computed(() => [
-  { key: "campus", label: "校园生活" },
-  { key: "good-news", label: "喜报🎉" },
-  { key: "records", label: "记录" },
-  { key: "achievements", label: "个人成就" },
-  { key: "my-info", label: "我的信息" },
-  { key: "contacts", label: "教师/部门联系方式" },
-  { key: "student-info", label: "学生信息" },
-  { key: "admin", label: "后台管理" },
-]);
+const menuItems = computed(() => MENU_ITEMS);
 
 const menuLabelMap = {
   campus: "校园生活",
@@ -808,16 +800,16 @@ function showToast(message) {
   }, 1600);
 }
 
-function isMenuEnabled(key) {
-  return key === "campus" || key === "good-news" || key === "records" || key === "achievements";
-}
-
 function handleMenuClick(key) {
   if (!isMenuEnabled(key)) {
     return;
   }
   if (key === "achievements") {
     router.push("/achievements");
+    return;
+  }
+  if (key === "my-info") {
+    router.push("/myinfos");
     return;
   }
   if (key === "good-news") {
