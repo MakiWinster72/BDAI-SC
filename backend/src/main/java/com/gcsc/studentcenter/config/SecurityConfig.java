@@ -38,7 +38,7 @@ public class SecurityConfig {
                 response.getWriter().write("{\"success\":false,\"message\":\"未登录或登录已过期\"}");
             }))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/uploads/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
