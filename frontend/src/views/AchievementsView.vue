@@ -53,14 +53,15 @@
           <div class="achievement-card-body">
             <h2 class="achievement-card-title">{{ item.name }}</h2>
             <div class="achievement-card-dates">
-              <span>起止：{{ item.startDate || "-" }} 至 {{ item.endDate || "-" }}</span>
-              <span>获得：{{ item.awardDate || "-" }}</span>
+              <span>起止：{{ item.startDate || "-" }} {{ item.endDate || "-" }}</span>
+              <span class="date-spacer"></span>
+              <span>获得日期：{{ item.awardDate || "-" }}</span>
             </div>
             <div class="achievement-card-text">
-              <strong>成就描述：</strong>{{ item.description || "-" }}
+              {{ item.description || "-" }}
             </div>
             <div class="achievement-card-text">
-              <strong>个人感想：</strong>{{ item.thoughts || "-" }}
+              {{ item.thoughts || "-" }}
             </div>
           </div>
         </article>
