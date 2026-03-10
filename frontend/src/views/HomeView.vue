@@ -107,11 +107,13 @@
       </button>
       <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 
-      <div
-        v-show="publisherOpen"
-        class="publisher-backdrop"
-        @click="closePublisher"
-      ></div>
+      <transition name="publisher-backdrop">
+        <div
+          v-if="publisherOpen"
+          class="publisher-backdrop"
+          @click="closePublisher"
+        ></div>
+      </transition>
       <section
         class="publisher-sheet"
         :class="{ open: publisherOpen }"
