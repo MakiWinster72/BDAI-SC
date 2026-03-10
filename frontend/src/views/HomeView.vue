@@ -1010,7 +1010,15 @@ function indentSelection(add) {
     .join("\n");
   composer.content = replaceRange(value, blockStart, blockEnd, replaced);
   nextTick(() => {
-    input.setSelectionRange(blockStart, blockStart + replaced.length);
+    const delta = replaced.length - block.length;
+    if (start === end) {
+      const newPos = Math.max(0, Math.min(value.length + delta, start + delta));
+      input.setSelectionRange(newPos, newPos);
+    } else {
+      const newStart = start;
+      const newEnd = Math.max(newStart, end + delta);
+      input.setSelectionRange(newStart, newEnd);
+    }
     input.focus();
   });
 }
