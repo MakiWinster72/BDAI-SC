@@ -45,13 +45,18 @@
       <div v-if="errorMessage" class="form-tip">{{ errorMessage }}</div>
 
       <section class="achievement-list">
-        <article v-for="item in achievements" :key="item.id" class="achievement-card">
+        <article
+          v-for="item in achievements"
+          :key="item.id"
+          class="achievement-card"
+          @click="openDetail(item)"
+        >
           <div class="achievement-card-image">
             <img v-if="item.image" :src="item.image" alt="成就图片" />
             <div v-else class="achievement-card-placeholder">未上传图片</div>
           </div>
           <div class="achievement-card-body">
-            <h2 class="achievement-card-title">{{ item.name }}</h2>
+            <div class="achievement-card-title">{{ item.name }}</div>
             <div class="achievement-card-dates">
               <span>起止：{{ item.startDate || "-" }} {{ item.endDate || "-" }}</span>
               <span class="date-spacer"></span>
@@ -73,6 +78,51 @@
 
       <transition name="publisher-backdrop">
         <div
+          v-if="viewOpen"
+          class="achievement-backdrop"
+          @click="closeView"
+        ></div>
+      </transition>
+      <section
+        class="achievement-view"
+        :class="{ open: viewOpen, closing: viewClosing, 'exit-up': viewExitUp }"
+        :aria-hidden="!viewOpen"
+      >
+        <header class="publisher-header">
+          <div class="publisher-title">成就查看</div>
+          <button class="publisher-close" type="button" @click="closeView">
+            关闭
+          </button>
+        </header>
+        <div v-if="viewLoading" class="empty-tip">加载中...</div>
+        <div v-else-if="viewItem" class="achievement-view-body">
+          <div class="achievement-detail-image">
+            <img v-if="viewItem.image" :src="viewItem.image" alt="成就图片" />
+            <div v-else class="achievement-card-placeholder">未上传图片</div>
+          </div>
+          <div class="achievement-detail-body">
+            <div class="achievement-card-title">{{ viewItem.name }}</div>
+            <div class="achievement-card-dates">
+              <span>起止：{{ viewItem.startDate || "-" }} {{ viewItem.endDate || "-" }}</span>
+              <span class="date-spacer"></span>
+              <span>获得日期：{{ viewItem.awardDate || "-" }}</span>
+            </div>
+            <div class="achievement-card-text">{{ viewItem.description || "-" }}</div>
+            <div class="achievement-card-text">{{ viewItem.thoughts || "-" }}</div>
+            <div class="achievement-card-actions">
+              <button class="post-action" type="button" @click="editFromView">
+                编辑
+              </button>
+              <button class="post-action danger" type="button" @click="openDelete">
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <transition name="publisher-backdrop">
+        <div
           v-if="editorOpen"
           class="achievement-backdrop"
           @click="closeEditor"
@@ -84,7 +134,7 @@
         :aria-hidden="!editorOpen"
       >
         <header class="publisher-header">
-          <div class="publisher-title">新增成就</div>
+          <div class="publisher-title">{{ editId ? "编辑成就" : "新增成就" }}</div>
           <button class="publisher-close" type="button" @click="closeEditor">
             关闭
           </button>
@@ -146,12 +196,34 @@
                 取消
               </button>
               <button class="action-button" type="button" @click="saveAchievement">
-                保存成就
+                {{ editId ? "保存修改" : "保存成就" }}
               </button>
             </div>
           </div>
         </div>
       </section>
+
+      <transition name="dialog-fade">
+        <div
+          v-if="deleteDialogOpen"
+          class="dialog-backdrop"
+          @click="closeDelete"
+        ></div>
+      </transition>
+      <transition name="dialog-pop">
+        <section v-if="deleteDialogOpen" class="dialog-card" @click.stop>
+          <header class="dialog-header">确认删除</header>
+          <div class="dialog-body">删除后无法恢复，确定要删除这条动态吗？</div>
+          <div class="dialog-actions">
+            <button class="ghost-button" type="button" @click="closeDelete">
+              取消
+            </button>
+            <button class="action-button" type="button" :disabled="deleteBusy" @click="confirmDelete">
+              确定删除
+            </button>
+          </div>
+        </section>
+      </transition>
 
       <input
         ref="imageInput"
@@ -167,7 +239,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { createAchievement, getAchievements } from "../api/achievements";
+import {
+  createAchievement,
+  deleteAchievement,
+  getAchievements,
+  updateAchievement,
+} from "../api/achievements";
 import { uploadMedia } from "../api/posts";
 
 const router = useRouter();
@@ -177,6 +254,13 @@ const editorOpen = ref(false);
 const imageInput = ref(null);
 const imagePreview = ref("");
 const errorMessage = ref("");
+const viewOpen = ref(false);
+const viewLoading = ref(false);
+const viewItem = ref(null);
+const viewClosing = ref(false);
+const editId = ref(null);
+const deleteDialogOpen = ref(false);
+const deleteBusy = ref(false);
 
 const achievements = ref([]);
 const API_BASE = "http://localhost:8080";
@@ -260,11 +344,14 @@ function handleMenuClick(key) {
 }
 
 function openEditor() {
+  editId.value = null;
+  resetForm();
   editorOpen.value = true;
 }
 
 function closeEditor() {
   editorOpen.value = false;
+  editId.value = null;
 }
 
 function resetForm() {
@@ -289,8 +376,18 @@ async function saveAchievement() {
     imageUrl: form.imageUrl || null,
   };
   try {
-    const { data } = await createAchievement(payload);
-    achievements.value = [normalizeAchievement(data), ...achievements.value];
+    if (editId.value) {
+      const { data } = await updateAchievement(editId.value, payload);
+      achievements.value = achievements.value.map((item) =>
+        item.id === data.id ? normalizeAchievement(data) : item,
+      );
+      if (viewItem.value && viewItem.value.id === data.id) {
+        viewItem.value = normalizeAchievement(data);
+      }
+    } else {
+      const { data } = await createAchievement(payload);
+      achievements.value = [normalizeAchievement(data), ...achievements.value];
+    }
     resetForm();
     closeEditor();
     errorMessage.value = "";
@@ -335,6 +432,73 @@ function normalizeAchievement(item) {
     thoughts: item.thoughts,
     image: resolveMediaUrl(item.imageUrl),
   };
+}
+
+function openDetail(item) {
+  viewItem.value = item;
+  viewOpen.value = true;
+  viewClosing.value = false;
+}
+
+function closeView() {
+  viewOpen.value = false;
+  viewClosing.value = true;
+  setTimeout(() => {
+    viewItem.value = null;
+    viewClosing.value = false;
+  }, 260);
+}
+
+function editFromView() {
+  if (!viewItem.value) {
+    return;
+  }
+  const item = viewItem.value;
+  editId.value = item.id;
+  form.name = item.name || "";
+  form.startDate = item.startDate || "";
+  form.endDate = item.endDate || "";
+  form.awardDate = item.awardDate || "";
+  form.description = item.description || "";
+  form.thoughts = item.thoughts || "";
+  form.imageUrl = item.image ? item.image.replace(API_BASE, "") : "";
+  imagePreview.value = item.image || "";
+  viewOpen.value = false;
+  viewClosing.value = true;
+  editorOpen.value = true;
+  setTimeout(() => {
+    viewItem.value = null;
+    viewClosing.value = false;
+  }, 260);
+}
+
+function openDelete() {
+  deleteDialogOpen.value = true;
+}
+
+function closeDelete() {
+  if (deleteBusy.value) {
+    return;
+  }
+  deleteDialogOpen.value = false;
+}
+
+async function confirmDelete() {
+  if (!viewItem.value) {
+    closeDelete();
+    return;
+  }
+  deleteBusy.value = true;
+  try {
+    await deleteAchievement(viewItem.value.id);
+    achievements.value = achievements.value.filter((item) => item.id !== viewItem.value.id);
+    closeDelete();
+    closeView();
+  } catch (err) {
+    errorMessage.value = err?.response?.data?.message || "删除失败";
+  } finally {
+    deleteBusy.value = false;
+  }
 }
 
 async function fetchAchievements() {

@@ -2,6 +2,7 @@ package com.gcsc.studentcenter.controller;
 
 import com.gcsc.studentcenter.dto.AchievementCreateRequest;
 import com.gcsc.studentcenter.dto.AchievementResponse;
+import com.gcsc.studentcenter.dto.AchievementUpdateRequest;
 import com.gcsc.studentcenter.service.AchievementService;
 import com.gcsc.studentcenter.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -36,6 +37,18 @@ public class AchievementController {
         return ResponseEntity.ok(achievementService.list(username));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<AchievementResponse> getById(
+        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+        @PathVariable("id") Long id
+    ) {
+        String username = resolveUsername(authHeader);
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(achievementService.getById(username, id));
+    }
+
     @PostMapping
     public ResponseEntity<AchievementResponse> create(
         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
@@ -46,6 +59,32 @@ public class AchievementController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(achievementService.create(username, request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AchievementResponse> update(
+        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+        @PathVariable("id") Long id,
+        @RequestBody AchievementUpdateRequest request
+    ) {
+        String username = resolveUsername(authHeader);
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(achievementService.update(username, id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+        @PathVariable("id") Long id
+    ) {
+        String username = resolveUsername(authHeader);
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        achievementService.delete(username, id);
+        return ResponseEntity.ok().build();
     }
 
     private String resolveUsername(String authHeader) {
