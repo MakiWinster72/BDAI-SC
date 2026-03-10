@@ -463,6 +463,7 @@
             class="publisher-input"
             maxlength="2000"
             placeholder="支持 Markdown：标题、引用、列表、表格、加粗、斜体..."
+            @keydown="handleComposerKeydown"
           />
 
           <div v-if="hasPreview" class="publisher-preview">
@@ -909,22 +910,68 @@ function applyList(kind) {
 
   const { input, start, end } = sel;
   const value = composer.content || "";
-  const selected = value.slice(start, end);
-  const lines = (start === end ? ["列表项"] : selected.split("\n")).filter(
-    (l) => l.length > 0,
-  );
-  const replaced =
-    lines
-      .map((line, idx) => {
-        if (kind === "ordered") {
-          return `${idx + 1}. ${line.replace(/^\d+\.\s+/, "")}`;
-        }
-        return `- ${line.replace(/^-+\s+/, "")}`;
-      })
-      .join("\n") + (start === end ? "\n" : "");
-  composer.content = replaceRange(value, start, end, replaced);
+  const marker = kind === "ordered" ? "1. " : "- ";
+
+  if (start === end) {
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const lineEnd = value.indexOf("\n", start) === -1
+      ? value.length
+      : value.indexOf("\n", start);
+    const line = value.slice(lineStart, lineEnd);
+    const indent = line.match(/^\s*/)?.[0] || "";
+    const trimmed = line.trimStart();
+    const stripped = trimmed
+      .replace(/^\d+\.\s+/, "")
+      .replace(/^-+\s+/, "");
+    const hasText = stripped.trim().length > 0;
+
+    if (hasText) {
+      const newLine = `${indent}${marker}${stripped}`;
+      composer.content = replaceRange(value, lineStart, lineEnd, newLine);
+      nextTick(() => {
+        const textStart = lineStart + indent.length + marker.length;
+        input.setSelectionRange(textStart, textStart + stripped.length);
+        input.focus();
+      });
+      return;
+    }
+
+    const insert = `${indent}${marker}文本`;
+    composer.content = replaceRange(value, lineStart, lineEnd, insert);
+    nextTick(() => {
+      const textStart = lineStart + indent.length + marker.length;
+      input.setSelectionRange(textStart, textStart + 2);
+      input.focus();
+    });
+    return;
+  }
+
+  const blockStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+  const blockEnd = value.indexOf("\n", end) === -1
+    ? value.length
+    : value.indexOf("\n", end);
+  const block = value.slice(blockStart, blockEnd);
+  const lines = block.split("\n");
+  let index = 1;
+  const replaced = lines
+    .map((line) => {
+      if (line.trim().length === 0) {
+        return line;
+      }
+      const indent = line.match(/^\s*/)?.[0] || "";
+      let content = line.trimStart();
+      content = content.replace(/^\d+\.\s+/, "").replace(/^-+\s+/, "");
+      if (kind === "ordered") {
+        const current = index;
+        index += 1;
+        return `${indent}${current}. ${content}`;
+      }
+      return `${indent}- ${content}`;
+    })
+    .join("\n");
+  composer.content = replaceRange(value, blockStart, blockEnd, replaced);
   nextTick(() => {
-    input.setSelectionRange(start, start + replaced.length);
+    input.setSelectionRange(blockStart, blockStart + replaced.length);
     input.focus();
   });
 }
@@ -964,6 +1011,72 @@ function indentSelection(add) {
   composer.content = replaceRange(value, blockStart, blockEnd, replaced);
   nextTick(() => {
     input.setSelectionRange(blockStart, blockStart + replaced.length);
+    input.focus();
+  });
+}
+
+function handleComposerKeydown(event) {
+  if (event.key !== "Enter") {
+    return;
+  }
+  const input = composerInput.value;
+  if (!input) {
+    return;
+  }
+  const start = input.selectionStart || 0;
+  const end = input.selectionEnd || 0;
+  if (start !== end) {
+    return;
+  }
+
+  const value = composer.content || "";
+  const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+  const lineEnd = value.indexOf("\n", start) === -1
+    ? value.length
+    : value.indexOf("\n", start);
+  const line = value.slice(lineStart, lineEnd);
+
+  if (start !== lineEnd) {
+    return;
+  }
+
+  const orderedMatch = line.match(/^(\s*)(\d+)\.\s*(.*)$/);
+  const unorderedMatch = line.match(/^(\s*)-\s*(.*)$/);
+  if (!orderedMatch && !unorderedMatch) {
+    return;
+  }
+
+  const indent = orderedMatch ? orderedMatch[1] : unorderedMatch[1];
+  const content = orderedMatch ? orderedMatch[3] : unorderedMatch[2];
+
+  if (content.trim().length === 0) {
+    event.preventDefault();
+    composer.content = replaceRange(value, lineStart, lineEnd, "");
+    nextTick(() => {
+      input.setSelectionRange(lineStart, lineStart);
+      input.focus();
+    });
+    return;
+  }
+
+  event.preventDefault();
+  if (orderedMatch) {
+    const nextNumber = Number(orderedMatch[2]) + 1;
+    const insert = `\n${indent}${nextNumber}. `;
+    const nextPos = start + insert.length;
+    composer.content = replaceRange(value, start, start, insert);
+    nextTick(() => {
+      input.setSelectionRange(nextPos, nextPos);
+      input.focus();
+    });
+    return;
+  }
+
+  const insert = `\n${indent}- `;
+  const nextPos = start + insert.length;
+  composer.content = replaceRange(value, start, start, insert);
+  nextTick(() => {
+    input.setSelectionRange(nextPos, nextPos);
     input.focus();
   });
 }
