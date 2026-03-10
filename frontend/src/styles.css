@@ -831,20 +831,28 @@ body {
   font-weight: 600;
 }
 
-.date-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .date-input {
   flex: 1;
   display: grid;
   gap: 6px;
 }
 
-.date-input.single {
-  max-width: 220px;
+.date-range-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.date-input.inline {
+  min-width: 160px;
+  flex: 0 0 auto;
+}
+
+.date-spacer {
+  width: 10px;
+  height: 1px;
+  display: inline-block;
 }
 
 .date-label {
@@ -1227,7 +1235,7 @@ body {
   color: #0f4c54;
   font-size: 14px;
   line-height: 1.7;
-  min-height: 180px;
+  min-height: 60px;
   max-height: 55vh;
   overflow: auto;
 }
@@ -1669,11 +1677,7 @@ body {
     bottom: 10px;
   }
 
-  .date-range {
-    flex-direction: column;
-  }
-
-  .date-input.single {
-    max-width: none;
+  .date-range-inline {
+    flex-wrap: wrap;
   }
 }

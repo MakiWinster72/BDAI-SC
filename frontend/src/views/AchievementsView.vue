@@ -101,22 +101,23 @@
             </div>
 
             <div class="field-row">
-              <label class="field-label">起止日期</label>
-              <div class="date-range">
-                <label class="date-input">
+              <label class="field-label">获得日期</label>
+              <div class="date-range-inline">
+                <label class="date-input inline">
                   <span class="date-label">开始</span>
                   <input v-model="form.startDate" class="date-input-field" type="date" />
                 </label>
-                <label class="date-input">
+                <span class="date-spacer"></span>
+                <label class="date-input inline">
                   <span class="date-label">结束</span>
                   <input v-model="form.endDate" class="date-input-field" type="date" />
                 </label>
+                <span class="date-spacer"></span>
+                <label class="date-input inline">
+                  <span class="date-label">获得日期</span>
+                  <input v-model="form.awardDate" class="date-input-field" type="date" />
+                </label>
               </div>
-              <label class="field-label">获得日期</label>
-              <label class="date-input single">
-                <span class="date-label">获得</span>
-                <input v-model="form.awardDate" class="date-input-field" type="date" />
-              </label>
             </div>
 
             <div class="field-row">
@@ -124,7 +125,7 @@
               <textarea
                 v-model="form.description"
                 class="publisher-input"
-                rows="3"
+                rows="2"
                 placeholder="描述该成就的背景或亮点"
               ></textarea>
             </div>
@@ -134,7 +135,7 @@
               <textarea
                 v-model="form.thoughts"
                 class="publisher-input"
-                rows="3"
+                rows="2"
                 placeholder="写下你的感受或收获"
               ></textarea>
             </div>
