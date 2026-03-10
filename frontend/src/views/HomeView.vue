@@ -486,7 +486,7 @@
         </div>
 
         <div class="publisher-footer">
-          <label class="publisher-check" v-if="!isGoodNewsMode"
+          <label class="publisher-check" v-if="!isGoodNewsMode && !isRecordsMode"
             ><input v-model="composer.isPrivate" type="checkbox" />
             仅自己可见</label
           >
@@ -621,11 +621,12 @@ const currentMenuLabel = computed(
 );
 const canPost = computed(() => Boolean(profile.username));
 const isFeedMenu = computed(() =>
-  ["campus", "good-news"].includes(activeMenu.value),
+  ["campus", "good-news", "records"].includes(activeMenu.value),
 );
 const showComposer = computed(() =>
-  ["campus", "good-news"].includes(activeMenu.value),
+  ["campus", "good-news", "records"].includes(activeMenu.value),
 );
+const isRecordsMode = computed(() => activeMenu.value === "records");
 const isGoodNewsMode = computed(() => activeMenu.value === "good-news");
 const isUploading = computed(() => uploadingCount.value > 0);
 const canOpenPublisher = computed(() => canPost.value && showComposer.value);
@@ -650,6 +651,9 @@ watch(activeMenu, () => {
   publisherOpen.value = false;
   headingMenuOpen.value = false;
   resetComposerState();
+  if (isRecordsMode.value) {
+    composer.isPrivate = true;
+  }
 });
 
 onMounted(async () => {
@@ -735,7 +739,7 @@ function showToast(message) {
 }
 
 function isMenuEnabled(key) {
-  return key === "campus" || key === "good-news";
+  return key === "campus" || key === "good-news" || key === "records";
 }
 
 function handleMenuClick(key) {
@@ -762,7 +766,11 @@ async function publishPost() {
   const payload = {
     content: composer.content,
     goodNews: isGoodNewsMode.value,
-    privatePost: isGoodNewsMode.value ? false : composer.isPrivate,
+    privatePost: isGoodNewsMode.value
+      ? false
+      : isRecordsMode.value
+        ? true
+        : composer.isPrivate,
     achievement: composer.isAchievement,
     media: composer.media,
   };
