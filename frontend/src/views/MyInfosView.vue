@@ -268,9 +268,10 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref } from "vue";
+import { reactive, computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { MENU_ITEMS, isMenuEnabled } from "../constants/menu";
+import { getStudentProfile, saveStudentProfile } from "../api/profile";
 
 const router = useRouter();
 
@@ -344,9 +345,108 @@ function enterEdit() {
   isEditing.value = true;
 }
 
-function confirmEdit() {
-  isEditing.value = false;
+async function confirmEdit() {
+  if (!isEditing.value) {
+    return;
+  }
+  const className = buildClassName(
+    info.classYear,
+    info.classMajor,
+    info.classNo,
+    info.className,
+  );
+  const payload = {
+    fullName: info.name,
+    studentNo: info.studentNo,
+    classYear: info.classYear || null,
+    classMajor: info.classMajor,
+    classNo: info.classNo,
+    className,
+    college: info.college,
+    phone: info.phone,
+    address: info.address,
+    idNo: info.idNo,
+    nativePlace: info.nativePlace,
+    leagueNo: info.leagueNo,
+    partyApplied: info.partyApplied,
+    notDeveloped: info.notDeveloped,
+    applicationDate: info.applicationDate || null,
+    activistDate: info.activistDate || null,
+    emergencyPhone: info.emergencyPhone,
+    emergencyRelation: info.emergencyRelation,
+  };
+  try {
+    const { data } = await saveStudentProfile(payload);
+    applyProfileResponse(data);
+    isEditing.value = false;
+  } catch (err) {
+    console.error(err);
+  }
 }
+
+function buildClassName(year, major, no, fallback) {
+  if (fallback) {
+    return fallback;
+  }
+  const safeYear = year ? `${year}级` : "";
+  const safeMajor = major || "";
+  const safeNo = no ? `${no}班` : "";
+  const result = `${safeYear}${safeMajor}${safeNo}`.trim();
+  return result || "";
+}
+
+function applyProfileResponse(data) {
+  if (!data) {
+    return;
+  }
+  info.name = data.fullName || data.displayName || "";
+  info.studentNo = data.studentNo || "";
+  info.classYear = data.classYear || "";
+  info.classMajor = data.classMajor || "";
+  info.classNo = data.classNo || "";
+  info.className = data.className || "";
+  info.college = data.college || "";
+  info.phone = data.phone || "";
+  info.address = data.address || "";
+  info.idNo = data.idNo || "";
+  info.nativePlace = data.nativePlace || "";
+  info.leagueNo = data.leagueNo || "";
+  info.partyApplied = Boolean(data.partyApplied);
+  info.notDeveloped = Boolean(data.notDeveloped);
+  info.applicationDate = data.applicationDate || "";
+  info.activistDate = data.activistDate || "";
+  info.emergencyPhone = data.emergencyPhone || "";
+  info.emergencyRelation = data.emergencyRelation || "";
+
+  profile.displayName = data.displayName || profile.displayName;
+  profile.username = data.username || profile.username;
+  profile.studentNo = data.studentNo || profile.studentNo;
+  profile.className = data.className || profile.className;
+  profile.college = data.college || profile.college;
+
+  saveUser(profile);
+}
+
+function saveUser(data) {
+  const user = {
+    username: data.username,
+    displayName: data.displayName,
+    role: data.role || profile.role || "STUDENT",
+    studentNo: data.studentNo || "",
+    className: data.className || "",
+    college: data.college || "",
+  };
+  localStorage.setItem("gcsc_user", JSON.stringify(user));
+}
+
+onMounted(async () => {
+  try {
+    const { data } = await getStudentProfile();
+    applyProfileResponse(data);
+  } catch (err) {
+    console.error(err);
+  }
+});
 
 function loadUser() {
   try {
