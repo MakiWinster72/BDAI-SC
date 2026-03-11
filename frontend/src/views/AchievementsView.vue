@@ -3,7 +3,14 @@
     <aside class="dashboard-left">
       <section class="profile-card">
         <div class="profile-row profile-main">
-          <div class="profile-avatar">{{ avatarText }}</div>
+          <div class="profile-avatar">
+            <img
+              v-if="profile.avatarUrl"
+              :src="resolveMediaUrl(profile.avatarUrl)"
+              alt="头像"
+            />
+            <span v-else>{{ avatarText }}</span>
+          </div>
           <div class="profile-name-wrap">
             <p class="profile-name">
               {{ profile.displayName || profile.username || "同学" }}
@@ -296,6 +303,7 @@ function loadUser() {
     return {
       username: raw.username || "",
       displayName: raw.displayName || "",
+      avatarUrl: raw.avatarUrl || "",
       role: raw.role || "STUDENT",
       studentNo: raw.studentNo || "",
       className: raw.className || "",
@@ -305,6 +313,7 @@ function loadUser() {
     return {
       username: "",
       displayName: "",
+      avatarUrl: "",
       role: "STUDENT",
       studentNo: "",
       className: "",

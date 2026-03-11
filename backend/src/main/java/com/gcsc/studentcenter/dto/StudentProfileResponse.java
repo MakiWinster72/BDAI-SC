@@ -10,6 +10,7 @@ public class StudentProfileResponse {
     private String className;
     private String college;
     private String fullName;
+    private String avatarUrl;
     private Integer classYear;
     private String classMajor;
     private String classNo;
@@ -33,6 +34,7 @@ public class StudentProfileResponse {
         String className,
         String college,
         String fullName,
+        String avatarUrl,
         Integer classYear,
         String classMajor,
         String classNo,
@@ -55,6 +57,7 @@ public class StudentProfileResponse {
         this.className = className;
         this.college = college;
         this.fullName = fullName;
+        this.avatarUrl = avatarUrl;
         this.classYear = classYear;
         this.classMajor = classMajor;
         this.classNo = classNo;
@@ -97,6 +100,10 @@ public class StudentProfileResponse {
 
     public String getFullName() {
         return fullName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 
     public Integer getClassYear() {

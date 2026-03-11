@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public class StudentProfileRequest {
     private String fullName;
+    private String avatarUrl;
     private String studentNo;
     private Integer classYear;
     private String classMajor;
@@ -36,6 +37,14 @@ public class StudentProfileRequest {
 
     public void setStudentNo(String studentNo) {
         this.studentNo = studentNo;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public Integer getClassYear() {

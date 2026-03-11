@@ -46,6 +46,7 @@ public class StudentProfileService {
             });
 
         profile.setFullName(normalize(request.getFullName()));
+        profile.setAvatarUrl(normalize(request.getAvatarUrl()));
         profile.setStudentNo(normalize(request.getStudentNo()));
         profile.setClassYear(request.getClassYear());
         profile.setClassMajor(normalize(request.getClassMajor()));
@@ -92,6 +93,7 @@ public class StudentProfileService {
             user.getClassName(),
             user.getCollege(),
             profile != null ? profile.getFullName() : user.getDisplayName(),
+            profile != null ? profile.getAvatarUrl() : null,
             profile != null ? profile.getClassYear() : null,
             profile != null ? profile.getClassMajor() : null,
             profile != null ? profile.getClassNo() : null,

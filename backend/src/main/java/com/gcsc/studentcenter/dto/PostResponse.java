@@ -12,6 +12,7 @@ public class PostResponse {
     private String authorName;
     private String authorUsername;
     private String authorRole;
+    private String authorAvatarUrl;
     private LocalDateTime createdAt;
     private List<MediaItemResponse> media;
 
@@ -24,6 +25,7 @@ public class PostResponse {
         String authorName,
         String authorUsername,
         String authorRole,
+        String authorAvatarUrl,
         LocalDateTime createdAt,
         List<MediaItemResponse> media
     ) {
@@ -35,6 +37,7 @@ public class PostResponse {
         this.authorName = authorName;
         this.authorUsername = authorUsername;
         this.authorRole = authorRole;
+        this.authorAvatarUrl = authorAvatarUrl;
         this.createdAt = createdAt;
         this.media = media;
     }
@@ -69,6 +72,10 @@ public class PostResponse {
 
     public String getAuthorRole() {
         return authorRole;
+    }
+
+    public String getAuthorAvatarUrl() {
+        return authorAvatarUrl;
     }
 
     public LocalDateTime getCreatedAt() {

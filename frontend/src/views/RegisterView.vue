@@ -145,6 +145,7 @@ async function handleRegister() {
       JSON.stringify({
         username: data.username,
         displayName: data.displayName,
+        avatarUrl: data.avatarUrl || "",
         role: data.role,
         studentNo: data.studentNo,
         className: data.className,

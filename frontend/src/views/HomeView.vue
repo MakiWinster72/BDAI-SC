@@ -3,7 +3,14 @@
     <aside class="dashboard-left">
       <section class="profile-card">
         <div class="profile-row profile-main">
-          <div class="profile-avatar">{{ avatarText }}</div>
+          <div class="profile-avatar">
+            <img
+              v-if="profile.avatarUrl"
+              :src="resolveMediaUrl(profile.avatarUrl)"
+              alt="头像"
+            />
+            <span v-else>{{ avatarText }}</span>
+          </div>
           <div class="profile-name-wrap">
             <p class="profile-name">
               {{ profile.displayName || profile.username || "同学" }}
@@ -46,7 +53,14 @@
         <article v-for="post in visiblePosts" :key="post.id" class="post-card">
           <div class="post-header">
             <div class="post-author">
-              <div class="post-avatar">{{ postAvatarText(post) }}</div>
+              <div class="post-avatar">
+                <img
+                  v-if="post.authorAvatarUrl"
+                  :src="resolveMediaUrl(post.authorAvatarUrl)"
+                  alt="头像"
+                />
+                <span v-else>{{ postAvatarText(post) }}</span>
+              </div>
               <div class="post-author-info">
                 <div class="post-author-name">
                   {{ post.authorName || post.authorUsername || "同学" }}
@@ -1310,6 +1324,7 @@ function loadUser() {
     return {
       username: raw.username || "",
       displayName: raw.displayName || "",
+      avatarUrl: raw.avatarUrl || "",
       role: raw.role || "STUDENT",
       studentNo: raw.studentNo || "",
       className: raw.className || "",
@@ -1319,6 +1334,7 @@ function loadUser() {
     return {
       username: "",
       displayName: "",
+      avatarUrl: "",
       role: "STUDENT",
       studentNo: "",
       className: "",
@@ -1328,9 +1344,11 @@ function loadUser() {
 }
 
 function saveUser(data) {
+  const existing = loadUser();
   const user = {
     username: data.username,
     displayName: data.displayName,
+    avatarUrl: data.avatarUrl || existing.avatarUrl || "",
     role: data.role || "STUDENT",
     studentNo: data.studentNo || "",
     className: data.className || "",

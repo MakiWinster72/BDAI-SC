@@ -3,7 +3,14 @@
     <aside class="dashboard-left">
       <section class="profile-card">
         <div class="profile-row profile-main">
-          <div class="profile-avatar">{{ avatarText }}</div>
+          <div class="profile-avatar">
+            <img
+              v-if="info.avatarUrl"
+              :src="resolveMediaUrl(info.avatarUrl)"
+              alt="头像"
+            />
+            <span v-else>{{ avatarText }}</span>
+          </div>
           <div class="profile-name-wrap">
             <p class="profile-name">
               {{ profile.displayName || profile.username || "同学" }}
@@ -41,9 +48,26 @@
 
       <section class="info-shell">
         <div class="info-hero">
-          <button class="avatar-square" type="button">
-            点击设置头像
+          <button
+            class="avatar-square"
+            type="button"
+            :disabled="!isEditing"
+            @click="triggerAvatarUpload"
+          >
+            <img
+              v-if="info.avatarUrl"
+              :src="resolveMediaUrl(info.avatarUrl)"
+              alt="头像"
+            />
+            <span v-else>点击设置头像</span>
           </button>
+          <input
+            ref="avatarInput"
+            type="file"
+            accept="image/*"
+            hidden
+            @change="onAvatarChange"
+          />
           <div class="info-hero-text">
             <div class="info-hero-title">基础信息</div>
             <div class="info-hero-subtitle">请确保信息完整准确</div>
@@ -272,15 +296,19 @@ import { reactive, computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { MENU_ITEMS, isMenuEnabled } from "../constants/menu";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
+import { uploadMedia } from "../api/posts";
 
 const router = useRouter();
 
 const profile = reactive(loadUser());
 const activeMenu = ref("my-info");
 const isEditing = ref(false);
+const avatarInput = ref(null);
+const API_BASE = "http://localhost:8080";
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
+  avatarUrl: "",
   studentNo: profile.studentNo || "",
   classYear: "",
   classMajor: "",
@@ -341,6 +369,40 @@ function handleMenuClick(key) {
   router.push("/home");
 }
 
+function resolveMediaUrl(url) {
+  if (!url) {
+    return "";
+  }
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  return `${API_BASE}${url}`;
+}
+
+function triggerAvatarUpload() {
+  if (!isEditing.value) {
+    return;
+  }
+  avatarInput.value && avatarInput.value.click();
+}
+
+async function onAvatarChange(event) {
+  const [file] = Array.from(event.target.files || []);
+  event.target.value = "";
+  if (!file) {
+    return;
+  }
+  try {
+    const { data } = await uploadMedia(file);
+    if (data?.mediaType !== "IMAGE") {
+      return;
+    }
+    info.avatarUrl = data.url || "";
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 function enterEdit() {
   isEditing.value = true;
 }
@@ -357,6 +419,7 @@ async function confirmEdit() {
   );
   const payload = {
     fullName: info.name,
+    avatarUrl: info.avatarUrl,
     studentNo: info.studentNo,
     classYear: info.classYear || null,
     classMajor: info.classMajor,
@@ -400,6 +463,9 @@ function applyProfileResponse(data) {
     return;
   }
   info.name = data.fullName || data.displayName || "";
+  if (data.avatarUrl) {
+    info.avatarUrl = data.avatarUrl;
+  }
   info.studentNo = data.studentNo || "";
   info.classYear = data.classYear || "";
   info.classMajor = data.classMajor || "";
@@ -420,6 +486,7 @@ function applyProfileResponse(data) {
 
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;
+  profile.avatarUrl = data.avatarUrl || profile.avatarUrl;
   profile.studentNo = data.studentNo || profile.studentNo;
   profile.className = data.className || profile.className;
   profile.college = data.college || profile.college;
@@ -431,6 +498,7 @@ function saveUser(data) {
   const user = {
     username: data.username,
     displayName: data.displayName,
+    avatarUrl: data.avatarUrl || "",
     role: data.role || profile.role || "STUDENT",
     studentNo: data.studentNo || "",
     className: data.className || "",
@@ -454,6 +522,7 @@ function loadUser() {
     return {
       username: raw.username || "",
       displayName: raw.displayName || "",
+      avatarUrl: raw.avatarUrl || "",
       role: raw.role || "STUDENT",
       studentNo: raw.studentNo || "",
       className: raw.className || "",
@@ -463,6 +532,7 @@ function loadUser() {
     return {
       username: "",
       displayName: "",
+      avatarUrl: "",
       role: "STUDENT",
       studentNo: "",
       className: "",

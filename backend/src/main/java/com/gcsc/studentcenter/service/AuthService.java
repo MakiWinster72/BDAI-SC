@@ -5,8 +5,10 @@ import com.gcsc.studentcenter.dto.LoginRequest;
 import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
 import com.gcsc.studentcenter.entity.AppUser;
+import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
+import com.gcsc.studentcenter.repository.StudentProfileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +22,18 @@ public class AuthService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final StudentProfileRepository studentProfileRepository;
 
-    public AuthService(AppUserRepository appUserRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(
+        AppUserRepository appUserRepository,
+        PasswordEncoder passwordEncoder,
+        JwtService jwtService,
+        StudentProfileRepository studentProfileRepository
+    ) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.studentProfileRepository = studentProfileRepository;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -71,6 +80,7 @@ public class AuthService {
             savedUser.getStudentNo(),
             savedUser.getClassName(),
             savedUser.getCollege(),
+            resolveAvatarUrl(savedUser),
             token
         );
     }
@@ -92,6 +102,7 @@ public class AuthService {
         }
         UserRole role = roleOrDefault(user);
         String token = jwtService.generateToken(user.getUsername(), user.getDisplayName(), role.name());
+        String avatarUrl = resolveAvatarUrl(user);
         return new AuthResponse(
             true,
             "登录成功",
@@ -101,6 +112,7 @@ public class AuthService {
             user.getStudentNo(),
             user.getClassName(),
             user.getCollege(),
+            avatarUrl,
             token
         );
     }
@@ -109,14 +121,24 @@ public class AuthService {
         AppUser user = appUserRepository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
         UserRole role = roleOrDefault(user);
+        String avatarUrl = resolveAvatarUrl(user);
         return new UserProfileResponse(
             user.getUsername(),
             user.getDisplayName(),
             role.name(),
             user.getStudentNo(),
             user.getClassName(),
-            user.getCollege()
+            user.getCollege(),
+            avatarUrl
         );
+    }
+
+    private String resolveAvatarUrl(AppUser user) {
+        if (studentProfileRepository == null || user == null) {
+            return null;
+        }
+        StudentProfile profile = studentProfileRepository.findByUserId(user.getId()).orElse(null);
+        return profile == null ? null : profile.getAvatarUrl();
     }
 
     private UserRole parseRole(String rawRole) {

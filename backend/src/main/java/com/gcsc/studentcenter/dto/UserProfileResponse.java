@@ -7,6 +7,7 @@ public class UserProfileResponse {
     private final String studentNo;
     private final String className;
     private final String college;
+    private final String avatarUrl;
 
     public UserProfileResponse(
         String username,
@@ -14,7 +15,8 @@ public class UserProfileResponse {
         String role,
         String studentNo,
         String className,
-        String college
+        String college,
+        String avatarUrl
     ) {
         this.username = username;
         this.displayName = displayName;
@@ -22,6 +24,7 @@ public class UserProfileResponse {
         this.studentNo = studentNo;
         this.className = className;
         this.college = college;
+        this.avatarUrl = avatarUrl;
     }
 
     public String getUsername() {
@@ -46,5 +49,9 @@ public class UserProfileResponse {
 
     public String getCollege() {
         return college;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 }

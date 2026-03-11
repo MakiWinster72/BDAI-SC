@@ -9,6 +9,7 @@ public class AuthResponse {
     private final String studentNo;
     private final String className;
     private final String college;
+    private final String avatarUrl;
     private final String token;
     private final String tokenType;
 
@@ -21,6 +22,7 @@ public class AuthResponse {
         String studentNo,
         String className,
         String college,
+        String avatarUrl,
         String token
     ) {
         this.success = success;
@@ -31,6 +33,7 @@ public class AuthResponse {
         this.studentNo = studentNo;
         this.className = className;
         this.college = college;
+        this.avatarUrl = avatarUrl;
         this.token = token;
         this.tokenType = "Bearer";
     }
@@ -65,6 +68,10 @@ public class AuthResponse {
 
     public String getCollege() {
         return college;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 
     public String getToken() {

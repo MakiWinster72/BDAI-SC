@@ -334,12 +334,13 @@ body {
 .profile-avatar {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: #036b72;
   color: #fff;
   display: grid;
   place-items: center;
   font-weight: 700;
+  overflow: hidden;
 }
 
 .profile-name-wrap {
@@ -649,6 +650,7 @@ body {
   color: #0f555d;
   font-weight: 700;
   letter-spacing: 0.5px;
+  overflow: hidden;
 }
 
 .post-author-info {
@@ -1086,12 +1088,39 @@ body {
   border-radius: 18px;
   border: 1px dashed rgba(3, 107, 114, 0.35);
   background: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
   color: #0f555d;
   font-weight: 700;
   cursor: pointer;
   padding: 12px;
   text-align: center;
   line-height: 1.4;
+}
+
+.avatar-square:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.avatar-square img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.post-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
 }
 
 .info-hero-text {

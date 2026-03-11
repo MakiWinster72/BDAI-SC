@@ -26,6 +26,9 @@ public class StudentProfile {
     @Column(name = "full_name", length = 64)
     private String fullName;
 
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
+
     @Column(name = "student_no", length = 32)
     private String studentNo;
 
@@ -103,6 +106,14 @@ public class StudentProfile {
 
     public void setStudentNo(String studentNo) {
         this.studentNo = studentNo;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public Integer getClassYear() {
