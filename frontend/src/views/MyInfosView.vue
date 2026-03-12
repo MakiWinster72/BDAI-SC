@@ -308,7 +308,7 @@ const API_BASE = "http://localhost:8080";
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
-  avatarUrl: "",
+  avatarUrl: profile.avatarUrl || "",
   studentNo: profile.studentNo || "",
   classYear: "",
   classMajor: "",
@@ -463,9 +463,7 @@ function applyProfileResponse(data) {
     return;
   }
   info.name = data.fullName || data.displayName || "";
-  if (data.avatarUrl) {
-    info.avatarUrl = data.avatarUrl;
-  }
+  info.avatarUrl = data.avatarUrl || profile.avatarUrl || "";
   info.studentNo = data.studentNo || "";
   info.classYear = data.classYear || "";
   info.classMajor = data.classMajor || "";

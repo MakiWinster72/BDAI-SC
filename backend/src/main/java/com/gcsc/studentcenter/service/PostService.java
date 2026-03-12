@@ -7,11 +7,9 @@ import com.gcsc.studentcenter.dto.PostResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.Post;
 import com.gcsc.studentcenter.entity.PostMedia;
-import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.PostRepository;
-import com.gcsc.studentcenter.repository.StudentProfileRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,16 +23,13 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final AppUserRepository appUserRepository;
-    private final StudentProfileRepository studentProfileRepository;
 
     public PostService(
         PostRepository postRepository,
-        AppUserRepository appUserRepository,
-        StudentProfileRepository studentProfileRepository
+        AppUserRepository appUserRepository
     ) {
         this.postRepository = postRepository;
         this.appUserRepository = appUserRepository;
-        this.studentProfileRepository = studentProfileRepository;
     }
 
     public PostResponse createPost(String username, PostCreateRequest request) {
@@ -132,9 +127,6 @@ public class PostService {
                 .collect(Collectors.toList());
 
         AppUser author = post.getAuthor();
-        StudentProfile profile = author == null
-            ? null
-            : studentProfileRepository.findByUserId(author.getId()).orElse(null);
         return new PostResponse(
             post.getId(),
             post.getContent(),
@@ -144,7 +136,7 @@ public class PostService {
             author.getDisplayName(),
             author.getUsername(),
             author.getRole() == null ? "STUDENT" : author.getRole().name(),
-            profile != null ? profile.getAvatarUrl() : null,
+            author.getAvatarUrl(),
             post.getCreatedAt(),
             media
         );

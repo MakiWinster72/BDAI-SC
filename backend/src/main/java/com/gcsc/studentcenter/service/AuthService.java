@@ -5,10 +5,8 @@ import com.gcsc.studentcenter.dto.LoginRequest;
 import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
 import com.gcsc.studentcenter.entity.AppUser;
-import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
-import com.gcsc.studentcenter.repository.StudentProfileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,18 +20,15 @@ public class AuthService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final StudentProfileRepository studentProfileRepository;
 
     public AuthService(
         AppUserRepository appUserRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService,
-        StudentProfileRepository studentProfileRepository
+        JwtService jwtService
     ) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.studentProfileRepository = studentProfileRepository;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -134,11 +129,10 @@ public class AuthService {
     }
 
     private String resolveAvatarUrl(AppUser user) {
-        if (studentProfileRepository == null || user == null) {
+        if (user == null) {
             return null;
         }
-        StudentProfile profile = studentProfileRepository.findByUserId(user.getId()).orElse(null);
-        return profile == null ? null : profile.getAvatarUrl();
+        return user.getAvatarUrl();
     }
 
     private UserRole parseRole(String rawRole) {

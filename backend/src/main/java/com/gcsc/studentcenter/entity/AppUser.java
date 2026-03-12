@@ -34,6 +34,9 @@ public class AppUser {
     @Column(name = "college", length = 64)
     private String college;
 
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -103,5 +106,13 @@ public class AppUser {
 
     public void setCollege(String college) {
         this.college = college;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }
