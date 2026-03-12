@@ -783,6 +783,73 @@ body {
   margin-bottom: 6px;
 }
 
+.contacts-search {
+  position: fixed;
+  left: 342px;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  justify-content: center;
+  z-index: 30;
+}
+
+.contacts-search-panel {
+  width: min(520px, 100%);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(3, 107, 114, 0.25);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 24px rgba(3, 107, 114, 0.08);
+  backdrop-filter: blur(12px);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.contacts-search-panel:focus-within {
+  border-color: rgba(3, 107, 114, 0.75);
+  box-shadow: 0 16px 30px rgba(3, 107, 114, 0.2);
+  transform: translateY(-1px);
+}
+
+.contacts-search-icon {
+  width: 20px;
+  height: 20px;
+  color: rgba(3, 107, 114, 0.75);
+  display: grid;
+  place-items: center;
+}
+
+.contacts-search-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.contacts-search-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+  height: 34px;
+  padding: 0;
+  color: #0f555d;
+  outline: none;
+  font-size: 14px;
+}
+
+.contacts-search-input:focus {
+  border-color: transparent;
+}
+
+.contacts-search-input::placeholder {
+  color: rgba(15, 85, 93, 0.6);
+}
+
 .achievement-backdrop {
   position: fixed;
   inset: 0;
@@ -2014,6 +2081,10 @@ body {
   .contacts-grid {
     grid-template-columns: 1fr;
   }
+
+  .contacts-search {
+    left: 302px;
+  }
 }
 
 @media (max-width: 840px) {
@@ -2023,6 +2094,11 @@ body {
 
   .feed-waterfall {
     column-count: 1;
+  }
+
+  .contacts-search {
+    left: 24px;
+    right: 24px;
   }
 
   .footer-action {

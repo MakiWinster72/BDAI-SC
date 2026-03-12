@@ -51,7 +51,7 @@
 
       <section v-if="isContactsMode" class="contacts-grid">
         <article
-          v-for="contact in contacts"
+          v-for="contact in visibleContacts"
           :key="contact.id"
           class="contact-card"
         >
@@ -67,6 +67,22 @@
             <div class="contact-line">{{ contact.phone }}</div>
           </div>
         </article>
+      </section>
+      <section v-if="isContactsMode" class="contacts-search">
+        <div class="contacts-search-panel">
+          <span class="contacts-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="11" cy="11" r="7" stroke-width="1.8" />
+              <path d="M16.5 16.5L21 21" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </span>
+          <input
+            v-model.trim="contactSearchQuery"
+            class="contacts-search-input"
+            type="text"
+            placeholder="输入姓名 / 办公室 / 职位"
+          />
+        </div>
       </section>
 
       <section v-else class="feed-waterfall">
@@ -756,6 +772,7 @@ const isFeedMenu = computed(() =>
   ["campus", "good-news", "records"].includes(activeMenu.value),
 );
 const isContactsMode = computed(() => activeMenu.value === "contacts");
+const contactSearchQuery = ref("");
 const showComposer = computed(() =>
   ["campus", "good-news", "records"].includes(activeMenu.value),
 );
@@ -776,6 +793,18 @@ const footerActionText = computed(() => {
 });
 
 const visiblePosts = computed(() => posts.value);
+const visibleContacts = computed(() => {
+  const keyword = contactSearchQuery.value.trim().toLowerCase();
+  if (!keyword) {
+    return contacts;
+  }
+  return contacts.filter((item) => {
+    const name = (item.name || "").toLowerCase();
+    const office = (item.office || "").toLowerCase();
+    const duty = (item.role || "").toLowerCase();
+    return name.includes(keyword) || office.includes(keyword) || duty.includes(keyword);
+  });
+});
 
 function syncMenuFromRoute() {
   if (route.path === "/congra") {
@@ -807,10 +836,13 @@ watch(activeMenu, () => {
   }
   publisherOpen.value = false;
   headingMenuOpen.value = false;
-  resetComposerState();
-  if (isRecordsMode.value) {
-    composer.isPrivate = true;
-  }
+    resetComposerState();
+    if (isRecordsMode.value) {
+      composer.isPrivate = true;
+    }
+    if (!isContactsMode.value) {
+      contactSearchQuery.value = "";
+    }
 });
 
 onMounted(async () => {
@@ -863,6 +895,7 @@ function openPublisher() {
   headingMenuOpen.value = false;
   nextTick(() => composerInput.value && composerInput.value.focus());
 }
+
 
 function closePublisher() {
   publisherOpen.value = false;
