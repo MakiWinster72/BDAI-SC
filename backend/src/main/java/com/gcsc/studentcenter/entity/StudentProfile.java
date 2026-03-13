@@ -77,6 +77,12 @@ public class StudentProfile {
     @Column(name = "emergency_relation", length = 32)
     private String emergencyRelation;
 
+    @Column(name = "is_hk_mo_tw")
+    private Boolean hkMoTw;
+
+    @Column(name = "is_special")
+    private Boolean specialStudent;
+
     public Long getId() {
         return id;
     }
@@ -231,5 +237,21 @@ public class StudentProfile {
 
     public void setEmergencyRelation(String emergencyRelation) {
         this.emergencyRelation = emergencyRelation;
+    }
+
+    public Boolean getHkMoTw() {
+        return hkMoTw;
+    }
+
+    public void setHkMoTw(Boolean hkMoTw) {
+        this.hkMoTw = hkMoTw;
+    }
+
+    public Boolean getSpecialStudent() {
+        return specialStudent;
+    }
+
+    public void setSpecialStudent(Boolean specialStudent) {
+        this.specialStudent = specialStudent;
     }
 }

@@ -63,6 +63,8 @@ public class StudentProfileService {
         profile.setActivistDate(request.getActivistDate());
         profile.setEmergencyPhone(normalize(request.getEmergencyPhone()));
         profile.setEmergencyRelation(normalize(request.getEmergencyRelation()));
+        profile.setHkMoTw(request.getHkMoTw());
+        profile.setSpecialStudent(request.getSpecialStudent());
 
         user.setAvatarUrl(normalize(request.getAvatarUrl()));
         syncUserSummary(user, profile);
@@ -107,7 +109,9 @@ public class StudentProfileService {
             profile != null ? profile.getApplicationDate() : null,
             profile != null ? profile.getActivistDate() : null,
             profile != null ? profile.getEmergencyPhone() : null,
-            profile != null ? profile.getEmergencyRelation() : null
+            profile != null ? profile.getEmergencyRelation() : null,
+            profile != null ? profile.getHkMoTw() : null,
+            profile != null ? profile.getSpecialStudent() : null
         );
     }
 

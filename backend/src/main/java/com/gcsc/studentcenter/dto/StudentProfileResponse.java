@@ -25,6 +25,8 @@ public class StudentProfileResponse {
     private LocalDate activistDate;
     private String emergencyPhone;
     private String emergencyRelation;
+    private Boolean hkMoTw;
+    private Boolean specialStudent;
 
     public StudentProfileResponse(
         Long id,
@@ -48,7 +50,9 @@ public class StudentProfileResponse {
         LocalDate applicationDate,
         LocalDate activistDate,
         String emergencyPhone,
-        String emergencyRelation
+        String emergencyRelation,
+        Boolean hkMoTw,
+        Boolean specialStudent
     ) {
         this.id = id;
         this.username = username;
@@ -72,6 +76,8 @@ public class StudentProfileResponse {
         this.activistDate = activistDate;
         this.emergencyPhone = emergencyPhone;
         this.emergencyRelation = emergencyRelation;
+        this.hkMoTw = hkMoTw;
+        this.specialStudent = specialStudent;
     }
 
     public Long getId() {
@@ -160,5 +166,13 @@ public class StudentProfileResponse {
 
     public String getEmergencyRelation() {
         return emergencyRelation;
+    }
+
+    public Boolean getHkMoTw() {
+        return hkMoTw;
+    }
+
+    public Boolean getSpecialStudent() {
+        return specialStudent;
     }
 }

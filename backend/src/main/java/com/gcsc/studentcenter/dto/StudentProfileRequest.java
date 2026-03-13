@@ -22,6 +22,8 @@ public class StudentProfileRequest {
     private LocalDate activistDate;
     private String emergencyPhone;
     private String emergencyRelation;
+    private Boolean hkMoTw;
+    private Boolean specialStudent;
 
     public String getFullName() {
         return fullName;
@@ -173,5 +175,21 @@ public class StudentProfileRequest {
 
     public void setEmergencyRelation(String emergencyRelation) {
         this.emergencyRelation = emergencyRelation;
+    }
+
+    public Boolean getHkMoTw() {
+        return hkMoTw;
+    }
+
+    public void setHkMoTw(Boolean hkMoTw) {
+        this.hkMoTw = hkMoTw;
+    }
+
+    public Boolean getSpecialStudent() {
+        return specialStudent;
+    }
+
+    public void setSpecialStudent(Boolean specialStudent) {
+        this.specialStudent = specialStudent;
     }
 }
