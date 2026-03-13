@@ -181,10 +181,6 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
-                inputmode="none"
-                @click.stop="openDatePicker"
-                @mousedown.prevent
-                @keydown.prevent
                 :disabled="!isEditing"
               />
             </label>
@@ -452,10 +448,6 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
-                inputmode="none"
-                @click.stop="openDatePicker"
-                @mousedown.prevent
-                @keydown.prevent
                 :disabled="leagueApplicationDisabled"
               />
             </label>
@@ -467,10 +459,6 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  inputmode="none"
-                  @click.stop="openDatePicker"
-                  @mousedown.prevent
-                  @keydown.prevent
                   :disabled="leagueJoinDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -523,10 +511,6 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
-                inputmode="none"
-                @pointerdown.stop.prevent
-                @click.stop="openDatePicker"
-                @keydown.prevent
                 :disabled="applicationDateDisabled"
               />
             </label>
@@ -538,10 +522,6 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  inputmode="none"
-                  @click.stop="openDatePicker"
-                  @mousedown.prevent
-                  @keydown.prevent
                   :disabled="activistDateDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -562,10 +542,6 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  inputmode="none"
-                  @click.stop="openDatePicker"
-                  @mousedown.prevent
-                  @keydown.prevent
                   :disabled="partyTrainingDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -586,10 +562,6 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  inputmode="none"
-                  @click.stop="openDatePicker"
-                  @mousedown.prevent
-                  @keydown.prevent
                   :disabled="developmentTargetDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -610,10 +582,6 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  inputmode="none"
-                  @click.stop="openDatePicker"
-                  @mousedown.prevent
-                  @keydown.prevent
                   :disabled="probationaryDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -634,10 +602,6 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  inputmode="none"
-                  @click.stop="openDatePicker"
-                  @mousedown.prevent
-                  @keydown.prevent
                   :disabled="fullMemberDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -1034,6 +998,7 @@ function toggleStudentCategoryMenu() {
     return;
   }
   studentCategoryMenuOpen.value = !studentCategoryMenuOpen.value;
+  yearMenuOpen.value = false;
   politicalStatusMenuOpen.value = false;
   dormCampusMenuOpen.value = false;
 }
@@ -1053,6 +1018,7 @@ function togglePoliticalStatusMenu() {
     return;
   }
   politicalStatusMenuOpen.value = !politicalStatusMenuOpen.value;
+  yearMenuOpen.value = false;
   studentCategoryMenuOpen.value = false;
   dormCampusMenuOpen.value = false;
 }
@@ -1090,6 +1056,7 @@ function selectYear(value) {
   yearMenuOpen.value = false;
 }
 
+
 function handleDocumentClick(event) {
   if (event.target.closest(".student-select")) {
     return;
@@ -1100,15 +1067,6 @@ function handleDocumentClick(event) {
   dormCampusMenuOpen.value = false;
 }
 
-function openDatePicker(event) {
-  if (!isEditing.value) {
-    return;
-  }
-  const target = event?.target;
-  if (target && typeof target.showPicker === "function") {
-    requestAnimationFrame(() => target.showPicker());
-  }
-}
 
 function handleDigitsInput(field, maxLength, event) {
   const raw = event.target.value || "";
@@ -1128,9 +1086,6 @@ function handleIdNoInput(event) {
 }
 
 function triggerAvatarUpload() {
-  if (!isEditing.value) {
-    return;
-  }
   avatarInput.value && avatarInput.value.click();
 }
 
@@ -1156,9 +1111,6 @@ function enterEdit() {
 }
 
 async function confirmEdit() {
-  if (!isEditing.value) {
-    return;
-  }
   const className = buildClassName(
     info.classYear,
     info.classMajor,
