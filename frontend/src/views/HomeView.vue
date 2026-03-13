@@ -116,7 +116,12 @@
         <div v-if="loadingPosts" class="empty-tip">加载中...</div>
       </section>
 
-      <button class="footer-action" type="button" @click="openPublisher">
+      <button
+        v-if="showPublisherAction"
+        class="footer-action"
+        type="button"
+        @click="openPublisher"
+      >
         {{ footerActionText }}
       </button>
       <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
@@ -684,8 +689,20 @@ const showComposer = computed(() =>
 );
 const isRecordsMode = computed(() => activeMenu.value === "records");
 const isGoodNewsMode = computed(() => activeMenu.value === "good-news");
+const canPublishGoodNews = computed(
+  () => profile.role === "TEACHER" || profile.role === "ADMIN",
+);
 const isUploading = computed(() => uploadingCount.value > 0);
 const canOpenPublisher = computed(() => canPost.value && showComposer.value);
+const showPublisherAction = computed(() => {
+  if (!showComposer.value) {
+    return false;
+  }
+  if (isGoodNewsMode.value) {
+    return canPublishGoodNews.value;
+  }
+  return true;
+});
 const previewHtml = computed(() => renderMarkdown(composer.content));
 const hasPreview = computed(() => (composer.content || "").trim().length > 0);
 const footerActionText = computed(() => {
@@ -765,6 +782,11 @@ async function fetchPosts() {
 function openPublisher() {
   if (!canPost.value) {
     showToast("请先登录");
+    return;
+  }
+
+  if (isGoodNewsMode.value && !canPublishGoodNews.value) {
+    showToast("仅教师或管理员可发布喜报");
     return;
   }
 
