@@ -65,6 +65,7 @@
                   <button class="info-input student-select-trigger" type="button">
                     {{ yearLabel }}
                   </button>
+                <transition name="student-dropdown">
                   <div v-if="yearMenuOpen" class="student-select-menu">
                     <button
                       class="student-select-option"
@@ -83,14 +84,16 @@
                       {{ year }}
                     </button>
                   </div>
-                </div>
+                </transition>
               </div>
-              <div class="student-filter-field">
-                <span class="info-label">学院</span>
-                <div class="student-select" @click.stop="toggleCollegeMenu">
-                  <button class="info-input student-select-trigger" type="button">
-                    {{ collegeLabel }}
-                  </button>
+            </div>
+            <div class="student-filter-field">
+              <span class="info-label">学院</span>
+              <div class="student-select" @click.stop="toggleCollegeMenu">
+                <button class="info-input student-select-trigger" type="button">
+                  {{ collegeLabel }}
+                </button>
+                <transition name="student-dropdown">
                   <div v-if="collegeMenuOpen" class="student-select-menu">
                     <button
                       class="student-select-option"
@@ -109,16 +112,18 @@
                       {{ college }}
                     </button>
                   </div>
-                </div>
+                </transition>
               </div>
             </div>
+          </div>
 
-            <div class="student-filter-row">
-              <span class="info-label">班级</span>
-              <div class="student-select" @click.stop="toggleMajorMenu">
-                <button class="info-input student-select-trigger" type="button">
-                  {{ majorLabel }}
-                </button>
+          <div class="student-filter-row">
+            <span class="info-label">班级</span>
+            <div class="student-select" @click.stop="toggleMajorMenu">
+              <button class="info-input student-select-trigger" type="button">
+                {{ majorLabel }}
+              </button>
+              <transition name="student-dropdown">
                 <div v-if="majorMenuOpen" class="student-select-menu">
                   <button
                     class="student-select-option"
@@ -137,8 +142,9 @@
                     {{ major }}
                   </button>
                 </div>
-              </div>
+              </transition>
             </div>
+          </div>
 
             <div class="student-filter-row student-filter-inline">
               <label class="info-choice">
@@ -581,6 +587,7 @@ function loadUser() {
 
 .student-select {
   position: relative;
+  overflow: visible;
 }
 
 .student-select-trigger {
@@ -596,11 +603,17 @@ function loadUser() {
   right: 0;
   max-height: 190px;
   overflow-y: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(3, 107, 114, 0.2);
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 18px 38px rgba(3, 107, 114, 0.16);
-  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(3, 107, 114, 0.18);
+  background-color: rgba(255, 255, 255, 0.6);
+  background-image: linear-gradient(
+    130deg,
+    rgba(205, 255, 249, 0.9),
+    rgba(197, 217, 226, 0.7)
+  );
+  box-shadow: 0 18px 38px rgba(3, 107, 114, 0.18);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   z-index: 30;
   padding: 6px;
   display: grid;
@@ -620,6 +633,23 @@ function loadUser() {
 
 .student-select-option:hover {
   background: rgba(205, 255, 249, 0.9);
+}
+
+.student-dropdown-enter-active,
+.student-dropdown-leave-active {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.student-dropdown-enter-from,
+.student-dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+}
+
+.student-dropdown-enter-to,
+.student-dropdown-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .student-filter-inline {
