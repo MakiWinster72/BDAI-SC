@@ -1320,6 +1320,8 @@ async function saveContact() {
     }
     showToast(err?.response?.data?.message || "保存失败");
   }
+}
+
 function openSidebar() {
   sidebarOpen.value = true;
 }
