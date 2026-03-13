@@ -1362,6 +1362,8 @@ body {
   grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
   gap: 22px;
   align-items: start;
+  position: relative;
+  padding-bottom: 54px;
 }
 
 .contacts-view-photo {
@@ -1393,6 +1395,14 @@ body {
 .contacts-view-line {
   font-size: 14px;
   color: #1b4a52;
+}
+
+.contacts-view-actions {
+  display: flex;
+  gap: 10px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 
 .achievement-detail-image {
