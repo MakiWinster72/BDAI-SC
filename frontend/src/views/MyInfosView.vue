@@ -115,37 +115,12 @@
             <label class="field-card field-full">
               <span class="info-label">班别</span>
               <div class="class-inline">
-                <div class="student-select">
-                  <button
-                    class="info-input student-select-trigger"
-                    type="button"
-                    :disabled="!isEditing"
-                    @click.stop="toggleYearMenu"
-                  >
-                    <span :class="{ 'select-placeholder': !info.classYear }">{{ yearLabel }}</span>
-                    <span class="select-caret" aria-hidden="true"></span>
-                  </button>
-                  <transition name="student-dropdown">
-                    <div v-if="yearMenuOpen" class="student-select-menu">
-                      <button
-                        class="student-select-option"
-                        type="button"
-                        @click="selectYear('')"
-                      >
-                        选择年级
-                      </button>
-                      <button
-                        v-for="year in classYearOptions"
-                        :key="year"
-                        class="student-select-option"
-                        type="button"
-                        @click="selectYear(String(year))"
-                      >
-                        {{ year }}
-                      </button>
-                    </div>
-                  </transition>
-                </div>
+                <select v-model="info.classYear" class="info-input" :disabled="!isEditing">
+                  <option disabled value="">选择年级</option>
+                  <option v-for="year in classYearOptions" :key="year" :value="year">
+                    {{ year }}
+                  </option>
+                </select>
                 <span class="class-text">级</span>
                 <input
                   v-model="info.classMajor"
@@ -186,32 +161,12 @@
             </label>
             <label class="field-card">
               <span class="info-label">学生类别</span>
-              <div class="student-select">
-                <button
-                  class="info-input student-select-trigger"
-                  type="button"
-                  :disabled="!isEditing"
-                  @click.stop="toggleStudentCategoryMenu"
-                >
-                  <span :class="{ 'select-placeholder': !info.studentCategory }">
-                    {{ studentCategoryLabel }}
-                  </span>
-                  <span class="select-caret" aria-hidden="true"></span>
-                </button>
-                <transition name="student-dropdown">
-                  <div v-if="studentCategoryMenuOpen" class="student-select-menu">
-                    <button
-                      v-for="item in studentCategoryOptions"
-                      :key="item"
-                      class="student-select-option"
-                      type="button"
-                      @click="selectStudentCategory(item)"
-                    >
-                      {{ item }}
-                    </button>
-                  </div>
-                </transition>
-              </div>
+              <select v-model="info.studentCategory" class="info-input" :disabled="!isEditing">
+                <option disabled value="">选择学生类别</option>
+                <option v-for="item in studentCategoryOptions" :key="item" :value="item">
+                  {{ item }}
+                </option>
+              </select>
             </label>
             <label class="field-card">
               <span class="info-label">班主任</span>
@@ -251,32 +206,12 @@
             </label>
             <label class="field-card">
               <span class="info-label">政治面貌</span>
-              <div class="student-select">
-                <button
-                  class="info-input student-select-trigger"
-                  type="button"
-                  :disabled="!isEditing"
-                  @click.stop="togglePoliticalStatusMenu"
-                >
-                  <span :class="{ 'select-placeholder': !info.politicalStatus }">
-                    {{ politicalStatusLabel }}
-                  </span>
-                  <span class="select-caret" aria-hidden="true"></span>
-                </button>
-                <transition name="student-dropdown">
-                  <div v-if="politicalStatusMenuOpen" class="student-select-menu">
-                    <button
-                      v-for="item in politicalStatusOptions"
-                      :key="item"
-                      class="student-select-option"
-                      type="button"
-                      @click="selectPoliticalStatus(item)"
-                    >
-                      {{ item }}
-                    </button>
-                  </div>
-                </transition>
-              </div>
+              <select v-model="info.politicalStatus" class="info-input" :disabled="!isEditing">
+                <option disabled value="">选择政治面貌</option>
+                <option v-for="item in politicalStatusOptions" :key="item" :value="item">
+                  {{ item }}
+                </option>
+              </select>
             </label>
             <label class="field-card">
               <span class="info-label">手机号码</span>
@@ -365,32 +300,12 @@
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
               <span class="info-label">住宿校区</span>
-              <div class="student-select">
-                <button
-                  class="info-input student-select-trigger"
-                  type="button"
-                  :disabled="!isEditing || info.offCampusLiving"
-                  @click.stop="toggleDormCampusMenu"
-                >
-                  <span :class="{ 'select-placeholder': !info.dormCampus }">
-                    {{ dormCampusLabel }}
-                  </span>
-                  <span class="select-caret" aria-hidden="true"></span>
-                </button>
-                <transition name="student-dropdown">
-                  <div v-if="dormCampusMenuOpen" class="student-select-menu">
-                    <button
-                      v-for="item in dormCampusOptions"
-                      :key="item"
-                      class="student-select-option"
-                      type="button"
-                      @click="selectDormCampus(item)"
-                    >
-                      {{ item }}
-                    </button>
-                  </div>
-                </transition>
-              </div>
+              <select v-model="info.dormCampus" class="info-input" :disabled="!isEditing || info.offCampusLiving">
+                <option disabled value="">选择住宿校区</option>
+                <option v-for="item in dormCampusOptions" :key="item" :value="item">
+                  {{ item }}
+                </option>
+              </select>
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
               <span class="info-label">住宿楼栋</span>
@@ -767,7 +682,7 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { reactive, computed, ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
@@ -781,10 +696,6 @@ const activeMenu = ref("my-info");
 const isEditing = ref(false);
 const avatarInput = ref(null);
 const sidebarOpen = ref(false);
-const yearMenuOpen = ref(false);
-const studentCategoryMenuOpen = ref(false);
-const politicalStatusMenuOpen = ref(false);
-const dormCampusMenuOpen = ref(false);
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -862,16 +773,6 @@ const roleLabel = computed(() => {
   return "学生";
 });
 
-const studentCategoryLabel = computed(
-  () => info.studentCategory || "选择学生类别",
-);
-const politicalStatusLabel = computed(
-  () => info.politicalStatus || "选择政治面貌",
-);
-const dormCampusLabel = computed(
-  () => info.dormCampus || "选择住宿校区",
-);
-const yearLabel = computed(() => (info.classYear ? `${info.classYear}级` : "选择年级"));
 
 const dormBuildingDisabled = computed(
   () => !isEditing.value || info.offCampusLiving || !info.dormCampus,
@@ -993,79 +894,6 @@ function resolveMediaUrl(url) {
   return `${API_BASE}${url}`;
 }
 
-function toggleStudentCategoryMenu() {
-  if (!isEditing.value) {
-    return;
-  }
-  studentCategoryMenuOpen.value = !studentCategoryMenuOpen.value;
-  yearMenuOpen.value = false;
-  politicalStatusMenuOpen.value = false;
-  dormCampusMenuOpen.value = false;
-}
-
-function toggleYearMenu() {
-  if (!isEditing.value) {
-    return;
-  }
-  yearMenuOpen.value = !yearMenuOpen.value;
-  studentCategoryMenuOpen.value = false;
-  politicalStatusMenuOpen.value = false;
-  dormCampusMenuOpen.value = false;
-}
-
-function togglePoliticalStatusMenu() {
-  if (!isEditing.value) {
-    return;
-  }
-  politicalStatusMenuOpen.value = !politicalStatusMenuOpen.value;
-  yearMenuOpen.value = false;
-  studentCategoryMenuOpen.value = false;
-  dormCampusMenuOpen.value = false;
-}
-
-function toggleDormCampusMenu() {
-  if (!isEditing.value || info.offCampusLiving) {
-    return;
-  }
-  dormCampusMenuOpen.value = !dormCampusMenuOpen.value;
-  studentCategoryMenuOpen.value = false;
-  politicalStatusMenuOpen.value = false;
-}
-
-function selectStudentCategory(value) {
-  info.studentCategory = value;
-  studentCategoryMenuOpen.value = false;
-}
-
-function selectPoliticalStatus(value) {
-  info.politicalStatus = value;
-  politicalStatusMenuOpen.value = false;
-}
-
-function selectDormCampus(value) {
-  info.dormCampus = value;
-  if (!value) {
-    info.dormBuilding = "";
-    info.dormRoom = "";
-  }
-  dormCampusMenuOpen.value = false;
-}
-
-function selectYear(value) {
-  info.classYear = value ? Number(value) : "";
-  yearMenuOpen.value = false;
-}
-
-
-function handleDocumentClick(event) {
-  if (event.target.closest(".student-select")) {
-    return;
-  }
-  yearMenuOpen.value = false;
-  studentCategoryMenuOpen.value = false;
-  politicalStatusMenuOpen.value = false;
-  dormCampusMenuOpen.value = false;
-}
 
 
 function handleDigitsInput(field, maxLength, event) {
@@ -1307,17 +1135,12 @@ function saveUser(data) {
 }
 
 onMounted(async () => {
-  document.addEventListener("click", handleDocumentClick);
   try {
     const { data } = await getStudentProfile();
     applyProfileResponse(data);
   } catch (err) {
     console.error(err);
   }
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleDocumentClick);
 });
 
 watch(
