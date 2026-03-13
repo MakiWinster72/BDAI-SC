@@ -69,23 +69,109 @@
         </article>
       </section>
       <section v-if="isContactsMode" class="contacts-search">
-        <div class="contacts-search-panel">
-          <span class="contacts-search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="11" cy="11" r="7" stroke-width="1.8" />
-              <path d="M16.5 16.5L21 21" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
-          </span>
-          <input
-            v-model.trim="contactSearchQuery"
-            class="contacts-search-input"
-            type="text"
-            placeholder="输入姓名 / 办公室 / 职位"
-          />
+        <div class="contacts-search-actions">
+          <div class="contacts-search-panel">
+            <span class="contacts-search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="11" cy="11" r="7" stroke-width="1.8" />
+                <path d="M16.5 16.5L21 21" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input
+              v-model.trim="contactSearchQuery"
+              class="contacts-search-input"
+              type="text"
+              placeholder="输入姓名 / 办公室 / 职位"
+            />
+          </div>
+          <button
+            v-if="isAdmin"
+            class="contacts-add-button"
+            type="button"
+            @click="openAddContact"
+          >
+            添加
+          </button>
         </div>
       </section>
 
-      <section v-else class="feed-waterfall">
+      <transition name="publisher-backdrop">
+        <div
+          v-if="addContactOpen"
+          class="publisher-backdrop"
+          @click="closeAddContact"
+        ></div>
+      </transition>
+      <section
+        class="contacts-add-view"
+        :class="{ open: addContactOpen, closing: addContactClosing }"
+        :aria-hidden="!addContactOpen"
+      >
+        <header class="publisher-header">
+          <div class="publisher-title">添加联系人</div>
+          <button class="publisher-close" type="button" @click="closeAddContact">
+            关闭
+          </button>
+        </header>
+        <div class="contacts-add-body">
+          <div class="contacts-add-photo">
+            <div class="contacts-add-photo-frame">
+              <span>照片 3:4</span>
+            </div>
+            <button class="post-action" type="button" @click="showToast('上传功能待接入')">
+              上传照片
+            </button>
+          </div>
+          <div class="contacts-add-fields">
+            <label class="form-row">
+              <span class="form-label">姓名</span>
+              <input
+                v-model.trim="contactForm.name"
+                class="form-input"
+                type="text"
+                placeholder="输入姓名"
+              />
+            </label>
+            <label class="form-row">
+              <span class="form-label">办公室</span>
+              <input
+                v-model.trim="contactForm.office"
+                class="form-input"
+                type="text"
+                placeholder="例如 厚德楼802"
+              />
+            </label>
+            <label class="form-row">
+              <span class="form-label">职位</span>
+              <input
+                v-model.trim="contactForm.role"
+                class="form-input"
+                type="text"
+                placeholder="例如 辅导员"
+              />
+            </label>
+            <label class="form-row">
+              <span class="form-label">联系方式</span>
+              <input
+                v-model.trim="contactForm.phone"
+                class="form-input"
+                type="text"
+                placeholder="手机号 / 分机号"
+              />
+            </label>
+            <div class="contacts-add-actions">
+              <button class="ghost-button" type="button" @click="closeAddContact">
+                取消
+              </button>
+              <button class="ghost-button" type="button" @click="showToast('保存功能待接入')">
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section v-if="!isContactsMode" class="feed-waterfall">
         <article v-for="post in visiblePosts" :key="post.id" class="post-card">
           <div class="post-header">
             <div class="post-author">
@@ -768,6 +854,7 @@ const currentMenuLabel = computed(
   () => menuLabelMap[activeMenu.value] || "校园生活",
 );
 const canPost = computed(() => Boolean(profile.username));
+const isAdmin = computed(() => profile.role === "ADMIN");
 const isFeedMenu = computed(() =>
   ["campus", "good-news", "records"].includes(activeMenu.value),
 );
@@ -804,6 +891,15 @@ const visibleContacts = computed(() => {
     const duty = (item.role || "").toLowerCase();
     return name.includes(keyword) || office.includes(keyword) || duty.includes(keyword);
   });
+});
+const addContactOpen = ref(false);
+const addContactClosing = ref(false);
+const contactForm = reactive({
+  name: "",
+  office: "",
+  role: "",
+  phone: "",
+  photoUrl: "",
 });
 
 function syncMenuFromRoute() {
@@ -842,6 +938,7 @@ watch(activeMenu, () => {
     }
     if (!isContactsMode.value) {
       contactSearchQuery.value = "";
+      closeAddContact();
     }
 });
 
@@ -896,6 +993,25 @@ function openPublisher() {
   nextTick(() => composerInput.value && composerInput.value.focus());
 }
 
+function openAddContact() {
+  if (!isAdmin.value) {
+    showToast("仅管理员可添加");
+    return;
+  }
+  addContactOpen.value = true;
+  addContactClosing.value = false;
+}
+
+function closeAddContact() {
+  if (!addContactOpen.value) {
+    return;
+  }
+  addContactOpen.value = false;
+  addContactClosing.value = true;
+  setTimeout(() => {
+    addContactClosing.value = false;
+  }, 260);
+}
 
 function closePublisher() {
   publisherOpen.value = false;
