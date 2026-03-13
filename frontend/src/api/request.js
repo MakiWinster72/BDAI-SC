@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8080`
+
 const request = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: API_BASE,
   timeout: 12000
 })
 
@@ -27,4 +30,5 @@ request.interceptors.response.use(
   }
 )
 
+export { API_BASE }
 export default request

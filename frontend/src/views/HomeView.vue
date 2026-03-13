@@ -618,10 +618,10 @@ import { useRoute, useRouter } from "vue-router";
 import { getMe } from "../api/auth";
 import { MENU_ITEMS, isMenuEnabled } from "../constants/menu";
 import { createPost, deletePost, getPosts, uploadMedia } from "../api/posts";
+import { API_BASE } from "../api/request";
 
 const router = useRouter();
 const route = useRoute();
-const API_BASE = "http://localhost:8080";
 
 const menuItems = computed(() => MENU_ITEMS);
 

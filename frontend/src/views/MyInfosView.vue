@@ -297,6 +297,7 @@ import { useRouter } from "vue-router";
 import { MENU_ITEMS, isMenuEnabled } from "../constants/menu";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/posts";
+import { API_BASE } from "../api/request";
 
 const router = useRouter();
 
@@ -304,7 +305,6 @@ const profile = reactive(loadUser());
 const activeMenu = ref("my-info");
 const isEditing = ref(false);
 const avatarInput = ref(null);
-const API_BASE = "http://localhost:8080";
 
 const info = reactive({
   name: profile.displayName || profile.username || "",

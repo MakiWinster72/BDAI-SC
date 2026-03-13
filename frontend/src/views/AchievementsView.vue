@@ -254,6 +254,7 @@ import {
   updateAchievement,
 } from "../api/achievements";
 import { uploadMedia } from "../api/posts";
+import { API_BASE } from "../api/request";
 
 const router = useRouter();
 const profile = reactive(loadUser());
@@ -271,7 +272,6 @@ const deleteDialogOpen = ref(false);
 const deleteBusy = ref(false);
 
 const achievements = ref([]);
-const API_BASE = "http://localhost:8080";
 
 const form = reactive({
   name: "",
