@@ -49,7 +49,228 @@
         </button>
       </header>
 
-      <section class="feed-waterfall">
+      <section v-if="isContactsMode" class="contacts-grid">
+        <article
+          v-for="contact in visibleContacts"
+          :key="contact.id"
+          class="contact-card"
+          @click="openContactView(contact)"
+        >
+          <div
+            class="contact-photo"
+            :class="{ placeholder: !contact.photoUrl }"
+            :style="contactPhotoStyle(contact)"
+          ></div>
+          <div class="contact-info">
+            <div class="contact-line contact-name">{{ contact.name }}</div>
+            <div class="contact-line">{{ contact.office }}</div>
+            <div class="contact-line">{{ contact.role }}</div>
+            <div class="contact-line">{{ contact.phone }}</div>
+          </div>
+        </article>
+      </section>
+      <section v-if="isContactsMode" class="contacts-search">
+        <div class="contacts-search-actions">
+          <div class="contacts-search-panel">
+            <span class="contacts-search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="11" cy="11" r="7" stroke-width="1.8" />
+                <path d="M16.5 16.5L21 21" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input
+              v-model.trim="contactSearchQuery"
+              class="contacts-search-input"
+              type="text"
+              placeholder="输入姓名 / 办公室 / 职位"
+            />
+          </div>
+          <button
+            v-if="isAdmin"
+            class="contacts-add-button"
+            type="button"
+            @click="openAddContact"
+          >
+            添加
+          </button>
+        </div>
+      </section>
+
+      <transition name="publisher-backdrop">
+        <div
+          v-if="addContactOpen"
+          class="publisher-backdrop"
+          @click="closeAddContact"
+        ></div>
+      </transition>
+      <section
+        class="contacts-add-view"
+        :class="{ open: addContactOpen, closing: addContactClosing }"
+        :aria-hidden="!addContactOpen"
+      >
+        <header class="publisher-header">
+          <div class="publisher-title">添加联系人</div>
+          <button class="publisher-close" type="button" @click="closeAddContact">
+            关闭
+          </button>
+        </header>
+        <div class="contacts-add-body">
+          <div class="contacts-add-photo">
+            <button class="contacts-add-photo-frame" type="button" @click="triggerContactPhoto">
+              <img
+                v-if="contactForm.photoPreview"
+                :src="contactForm.photoPreview"
+                alt="联系人照片预览"
+              />
+              <span v-else>照片 3:4</span>
+            </button>
+            <input
+              ref="contactPhotoInput"
+              class="contacts-photo-input"
+              type="file"
+              accept="image/*"
+              @change="onContactPhotoChange"
+            />
+          </div>
+          <div class="contacts-add-fields">
+            <label class="form-row">
+              <span class="form-label">姓名</span>
+              <input
+                v-model.trim="contactForm.name"
+                class="form-input"
+                type="text"
+                placeholder="输入姓名"
+              />
+            </label>
+            <label class="form-row">
+              <span class="form-label">办公室</span>
+              <input
+                v-model.trim="contactForm.office"
+                class="form-input"
+                type="text"
+                placeholder="例如 厚德楼802"
+              />
+            </label>
+            <label class="form-row">
+              <span class="form-label">职位</span>
+              <input
+                v-model.trim="contactForm.role"
+                class="form-input"
+                type="text"
+                placeholder="例如 辅导员"
+              />
+            </label>
+            <label class="form-row">
+              <span class="form-label">联系方式</span>
+              <input
+                v-model.trim="contactForm.phone"
+                class="form-input"
+                type="text"
+                placeholder="手机号 / 分机号"
+              />
+            </label>
+            <div class="contacts-add-actions">
+              <button class="ghost-button" type="button" @click="closeAddContact">
+                取消
+              </button>
+              <button class="ghost-button" type="button" @click="saveContact">
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <transition name="publisher-backdrop">
+        <div
+          v-if="contactViewOpen"
+          class="publisher-backdrop"
+          @click="closeContactView"
+        ></div>
+      </transition>
+      <section
+        class="contacts-view"
+        :class="{ open: contactViewOpen, closing: contactViewClosing }"
+        :aria-hidden="!contactViewOpen"
+      >
+        <header class="publisher-header">
+          <div class="publisher-title">联系人</div>
+          <button class="publisher-close" type="button" @click="closeContactView">
+            关闭
+          </button>
+        </header>
+        <div v-if="contactViewItem" class="contacts-view-body">
+          <div
+            class="contacts-view-photo"
+            :class="{ placeholder: !contactViewItem.photoUrl }"
+            :style="contactPhotoStyle(contactViewItem)"
+          ></div>
+          <div class="contacts-view-info">
+            <template v-if="contactViewEditing">
+              <label class="form-row">
+                <span class="form-label">姓名</span>
+                <input
+                  v-model.trim="contactViewForm.name"
+                  class="form-input"
+                  type="text"
+                  placeholder="输入姓名"
+                />
+              </label>
+              <label class="form-row">
+                <span class="form-label">办公室</span>
+                <input
+                  v-model.trim="contactViewForm.office"
+                  class="form-input"
+                  type="text"
+                  placeholder="例如 厚德楼802"
+                />
+              </label>
+              <label class="form-row">
+                <span class="form-label">职位</span>
+                <input
+                  v-model.trim="contactViewForm.role"
+                  class="form-input"
+                  type="text"
+                  placeholder="例如 辅导员"
+                />
+              </label>
+              <label class="form-row">
+                <span class="form-label">联系方式</span>
+                <input
+                  v-model.trim="contactViewForm.phone"
+                  class="form-input"
+                  type="text"
+                  placeholder="手机号 / 分机号"
+                />
+              </label>
+            </template>
+            <template v-else>
+              <div class="contacts-view-name">{{ contactViewItem.name }}</div>
+              <div class="contacts-view-line">{{ contactViewItem.office || "-" }}</div>
+              <div class="contacts-view-line">{{ contactViewItem.role || "-" }}</div>
+              <div class="contacts-view-line">{{ contactViewItem.phone || "-" }}</div>
+            </template>
+          </div>
+          <div v-if="contactViewEditing" class="contacts-view-actions">
+            <button class="ghost-button" type="button" @click="cancelContactEdit">
+              取消
+            </button>
+            <button class="ghost-button" type="button" @click="saveContactEdit">
+              保存
+            </button>
+          </div>
+          <div v-else-if="isAdmin" class="contacts-view-actions">
+            <button class="ghost-button" type="button" @click="startContactEdit">
+              编辑
+            </button>
+            <button class="ghost-button" type="button" @click="removeContact">
+              删除
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section v-if="!isContactsMode" class="feed-waterfall">
         <article v-for="post in visiblePosts" :key="post.id" class="post-card">
           <div class="post-header">
             <div class="post-author">
@@ -128,12 +349,13 @@
 
       <transition name="publisher-backdrop">
         <div
-          v-if="publisherOpen"
+          v-if="publisherOpen && canOpenPublisher"
           class="publisher-backdrop"
           @click="closePublisher"
         ></div>
       </transition>
       <section
+        v-if="canOpenPublisher"
         class="publisher-sheet"
         :class="{ open: publisherOpen, expanded: hasPreview }"
         :aria-hidden="!publisherOpen"
@@ -619,6 +841,7 @@ import { getMe } from "../api/auth";
 import { MENU_ITEMS, isMenuEnabled } from "../constants/menu";
 import { createPost, deletePost, getPosts, uploadMedia } from "../api/posts";
 import { API_BASE } from "../api/request";
+import { createContact, deleteContact, getContacts, updateContact } from "../api/contacts";
 
 const router = useRouter();
 const route = useRoute();
@@ -646,6 +869,7 @@ const activeMenu = ref("campus");
 const profile = reactive(loadUser());
 const posts = ref([]);
 const loadingPosts = ref(false);
+const contacts = ref([]);
 
 const composerBusy = ref(false);
 const composerError = ref("");
@@ -681,9 +905,12 @@ const currentMenuLabel = computed(
   () => menuLabelMap[activeMenu.value] || "校园生活",
 );
 const canPost = computed(() => Boolean(profile.username));
+const isAdmin = computed(() => profile.role === "ADMIN");
 const isFeedMenu = computed(() =>
   ["campus", "good-news", "records"].includes(activeMenu.value),
 );
+const isContactsMode = computed(() => activeMenu.value === "contacts");
+const contactSearchQuery = ref("");
 const showComposer = computed(() =>
   ["campus", "good-news", "records"].includes(activeMenu.value),
 );
@@ -716,6 +943,41 @@ const footerActionText = computed(() => {
 });
 
 const visiblePosts = computed(() => posts.value);
+const visibleContacts = computed(() => {
+  const keyword = contactSearchQuery.value.trim().toLowerCase();
+  if (!keyword) {
+    return contacts.value;
+  }
+  return contacts.value.filter((item) => {
+    const name = (item.name || "").toLowerCase();
+    const office = (item.office || "").toLowerCase();
+    const duty = (item.role || "").toLowerCase();
+    return name.includes(keyword) || office.includes(keyword) || duty.includes(keyword);
+  });
+});
+const addContactOpen = ref(false);
+const addContactClosing = ref(false);
+const contactPhotoUploading = ref(false);
+const contactPhotoInput = ref(null);
+const contactViewOpen = ref(false);
+const contactViewClosing = ref(false);
+const contactViewItem = ref(null);
+const contactViewEditing = ref(false);
+const contactViewBusy = ref(false);
+const contactViewForm = reactive({
+  name: "",
+  office: "",
+  role: "",
+  phone: "",
+});
+const contactForm = reactive({
+  name: "",
+  office: "",
+  role: "",
+  phone: "",
+  photoUrl: "",
+  photoPreview: "",
+});
 
 function syncMenuFromRoute() {
   if (route.path === "/congra") {
@@ -724,6 +986,10 @@ function syncMenuFromRoute() {
   }
   if (route.path === "/memory") {
     activeMenu.value = "records";
+    return;
+  }
+  if (route.path === "/contacts") {
+    activeMenu.value = "contacts";
     return;
   }
   activeMenu.value = "campus";
@@ -741,12 +1007,20 @@ watch(activeMenu, () => {
   if (isFeedMenu.value) {
     fetchPosts();
   }
+  if (isContactsMode.value) {
+    fetchContacts();
+  }
   publisherOpen.value = false;
   headingMenuOpen.value = false;
-  resetComposerState();
-  if (isRecordsMode.value) {
-    composer.isPrivate = true;
-  }
+    resetComposerState();
+    if (isRecordsMode.value) {
+      composer.isPrivate = true;
+    }
+    if (!isContactsMode.value) {
+      contactSearchQuery.value = "";
+      closeAddContact();
+      closeContactView();
+    }
 });
 
 onMounted(async () => {
@@ -754,6 +1028,7 @@ onMounted(async () => {
     const { data } = await getMe();
     saveUser(data);
     await fetchPosts();
+    await fetchContacts();
   } catch {
     localStorage.removeItem("gcsc_token");
     localStorage.removeItem("gcsc_user");
@@ -776,6 +1051,15 @@ async function fetchPosts() {
     posts.value = [];
   } finally {
     loadingPosts.value = false;
+  }
+}
+
+async function fetchContacts() {
+  try {
+    const { data } = await getContacts();
+    contacts.value = Array.isArray(data) ? data.map(normalizeContact) : [];
+  } catch {
+    contacts.value = [];
   }
 }
 
@@ -803,6 +1087,197 @@ function openPublisher() {
   publisherOpen.value = true;
   headingMenuOpen.value = false;
   nextTick(() => composerInput.value && composerInput.value.focus());
+}
+
+function openAddContact() {
+  if (!isAdmin.value) {
+    showToast("仅管理员可添加");
+    return;
+  }
+  resetContactForm();
+  addContactOpen.value = true;
+  addContactClosing.value = false;
+}
+
+function closeAddContact() {
+  if (!addContactOpen.value) {
+    return;
+  }
+  addContactOpen.value = false;
+  addContactClosing.value = true;
+  setTimeout(() => {
+    addContactClosing.value = false;
+  }, 260);
+}
+
+function openContactView(contact) {
+  contactViewItem.value = contact;
+  contactViewOpen.value = true;
+  contactViewClosing.value = false;
+  contactViewEditing.value = false;
+}
+
+function closeContactView() {
+  if (!contactViewOpen.value) {
+    return;
+  }
+  contactViewOpen.value = false;
+  contactViewClosing.value = true;
+  setTimeout(() => {
+    contactViewItem.value = null;
+    contactViewEditing.value = false;
+    contactViewClosing.value = false;
+  }, 260);
+}
+
+function startContactEdit() {
+  if (!isAdmin.value || !contactViewItem.value) {
+    return;
+  }
+  contactViewForm.name = contactViewItem.value.name || "";
+  contactViewForm.office = contactViewItem.value.office || "";
+  contactViewForm.role = contactViewItem.value.role || "";
+  contactViewForm.phone = contactViewItem.value.phone || "";
+  contactViewEditing.value = true;
+}
+
+function cancelContactEdit() {
+  if (contactViewBusy.value) {
+    return;
+  }
+  contactViewEditing.value = false;
+}
+
+async function saveContactEdit() {
+  if (!isAdmin.value || !contactViewItem.value) {
+    return;
+  }
+  if (!contactViewForm.name.trim()) {
+    showToast("姓名不能为空");
+    return;
+  }
+  contactViewBusy.value = true;
+  const payload = {
+    name: contactViewForm.name.trim(),
+    office: contactViewForm.office.trim() || null,
+    duty: contactViewForm.role.trim() || null,
+    phone: contactViewForm.phone.trim() || null,
+  };
+  try {
+    const { data } = await updateContact(contactViewItem.value.id, payload);
+    const normalized = normalizeContact(data);
+    contactViewItem.value = normalized;
+    contacts.value = contacts.value.map((item) =>
+      item.id === normalized.id ? normalized : item,
+    );
+    contactViewEditing.value = false;
+    showToast("已保存");
+  } catch (err) {
+    if (err?.response?.status === 403) {
+      showToast("无权限操作");
+      return;
+    }
+    showToast(err?.response?.data?.message || "保存失败");
+  } finally {
+    contactViewBusy.value = false;
+  }
+}
+
+async function removeContact() {
+  if (!isAdmin.value || !contactViewItem.value) {
+    return;
+  }
+  if (!window.confirm("确认删除该联系人吗？")) {
+    return;
+  }
+  contactViewBusy.value = true;
+  try {
+    await deleteContact(contactViewItem.value.id);
+    contacts.value = contacts.value.filter((item) => item.id !== contactViewItem.value.id);
+    closeContactView();
+    showToast("已删除");
+  } catch (err) {
+    if (err?.response?.status === 403) {
+      showToast("无权限操作");
+      return;
+    }
+    showToast(err?.response?.data?.message || "删除失败");
+  } finally {
+    contactViewBusy.value = false;
+  }
+}
+
+function triggerContactPhoto() {
+  if (contactPhotoUploading.value) {
+    return;
+  }
+  contactPhotoInput.value && contactPhotoInput.value.click();
+}
+
+async function onContactPhotoChange(event) {
+  const [file] = Array.from(event.target.files || []);
+  event.target.value = "";
+  if (!file) {
+    return;
+  }
+  contactPhotoUploading.value = true;
+  try {
+    const { data } = await uploadMedia(file);
+    contactForm.photoUrl = data.url || "";
+    contactForm.photoPreview = resolveMediaUrl(data.url);
+  } catch (err) {
+    showToast(err?.response?.data?.message || "上传失败");
+  } finally {
+    contactPhotoUploading.value = false;
+  }
+}
+
+function resetContactForm() {
+  contactForm.name = "";
+  contactForm.office = "";
+  contactForm.role = "";
+  contactForm.phone = "";
+  contactForm.photoUrl = "";
+  contactForm.photoPreview = "";
+}
+
+function normalizeContact(item) {
+  return {
+    id: item.id,
+    name: item.name,
+    office: item.office,
+    role: item.duty,
+    phone: item.phone,
+    photoUrl: resolveMediaUrl(item.photoUrl),
+  };
+}
+
+async function saveContact() {
+  if (!contactForm.name.trim()) {
+    showToast("姓名不能为空");
+    return;
+  }
+  const payload = {
+    name: contactForm.name.trim(),
+    office: contactForm.office.trim() || null,
+    duty: contactForm.role.trim() || null,
+    phone: contactForm.phone.trim() || null,
+    photoUrl: contactForm.photoUrl || null,
+  };
+  try {
+    const { data } = await createContact(payload);
+    const normalized = normalizeContact(data);
+    contacts.value = [normalized, ...contacts.value];
+    closeAddContact();
+    resetContactForm();
+    showToast("已保存");
+  } catch (err) {
+    if (err?.response?.status === 403) {
+      showToast("无权限操作");
+      return;
+    }
+    showToast(err?.response?.data?.message || "保存失败");
+  }
 }
 
 function closePublisher() {
@@ -856,7 +1331,20 @@ function handleMenuClick(key) {
     router.push("/memory");
     return;
   }
+  if (key === "contacts") {
+    router.push("/contacts");
+    return;
+  }
   router.push("/home");
+}
+
+function contactPhotoStyle(contact) {
+  if (!contact.photoUrl) {
+    return null;
+  }
+  return {
+    backgroundImage: `url(${contact.photoUrl})`,
+  };
 }
 
 function resetComposerState() {

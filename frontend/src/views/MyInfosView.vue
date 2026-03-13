@@ -366,6 +366,10 @@ function handleMenuClick(key) {
     router.push("/memory");
     return;
   }
+  if (key === "contacts") {
+    router.push("/contacts");
+    return;
+  }
   router.push("/home");
 }
 

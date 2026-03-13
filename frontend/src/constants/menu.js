@@ -15,6 +15,7 @@ const ENABLED_MENU_KEYS = new Set([
   "records",
   "achievements",
   "my-info",
+  "contacts",
 ]);
 
 export function isMenuEnabled(key) {
