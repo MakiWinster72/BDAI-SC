@@ -38,6 +38,14 @@ public class StudentProfileService {
         return toResponse(user, profileOpt.orElse(null));
     }
 
+    @Transactional(readOnly = true)
+    public StudentProfileResponse getProfileById(Long id) {
+        StudentProfile profile = studentProfileRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("学生档案不存在"));
+        AppUser user = profile.getUser();
+        return toResponse(user, profile);
+    }
+
     @Transactional
     public StudentProfileResponse saveProfile(String username, StudentProfileRequest request) {
         AppUser user = appUserRepository.findByUsername(username)

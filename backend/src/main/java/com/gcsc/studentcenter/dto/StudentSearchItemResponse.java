@@ -8,6 +8,8 @@ public class StudentSearchItemResponse {
     private String classMajor;
     private String classNo;
     private String college;
+    private Boolean hkMoTw;
+    private Boolean specialStudent;
 
     public StudentSearchItemResponse(
         Long id,
@@ -16,7 +18,9 @@ public class StudentSearchItemResponse {
         Integer classYear,
         String classMajor,
         String classNo,
-        String college
+        String college,
+        Boolean hkMoTw,
+        Boolean specialStudent
     ) {
         this.id = id;
         this.fullName = fullName;
@@ -25,6 +29,8 @@ public class StudentSearchItemResponse {
         this.classMajor = classMajor;
         this.classNo = classNo;
         this.college = college;
+        this.hkMoTw = hkMoTw;
+        this.specialStudent = specialStudent;
     }
 
     public Long getId() {
@@ -53,5 +59,13 @@ public class StudentSearchItemResponse {
 
     public String getCollege() {
         return college;
+    }
+
+    public Boolean getHkMoTw() {
+        return hkMoTw;
+    }
+
+    public Boolean getSpecialStudent() {
+        return specialStudent;
     }
 }

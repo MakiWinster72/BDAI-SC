@@ -11,3 +11,7 @@ export function saveStudentProfile(payload) {
 export function searchStudentProfiles(params) {
   return request.get('/api/student-profiles/search', { params })
 }
+
+export function getStudentProfileById(id) {
+  return request.get(`/api/student-profiles/${id}`)
+}

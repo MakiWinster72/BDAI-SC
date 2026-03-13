@@ -23,7 +23,9 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
             sp.classYear,
             sp.classMajor,
             sp.classNo,
-            sp.college
+            sp.college,
+            sp.hkMoTw,
+            sp.specialStudent
         )
         from StudentProfile sp
         join sp.user u

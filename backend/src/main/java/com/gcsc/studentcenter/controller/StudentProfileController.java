@@ -3,6 +3,7 @@ package com.gcsc.studentcenter.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,11 @@ public class StudentProfileController {
     @GetMapping("/me")
     public ResponseEntity<StudentProfileResponse> me(Authentication authentication) {
         return ResponseEntity.ok(studentProfileService.getProfile(authentication.getName()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StudentProfileResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(studentProfileService.getProfileById(id));
     }
 
     @PutMapping("/me")
