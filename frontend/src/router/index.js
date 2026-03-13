@@ -13,6 +13,7 @@ const router = createRouter({
     { path: '/home', name: 'home', component: HomeView, meta: { requiresAuth: true } },
     { path: '/congra', name: 'congra', component: HomeView, meta: { requiresAuth: true } },
     { path: '/memory', name: 'memory', component: HomeView, meta: { requiresAuth: true } },
+    { path: '/contacts', name: 'contacts', component: HomeView, meta: { requiresAuth: true } },
     { path: '/achievements', name: 'achievements', component: AchievementsView, meta: { requiresAuth: true } },
     { path: '/myinfos', name: 'myinfos', component: MyInfosView, meta: { requiresAuth: true } },
     {
