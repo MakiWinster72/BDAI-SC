@@ -1,6 +1,13 @@
 <template>
   <div class="dashboard-layout">
-    <aside class="dashboard-left">
+    <transition name="publisher-backdrop">
+      <div
+        v-if="sidebarOpen"
+        class="mobile-sidebar-backdrop"
+        @click="closeSidebar"
+      ></div>
+    </transition>
+    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
       <section class="profile-card">
         <div class="profile-row profile-main">
           <div class="profile-avatar">
@@ -82,6 +89,45 @@
       <button class="footer-action" type="button" @click="openEditor">
         添加成就
       </button>
+      <div class="mobile-capsule">
+        <div class="capsule-left">
+          <div
+            class="capsule-action"
+            role="button"
+            tabindex="0"
+            @click="openSidebar"
+          >
+            <span class="capsule-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="capsule-right">
+          <div
+            class="capsule-action"
+            role="button"
+            tabindex="0"
+            @click="goPublish"
+          >
+            发布
+          </div>
+          <div
+            class="capsule-action capsule-primary"
+            role="button"
+            tabindex="0"
+            @click="openEditor"
+          >
+            添加成就
+          </div>
+        </div>
+      </div>
 
       <transition name="publisher-backdrop">
         <div
@@ -270,6 +316,7 @@ const viewClosing = ref(false);
 const editId = ref(null);
 const deleteDialogOpen = ref(false);
 const deleteBusy = ref(false);
+const sidebarOpen = ref(false);
 
 const achievements = ref([]);
 
@@ -326,6 +373,7 @@ function handleMenuClick(key) {
   if (!isMenuEnabled(key)) {
     return;
   }
+  sidebarOpen.value = false;
   if (key === "achievements") {
     return;
   }
@@ -346,6 +394,18 @@ function handleMenuClick(key) {
     return;
   }
   router.push("/home");
+}
+
+function openSidebar() {
+  sidebarOpen.value = true;
+}
+
+function closeSidebar() {
+  sidebarOpen.value = false;
+}
+
+function goPublish() {
+  router.push({ path: "/home", query: { publish: "1" } });
 }
 
 function openEditor() {

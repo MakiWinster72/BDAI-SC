@@ -1,6 +1,13 @@
 <template>
   <div class="dashboard-layout">
-    <aside class="dashboard-left">
+    <transition name="publisher-backdrop">
+      <div
+        v-if="sidebarOpen"
+        class="mobile-sidebar-backdrop"
+        @click="closeSidebar"
+      ></div>
+    </transition>
+    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
       <section class="profile-card">
         <div class="profile-row profile-main">
           <div class="profile-avatar">
@@ -345,6 +352,38 @@
       >
         {{ footerActionText }}
       </button>
+      <div class="mobile-capsule">
+        <div class="capsule-left">
+          <div
+            class="capsule-action"
+            role="button"
+            tabindex="0"
+            @click="openSidebar"
+          >
+            <span class="capsule-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="capsule-right">
+          <div
+            v-if="showPublisherAction"
+            class="capsule-action capsule-primary"
+            role="button"
+            tabindex="0"
+            @click="openPublisher"
+          >
+            {{ footerActionText }}
+          </div>
+        </div>
+      </div>
       <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 
       <transition name="publisher-backdrop">
@@ -869,6 +908,7 @@ const activeMenu = ref("campus");
 const profile = reactive(loadUser());
 const posts = ref([]);
 const loadingPosts = ref(false);
+const sidebarOpen = ref(false);
 const contacts = ref([]);
 
 const composerBusy = ref(false);
@@ -999,6 +1039,7 @@ watch(
   () => route.path,
   () => {
     syncMenuFromRoute();
+    openPublisherFromQuery();
   },
   { immediate: true },
 );
@@ -1029,6 +1070,7 @@ onMounted(async () => {
     saveUser(data);
     await fetchPosts();
     await fetchContacts();
+    openPublisherFromQuery();
   } catch {
     localStorage.removeItem("gcsc_token");
     localStorage.removeItem("gcsc_user");
@@ -1278,6 +1320,12 @@ async function saveContact() {
     }
     showToast(err?.response?.data?.message || "保存失败");
   }
+function openSidebar() {
+  sidebarOpen.value = true;
+}
+
+function closeSidebar() {
+  sidebarOpen.value = false;
 }
 
 function closePublisher() {
@@ -1315,6 +1363,7 @@ function handleMenuClick(key) {
   if (!isMenuEnabled(key)) {
     return;
   }
+  sidebarOpen.value = false;
   if (key === "achievements") {
     router.push("/achievements");
     return;
@@ -1345,6 +1394,16 @@ function contactPhotoStyle(contact) {
   return {
     backgroundImage: `url(${contact.photoUrl})`,
   };
+}
+
+function openPublisherFromQuery() {
+  if (route.query.publish !== "1") {
+    return;
+  }
+  if (showPublisherAction.value) {
+    openPublisher();
+  }
+  router.replace({ path: route.path, query: {} });
 }
 
 function resetComposerState() {

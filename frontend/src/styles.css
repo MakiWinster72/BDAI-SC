@@ -296,6 +296,76 @@ body {
   align-self: start;
 }
 
+.mobile-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 18, 20, 0.35);
+  backdrop-filter: blur(6px);
+  z-index: 45;
+}
+
+.mobile-capsule {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  width: min(80vw, 520px);
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: linear-gradient(
+    120deg,
+    rgba(230, 248, 247, 0.55),
+    rgba(200, 228, 230, 0.35)
+  );
+  box-shadow:
+    0 14px 32px rgba(3, 107, 114, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(18px) saturate(160%);
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  z-index: 55;
+}
+
+.capsule-left,
+.capsule-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.capsule-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0d515a;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 6px 4px;
+  font-size: 13px;
+}
+
+.capsule-primary {
+  color: #0a6b74;
+}
+
+.capsule-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capsule-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
 .profile-card,
 .menu-card,
 .composer-card,
@@ -2344,6 +2414,27 @@ body {
 @media (max-width: 840px) {
   .dashboard-layout {
     grid-template-columns: 1fr;
+    padding-bottom: 96px;
+  }
+
+  .dashboard-left {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(320px, 86vw);
+    padding: 20px 16px;
+    background: rgba(236, 248, 248, 0.96);
+    border-right: 1px solid rgba(3, 107, 114, 0.12);
+    box-shadow: 18px 0 40px rgba(3, 107, 114, 0.18);
+    transform: translateX(-110%);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 60;
+    overflow-y: auto;
+  }
+
+  .dashboard-left.open {
+    transform: translateX(0);
   }
 
   .feed-waterfall {
@@ -2365,13 +2456,16 @@ body {
   }
 
   .footer-action {
-    right: 50%;
-    transform: translateX(50%);
+    display: none;
   }
 
   .toast {
     right: 50%;
     transform: translateX(50%);
+  }
+
+  .mobile-capsule {
+    display: flex;
   }
 
   .achievement-grid {
