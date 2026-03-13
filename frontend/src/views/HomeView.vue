@@ -54,6 +54,7 @@
           v-for="contact in visibleContacts"
           :key="contact.id"
           class="contact-card"
+          @click="openContactView(contact)"
         >
           <div
             class="contact-photo"
@@ -176,6 +177,39 @@
                 保存
               </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <transition name="publisher-backdrop">
+        <div
+          v-if="contactViewOpen"
+          class="publisher-backdrop"
+          @click="closeContactView"
+        ></div>
+      </transition>
+      <section
+        class="contacts-view"
+        :class="{ open: contactViewOpen, closing: contactViewClosing }"
+        :aria-hidden="!contactViewOpen"
+      >
+        <header class="publisher-header">
+          <div class="publisher-title">联系人</div>
+          <button class="publisher-close" type="button" @click="closeContactView">
+            关闭
+          </button>
+        </header>
+        <div v-if="contactViewItem" class="contacts-view-body">
+          <div
+            class="contacts-view-photo"
+            :class="{ placeholder: !contactViewItem.photoUrl }"
+            :style="contactPhotoStyle(contactViewItem)"
+          ></div>
+          <div class="contacts-view-info">
+            <div class="contacts-view-name">{{ contactViewItem.name }}</div>
+            <div class="contacts-view-line">{{ contactViewItem.office || "-" }}</div>
+            <div class="contacts-view-line">{{ contactViewItem.role || "-" }}</div>
+            <div class="contacts-view-line">{{ contactViewItem.phone || "-" }}</div>
           </div>
         </div>
       </section>
@@ -857,6 +891,9 @@ const addContactOpen = ref(false);
 const addContactClosing = ref(false);
 const contactPhotoUploading = ref(false);
 const contactPhotoInput = ref(null);
+const contactViewOpen = ref(false);
+const contactViewClosing = ref(false);
+const contactViewItem = ref(null);
 const contactForm = reactive({
   name: "",
   office: "",
@@ -906,6 +943,7 @@ watch(activeMenu, () => {
     if (!isContactsMode.value) {
       contactSearchQuery.value = "";
       closeAddContact();
+      closeContactView();
     }
 });
 
@@ -988,6 +1026,24 @@ function closeAddContact() {
   addContactClosing.value = true;
   setTimeout(() => {
     addContactClosing.value = false;
+  }, 260);
+}
+
+function openContactView(contact) {
+  contactViewItem.value = contact;
+  contactViewOpen.value = true;
+  contactViewClosing.value = false;
+}
+
+function closeContactView() {
+  if (!contactViewOpen.value) {
+    return;
+  }
+  contactViewOpen.value = false;
+  contactViewClosing.value = true;
+  setTimeout(() => {
+    contactViewItem.value = null;
+    contactViewClosing.value = false;
   }, 260);
 }
 
