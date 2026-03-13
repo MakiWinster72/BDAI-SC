@@ -10,7 +10,6 @@ post_media
 posts
 student_profiles
 users
-contacts
 ```
 
 ## Table Schemas
@@ -93,20 +92,3 @@ contacts
 | avatar_url    | varchar(255)                      | YES  |     | NULL    |                | 头像地址 |
 | role          | enum('ADMIN','STUDENT','TEACHER') | NO   |     | NULL    |                | 角色     |
 | student_no    | varchar(32)                       | YES  |     | NULL    |                | 学号     |
-
-### contacts
-
-用于存储教师与部门联系方式。
-
-| Field      | Type         | Null | Key | Default | Extra          | 备注               |
-| ---------- | ------------ | ---- | --- | ------- | -------------- | ------------------ |
-| id         | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键               |
-| name       | varchar(64)  | NO   |     | NULL    |                | 名称（教师或部门） |
-| office     | varchar(64)  | YES  |     | NULL    |                | 办公室/地点        |
-| duty       | varchar(64)  | YES  |     | NULL    |                | 职责               |
-| phone      | varchar(32)  | YES  |     | NULL    |                | 联系方式           |
-| photo_url  | varchar(255) | YES  |     | NULL    |                | 照片URL            |
-| sort_order | int(11)      | NO   |     | 0       |                | 排序               |
-| is_active  | bit(1)       | NO   |     | b'1'    |                | 是否启用           |
-| created_at | datetime(6)  | NO   |     | NULL    |                | 创建时间           |
-| updated_at | datetime(6)  | NO   |     | NULL    |                | 更新时间           |

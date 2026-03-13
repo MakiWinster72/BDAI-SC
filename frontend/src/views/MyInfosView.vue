@@ -325,7 +325,7 @@ import { reactive, computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
-import { uploadMedia } from "../api/posts";
+import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
 
 const router = useRouter();
@@ -393,19 +393,7 @@ function handleMenuClick(key) {
     router.push("/student-info");
     return;
   }
-  if (key === "good-news") {
-    router.push("/congra");
-    return;
-  }
-  if (key === "records") {
-    router.push("/memory");
-    return;
-  }
-  if (key === "contacts") {
-    router.push("/contacts");
-    return;
-  }
-  router.push("/home");
+  router.push("/myinfos");
 }
 
 function openSidebar() {

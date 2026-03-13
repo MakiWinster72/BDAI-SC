@@ -644,19 +644,7 @@ function handleMenuClick(key) {
     router.push("/student-info");
     return;
   }
-  if (key === "good-news") {
-    router.push("/congra");
-    return;
-  }
-  if (key === "records") {
-    router.push("/memory");
-    return;
-  }
-  if (key === "contacts") {
-    router.push("/contacts");
-    return;
-  }
-  router.push("/home");
+  router.push("/myinfos");
 }
 
 function resolveMediaUrl(url) {

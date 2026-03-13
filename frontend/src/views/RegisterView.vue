@@ -155,7 +155,7 @@ async function handleRegister() {
     localStorage.setItem('gcsc_token', data.token || '')
 
     setTimeout(() => {
-      router.push('/home')
+      router.push('/myinfos')
     }, 600)
   } catch (error) {
     feedback.text = parseError(error)
