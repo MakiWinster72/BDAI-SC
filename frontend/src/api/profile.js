@@ -7,3 +7,7 @@ export function getStudentProfile() {
 export function saveStudentProfile(payload) {
   return request.put('/api/student-profiles/me', payload)
 }
+
+export function searchStudentProfiles(params) {
+  return request.get('/api/student-profiles/search', { params })
+}

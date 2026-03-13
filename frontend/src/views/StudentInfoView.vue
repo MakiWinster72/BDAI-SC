@@ -210,6 +210,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
+import { searchStudentProfiles } from "../api/profile";
 
 const router = useRouter();
 const API_BASE = "http://localhost:8080";
@@ -223,6 +224,11 @@ const pageInput = ref(null);
 const yearMenuOpen = ref(false);
 const collegeMenuOpen = ref(false);
 const majorMenuOpen = ref(false);
+const students = ref([]);
+const totalPages = ref(1);
+const totalItems = ref(0);
+const loading = ref(false);
+const pageSize = 5;
 
 const classYearOptions = Array.from({ length: 19 }, (_, index) => 2022 + index);
 const collegeOptions = [
@@ -257,69 +263,6 @@ const filters = reactive({
   keyword: "",
 });
 
-const students = ref([
-  {
-    id: 1,
-    name: "李思涵",
-    gradeYear: "2024",
-    college: "大数据与人工智能学院",
-    major: "软件工程",
-    classNo: "1",
-    studentNo: "20240101",
-    tags: [],
-  },
-  {
-    id: 2,
-    name: "张宇航",
-    gradeYear: "2023",
-    college: "工商学院",
-    major: "市场营销",
-    classNo: "2",
-    studentNo: "20230218",
-    tags: ["HK"],
-  },
-  {
-    id: 3,
-    name: "周雨晴",
-    gradeYear: "2022",
-    college: "会计学院",
-    major: "会计学",
-    classNo: "3",
-    studentNo: "20220176",
-    tags: ["SPECIAL"],
-  },
-  {
-    id: 4,
-    name: "陈亦南",
-    gradeYear: "2024",
-    college: "湾区与影视学院",
-    major: "播音",
-    classNo: "1",
-    studentNo: "20240188",
-    tags: [],
-  },
-  {
-    id: 5,
-    name: "林芷妍",
-    gradeYear: "2023",
-    college: "大数据与人工智能学院",
-    major: "计算机科学与技术",
-    classNo: "4",
-    studentNo: "20230303",
-    tags: [],
-  },
-  {
-    id: 6,
-    name: "王若凡",
-    gradeYear: "2022",
-    college: "会计学院",
-    major: "国际会计（ACCA）",
-    classNo: "2",
-    studentNo: "20220229",
-    tags: ["HK"],
-  },
-]);
-
 const availableMajors = computed(() => {
   if (!filters.college) {
     const majors = Object.values(collegeMajorsMap).flat();
@@ -343,56 +286,78 @@ const hasActiveFilters = computed(() => {
   );
 });
 
-const filteredStudents = computed(() => {
-  if (!hasActiveFilters.value) {
-    return [];
-  }
-  const keyword = filters.keyword.trim().toLowerCase();
-  return students.value.filter((student) => {
-    if (filters.classYear && student.gradeYear !== String(filters.classYear)) {
-      return false;
-    }
-    if (filters.college && student.college !== filters.college) {
-      return false;
-    }
-    if (filters.major && student.major !== filters.major) {
-      return false;
-    }
-    if (filters.isHkMoTw && !student.tags.includes("HK")) {
-      return false;
-    }
-    if (filters.isSpecial && !student.tags.includes("SPECIAL")) {
-      return false;
-    }
-    if (keyword) {
-      const haystack = `${student.name}${student.college}${student.major}${student.classNo}${student.studentNo}`.toLowerCase();
-      if (!haystack.includes(keyword)) {
-        return false;
-      }
-    }
-    return true;
-  });
+const pagedStudents = computed(() => students.value);
+
+watch(
+  () => ({
+    classYear: filters.classYear,
+    college: filters.college,
+    major: filters.major,
+    isHkMoTw: filters.isHkMoTw,
+    isSpecial: filters.isSpecial,
+    keyword: filters.keyword,
+  }),
+  () => {
+    currentPage.value = 1;
+    pageInput.value = null;
+    fetchStudents();
+  },
+  { deep: true },
+);
+
+watch(currentPage, () => {
+  fetchStudents();
 });
 
-const totalPages = computed(() => {
-  if (!filteredStudents.value.length) {
-    return 1;
-  }
-  return Math.ceil(filteredStudents.value.length / 5);
-});
+function resetResults() {
+  students.value = [];
+  totalPages.value = 1;
+  totalItems.value = 0;
+}
 
-const pagedStudents = computed(() => {
-  if (!filteredStudents.value.length) {
-    return [];
+async function fetchStudents() {
+  loading.value = true;
+  try {
+    const params = {
+      page: currentPage.value,
+      size: pageSize,
+    };
+    if (filters.classYear) {
+      params.classYear = filters.classYear;
+    }
+    if (filters.college) {
+      params.college = filters.college;
+    }
+    if (filters.major) {
+      params.major = filters.major;
+    }
+    if (filters.isHkMoTw) {
+      params.hkMoTw = true;
+    }
+    if (filters.isSpecial) {
+      params.specialStudent = true;
+    }
+    if (filters.keyword && filters.keyword.trim()) {
+      params.keyword = filters.keyword.trim();
+    }
+    const { data } = await searchStudentProfiles(params);
+    students.value = (data?.items || []).map((item) => ({
+      id: item.id,
+      name: item.fullName || "未命名",
+      gradeYear: item.classYear || "",
+      college: item.college || "",
+      major: item.classMajor || "",
+      classNo: item.classNo || "",
+      studentNo: item.studentNo || "",
+    }));
+    totalPages.value = Math.max(1, data?.totalPages || 1);
+    totalItems.value = data?.total || 0;
+  } catch {
+    resetResults();
+  } finally {
+    loading.value = false;
   }
-  const start = (currentPage.value - 1) * 5;
-  return filteredStudents.value.slice(start, start + 5);
-});
-
-watch(filteredStudents, () => {
-  currentPage.value = 1;
-  pageInput.value = null;
-});
+}
 
 function toggleYearMenu() {
   yearMenuOpen.value = !yearMenuOpen.value;
@@ -447,6 +412,7 @@ function handleDocumentClick(event) {
 
 onMounted(() => {
   document.addEventListener("click", handleDocumentClick);
+  fetchStudents();
 });
 
 onBeforeUnmount(() => {

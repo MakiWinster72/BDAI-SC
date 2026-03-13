@@ -2,11 +2,15 @@ package com.gcsc.studentcenter.service;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gcsc.studentcenter.dto.StudentProfileRequest;
 import com.gcsc.studentcenter.dto.StudentProfileResponse;
+import com.gcsc.studentcenter.dto.StudentSearchItemResponse;
+import com.gcsc.studentcenter.dto.StudentSearchResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.repository.AppUserRepository;
@@ -71,6 +75,37 @@ public class StudentProfileService {
 
         StudentProfile saved = studentProfileRepository.save(profile);
         return toResponse(user, saved);
+    }
+
+    @Transactional(readOnly = true)
+    public StudentSearchResponse searchProfiles(
+        Integer classYear,
+        String college,
+        String major,
+        Boolean hkMoTw,
+        Boolean specialStudent,
+        String keyword,
+        int page,
+        int size
+    ) {
+        int pageIndex = Math.max(page - 1, 0);
+        int pageSize = Math.max(size, 1);
+        Page<StudentSearchItemResponse> result = studentProfileRepository.searchProfiles(
+            classYear,
+            normalize(college),
+            normalize(major),
+            hkMoTw,
+            specialStudent,
+            normalize(keyword),
+            PageRequest.of(pageIndex, pageSize)
+        );
+        return new StudentSearchResponse(
+            result.getContent(),
+            pageIndex + 1,
+            pageSize,
+            result.getTotalElements(),
+            result.getTotalPages()
+        );
     }
 
     private void syncUserSummary(AppUser user, StudentProfile profile) {
