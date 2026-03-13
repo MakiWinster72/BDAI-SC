@@ -64,19 +64,42 @@ public class StudentProfileService {
         profile.setClassNo(normalize(request.getClassNo()));
         profile.setClassName(resolveClassName(request));
         profile.setCollege(normalize(request.getCollege()));
+        profile.setEnrollmentDate(request.getEnrollmentDate());
+        profile.setStudentCategory(normalize(request.getStudentCategory()));
+        profile.setEthnicity(normalize(request.getEthnicity()));
+        profile.setPoliticalStatus(normalize(request.getPoliticalStatus()));
+        profile.setDormCampus(normalize(request.getDormCampus()));
+        profile.setDormBuilding(normalize(request.getDormBuilding()));
+        profile.setDormRoom(normalize(request.getDormRoom()));
+        profile.setClassTeacher(normalize(request.getClassTeacher()));
+        profile.setCounselor(normalize(request.getCounselor()));
         profile.setPhone(normalize(request.getPhone()));
         profile.setAddress(normalize(request.getAddress()));
         profile.setIdNo(normalize(request.getIdNo()));
         profile.setNativePlace(normalize(request.getNativePlace()));
         profile.setLeagueNo(normalize(request.getLeagueNo()));
+        profile.setLeagueApplicationDate(request.getLeagueApplicationDate());
+        profile.setLeagueJoinDate(request.getLeagueJoinDate());
         profile.setPartyApplied(request.getPartyApplied());
         profile.setNotDeveloped(request.getNotDeveloped());
         profile.setApplicationDate(request.getApplicationDate());
         profile.setActivistDate(request.getActivistDate());
+        profile.setPartyTrainingDate(request.getPartyTrainingDate());
+        profile.setDevelopmentTargetDate(request.getDevelopmentTargetDate());
+        profile.setProbationaryMemberDate(request.getProbationaryMemberDate());
+        profile.setFullMemberDate(request.getFullMemberDate());
         profile.setEmergencyPhone(normalize(request.getEmergencyPhone()));
         profile.setEmergencyRelation(normalize(request.getEmergencyRelation()));
         profile.setHkMoTw(request.getHkMoTw());
         profile.setSpecialStudent(request.getSpecialStudent());
+        profile.setFatherName(normalize(request.getFatherName()));
+        profile.setFatherPhone(normalize(request.getFatherPhone()));
+        profile.setFatherWorkUnit(normalize(request.getFatherWorkUnit()));
+        profile.setFatherTitle(normalize(request.getFatherTitle()));
+        profile.setMotherName(normalize(request.getMotherName()));
+        profile.setMotherPhone(normalize(request.getMotherPhone()));
+        profile.setMotherWorkUnit(normalize(request.getMotherWorkUnit()));
+        profile.setMotherTitle(normalize(request.getMotherTitle()));
 
         user.setAvatarUrl(normalize(request.getAvatarUrl()));
         syncUserSummary(user, profile);
@@ -142,19 +165,42 @@ public class StudentProfileService {
             profile != null ? profile.getClassYear() : null,
             profile != null ? profile.getClassMajor() : null,
             profile != null ? profile.getClassNo() : null,
+            profile != null ? profile.getEnrollmentDate() : null,
+            profile != null ? profile.getStudentCategory() : null,
+            profile != null ? profile.getEthnicity() : null,
+            profile != null ? profile.getPoliticalStatus() : null,
             profile != null ? profile.getPhone() : null,
             profile != null ? profile.getAddress() : null,
             profile != null ? profile.getIdNo() : null,
             profile != null ? profile.getNativePlace() : null,
+            profile != null ? profile.getDormCampus() : null,
+            profile != null ? profile.getDormBuilding() : null,
+            profile != null ? profile.getDormRoom() : null,
+            profile != null ? profile.getClassTeacher() : null,
+            profile != null ? profile.getCounselor() : null,
             profile != null ? profile.getLeagueNo() : null,
+            profile != null ? profile.getLeagueApplicationDate() : null,
+            profile != null ? profile.getLeagueJoinDate() : null,
             profile != null ? profile.getPartyApplied() : null,
             profile != null ? profile.getNotDeveloped() : null,
             profile != null ? profile.getApplicationDate() : null,
             profile != null ? profile.getActivistDate() : null,
+            profile != null ? profile.getPartyTrainingDate() : null,
+            profile != null ? profile.getDevelopmentTargetDate() : null,
+            profile != null ? profile.getProbationaryMemberDate() : null,
+            profile != null ? profile.getFullMemberDate() : null,
             profile != null ? profile.getEmergencyPhone() : null,
             profile != null ? profile.getEmergencyRelation() : null,
             profile != null ? profile.getHkMoTw() : null,
-            profile != null ? profile.getSpecialStudent() : null
+            profile != null ? profile.getSpecialStudent() : null,
+            profile != null ? profile.getFatherName() : null,
+            profile != null ? profile.getFatherPhone() : null,
+            profile != null ? profile.getFatherWorkUnit() : null,
+            profile != null ? profile.getFatherTitle() : null,
+            profile != null ? profile.getMotherName() : null,
+            profile != null ? profile.getMotherPhone() : null,
+            profile != null ? profile.getMotherWorkUnit() : null,
+            profile != null ? profile.getMotherTitle() : null
         );
     }
 

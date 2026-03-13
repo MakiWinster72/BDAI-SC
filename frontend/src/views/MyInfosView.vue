@@ -93,7 +93,7 @@
         </div>
 
         <div class="info-card">
-          <div class="info-section-title">个人信息</div>
+          <div class="info-section-title">学籍信息</div>
           <div class="info-form-grid">
             <label class="field-card">
               <span class="info-label">名字</span>
@@ -152,39 +152,88 @@
                 :disabled="!isEditing"
               />
             </label>
+            <label class="field-card">
+              <span class="info-label">入学时间</span>
+              <input
+                v-model="info.enrollmentDate"
+                class="info-input"
+                type="date"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">学生类别</span>
+              <input
+                v-model="info.studentCategory"
+                class="info-input"
+                type="text"
+                placeholder="如：本科/研究生"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">班主任</span>
+              <input
+                v-model="info.classTeacher"
+                class="info-input"
+                type="text"
+                placeholder="请输入班主任"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">辅导员</span>
+              <input
+                v-model="info.counselor"
+                class="info-input"
+                type="text"
+                placeholder="请输入辅导员"
+                :disabled="!isEditing"
+              />
+            </label>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-section-title">联系方式</div>
+          <div class="info-section-title">个人证件与联系方式</div>
           <div class="info-form-grid">
             <label class="field-card">
-              <span class="info-label">电话号码</span>
+              <span class="info-label">民族</span>
+              <input
+                v-model="info.ethnicity"
+                class="info-input"
+                type="text"
+                placeholder="请输入民族"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">政治面貌</span>
+              <input
+                v-model="info.politicalStatus"
+                class="info-input"
+                type="text"
+                placeholder="如：共青团员"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">手机号码</span>
               <input
                 v-model="info.phone"
                 class="info-input"
                 type="tel"
-                placeholder="请输入电话号码"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card field-full">
-              <span class="info-label">住址</span>
-              <input
-                v-model="info.address"
-                class="info-input"
-                type="text"
-                placeholder="请输入住址"
+                placeholder="请输入手机号"
                 :disabled="!isEditing"
               />
             </label>
             <label class="field-card">
-              <span class="info-label">身份证号</span>
+              <span class="info-label">身份证件号</span>
               <input
                 v-model="info.idNo"
                 class="info-input"
                 type="text"
-                placeholder="请输入身份证号"
+                placeholder="请输入身份证件号"
                 :disabled="!isEditing"
               />
             </label>
@@ -198,12 +247,58 @@
                 :disabled="!isEditing"
               />
             </label>
+            <label class="field-card field-full">
+              <span class="info-label">住址</span>
+              <input
+                v-model="info.address"
+                class="info-input"
+                type="text"
+                placeholder="请输入住址"
+                :disabled="!isEditing"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-section-title">住宿信息</div>
+          <div class="info-form-grid">
+            <label class="field-card">
+              <span class="info-label">住宿校区</span>
+              <input
+                v-model="info.dormCampus"
+                class="info-input"
+                type="text"
+                placeholder="如：主校区"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">住宿楼栋</span>
+              <input
+                v-model="info.dormBuilding"
+                class="info-input"
+                type="text"
+                placeholder="如：1号楼"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">住宿房间</span>
+              <input
+                v-model="info.dormRoom"
+                class="info-input"
+                type="text"
+                placeholder="如：508"
+                :disabled="!isEditing"
+              />
+            </label>
           </div>
         </div>
 
         <div class="info-card">
           <div class="info-section-title">团组织与入党信息</div>
-          <div class="info-form-grid">
+          <div class="info-form-grid three">
             <label class="field-card">
               <span class="info-label">团号</span>
               <input
@@ -211,6 +306,24 @@
                 class="info-input"
                 type="text"
                 placeholder="请输入团号"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">提交入团申请书时间</span>
+              <input
+                v-model="info.leagueApplicationDate"
+                class="info-input"
+                type="date"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">入团时间</span>
+              <input
+                v-model="info.leagueJoinDate"
+                class="info-input"
+                type="date"
                 :disabled="!isEditing"
               />
             </label>
@@ -238,7 +351,7 @@
               </div>
             </div>
             <label class="field-card">
-              <span class="info-label">入党通知书申请日期</span>
+              <span class="info-label">提交入党申请书时间</span>
               <input
                 v-model="info.applicationDate"
                 class="info-input"
@@ -247,7 +360,7 @@
               />
             </label>
             <label class="field-card">
-              <span class="info-label">成为入党积极分子日期</span>
+              <span class="info-label">确定积极分子时间</span>
               <div class="info-inline info-inline-date">
                 <input
                   v-model="info.activistDate"
@@ -265,11 +378,133 @@
                 </label>
               </div>
             </label>
+            <label class="field-card">
+              <span class="info-label">上党课时间</span>
+              <input
+                v-model="info.partyTrainingDate"
+                class="info-input"
+                type="date"
+                :disabled="!isEditing || !info.partyApplied || info.notDeveloped"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">确定发展对象时间</span>
+              <input
+                v-model="info.developmentTargetDate"
+                class="info-input"
+                type="date"
+                :disabled="!isEditing || !info.partyApplied || info.notDeveloped"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">接受为预备党员时间</span>
+              <input
+                v-model="info.probationaryMemberDate"
+                class="info-input"
+                type="date"
+                :disabled="!isEditing || !info.partyApplied || info.notDeveloped"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">转为正式党员时间</span>
+              <input
+                v-model="info.fullMemberDate"
+                class="info-input"
+                type="date"
+                :disabled="!isEditing || !info.partyApplied || info.notDeveloped"
+              />
+            </label>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-section-title">其他</div>
+          <div class="info-section-title">家庭信息</div>
+          <div class="info-form-grid three">
+            <label class="field-card">
+              <span class="info-label">父亲姓名</span>
+              <input
+                v-model="info.fatherName"
+                class="info-input"
+                type="text"
+                placeholder="请输入父亲姓名"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">父亲手机号码</span>
+              <input
+                v-model="info.fatherPhone"
+                class="info-input"
+                type="tel"
+                placeholder="请输入父亲手机号码"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">父亲工作单位</span>
+              <input
+                v-model="info.fatherWorkUnit"
+                class="info-input"
+                type="text"
+                placeholder="请输入父亲工作单位"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">父亲职务</span>
+              <input
+                v-model="info.fatherTitle"
+                class="info-input"
+                type="text"
+                placeholder="请输入父亲职务"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">母亲姓名</span>
+              <input
+                v-model="info.motherName"
+                class="info-input"
+                type="text"
+                placeholder="请输入母亲姓名"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">母亲手机号码</span>
+              <input
+                v-model="info.motherPhone"
+                class="info-input"
+                type="tel"
+                placeholder="请输入母亲手机号码"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">母亲工作单位</span>
+              <input
+                v-model="info.motherWorkUnit"
+                class="info-input"
+                type="text"
+                placeholder="请输入母亲工作单位"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
+              <span class="info-label">母亲职务</span>
+              <input
+                v-model="info.motherTitle"
+                class="info-input"
+                type="text"
+                placeholder="请输入母亲职务"
+                :disabled="!isEditing"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-section-title">紧急联系人</div>
           <div class="info-form-grid">
             <label class="field-card">
               <span class="info-label">紧急联系人电话</span>
@@ -345,17 +580,40 @@ const info = reactive({
   classNo: "",
   className: profile.className || "",
   college: profile.college || "",
+  enrollmentDate: "",
+  studentCategory: "",
+  ethnicity: "",
+  politicalStatus: "",
+  dormCampus: "",
+  dormBuilding: "",
+  dormRoom: "",
+  classTeacher: "",
+  counselor: "",
   phone: "",
   address: "",
   idNo: "",
   nativePlace: "",
   leagueNo: "",
+  leagueApplicationDate: "",
+  leagueJoinDate: "",
   partyApplied: false,
   notDeveloped: false,
   applicationDate: "",
   activistDate: "",
+  partyTrainingDate: "",
+  developmentTargetDate: "",
+  probationaryMemberDate: "",
+  fullMemberDate: "",
   emergencyPhone: "",
   emergencyRelation: "",
+  fatherName: "",
+  fatherPhone: "",
+  fatherWorkUnit: "",
+  fatherTitle: "",
+  motherName: "",
+  motherPhone: "",
+  motherWorkUnit: "",
+  motherTitle: "",
 });
 
 const classYearOptions = Array.from({ length: 19 }, (_, index) => 2022 + index);
@@ -461,17 +719,40 @@ async function confirmEdit() {
     classNo: info.classNo,
     className,
     college: info.college,
+    enrollmentDate: info.enrollmentDate || null,
+    studentCategory: info.studentCategory,
+    ethnicity: info.ethnicity,
+    politicalStatus: info.politicalStatus,
+    dormCampus: info.dormCampus,
+    dormBuilding: info.dormBuilding,
+    dormRoom: info.dormRoom,
+    classTeacher: info.classTeacher,
+    counselor: info.counselor,
     phone: info.phone,
     address: info.address,
     idNo: info.idNo,
     nativePlace: info.nativePlace,
     leagueNo: info.leagueNo,
+    leagueApplicationDate: info.leagueApplicationDate || null,
+    leagueJoinDate: info.leagueJoinDate || null,
     partyApplied: info.partyApplied,
     notDeveloped: info.notDeveloped,
     applicationDate: info.applicationDate || null,
     activistDate: info.activistDate || null,
+    partyTrainingDate: info.partyTrainingDate || null,
+    developmentTargetDate: info.developmentTargetDate || null,
+    probationaryMemberDate: info.probationaryMemberDate || null,
+    fullMemberDate: info.fullMemberDate || null,
     emergencyPhone: info.emergencyPhone,
     emergencyRelation: info.emergencyRelation,
+    fatherName: info.fatherName,
+    fatherPhone: info.fatherPhone,
+    fatherWorkUnit: info.fatherWorkUnit,
+    fatherTitle: info.fatherTitle,
+    motherName: info.motherName,
+    motherPhone: info.motherPhone,
+    motherWorkUnit: info.motherWorkUnit,
+    motherTitle: info.motherTitle,
   };
   try {
     const { data } = await saveStudentProfile(payload);
@@ -505,17 +786,40 @@ function applyProfileResponse(data) {
   info.classNo = data.classNo || "";
   info.className = data.className || "";
   info.college = data.college || "";
+  info.enrollmentDate = data.enrollmentDate || "";
+  info.studentCategory = data.studentCategory || "";
+  info.ethnicity = data.ethnicity || "";
+  info.politicalStatus = data.politicalStatus || "";
+  info.dormCampus = data.dormCampus || "";
+  info.dormBuilding = data.dormBuilding || "";
+  info.dormRoom = data.dormRoom || "";
+  info.classTeacher = data.classTeacher || "";
+  info.counselor = data.counselor || "";
   info.phone = data.phone || "";
   info.address = data.address || "";
   info.idNo = data.idNo || "";
   info.nativePlace = data.nativePlace || "";
   info.leagueNo = data.leagueNo || "";
+  info.leagueApplicationDate = data.leagueApplicationDate || "";
+  info.leagueJoinDate = data.leagueJoinDate || "";
   info.partyApplied = Boolean(data.partyApplied);
   info.notDeveloped = Boolean(data.notDeveloped);
   info.applicationDate = data.applicationDate || "";
   info.activistDate = data.activistDate || "";
+  info.partyTrainingDate = data.partyTrainingDate || "";
+  info.developmentTargetDate = data.developmentTargetDate || "";
+  info.probationaryMemberDate = data.probationaryMemberDate || "";
+  info.fullMemberDate = data.fullMemberDate || "";
   info.emergencyPhone = data.emergencyPhone || "";
   info.emergencyRelation = data.emergencyRelation || "";
+  info.fatherName = data.fatherName || "";
+  info.fatherPhone = data.fatherPhone || "";
+  info.fatherWorkUnit = data.fatherWorkUnit || "";
+  info.fatherTitle = data.fatherTitle || "";
+  info.motherName = data.motherName || "";
+  info.motherPhone = data.motherPhone || "";
+  info.motherWorkUnit = data.motherWorkUnit || "";
+  info.motherTitle = data.motherTitle || "";
 
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;

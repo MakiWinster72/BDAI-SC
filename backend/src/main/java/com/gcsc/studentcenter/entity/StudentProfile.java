@@ -44,6 +44,33 @@ public class StudentProfile {
     @Column(name = "college", length = 64)
     private String college;
 
+    @Column(name = "enrollment_date")
+    private LocalDate enrollmentDate;
+
+    @Column(name = "student_category", length = 32)
+    private String studentCategory;
+
+    @Column(name = "ethnicity", length = 32)
+    private String ethnicity;
+
+    @Column(name = "political_status", length = 32)
+    private String politicalStatus;
+
+    @Column(name = "dorm_campus", length = 64)
+    private String dormCampus;
+
+    @Column(name = "dorm_building", length = 64)
+    private String dormBuilding;
+
+    @Column(name = "dorm_room", length = 64)
+    private String dormRoom;
+
+    @Column(name = "class_teacher", length = 64)
+    private String classTeacher;
+
+    @Column(name = "counselor", length = 64)
+    private String counselor;
+
     @Column(name = "phone", length = 32)
     private String phone;
 
@@ -59,6 +86,12 @@ public class StudentProfile {
     @Column(name = "league_no", length = 32)
     private String leagueNo;
 
+    @Column(name = "league_application_date")
+    private LocalDate leagueApplicationDate;
+
+    @Column(name = "league_join_date")
+    private LocalDate leagueJoinDate;
+
     @Column(name = "party_applied")
     private Boolean partyApplied;
 
@@ -71,6 +104,18 @@ public class StudentProfile {
     @Column(name = "activist_date")
     private LocalDate activistDate;
 
+    @Column(name = "party_training_date")
+    private LocalDate partyTrainingDate;
+
+    @Column(name = "development_target_date")
+    private LocalDate developmentTargetDate;
+
+    @Column(name = "probationary_member_date")
+    private LocalDate probationaryMemberDate;
+
+    @Column(name = "full_member_date")
+    private LocalDate fullMemberDate;
+
     @Column(name = "emergency_phone", length = 32)
     private String emergencyPhone;
 
@@ -82,6 +127,30 @@ public class StudentProfile {
 
     @Column(name = "is_special")
     private Boolean specialStudent;
+
+    @Column(name = "father_name", length = 64)
+    private String fatherName;
+
+    @Column(name = "father_phone", length = 32)
+    private String fatherPhone;
+
+    @Column(name = "father_work_unit", length = 128)
+    private String fatherWorkUnit;
+
+    @Column(name = "father_title", length = 64)
+    private String fatherTitle;
+
+    @Column(name = "mother_name", length = 64)
+    private String motherName;
+
+    @Column(name = "mother_phone", length = 32)
+    private String motherPhone;
+
+    @Column(name = "mother_work_unit", length = 128)
+    private String motherWorkUnit;
+
+    @Column(name = "mother_title", length = 64)
+    private String motherTitle;
 
     public Long getId() {
         return id;
@@ -151,6 +220,78 @@ public class StudentProfile {
         this.college = college;
     }
 
+    public LocalDate getEnrollmentDate() {
+        return enrollmentDate;
+    }
+
+    public void setEnrollmentDate(LocalDate enrollmentDate) {
+        this.enrollmentDate = enrollmentDate;
+    }
+
+    public String getStudentCategory() {
+        return studentCategory;
+    }
+
+    public void setStudentCategory(String studentCategory) {
+        this.studentCategory = studentCategory;
+    }
+
+    public String getEthnicity() {
+        return ethnicity;
+    }
+
+    public void setEthnicity(String ethnicity) {
+        this.ethnicity = ethnicity;
+    }
+
+    public String getPoliticalStatus() {
+        return politicalStatus;
+    }
+
+    public void setPoliticalStatus(String politicalStatus) {
+        this.politicalStatus = politicalStatus;
+    }
+
+    public String getDormCampus() {
+        return dormCampus;
+    }
+
+    public void setDormCampus(String dormCampus) {
+        this.dormCampus = dormCampus;
+    }
+
+    public String getDormBuilding() {
+        return dormBuilding;
+    }
+
+    public void setDormBuilding(String dormBuilding) {
+        this.dormBuilding = dormBuilding;
+    }
+
+    public String getDormRoom() {
+        return dormRoom;
+    }
+
+    public void setDormRoom(String dormRoom) {
+        this.dormRoom = dormRoom;
+    }
+
+    public String getClassTeacher() {
+        return classTeacher;
+    }
+
+    public void setClassTeacher(String classTeacher) {
+        this.classTeacher = classTeacher;
+    }
+
+    public String getCounselor() {
+        return counselor;
+    }
+
+    public void setCounselor(String counselor) {
+        this.counselor = counselor;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -191,6 +332,22 @@ public class StudentProfile {
         this.leagueNo = leagueNo;
     }
 
+    public LocalDate getLeagueApplicationDate() {
+        return leagueApplicationDate;
+    }
+
+    public void setLeagueApplicationDate(LocalDate leagueApplicationDate) {
+        this.leagueApplicationDate = leagueApplicationDate;
+    }
+
+    public LocalDate getLeagueJoinDate() {
+        return leagueJoinDate;
+    }
+
+    public void setLeagueJoinDate(LocalDate leagueJoinDate) {
+        this.leagueJoinDate = leagueJoinDate;
+    }
+
     public Boolean getPartyApplied() {
         return partyApplied;
     }
@@ -223,6 +380,38 @@ public class StudentProfile {
         this.activistDate = activistDate;
     }
 
+    public LocalDate getPartyTrainingDate() {
+        return partyTrainingDate;
+    }
+
+    public void setPartyTrainingDate(LocalDate partyTrainingDate) {
+        this.partyTrainingDate = partyTrainingDate;
+    }
+
+    public LocalDate getDevelopmentTargetDate() {
+        return developmentTargetDate;
+    }
+
+    public void setDevelopmentTargetDate(LocalDate developmentTargetDate) {
+        this.developmentTargetDate = developmentTargetDate;
+    }
+
+    public LocalDate getProbationaryMemberDate() {
+        return probationaryMemberDate;
+    }
+
+    public void setProbationaryMemberDate(LocalDate probationaryMemberDate) {
+        this.probationaryMemberDate = probationaryMemberDate;
+    }
+
+    public LocalDate getFullMemberDate() {
+        return fullMemberDate;
+    }
+
+    public void setFullMemberDate(LocalDate fullMemberDate) {
+        this.fullMemberDate = fullMemberDate;
+    }
+
     public String getEmergencyPhone() {
         return emergencyPhone;
     }
@@ -253,5 +442,69 @@ public class StudentProfile {
 
     public void setSpecialStudent(Boolean specialStudent) {
         this.specialStudent = specialStudent;
+    }
+
+    public String getFatherName() {
+        return fatherName;
+    }
+
+    public void setFatherName(String fatherName) {
+        this.fatherName = fatherName;
+    }
+
+    public String getFatherPhone() {
+        return fatherPhone;
+    }
+
+    public void setFatherPhone(String fatherPhone) {
+        this.fatherPhone = fatherPhone;
+    }
+
+    public String getFatherWorkUnit() {
+        return fatherWorkUnit;
+    }
+
+    public void setFatherWorkUnit(String fatherWorkUnit) {
+        this.fatherWorkUnit = fatherWorkUnit;
+    }
+
+    public String getFatherTitle() {
+        return fatherTitle;
+    }
+
+    public void setFatherTitle(String fatherTitle) {
+        this.fatherTitle = fatherTitle;
+    }
+
+    public String getMotherName() {
+        return motherName;
+    }
+
+    public void setMotherName(String motherName) {
+        this.motherName = motherName;
+    }
+
+    public String getMotherPhone() {
+        return motherPhone;
+    }
+
+    public void setMotherPhone(String motherPhone) {
+        this.motherPhone = motherPhone;
+    }
+
+    public String getMotherWorkUnit() {
+        return motherWorkUnit;
+    }
+
+    public void setMotherWorkUnit(String motherWorkUnit) {
+        this.motherWorkUnit = motherWorkUnit;
+    }
+
+    public String getMotherTitle() {
+        return motherTitle;
+    }
+
+    public void setMotherTitle(String motherTitle) {
+        this.motherTitle = motherTitle;
     }
 }
