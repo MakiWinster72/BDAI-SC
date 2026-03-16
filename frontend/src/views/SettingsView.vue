@@ -61,7 +61,22 @@
         <h1 class="feed-title">设置</h1>
       </header>
 
-      <section class="info-shell settings-shell"></section>
+      <section class="info-shell settings-shell">
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-text">
+              <div class="settings-title">外观</div>
+              <div class="settings-subtitle">明暗模式</div>
+            </div>
+            <label class="ios-switch" aria-label="切换明暗模式">
+              <input type="checkbox" />
+              <span class="ios-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button class="settings-action danger" type="button">注销账号</button>
+        </div>
 
       <div class="mobile-capsule">
         <div class="capsule-left">
