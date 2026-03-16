@@ -9,6 +9,7 @@ const ENABLED_MENU_KEYS = new Set([
   "achievements",
   "my-info",
   "student-info",
+  "admin",
 ]);
 
 const ROLE_MENU_VISIBILITY = {

@@ -873,6 +873,10 @@ function handleMenuClick(key) {
     router.push("/student-info");
     return;
   }
+  if (key === "admin") {
+    router.push("/admin");
+    return;
+  }
   router.push("/myinfos");
 }
 
