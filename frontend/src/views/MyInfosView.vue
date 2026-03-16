@@ -152,9 +152,12 @@
                   </option>
                 </select>
                 <input
-                  v-model="info.classNo"
+                  v-model.number="info.classNo"
                   class="info-input class-num"
-                  type="text"
+                  type="number"
+                  min="1"
+                  max="10"
+                  step="1"
                   placeholder="数字"
                   :disabled="!isEditing"
                 />
@@ -715,7 +718,7 @@ const info = reactive({
   studentNo: profile.studentNo || "",
   classYear: "",
   classMajor: "",
-  classNo: "",
+  classNo: 1,
   className: profile.className || "",
   college: profile.college || "",
   enrollmentDate: "",
@@ -1093,7 +1096,7 @@ function applyProfileResponse(data) {
   info.studentNo = data.studentNo || "";
   info.classYear = data.classYear || "";
   info.classMajor = data.classMajor || "";
-  info.classNo = data.classNo || "";
+  info.classNo = data.classNo ?? 1;
   info.className = data.className || "";
   info.college = data.college || "";
   info.enrollmentDate = data.enrollmentDate || "";
