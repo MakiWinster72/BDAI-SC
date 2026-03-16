@@ -485,6 +485,48 @@ body {
   cursor: not-allowed;
 }
 
+.menu-drawer {
+  display: grid;
+  gap: 6px;
+}
+
+.menu-drawer-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.menu-drawer-caret {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+
+.menu-drawer.open .menu-drawer-caret {
+  transform: rotate(-135deg);
+}
+
+.menu-drawer-panel {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.menu-drawer-item {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #185a62;
+  background: rgba(255, 255, 255, 0.55);
+}
+
 .dashboard-right {
   min-width: 0;
 }

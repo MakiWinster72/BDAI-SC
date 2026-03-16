@@ -39,20 +39,49 @@
       </section>
 
       <section class="menu-card">
-        <button
-          v-for="item in menuItems"
-          :key="item.key"
-          class="menu-item"
-          :class="{
-            active: activeMenu === item.key,
-            disabled: !isMenuEnabled(item.key),
-          }"
-          type="button"
-          :disabled="!isMenuEnabled(item.key)"
-          @click="handleMenuClick(item.key)"
-        >
-          {{ item.label }}
-        </button>
+        <template v-for="item in menuItems" :key="item.key">
+          <div
+            v-if="item.key === 'achievements'"
+            class="menu-drawer"
+            :class="{ open: achievementsOpen }"
+          >
+            <button
+              class="menu-item menu-drawer-trigger"
+              :class="{
+                active: activeMenu === item.key,
+                disabled: !isMenuEnabled(item.key),
+              }"
+              type="button"
+              :disabled="!isMenuEnabled(item.key)"
+              @click="toggleAchievements"
+            >
+              <span>{{ item.label }}</span>
+              <span class="menu-drawer-caret" aria-hidden="true"></span>
+            </button>
+            <div v-show="achievementsOpen" class="menu-drawer-panel">
+              <div
+                v-for="entry in achievementEntries"
+                :key="entry"
+                class="menu-drawer-item"
+              >
+                {{ entry }}
+              </div>
+            </div>
+          </div>
+          <button
+            v-else
+            class="menu-item"
+            :class="{
+              active: activeMenu === item.key,
+              disabled: !isMenuEnabled(item.key),
+            }"
+            type="button"
+            :disabled="!isMenuEnabled(item.key)"
+            @click="handleMenuClick(item.key)"
+          >
+            {{ item.label }}
+          </button>
+        </template>
       </section>
     </aside>
 
@@ -711,6 +740,7 @@ const activeMenu = ref("my-info");
 const isEditing = ref(false);
 const avatarInput = ref(null);
 const sidebarOpen = ref(false);
+const achievementsOpen = ref(false);
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -781,6 +811,15 @@ const politicalStatusOptions = ["无", "共青团员", "入党积极分子", "�
 const dormCampusOptions = ["佛山校区", "广州校区"];
 
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
+const achievementEntries = [
+  "学科竞赛、文体艺术",
+  "发表学术论文",
+  "发表期刊作品",
+  "专利(著作权)授权数(项)",
+  "职业资格证书",
+  "学生参与教师科研项目情况",
+  "创作、表演的代表性作品",
+];
 
 const avatarText = computed(() => {
   const name = profile.displayName || profile.username || "同学";
@@ -894,7 +933,7 @@ function handleMenuClick(key) {
     return;
   }
   if (key === "achievements") {
-    router.push("/achievements");
+    toggleAchievements();
     return;
   }
   if (key === "student-info") {
@@ -902,6 +941,16 @@ function handleMenuClick(key) {
     return;
   }
   router.push("/myinfos");
+}
+
+function toggleAchievements() {
+  if (!isMenuEnabled("achievements")) {
+    return;
+  }
+  achievementsOpen.value = !achievementsOpen.value;
+  if (achievementsOpen.value) {
+    activeMenu.value = "achievements";
+  }
 }
 
 function openSidebar() {
