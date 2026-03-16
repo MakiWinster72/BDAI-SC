@@ -47,48 +47,6 @@
           />
         </div>
 
-        <div class="form-row">
-          <label class="form-label" for="role">角色</label>
-          <select id="role" v-model="form.role" class="form-input" required>
-            <option value="STUDENT">学生</option>
-            <option value="TEACHER">教师</option>
-            <option value="ADMIN">管理员</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <label class="form-label" for="studentNo">学号</label>
-          <input
-            id="studentNo"
-            v-model.trim="form.studentNo"
-            class="form-input"
-            type="text"
-            placeholder="可选"
-          />
-        </div>
-
-        <div class="form-row">
-          <label class="form-label" for="className">班级</label>
-          <input
-            id="className"
-            v-model.trim="form.className"
-            class="form-input"
-            type="text"
-            placeholder="可选"
-          />
-        </div>
-
-        <div class="form-row">
-          <label class="form-label" for="college">学院</label>
-          <input
-            id="college"
-            v-model.trim="form.college"
-            class="form-input"
-            type="text"
-            placeholder="可选"
-          />
-        </div>
-
         <button class="action-button" :disabled="isSubmitting" type="submit">
           {{ isSubmitting ? '注册中...' : '注册' }}
         </button>
@@ -114,11 +72,7 @@ const router = useRouter()
 const form = reactive({
   displayName: '',
   username: '',
-  password: '',
-  role: 'STUDENT',
-  studentNo: '',
-  className: '',
-  college: ''
+  password: ''
 })
 
 const isSubmitting = ref(false)
