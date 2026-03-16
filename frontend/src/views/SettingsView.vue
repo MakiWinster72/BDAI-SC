@@ -75,8 +75,12 @@
           </div>
         </div>
         <div class="settings-actions">
+          <button class="settings-action" type="button" @click="handleLogout">
+            退出登录
+          </button>
           <button class="settings-action danger" type="button">注销账号</button>
         </div>
+      </section>
 
       <div class="mobile-capsule">
         <div class="capsule-left">
@@ -194,5 +198,11 @@ function closeSidebar() {
 
 function goToSettings() {
   router.push("/settings");
+}
+
+function handleLogout() {
+  localStorage.removeItem("gcsc_token");
+  localStorage.removeItem("gcsc_user");
+  router.push("/login");
 }
 </script>
