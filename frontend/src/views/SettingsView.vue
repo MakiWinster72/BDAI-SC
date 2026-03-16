@@ -78,7 +78,9 @@
           <button class="settings-action" type="button" @click="handleLogout">
             退出登录
           </button>
-          <button class="settings-action danger" type="button">注销账号</button>
+          <button class="settings-action danger" type="button">
+            TODO:注销账号
+          </button>
         </div>
       </section>
 
