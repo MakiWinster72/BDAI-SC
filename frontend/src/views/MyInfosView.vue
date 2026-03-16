@@ -120,16 +120,27 @@
                 :disabled="!isEditing"
               />
             </label>
+            <label class="field-card">
+              <span class="info-label">年级</span>
+              <select v-model="info.classYear" class="info-input" :disabled="!isEditing">
+                <option disabled value="">选择年级</option>
+                <option v-for="year in classYearOptions" :key="year" :value="year">
+                  {{ year }}
+                </option>
+              </select>
+            </label>
+            <label class="field-card">
+              <span class="info-label">学院</span>
+              <select v-model="info.college" class="info-input" :disabled="!isEditing">
+                <option disabled value="">选择学院</option>
+                <option v-for="item in collegeOptions" :key="item" :value="item">
+                  {{ item }}
+                </option>
+              </select>
+            </label>
             <label class="field-card field-full">
-              <span class="info-label">班别</span>
+              <span class="info-label">班级</span>
               <div class="class-inline">
-                <select v-model="info.classYear" class="info-input" :disabled="!isEditing">
-                  <option disabled value="">选择年级</option>
-                  <option v-for="year in classYearOptions" :key="year" :value="year">
-                    {{ year }}
-                  </option>
-                </select>
-                <span class="class-text">级</span>
                 <select
                   v-model="info.classMajor"
                   class="info-input"
@@ -149,15 +160,6 @@
                 />
                 <span class="class-text">班</span>
               </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">学院</span>
-              <select v-model="info.college" class="info-input" :disabled="!isEditing">
-                <option disabled value="">选择学院</option>
-                <option v-for="item in collegeOptions" :key="item" :value="item">
-                  {{ item }}
-                </option>
-              </select>
             </label>
             <label class="field-card">
               <span class="info-label">入学时间</span>
