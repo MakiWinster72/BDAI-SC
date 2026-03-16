@@ -24,7 +24,12 @@
             </p>
             <p class="profile-role">{{ roleLabel }}</p>
           </div>
-          <button class="profile-settings" type="button" aria-label="设置">
+          <button
+            class="profile-settings"
+            type="button"
+            aria-label="设置"
+            @click="goToSettings"
+          >
             <img src="/assets/icons/settings.svg" alt="设置" />
           </button>
         </div>
@@ -400,6 +405,10 @@ function openEditor() {
 function closeEditor() {
   editorOpen.value = false;
   editId.value = null;
+}
+
+function goToSettings() {
+  router.push("/settings");
 }
 
 function resetForm() {

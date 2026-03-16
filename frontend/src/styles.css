@@ -1204,6 +1204,10 @@ body {
   box-shadow: 0 22px 50px rgba(3, 107, 114, 0.12);
 }
 
+.settings-shell {
+  min-height: 420px;
+}
+
 .info-hero {
   border-radius: 18px;
   border: 1px solid rgba(3, 107, 114, 0.12);

@@ -4,6 +4,7 @@ import RegisterView from '../views/RegisterView.vue'
 import AchievementsView from '../views/AchievementsView.vue'
 import MyInfosView from '../views/MyInfosView.vue'
 import StudentInfoView from '../views/StudentInfoView.vue'
+import SettingsView from '../views/SettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,6 +12,7 @@ const router = createRouter({
     { path: '/', redirect: '/myinfos' },
     { path: '/achievements', name: 'achievements', component: AchievementsView, meta: { requiresAuth: true } },
     { path: '/myinfos', name: 'myinfos', component: MyInfosView, meta: { requiresAuth: true } },
+    { path: '/settings', name: 'settings', component: SettingsView, meta: { requiresAuth: true } },
     {
       path: '/student-info',
       name: 'student-info',
