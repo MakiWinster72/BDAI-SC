@@ -92,7 +92,7 @@ async function handleLogin() {
       })
     )
     localStorage.setItem('gcsc_token', data.token || '')
-    router.push('/home')
+    router.push('/myinfos')
   } catch (error) {
     feedback.text = parseError(error)
     feedback.type = 'error'

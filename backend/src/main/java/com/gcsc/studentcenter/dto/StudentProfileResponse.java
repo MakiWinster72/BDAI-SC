@@ -14,19 +14,51 @@ public class StudentProfileResponse {
     private Integer classYear;
     private String classMajor;
     private String classNo;
+    private LocalDate enrollmentDate;
+    private String studentCategory;
+    private String ethnicity;
+    private String politicalStatus;
     private String phone;
     private String address;
     private String idNo;
     private String nativePlace;
+    private String dormCampus;
+    private String dormBuilding;
+    private String dormRoom;
+    private Boolean offCampusLiving;
+    private String offCampusAddress;
+    private String classTeacher;
+    private String counselor;
     private String leagueNo;
+    private LocalDate leagueApplicationDate;
+    private LocalDate leagueJoinDate;
+    private Boolean leagueJoined;
+    private Boolean leagueDeveloping;
     private Boolean partyApplied;
     private Boolean notDeveloped;
     private LocalDate applicationDate;
     private LocalDate activistDate;
+    private Boolean activistDeveloping;
+    private LocalDate partyTrainingDate;
+    private Boolean partyTrainingPending;
+    private LocalDate developmentTargetDate;
+    private Boolean developmentTargetDeveloping;
+    private LocalDate probationaryMemberDate;
+    private Boolean probationaryDeveloping;
+    private LocalDate fullMemberDate;
+    private Boolean fullMemberDeveloping;
     private String emergencyPhone;
     private String emergencyRelation;
     private Boolean hkMoTw;
     private Boolean specialStudent;
+    private String fatherName;
+    private String fatherPhone;
+    private String fatherWorkUnit;
+    private String fatherTitle;
+    private String motherName;
+    private String motherPhone;
+    private String motherWorkUnit;
+    private String motherTitle;
 
     public StudentProfileResponse(
         Long id,
@@ -40,19 +72,51 @@ public class StudentProfileResponse {
         Integer classYear,
         String classMajor,
         String classNo,
+        LocalDate enrollmentDate,
+        String studentCategory,
+        String ethnicity,
+        String politicalStatus,
         String phone,
         String address,
         String idNo,
         String nativePlace,
+        String dormCampus,
+        String dormBuilding,
+        String dormRoom,
+        Boolean offCampusLiving,
+        String offCampusAddress,
+        String classTeacher,
+        String counselor,
         String leagueNo,
+        LocalDate leagueApplicationDate,
+        LocalDate leagueJoinDate,
+        Boolean leagueJoined,
+        Boolean leagueDeveloping,
         Boolean partyApplied,
         Boolean notDeveloped,
         LocalDate applicationDate,
         LocalDate activistDate,
+        Boolean activistDeveloping,
+        LocalDate partyTrainingDate,
+        Boolean partyTrainingPending,
+        LocalDate developmentTargetDate,
+        Boolean developmentTargetDeveloping,
+        LocalDate probationaryMemberDate,
+        Boolean probationaryDeveloping,
+        LocalDate fullMemberDate,
+        Boolean fullMemberDeveloping,
         String emergencyPhone,
         String emergencyRelation,
         Boolean hkMoTw,
-        Boolean specialStudent
+        Boolean specialStudent,
+        String fatherName,
+        String fatherPhone,
+        String fatherWorkUnit,
+        String fatherTitle,
+        String motherName,
+        String motherPhone,
+        String motherWorkUnit,
+        String motherTitle
     ) {
         this.id = id;
         this.username = username;
@@ -65,19 +129,51 @@ public class StudentProfileResponse {
         this.classYear = classYear;
         this.classMajor = classMajor;
         this.classNo = classNo;
+        this.enrollmentDate = enrollmentDate;
+        this.studentCategory = studentCategory;
+        this.ethnicity = ethnicity;
+        this.politicalStatus = politicalStatus;
         this.phone = phone;
         this.address = address;
         this.idNo = idNo;
         this.nativePlace = nativePlace;
+        this.dormCampus = dormCampus;
+        this.dormBuilding = dormBuilding;
+        this.dormRoom = dormRoom;
+        this.offCampusLiving = offCampusLiving;
+        this.offCampusAddress = offCampusAddress;
+        this.classTeacher = classTeacher;
+        this.counselor = counselor;
         this.leagueNo = leagueNo;
+        this.leagueApplicationDate = leagueApplicationDate;
+        this.leagueJoinDate = leagueJoinDate;
+        this.leagueJoined = leagueJoined;
+        this.leagueDeveloping = leagueDeveloping;
         this.partyApplied = partyApplied;
         this.notDeveloped = notDeveloped;
         this.applicationDate = applicationDate;
         this.activistDate = activistDate;
+        this.activistDeveloping = activistDeveloping;
+        this.partyTrainingDate = partyTrainingDate;
+        this.partyTrainingPending = partyTrainingPending;
+        this.developmentTargetDate = developmentTargetDate;
+        this.developmentTargetDeveloping = developmentTargetDeveloping;
+        this.probationaryMemberDate = probationaryMemberDate;
+        this.probationaryDeveloping = probationaryDeveloping;
+        this.fullMemberDate = fullMemberDate;
+        this.fullMemberDeveloping = fullMemberDeveloping;
         this.emergencyPhone = emergencyPhone;
         this.emergencyRelation = emergencyRelation;
         this.hkMoTw = hkMoTw;
         this.specialStudent = specialStudent;
+        this.fatherName = fatherName;
+        this.fatherPhone = fatherPhone;
+        this.fatherWorkUnit = fatherWorkUnit;
+        this.fatherTitle = fatherTitle;
+        this.motherName = motherName;
+        this.motherPhone = motherPhone;
+        this.motherWorkUnit = motherWorkUnit;
+        this.motherTitle = motherTitle;
     }
 
     public Long getId() {
@@ -124,6 +220,22 @@ public class StudentProfileResponse {
         return classNo;
     }
 
+    public LocalDate getEnrollmentDate() {
+        return enrollmentDate;
+    }
+
+    public String getStudentCategory() {
+        return studentCategory;
+    }
+
+    public String getEthnicity() {
+        return ethnicity;
+    }
+
+    public String getPoliticalStatus() {
+        return politicalStatus;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -140,8 +252,52 @@ public class StudentProfileResponse {
         return nativePlace;
     }
 
+    public String getDormCampus() {
+        return dormCampus;
+    }
+
+    public String getDormBuilding() {
+        return dormBuilding;
+    }
+
+    public String getDormRoom() {
+        return dormRoom;
+    }
+
+    public Boolean getOffCampusLiving() {
+        return offCampusLiving;
+    }
+
+    public String getOffCampusAddress() {
+        return offCampusAddress;
+    }
+
+    public String getClassTeacher() {
+        return classTeacher;
+    }
+
+    public String getCounselor() {
+        return counselor;
+    }
+
     public String getLeagueNo() {
         return leagueNo;
+    }
+
+    public LocalDate getLeagueApplicationDate() {
+        return leagueApplicationDate;
+    }
+
+    public LocalDate getLeagueJoinDate() {
+        return leagueJoinDate;
+    }
+
+    public Boolean getLeagueJoined() {
+        return leagueJoined;
+    }
+
+    public Boolean getLeagueDeveloping() {
+        return leagueDeveloping;
     }
 
     public Boolean getPartyApplied() {
@@ -160,6 +316,42 @@ public class StudentProfileResponse {
         return activistDate;
     }
 
+    public Boolean getActivistDeveloping() {
+        return activistDeveloping;
+    }
+
+    public LocalDate getPartyTrainingDate() {
+        return partyTrainingDate;
+    }
+
+    public Boolean getPartyTrainingPending() {
+        return partyTrainingPending;
+    }
+
+    public LocalDate getDevelopmentTargetDate() {
+        return developmentTargetDate;
+    }
+
+    public Boolean getDevelopmentTargetDeveloping() {
+        return developmentTargetDeveloping;
+    }
+
+    public LocalDate getProbationaryMemberDate() {
+        return probationaryMemberDate;
+    }
+
+    public Boolean getProbationaryDeveloping() {
+        return probationaryDeveloping;
+    }
+
+    public LocalDate getFullMemberDate() {
+        return fullMemberDate;
+    }
+
+    public Boolean getFullMemberDeveloping() {
+        return fullMemberDeveloping;
+    }
+
     public String getEmergencyPhone() {
         return emergencyPhone;
     }
@@ -174,5 +366,37 @@ public class StudentProfileResponse {
 
     public Boolean getSpecialStudent() {
         return specialStudent;
+    }
+
+    public String getFatherName() {
+        return fatherName;
+    }
+
+    public String getFatherPhone() {
+        return fatherPhone;
+    }
+
+    public String getFatherWorkUnit() {
+        return fatherWorkUnit;
+    }
+
+    public String getFatherTitle() {
+        return fatherTitle;
+    }
+
+    public String getMotherName() {
+        return motherName;
+    }
+
+    public String getMotherPhone() {
+        return motherPhone;
+    }
+
+    public String getMotherWorkUnit() {
+        return motherWorkUnit;
+    }
+
+    public String getMotherTitle() {
+        return motherTitle;
     }
 }

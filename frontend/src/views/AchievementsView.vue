@@ -111,14 +111,6 @@
         </div>
         <div class="capsule-right">
           <div
-            class="capsule-action"
-            role="button"
-            tabindex="0"
-            @click="goPublish"
-          >
-            发布
-          </div>
-          <div
             class="capsule-action capsule-primary"
             role="button"
             tabindex="0"
@@ -299,7 +291,7 @@ import {
   getAchievements,
   updateAchievement,
 } from "../api/achievements";
-import { uploadMedia } from "../api/posts";
+import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
 
 const router = useRouter();
@@ -385,19 +377,7 @@ function handleMenuClick(key) {
     router.push("/student-info");
     return;
   }
-  if (key === "good-news") {
-    router.push("/congra");
-    return;
-  }
-  if (key === "records") {
-    router.push("/memory");
-    return;
-  }
-  if (key === "contacts") {
-    router.push("/contacts");
-    return;
-  }
-  router.push("/home");
+  router.push("/myinfos");
 }
 
 function openSidebar() {
@@ -406,10 +386,6 @@ function openSidebar() {
 
 function closeSidebar() {
   sidebarOpen.value = false;
-}
-
-function goPublish() {
-  router.push({ path: "/home", query: { publish: "1" } });
 }
 
 function openEditor() {
