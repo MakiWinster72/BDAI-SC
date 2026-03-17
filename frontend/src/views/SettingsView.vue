@@ -81,6 +81,7 @@
           <button class="settings-action danger" type="button">
             TODO:注销账号
           </button>
+          <button class="settings-action" type="button">TODO:修改密码</button>
         </div>
       </section>
 
