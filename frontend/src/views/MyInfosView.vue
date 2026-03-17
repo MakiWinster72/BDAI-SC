@@ -625,7 +625,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  :disabled="!isEditing"
+                  :disabled="isEducationRowDisabled(index)"
                 />
                 <span class="education-sep">至</span>
                 <input
@@ -633,29 +633,38 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
-                  :disabled="!isEditing"
+                  :disabled="isEducationRowDisabled(index) || item.isCurrent"
                 />
+                <label class="info-choice info-choice-muted">
+                  <input
+                    v-model="item.isCurrent"
+                    type="checkbox"
+                    :disabled="isEducationRowDisabled(index) || isEducationCurrentDisabled(item)"
+                    @change="handleEducationCurrentChange(item, index)"
+                  />
+                  至今
+                </label>
               </div>
               <input
                 v-model="item.schoolName"
                 class="info-input"
                 type="text"
                 placeholder="学校名称"
-                :disabled="!isEditing"
+                :disabled="isEducationRowDisabled(index)"
               />
               <input
                 v-model="item.educationLevel"
                 class="info-input"
                 type="text"
                 placeholder="学历"
-                :disabled="!isEditing"
+                :disabled="isEducationRowDisabled(index)"
               />
               <input
                 v-model="item.witness"
                 class="info-input"
                 type="text"
                 placeholder="证明人"
-                :disabled="!isEditing"
+                :disabled="isEducationRowDisabled(index)"
               />
             </div>
           </div>
@@ -909,6 +918,7 @@ const educationItems = reactive(
     schoolName: "",
     educationLevel: "",
     witness: "",
+    isCurrent: false,
   })),
 );
 
@@ -932,6 +942,46 @@ const roleLabel = computed(() => {
 const classMajorOptions = computed(() => {
   return majorOptionsByCollege[info.college] || [];
 });
+
+const hasEducationCurrent = computed(() =>
+  educationItems.some((entry) => entry.isCurrent),
+);
+const currentEducationIndex = computed(() =>
+  educationItems.findIndex((entry) => entry.isCurrent),
+);
+
+function handleEducationCurrentChange(item, index) {
+  if (item.isCurrent) {
+    item.endDate = "";
+    clearEducationRowsAfter(index);
+  }
+}
+
+function isEducationCurrentDisabled(item) {
+  if (item.isCurrent) {
+    return false;
+  }
+  return hasEducationCurrent.value;
+}
+
+function isEducationRowDisabled(index) {
+  if (!isEditing.value) {
+    return true;
+  }
+  const currentIndex = currentEducationIndex.value;
+  return currentIndex !== -1 && index > currentIndex;
+}
+
+function clearEducationRowsAfter(index) {
+  educationItems.slice(index + 1).forEach((entry) => {
+    entry.startDate = "";
+    entry.endDate = "";
+    entry.schoolName = "";
+    entry.educationLevel = "";
+    entry.witness = "";
+    entry.isCurrent = false;
+  });
+}
 
 const dormBuildingDisabled = computed(
   () => !isEditing.value || info.offCampusLiving || !info.dormCampus,
