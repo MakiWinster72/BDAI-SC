@@ -1,6 +1,7 @@
 package com.gcsc.studentcenter.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class StudentProfileRequest {
     private String fullName;
@@ -56,6 +57,7 @@ public class StudentProfileRequest {
     private String motherPhone;
     private String motherWorkUnit;
     private String motherTitle;
+    private List<EducationExperienceItem> educationExperiences;
 
     public String getFullName() {
         return fullName;
@@ -478,5 +480,13 @@ public class StudentProfileRequest {
 
     public void setMotherTitle(String motherTitle) {
         this.motherTitle = motherTitle;
+    }
+
+    public List<EducationExperienceItem> getEducationExperiences() {
+        return educationExperiences;
+    }
+
+    public void setEducationExperiences(List<EducationExperienceItem> educationExperiences) {
+        this.educationExperiences = educationExperiences;
     }
 }

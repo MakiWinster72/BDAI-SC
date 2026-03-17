@@ -1,5 +1,7 @@
 package com.gcsc.studentcenter.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -11,13 +13,17 @@ import com.gcsc.studentcenter.dto.StudentProfileRequest;
 import com.gcsc.studentcenter.dto.StudentProfileResponse;
 import com.gcsc.studentcenter.dto.StudentSearchItemResponse;
 import com.gcsc.studentcenter.dto.StudentSearchResponse;
+import com.gcsc.studentcenter.dto.EducationExperienceItem;
 import com.gcsc.studentcenter.entity.AppUser;
+import com.gcsc.studentcenter.entity.EducationExperience;
 import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.StudentProfileRepository;
 
 @Service
 public class StudentProfileService {
+
+    private static final String FIXED_COLLEGE = "大数据与人工智能学院";
 
     private final StudentProfileRepository studentProfileRepository;
     private final AppUserRepository appUserRepository;
@@ -63,7 +69,7 @@ public class StudentProfileService {
         profile.setClassMajor(normalize(request.getClassMajor()));
         profile.setClassNo(normalize(request.getClassNo()));
         profile.setClassName(resolveClassName(request));
-        profile.setCollege(normalize(request.getCollege()));
+        profile.setCollege(FIXED_COLLEGE);
         profile.setEnrollmentDate(request.getEnrollmentDate());
         profile.setStudentCategory(normalize(request.getStudentCategory()));
         profile.setEthnicity(normalize(request.getEthnicity()));
@@ -109,6 +115,7 @@ public class StudentProfileService {
         profile.setMotherPhone(normalize(request.getMotherPhone()));
         profile.setMotherWorkUnit(normalize(request.getMotherWorkUnit()));
         profile.setMotherTitle(normalize(request.getMotherTitle()));
+        syncEducationExperiences(profile, request.getEducationExperiences());
 
         user.setAvatarUrl(normalize(request.getAvatarUrl()));
         syncUserSummary(user, profile);
@@ -155,9 +162,7 @@ public class StudentProfileService {
         }
         user.setStudentNo(profile.getStudentNo());
         user.setClassName(profile.getClassName());
-        if (profile.getCollege() != null) {
-            user.setCollege(profile.getCollege());
-        }
+        user.setCollege(FIXED_COLLEGE);
         appUserRepository.save(user);
     }
 
@@ -218,8 +223,49 @@ public class StudentProfileService {
             profile != null ? profile.getMotherName() : null,
             profile != null ? profile.getMotherPhone() : null,
             profile != null ? profile.getMotherWorkUnit() : null,
-            profile != null ? profile.getMotherTitle() : null
+            profile != null ? profile.getMotherTitle() : null,
+            toEducationItems(profile != null ? profile.getEducationExperiences() : null)
         );
+    }
+
+    private void syncEducationExperiences(
+        StudentProfile profile,
+        List<EducationExperienceItem> educationExperiences
+    ) {
+        List<EducationExperience> target = profile.getEducationExperiences();
+        target.clear();
+        if (educationExperiences == null) {
+            return;
+        }
+        for (EducationExperienceItem item : educationExperiences) {
+            EducationExperience experience = new EducationExperience();
+            experience.setProfile(profile);
+            experience.setStartDate(item.getStartDate());
+            experience.setEndDate(Boolean.TRUE.equals(item.getIsCurrent()) ? null : item.getEndDate());
+            experience.setSchoolName(normalize(item.getSchoolName()));
+            experience.setEducationLevel(normalize(item.getEducationLevel()));
+            experience.setWitness(normalize(item.getWitness()));
+            experience.setIsCurrent(item.getIsCurrent());
+            target.add(experience);
+        }
+    }
+
+    private List<EducationExperienceItem> toEducationItems(List<EducationExperience> experiences) {
+        if (experiences == null) {
+            return null;
+        }
+        List<EducationExperienceItem> items = new ArrayList<>();
+        for (EducationExperience experience : experiences) {
+            EducationExperienceItem item = new EducationExperienceItem();
+            item.setStartDate(experience.getStartDate());
+            item.setEndDate(experience.getEndDate());
+            item.setSchoolName(experience.getSchoolName());
+            item.setEducationLevel(experience.getEducationLevel());
+            item.setWitness(experience.getWitness());
+            item.setIsCurrent(experience.getIsCurrent());
+            items.add(item);
+        }
+        return items;
     }
 
     private String resolveClassName(StudentProfileRequest request) {

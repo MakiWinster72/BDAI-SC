@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 public class AuthService {
 
     private static final String USERNAME_RULE = "^[a-zA-Z0-9_]{4,32}$";
+    private static final String FIXED_COLLEGE = "大数据与人工智能学院";
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -57,7 +58,7 @@ public class AuthService {
         user.setRole(role);
         user.setStudentNo(normalizeOptional(request.getStudentNo()));
         user.setClassName(normalizeOptional(request.getClassName()));
-        user.setCollege(normalizeOptional(request.getCollege()));
+        user.setCollege(FIXED_COLLEGE);
         user.setCreatedAt(LocalDateTime.now());
         AppUser savedUser = appUserRepository.save(user);
         String token = jwtService.generateToken(

@@ -85,7 +85,7 @@
           />
           <div class="info-hero-text">
             <div class="info-hero-title">基础信息</div>
-            <div class="info-hero-subtitle">请确保信息完整准确</div>
+            <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
           </div>
           <div class="info-actions">
             <button class="ghost-button" type="button" @click="enterEdit">
@@ -122,21 +122,29 @@
             </label>
             <label class="field-card">
               <span class="info-label">年级</span>
-              <select v-model="info.classYear" class="info-input" :disabled="!isEditing">
+              <select
+                v-model="info.classYear"
+                class="info-input"
+                :disabled="!isEditing"
+              >
                 <option disabled value="">选择年级</option>
-                <option v-for="year in classYearOptions" :key="year" :value="year">
+                <option
+                  v-for="year in classYearOptions"
+                  :key="year"
+                  :value="year"
+                >
                   {{ year }}
                 </option>
               </select>
             </label>
             <label class="field-card">
               <span class="info-label">学院</span>
-              <select v-model="info.college" class="info-input" :disabled="!isEditing">
-                <option disabled value="">选择学院</option>
-                <option v-for="item in collegeOptions" :key="item" :value="item">
-                  {{ item }}
-                </option>
-              </select>
+              <input
+                v-model="info.college"
+                class="info-input"
+                type="text"
+                disabled
+              />
             </label>
             <label class="field-card field-full">
               <span class="info-label">班级</span>
@@ -147,7 +155,11 @@
                   :disabled="!isEditing || !classMajorOptions.length"
                 >
                   <option disabled value="">选择专业</option>
-                  <option v-for="major in classMajorOptions" :key="major" :value="major">
+                  <option
+                    v-for="major in classMajorOptions"
+                    :key="major"
+                    :value="major"
+                  >
                     {{ major }}
                   </option>
                 </select>
@@ -176,9 +188,17 @@
             </label>
             <label class="field-card">
               <span class="info-label">学生类别</span>
-              <select v-model="info.studentCategory" class="info-input" :disabled="!isEditing">
+              <select
+                v-model="info.studentCategory"
+                class="info-input"
+                :disabled="!isEditing"
+              >
                 <option disabled value="">选择学生类别</option>
-                <option v-for="item in studentCategoryOptions" :key="item" :value="item">
+                <option
+                  v-for="item in studentCategoryOptions"
+                  :key="item"
+                  :value="item"
+                >
                   {{ item }}
                 </option>
               </select>
@@ -211,19 +231,30 @@
           <div class="info-form-grid">
             <label class="field-card">
               <span class="info-label">民族</span>
-              <input
-                v-model="info.ethnicity"
-                class="info-input"
-                type="text"
-                placeholder="请输入民族"
-                :disabled="!isEditing"
-              />
+              <div class="class-inline">
+                <input
+                  v-model="info.ethnicity"
+                  class="info-input"
+                  type="text"
+                  placeholder="请输入民族"
+                  :disabled="!isEditing"
+                />
+                <span class="class-text">族</span>
+              </div>
             </label>
             <label class="field-card">
               <span class="info-label">政治面貌</span>
-              <select v-model="info.politicalStatus" class="info-input" :disabled="!isEditing">
+              <select
+                v-model="info.politicalStatus"
+                class="info-input"
+                :disabled="!isEditing"
+              >
                 <option disabled value="">选择政治面貌</option>
-                <option v-for="item in politicalStatusOptions" :key="item" :value="item">
+                <option
+                  v-for="item in politicalStatusOptions"
+                  :key="item"
+                  :value="item"
+                >
                   {{ item }}
                 </option>
               </select>
@@ -255,6 +286,7 @@
               />
             </label>
             <label class="field-card">
+              <!-- TODO: 做地址选择器 -->
               <span class="info-label">籍贯</span>
               <input
                 v-model="info.nativePlace"
@@ -265,6 +297,7 @@
               />
             </label>
             <label class="field-card field-full">
+              <!-- TODO: 做地址选择器 -->
               <span class="info-label">住址</span>
               <input
                 v-model="info.address"
@@ -305,6 +338,7 @@
             </div>
             <label class="field-card field-full" v-if="info.offCampusLiving">
               <span class="info-label">外居住详细地址</span>
+              <!-- TODO: 做地址选择器 -->
               <input
                 v-model="info.offCampusAddress"
                 class="info-input"
@@ -315,14 +349,23 @@
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
               <span class="info-label">住宿校区</span>
-              <select v-model="info.dormCampus" class="info-input" :disabled="!isEditing || info.offCampusLiving">
+              <select
+                v-model="info.dormCampus"
+                class="info-input"
+                :disabled="!isEditing || info.offCampusLiving"
+              >
                 <option disabled value="">选择住宿校区</option>
-                <option v-for="item in dormCampusOptions" :key="item" :value="item">
+                <option
+                  v-for="item in dormCampusOptions"
+                  :key="item"
+                  :value="item"
+                >
                   {{ item }}
                 </option>
               </select>
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
+              <!-- TODO: 等待佩佩姐发文件 -->
               <span class="info-label">住宿楼栋</span>
               <input
                 v-model="info.dormBuilding"
@@ -334,13 +377,27 @@
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
               <span class="info-label">住宿房间</span>
-              <input
-                v-model="info.dormRoom"
-                class="info-input"
-                type="text"
-                placeholder="如：508"
-                :disabled="dormRoomDisabled"
-              />
+              <div class="class-inline">
+                <input
+                  v-model="info.dormFloor"
+                  class="info-input class-num"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="楼层"
+                  :disabled="dormRoomDisabled"
+                />
+                <span class="class-text">层</span>
+                <input
+                  v-model="info.dormRoomNo"
+                  class="info-input"
+                  type="text"
+                  placeholder="房间号"
+                  :disabled="dormRoomDisabled"
+                />
+                <span class="class-text">号</span>
+              </div>
+              <div class="info-hint">如：223 -> 2 层 23 号</div>
             </label>
           </div>
         </div>
@@ -505,7 +562,7 @@
               </div>
             </label>
             <label class="field-card">
-              <span class="info-label">接受为预备党员时间</span>
+              <span class="info-label">接收为预备党员时间</span>
               <div class="info-inline info-inline-date">
                 <input
                   v-model="info.probationaryMemberDate"
@@ -548,6 +605,105 @@
         </div>
 
         <div class="info-card">
+          <div class="info-section-title">教育经历</div>
+          <div class="info-hint">从小学开始填</div>
+          <div ref="educationTableWrap" class="education-table-wrap">
+            <table class="education-table">
+              <thead>
+                <tr>
+                  <th>时间段</th>
+                  <th>学校名称</th>
+                  <th>学历</th>
+                  <th>证明人</th>
+                </tr>
+              </thead>
+              <transition-group name="education-row" tag="tbody">
+                <tr v-for="(item, index) in educationItems" :key="`edu-${index}`">
+                  <td>
+                    <div class="education-period">
+                      <input
+                        v-model="item.startDate"
+                        class="info-input"
+                        type="date"
+                        lang="zh-CN"
+                        :disabled="isEducationRowDisabled(index)"
+                      />
+                      <span class="education-sep">至</span>
+                      <input
+                        v-model="item.endDate"
+                        class="info-input"
+                        type="date"
+                        lang="zh-CN"
+                        :disabled="isEducationRowDisabled(index) || item.isCurrent"
+                      />
+                      <label class="info-choice info-choice-muted">
+                        <input
+                          v-model="item.isCurrent"
+                          type="checkbox"
+                          :disabled="isEducationRowDisabled(index) || isEducationCurrentDisabled(item)"
+                          @change="handleEducationCurrentChange(item, index)"
+                        />
+                        至今
+                      </label>
+                    </div>
+                  </td>
+                  <td>
+                    <input
+                      v-model="item.schoolName"
+                      class="info-input"
+                      type="text"
+                      placeholder="学校名称"
+                      :disabled="isEducationRowDisabled(index)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      v-model="item.educationLevel"
+                      class="info-input"
+                      type="text"
+                      placeholder="学历"
+                      :disabled="isEducationRowDisabled(index)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      v-model="item.witness"
+                      class="info-input"
+                      type="text"
+                      placeholder="证明人"
+                      :disabled="isEducationRowDisabled(index)"
+                    />
+                  </td>
+                </tr>
+              </transition-group>
+            </table>
+            <div class="education-controls-wrap">
+              <div class="education-controls">
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing"
+                  aria-label="增加一行"
+                  @click="addEducationRow"
+                >
+                  +
+                </button>
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing || educationItems.length <= 1"
+                  aria-label="减少一行"
+                  @click="removeEducationRow"
+                >
+                  −
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <!-- TODO: 单亲/离异等待现场演示求助 -->
           <div class="info-section-title">家庭信息</div>
           <div class="info-form-grid family-grid">
             <div class="family-section-title">父亲</div>
@@ -583,6 +739,9 @@
                 placeholder="请输入父亲工作单位"
                 :disabled="!isEditing"
               />
+              <div class="info-hint">
+                填写公司名字即可，若开小店则填写个体户，若无固定单位则填写散工，无业则写在家
+              </div>
             </label>
             <label class="field-card">
               <span class="info-label">职务</span>
@@ -593,6 +752,7 @@
                 placeholder="请输入父亲职务"
                 :disabled="!isEditing"
               />
+              <div class="info-hint">无业则填写“务农”</div>
             </label>
             <div class="family-section-title">母亲</div>
             <label class="field-card">
@@ -697,7 +857,7 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref, onMounted, watch } from "vue";
+import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
@@ -705,12 +865,14 @@ import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
 
 const router = useRouter();
+const FIXED_COLLEGE = "大数据与人工智能学院";
 
 const profile = reactive(loadUser());
 const activeMenu = ref("my-info");
 const isEditing = ref(false);
 const avatarInput = ref(null);
 const sidebarOpen = ref(false);
+const educationTableWrap = ref(null);
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -720,7 +882,7 @@ const info = reactive({
   classMajor: "",
   classNo: 1,
   className: profile.className || "",
-  college: profile.college || "",
+  college: FIXED_COLLEGE,
   enrollmentDate: "",
   studentCategory: "",
   ethnicity: "",
@@ -728,6 +890,8 @@ const info = reactive({
   dormCampus: "",
   dormBuilding: "",
   dormRoom: "",
+  dormFloor: "",
+  dormRoomNo: "",
   offCampusLiving: false,
   offCampusAddress: "",
   classTeacher: "",
@@ -767,18 +931,73 @@ const info = reactive({
 });
 
 const classYearOptions = Array.from({ length: 19 }, (_, index) => 2022 + index);
-const collegeOptions = ["大数据与人工智能学院"];
 const majorOptionsByCollege = {
   大数据与人工智能学院: [
     "计算机科学与技术",
     "计算机科学与技术（实验区）",
     "软件工程",
     "电子商务",
+    "大数据管理与应用（佛山校区全学段）",
+    "大数据管理与应用（数字治理）",
   ],
 };
 const studentCategoryOptions = ["本科", "研究生"];
-const politicalStatusOptions = ["无", "共青团员", "入党积极分子", "预备党员", "中共党员"];
+const politicalStatusOptions = ["群众", "共青团员", "中共预备党员", "中共党员"];
 const dormCampusOptions = ["佛山校区", "广州校区"];
+const educationItems = reactive(
+  Array.from({ length: 5 }, () => createEducationItem()),
+);
+
+function createEducationItem() {
+  return {
+    startDate: "",
+    endDate: "",
+    schoolName: "",
+    educationLevel: "",
+    witness: "",
+    isCurrent: false,
+  };
+}
+
+async function addEducationRow() {
+  await animateEducationHeightWithUpdate(() => {
+    educationItems.push(createEducationItem());
+  });
+}
+
+async function removeEducationRow() {
+  if (educationItems.length <= 1) {
+    return;
+  }
+  await animateEducationHeightWithUpdate(() => {
+    educationItems.pop();
+  });
+}
+
+async function animateEducationHeightWithUpdate(updateFn) {
+  const el = educationTableWrap.value;
+  if (!el) {
+    updateFn();
+    return;
+  }
+  const startHeight = el.getBoundingClientRect().height;
+  updateFn();
+  await nextTick();
+  const targetHeight = el.getBoundingClientRect().height;
+  el.style.height = `${startHeight}px`;
+  el.style.overflow = "hidden";
+  requestAnimationFrame(() => {
+    el.style.transition = "height 260ms ease";
+    el.style.height = `${targetHeight}px`;
+  });
+  const cleanup = () => {
+    el.style.height = "";
+    el.style.transition = "";
+    el.style.overflow = "";
+    el.removeEventListener("transitionend", cleanup);
+  };
+  el.addEventListener("transitionend", cleanup);
+}
 
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 
@@ -801,6 +1020,45 @@ const classMajorOptions = computed(() => {
   return majorOptionsByCollege[info.college] || [];
 });
 
+const hasEducationCurrent = computed(() =>
+  educationItems.some((entry) => entry.isCurrent),
+);
+const currentEducationIndex = computed(() =>
+  educationItems.findIndex((entry) => entry.isCurrent),
+);
+
+function handleEducationCurrentChange(item, index) {
+  if (item.isCurrent) {
+    item.endDate = "";
+    clearEducationRowsAfter(index);
+  }
+}
+
+function isEducationCurrentDisabled(item) {
+  if (item.isCurrent) {
+    return false;
+  }
+  return hasEducationCurrent.value;
+}
+
+function isEducationRowDisabled(index) {
+  if (!isEditing.value) {
+    return true;
+  }
+  const currentIndex = currentEducationIndex.value;
+  return currentIndex !== -1 && index > currentIndex;
+}
+
+function clearEducationRowsAfter(index) {
+  educationItems.slice(index + 1).forEach((entry) => {
+    entry.startDate = "";
+    entry.endDate = "";
+    entry.schoolName = "";
+    entry.educationLevel = "";
+    entry.witness = "";
+    entry.isCurrent = false;
+  });
+}
 
 const dormBuildingDisabled = computed(
   () => !isEditing.value || info.offCampusLiving || !info.dormCampus,
@@ -829,10 +1087,7 @@ const partyAppliedDisabled = computed(
   () => !isEditing.value || !info.leagueJoinDate || info.leagueDeveloping,
 );
 const applicationDateDisabled = computed(
-  () =>
-    !isEditing.value ||
-    partyAppliedDisabled.value ||
-    !info.partyApplied,
+  () => !isEditing.value || partyAppliedDisabled.value || !info.partyApplied,
 );
 const activistDateDisabled = computed(
   () =>
@@ -926,8 +1181,6 @@ function goToSettings() {
   router.push("/settings");
 }
 
-
-
 function handleDigitsInput(field, maxLength, event) {
   const raw = event.target.value || "";
   const next = raw.replace(/\D/g, "").slice(0, maxLength);
@@ -977,6 +1230,19 @@ async function confirmEdit() {
     info.classNo,
     info.className,
   );
+  const dormRoom = buildDormRoom(
+    info.dormFloor,
+    info.dormRoomNo,
+    info.dormRoom,
+  );
+  const educationExperiences = educationItems.map((item) => ({
+    startDate: item.startDate,
+    endDate: item.endDate,
+    schoolName: item.schoolName,
+    educationLevel: item.educationLevel,
+    witness: item.witness,
+    isCurrent: item.isCurrent,
+  }));
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
@@ -985,14 +1251,14 @@ async function confirmEdit() {
     classMajor: info.classMajor,
     classNo: info.classNo,
     className,
-    college: info.college,
+    college: FIXED_COLLEGE,
     enrollmentDate: info.enrollmentDate || null,
     studentCategory: info.studentCategory,
     ethnicity: info.ethnicity,
     politicalStatus: info.politicalStatus,
     dormCampus: info.dormCampus,
     dormBuilding: info.dormBuilding,
-    dormRoom: info.dormRoom,
+    dormRoom,
     offCampusLiving: info.offCampusLiving,
     offCampusAddress: info.offCampusAddress,
     classTeacher: info.classTeacher,
@@ -1029,6 +1295,7 @@ async function confirmEdit() {
     motherPhone: info.motherPhone,
     motherWorkUnit: info.motherWorkUnit,
     motherTitle: info.motherTitle,
+    educationExperiences,
   };
   if (info.offCampusLiving) {
     payload.dormCampus = null;
@@ -1087,6 +1354,32 @@ function buildClassName(year, major, no, fallback) {
   return result || "";
 }
 
+function buildDormRoom(floor, roomNo, fallback) {
+  const safeFloor = String(floor || "").trim();
+  const safeRoomNo = String(roomNo || "").trim();
+  if (safeFloor || safeRoomNo) {
+    return `${safeFloor}层${safeRoomNo}号`.trim();
+  }
+  return fallback || "";
+}
+
+function parseDormRoom(rawValue) {
+  const raw = String(rawValue || "").trim();
+  if (!raw) {
+    return { floor: "", roomNo: "" };
+  }
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) {
+    return { floor: "", roomNo: "" };
+  }
+  if (digits.length <= 2) {
+    return { floor: "", roomNo: digits };
+  }
+  const floor = digits.slice(0, digits.length - 2);
+  const roomNo = digits.slice(-2);
+  return { floor, roomNo };
+}
+
 function applyProfileResponse(data) {
   if (!data) {
     return;
@@ -1098,7 +1391,7 @@ function applyProfileResponse(data) {
   info.classMajor = data.classMajor || "";
   info.classNo = data.classNo ?? 1;
   info.className = data.className || "";
-  info.college = data.college || "";
+  info.college = FIXED_COLLEGE;
   info.enrollmentDate = data.enrollmentDate || "";
   info.studentCategory = data.studentCategory || "";
   info.ethnicity = data.ethnicity || "";
@@ -1106,6 +1399,9 @@ function applyProfileResponse(data) {
   info.dormCampus = data.dormCampus || "";
   info.dormBuilding = data.dormBuilding || "";
   info.dormRoom = data.dormRoom || "";
+  const parsedDormRoom = parseDormRoom(info.dormRoom);
+  info.dormFloor = parsedDormRoom.floor;
+  info.dormRoomNo = parsedDormRoom.roomNo;
   info.offCampusLiving = Boolean(data.offCampusLiving);
   info.offCampusAddress = data.offCampusAddress || "";
   info.classTeacher = data.classTeacher || "";
@@ -1142,15 +1438,32 @@ function applyProfileResponse(data) {
   info.motherPhone = data.motherPhone || "";
   info.motherWorkUnit = data.motherWorkUnit || "";
   info.motherTitle = data.motherTitle || "";
+  applyEducationExperiences(data.educationExperiences);
 
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;
   profile.avatarUrl = data.avatarUrl || profile.avatarUrl;
   profile.studentNo = data.studentNo || profile.studentNo;
   profile.className = data.className || profile.className;
-  profile.college = data.college || profile.college;
+  profile.college = FIXED_COLLEGE;
 
   saveUser(profile);
+}
+
+function applyEducationExperiences(rawItems) {
+  const nextItems = Array.isArray(rawItems) ? rawItems : [];
+  const normalized = nextItems.map((item) => ({
+    startDate: item?.startDate || "",
+    endDate: item?.isCurrent ? "" : item?.endDate || "",
+    schoolName: item?.schoolName || "",
+    educationLevel: item?.educationLevel || "",
+    witness: item?.witness || "",
+    isCurrent: Boolean(item?.isCurrent),
+  }));
+  while (normalized.length < 5) {
+    normalized.push(createEducationItem());
+  }
+  educationItems.splice(0, educationItems.length, ...normalized);
 }
 
 function saveUser(data) {
@@ -1161,7 +1474,7 @@ function saveUser(data) {
     role: data.role || profile.role || "STUDENT",
     studentNo: data.studentNo || "",
     className: data.className || "",
-    college: data.college || "",
+    college: FIXED_COLLEGE,
   };
   localStorage.setItem("gcsc_user", JSON.stringify(user));
 }
@@ -1182,6 +1495,8 @@ watch(
       info.dormCampus = "";
       info.dormBuilding = "";
       info.dormRoom = "";
+      info.dormFloor = "";
+      info.dormRoomNo = "";
     } else {
       info.offCampusAddress = "";
     }
@@ -1294,6 +1609,7 @@ watch(
   },
 );
 
+
 function loadUser() {
   try {
     const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
@@ -1304,7 +1620,7 @@ function loadUser() {
       role: raw.role || "STUDENT",
       studentNo: raw.studentNo || "",
       className: raw.className || "",
-      college: raw.college || "",
+      college: FIXED_COLLEGE,
     };
   } catch {
     return {
@@ -1314,7 +1630,7 @@ function loadUser() {
       role: "STUDENT",
       studentNo: "",
       className: "",
-      college: "",
+      college: FIXED_COLLEGE,
     };
   }
 }

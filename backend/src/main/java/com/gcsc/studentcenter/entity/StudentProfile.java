@@ -1,13 +1,17 @@
 package com.gcsc.studentcenter.entity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
@@ -177,6 +181,8 @@ public class StudentProfile {
 
     @Column(name = "mother_title", length = 64)
     private String motherTitle;
+    @OneToMany(mappedBy = "profile", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<EducationExperience> educationExperiences = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -603,5 +609,13 @@ public class StudentProfile {
 
     public void setMotherTitle(String motherTitle) {
         this.motherTitle = motherTitle;
+    }
+
+    public List<EducationExperience> getEducationExperiences() {
+        return educationExperiences;
+    }
+
+    public void setEducationExperiences(List<EducationExperience> educationExperiences) {
+        this.educationExperiences = educationExperiences;
     }
 }
