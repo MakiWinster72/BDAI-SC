@@ -607,7 +607,7 @@
         <div class="info-card">
           <div class="info-section-title">教育经历</div>
           <div class="info-hint">从小学开始填</div>
-          <div class="education-table-wrap">
+          <div ref="educationTableWrap" class="education-table-wrap">
             <table class="education-table">
               <thead>
                 <tr>
@@ -617,7 +617,7 @@
                   <th>证明人</th>
                 </tr>
               </thead>
-              <tbody>
+              <transition-group name="education-row" tag="tbody">
                 <tr v-for="(item, index) in educationItems" :key="`edu-${index}`">
                   <td>
                     <div class="education-period">
@@ -675,7 +675,7 @@
                     />
                   </td>
                 </tr>
-              </tbody>
+              </transition-group>
             </table>
             <div class="education-controls">
               <button
@@ -855,7 +855,7 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref, onMounted, watch } from "vue";
+import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
@@ -870,6 +870,7 @@ const activeMenu = ref("my-info");
 const isEditing = ref(false);
 const avatarInput = ref(null);
 const sidebarOpen = ref(false);
+const educationTableWrap = ref(null);
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -956,15 +957,44 @@ function createEducationItem() {
   };
 }
 
-function addEducationRow() {
-  educationItems.push(createEducationItem());
+async function addEducationRow() {
+  await animateEducationHeightWithUpdate(() => {
+    educationItems.push(createEducationItem());
+  });
 }
 
-function removeEducationRow() {
+async function removeEducationRow() {
   if (educationItems.length <= 1) {
     return;
   }
-  educationItems.pop();
+  await animateEducationHeightWithUpdate(() => {
+    educationItems.pop();
+  });
+}
+
+async function animateEducationHeightWithUpdate(updateFn) {
+  const el = educationTableWrap.value;
+  if (!el) {
+    updateFn();
+    return;
+  }
+  const startHeight = el.getBoundingClientRect().height;
+  updateFn();
+  await nextTick();
+  const targetHeight = el.getBoundingClientRect().height;
+  el.style.height = `${startHeight}px`;
+  el.style.overflow = "hidden";
+  requestAnimationFrame(() => {
+    el.style.transition = "height 260ms ease";
+    el.style.height = `${targetHeight}px`;
+  });
+  const cleanup = () => {
+    el.style.height = "";
+    el.style.transition = "";
+    el.style.overflow = "";
+    el.removeEventListener("transitionend", cleanup);
+  };
+  el.addEventListener("transitionend", cleanup);
 }
 
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
@@ -1550,6 +1580,7 @@ watch(
     info.fullMemberDate = "";
   },
 );
+
 
 function loadUser() {
   try {
