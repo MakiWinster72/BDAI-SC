@@ -607,65 +607,95 @@
         <div class="info-card">
           <div class="info-section-title">教育经历</div>
           <div class="info-hint">从小学开始填</div>
-          <div class="education-table">
-            <div class="education-row education-header">
-              <div>时间段</div>
-              <div>学校名称</div>
-              <div>学历</div>
-              <div>证明人</div>
-            </div>
-            <div
-              v-for="(item, index) in educationItems"
-              :key="`edu-${index}`"
-              class="education-row"
-            >
-              <div class="education-period">
-                <input
-                  v-model="item.startDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :disabled="isEducationRowDisabled(index)"
-                />
-                <span class="education-sep">至</span>
-                <input
-                  v-model="item.endDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :disabled="isEducationRowDisabled(index) || item.isCurrent"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="item.isCurrent"
-                    type="checkbox"
-                    :disabled="isEducationRowDisabled(index) || isEducationCurrentDisabled(item)"
-                    @change="handleEducationCurrentChange(item, index)"
-                  />
-                  至今
-                </label>
-              </div>
-              <input
-                v-model="item.schoolName"
-                class="info-input"
-                type="text"
-                placeholder="学校名称"
-                :disabled="isEducationRowDisabled(index)"
-              />
-              <input
-                v-model="item.educationLevel"
-                class="info-input"
-                type="text"
-                placeholder="学历"
-                :disabled="isEducationRowDisabled(index)"
-              />
-              <input
-                v-model="item.witness"
-                class="info-input"
-                type="text"
-                placeholder="证明人"
-                :disabled="isEducationRowDisabled(index)"
-              />
+          <div class="education-table-wrap">
+            <table class="education-table">
+              <thead>
+                <tr>
+                  <th>时间段</th>
+                  <th>学校名称</th>
+                  <th>学历</th>
+                  <th>证明人</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in educationItems" :key="`edu-${index}`">
+                  <td>
+                    <div class="education-period">
+                      <input
+                        v-model="item.startDate"
+                        class="info-input"
+                        type="date"
+                        lang="zh-CN"
+                        :disabled="isEducationRowDisabled(index)"
+                      />
+                      <span class="education-sep">至</span>
+                      <input
+                        v-model="item.endDate"
+                        class="info-input"
+                        type="date"
+                        lang="zh-CN"
+                        :disabled="isEducationRowDisabled(index) || item.isCurrent"
+                      />
+                      <label class="info-choice info-choice-muted">
+                        <input
+                          v-model="item.isCurrent"
+                          type="checkbox"
+                          :disabled="isEducationRowDisabled(index) || isEducationCurrentDisabled(item)"
+                          @change="handleEducationCurrentChange(item, index)"
+                        />
+                        至今
+                      </label>
+                    </div>
+                  </td>
+                  <td>
+                    <input
+                      v-model="item.schoolName"
+                      class="info-input"
+                      type="text"
+                      placeholder="学校名称"
+                      :disabled="isEducationRowDisabled(index)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      v-model="item.educationLevel"
+                      class="info-input"
+                      type="text"
+                      placeholder="学历"
+                      :disabled="isEducationRowDisabled(index)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      v-model="item.witness"
+                      class="info-input"
+                      type="text"
+                      placeholder="证明人"
+                      :disabled="isEducationRowDisabled(index)"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="education-controls">
+              <button
+                class="education-control"
+                type="button"
+                :disabled="!isEditing || educationItems.length <= 1"
+                aria-label="减少一行"
+                @click="removeEducationRow"
+              >
+                −
+              </button>
+              <button
+                class="education-control"
+                type="button"
+                :disabled="!isEditing"
+                aria-label="增加一行"
+                @click="addEducationRow"
+              >
+                +
+              </button>
             </div>
           </div>
         </div>
@@ -912,15 +942,30 @@ const studentCategoryOptions = ["本科", "研究生"];
 const politicalStatusOptions = ["群众", "共青团员", "中共预备党员", "中共党员"];
 const dormCampusOptions = ["佛山校区", "广州校区"];
 const educationItems = reactive(
-  Array.from({ length: 5 }, () => ({
+  Array.from({ length: 5 }, () => createEducationItem()),
+);
+
+function createEducationItem() {
+  return {
     startDate: "",
     endDate: "",
     schoolName: "",
     educationLevel: "",
     witness: "",
     isCurrent: false,
-  })),
-);
+  };
+}
+
+function addEducationRow() {
+  educationItems.push(createEducationItem());
+}
+
+function removeEducationRow() {
+  if (educationItems.length <= 1) {
+    return;
+  }
+  educationItems.pop();
+}
 
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 
