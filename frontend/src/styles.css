@@ -1609,13 +1609,19 @@ body {
   width: 100%;
 }
 
-.education-controls {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
-  padding: 10px 12px;
+.education-controls-wrap {
+  overflow-x: auto;
   border-top: 1px solid rgba(3, 107, 114, 0.08);
   background: rgba(255, 255, 255, 0.7);
+  width: max-content;
+  min-width: 760px;
+}
+
+.education-controls {
+  display: flex;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 10px 12px;
 }
 
 .education-control {

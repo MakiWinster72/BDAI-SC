@@ -677,25 +677,27 @@
                 </tr>
               </transition-group>
             </table>
-            <div class="education-controls">
-              <button
-                class="education-control"
-                type="button"
-                :disabled="!isEditing || educationItems.length <= 1"
-                aria-label="减少一行"
-                @click="removeEducationRow"
-              >
-                −
-              </button>
-              <button
-                class="education-control"
-                type="button"
-                :disabled="!isEditing"
-                aria-label="增加一行"
-                @click="addEducationRow"
-              >
-                +
-              </button>
+            <div class="education-controls-wrap">
+              <div class="education-controls">
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing"
+                  aria-label="增加一行"
+                  @click="addEducationRow"
+                >
+                  +
+                </button>
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing || educationItems.length <= 1"
+                  aria-label="减少一行"
+                  @click="removeEducationRow"
+                >
+                  −
+                </button>
+              </div>
             </div>
           </div>
         </div>
