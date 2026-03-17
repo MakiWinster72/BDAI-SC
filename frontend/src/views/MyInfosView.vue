@@ -769,6 +769,8 @@ const majorOptionsByCollege = {
     "计算机科学与技术（实验区）",
     "软件工程",
     "电子商务",
+    "大数据管理与应用（佛山校区全学段）",
+    "大数据管理与应用（数字治理）",
   ],
 };
 const studentCategoryOptions = ["本科", "研究生"];
