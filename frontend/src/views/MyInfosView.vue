@@ -286,6 +286,7 @@
               />
             </label>
             <label class="field-card">
+              <!-- TODO: 做地址选择器 -->
               <span class="info-label">籍贯</span>
               <input
                 v-model="info.nativePlace"
@@ -296,6 +297,7 @@
               />
             </label>
             <label class="field-card field-full">
+              <!-- TODO: 做地址选择器 -->
               <span class="info-label">住址</span>
               <input
                 v-model="info.address"
@@ -336,6 +338,7 @@
             </div>
             <label class="field-card field-full" v-if="info.offCampusLiving">
               <span class="info-label">外居住详细地址</span>
+              <!-- TODO: 做地址选择器 -->
               <input
                 v-model="info.offCampusAddress"
                 class="info-input"
@@ -362,6 +365,7 @@
               </select>
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
+              <!-- TODO: 等待佩佩姐发文件 -->
               <span class="info-label">住宿楼栋</span>
               <input
                 v-model="info.dormBuilding"
@@ -373,13 +377,27 @@
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
               <span class="info-label">住宿房间</span>
-              <input
-                v-model="info.dormRoom"
-                class="info-input"
-                type="text"
-                placeholder="如：508"
-                :disabled="dormRoomDisabled"
-              />
+              <div class="class-inline">
+                <input
+                  v-model="info.dormFloor"
+                  class="info-input class-num"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="楼层"
+                  :disabled="dormRoomDisabled"
+                />
+                <span class="class-text">层</span>
+                <input
+                  v-model="info.dormRoomNo"
+                  class="info-input"
+                  type="text"
+                  placeholder="房间号"
+                  :disabled="dormRoomDisabled"
+                />
+                <span class="class-text">号</span>
+                <span class="class-text">如：223 -> 2 层 23 号</span>
+              </div>
             </label>
           </div>
         </div>
@@ -544,7 +562,7 @@
               </div>
             </label>
             <label class="field-card">
-              <span class="info-label">接受为预备党员时间</span>
+              <span class="info-label">接收为预备党员时间</span>
               <div class="info-inline info-inline-date">
                 <input
                   v-model="info.probationaryMemberDate"
@@ -768,6 +786,8 @@ const info = reactive({
   dormCampus: "",
   dormBuilding: "",
   dormRoom: "",
+  dormFloor: "",
+  dormRoomNo: "",
   offCampusLiving: false,
   offCampusAddress: "",
   classTeacher: "",
@@ -1012,6 +1032,11 @@ async function confirmEdit() {
     info.classNo,
     info.className,
   );
+  const dormRoom = buildDormRoom(
+    info.dormFloor,
+    info.dormRoomNo,
+    info.dormRoom,
+  );
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
@@ -1027,7 +1052,7 @@ async function confirmEdit() {
     politicalStatus: info.politicalStatus,
     dormCampus: info.dormCampus,
     dormBuilding: info.dormBuilding,
-    dormRoom: info.dormRoom,
+    dormRoom,
     offCampusLiving: info.offCampusLiving,
     offCampusAddress: info.offCampusAddress,
     classTeacher: info.classTeacher,
@@ -1122,6 +1147,32 @@ function buildClassName(year, major, no, fallback) {
   return result || "";
 }
 
+function buildDormRoom(floor, roomNo, fallback) {
+  const safeFloor = String(floor || "").trim();
+  const safeRoomNo = String(roomNo || "").trim();
+  if (safeFloor || safeRoomNo) {
+    return `${safeFloor}层${safeRoomNo}号`.trim();
+  }
+  return fallback || "";
+}
+
+function parseDormRoom(rawValue) {
+  const raw = String(rawValue || "").trim();
+  if (!raw) {
+    return { floor: "", roomNo: "" };
+  }
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) {
+    return { floor: "", roomNo: "" };
+  }
+  if (digits.length <= 2) {
+    return { floor: "", roomNo: digits };
+  }
+  const floor = digits.slice(0, digits.length - 2);
+  const roomNo = digits.slice(-2);
+  return { floor, roomNo };
+}
+
 function applyProfileResponse(data) {
   if (!data) {
     return;
@@ -1141,6 +1192,9 @@ function applyProfileResponse(data) {
   info.dormCampus = data.dormCampus || "";
   info.dormBuilding = data.dormBuilding || "";
   info.dormRoom = data.dormRoom || "";
+  const parsedDormRoom = parseDormRoom(info.dormRoom);
+  info.dormFloor = parsedDormRoom.floor;
+  info.dormRoomNo = parsedDormRoom.roomNo;
   info.offCampusLiving = Boolean(data.offCampusLiving);
   info.offCampusAddress = data.offCampusAddress || "";
   info.classTeacher = data.classTeacher || "";
@@ -1217,6 +1271,8 @@ watch(
       info.dormCampus = "";
       info.dormBuilding = "";
       info.dormRoom = "";
+      info.dormFloor = "";
+      info.dormRoomNo = "";
     } else {
       info.offCampusAddress = "";
     }
