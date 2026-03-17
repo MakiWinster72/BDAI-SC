@@ -1513,6 +1513,45 @@ body {
   min-width: 180px;
 }
 
+.education-table {
+  display: grid;
+  gap: 10px;
+}
+
+.education-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.6fr) minmax(160px, 1.4fr) minmax(120px, 1fr) minmax(120px, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.education-header {
+  font-size: 12px;
+  color: #5b717a;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.education-period {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.education-sep {
+  color: #6a7d85;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.education-row .info-input[type="date"] {
+  min-width: 0;
+}
+
+.education-row .info-input {
+  width: 100%;
+}
+
 .info-choice {
   display: inline-flex;
   align-items: center;

@@ -605,6 +605,63 @@
         </div>
 
         <div class="info-card">
+          <div class="info-section-title">教育经历</div>
+          <div class="info-hint">从小学开始填</div>
+          <div class="education-table">
+            <div class="education-row education-header">
+              <div>时间段</div>
+              <div>学校名称</div>
+              <div>学历</div>
+              <div>证明人</div>
+            </div>
+            <div
+              v-for="(item, index) in educationItems"
+              :key="`edu-${index}`"
+              class="education-row"
+            >
+              <div class="education-period">
+                <input
+                  v-model="item.startDate"
+                  class="info-input"
+                  type="date"
+                  lang="zh-CN"
+                  :disabled="!isEditing"
+                />
+                <span class="education-sep">至</span>
+                <input
+                  v-model="item.endDate"
+                  class="info-input"
+                  type="date"
+                  lang="zh-CN"
+                  :disabled="!isEditing"
+                />
+              </div>
+              <input
+                v-model="item.schoolName"
+                class="info-input"
+                type="text"
+                placeholder="学校名称"
+                :disabled="!isEditing"
+              />
+              <input
+                v-model="item.educationLevel"
+                class="info-input"
+                type="text"
+                placeholder="学历"
+                :disabled="!isEditing"
+              />
+              <input
+                v-model="item.witness"
+                class="info-input"
+                type="text"
+                placeholder="证明人"
+                :disabled="!isEditing"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
           <!-- TODO: 单亲/离异等待现场演示求助 -->
           <div class="info-section-title">家庭信息</div>
           <div class="info-form-grid family-grid">
@@ -845,6 +902,15 @@ const majorOptionsByCollege = {
 const studentCategoryOptions = ["本科", "研究生"];
 const politicalStatusOptions = ["群众", "共青团员", "中共预备党员", "中共党员"];
 const dormCampusOptions = ["佛山校区", "广州校区"];
+const educationItems = reactive(
+  Array.from({ length: 5 }, () => ({
+    startDate: "",
+    endDate: "",
+    schoolName: "",
+    educationLevel: "",
+    witness: "",
+  })),
+);
 
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 
