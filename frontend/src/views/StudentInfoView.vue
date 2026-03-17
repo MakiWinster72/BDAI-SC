@@ -69,69 +69,27 @@
             <div class="student-filter-row">
               <div class="student-filter-field">
                 <span class="info-label">年级</span>
-                <div class="student-select">
-                  <button
-                    class="info-input student-select-trigger"
-                    type="button"
-                    @click.stop="toggleYearMenu"
+                <select v-model="filters.classYear" class="info-input">
+                  <option value="">全部</option>
+                  <option
+                    v-for="year in classYearOptions"
+                    :key="year"
+                    :value="String(year)"
                   >
-                    {{ yearLabel }}
-                  </button>
-                  <transition name="student-dropdown">
-                    <div v-if="yearMenuOpen" class="student-select-menu">
-                      <button
-                        class="student-select-option"
-                        type="button"
-                        @click="selectYear('')"
-                      >
-                        全部
-                      </button>
-                      <button
-                        v-for="year in classYearOptions"
-                        :key="year"
-                        class="student-select-option"
-                        type="button"
-                        @click="selectYear(String(year))"
-                      >
-                        {{ year }}
-                      </button>
-                    </div>
-                  </transition>
-                </div>
+                    {{ year }}
+                  </option>
+                </select>
               </div>
             </div>
 
             <div class="student-filter-row">
               <span class="info-label">班级</span>
-              <div class="student-select">
-                <button
-                  class="info-input student-select-trigger"
-                  type="button"
-                  @click.stop="toggleMajorMenu"
-                >
-                  {{ majorLabel }}
-                </button>
-                <transition name="student-dropdown">
-                  <div v-if="majorMenuOpen" class="student-select-menu">
-                    <button
-                      class="student-select-option"
-                      type="button"
-                      @click="selectMajor('')"
-                    >
-                      全部
-                    </button>
-                    <button
-                      v-for="major in availableMajors"
-                      :key="major"
-                      class="student-select-option"
-                      type="button"
-                      @click="selectMajor(major)"
-                    >
-                      {{ major }}
-                    </button>
-                  </div>
-                </transition>
-              </div>
+              <select v-model="filters.major" class="info-input">
+                <option value="">全部</option>
+                <option v-for="major in availableMajors" :key="major" :value="major">
+                  {{ major }}
+                </option>
+              </select>
             </div>
 
             <div class="student-filter-row student-filter-inline">
@@ -334,7 +292,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfileById, searchStudentProfiles } from "../api/profile";
@@ -348,8 +306,6 @@ const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 const selectedIds = ref([]);
 const currentPage = ref(1);
 const pageInput = ref(null);
-const yearMenuOpen = ref(false);
-const majorMenuOpen = ref(false);
 const students = ref([]);
 const totalPages = ref(1);
 const totalItems = ref(0);
@@ -388,8 +344,6 @@ const availableMajors = computed(() => {
   return majorOptions;
 });
 
-const yearLabel = computed(() => filters.classYear || "全部");
-const majorLabel = computed(() => filters.major || "全部");
 
 const hasActiveFilters = computed(() => {
   return Boolean(
@@ -472,30 +426,6 @@ async function fetchStudents() {
   }
 }
 
-function toggleYearMenu() {
-  yearMenuOpen.value = !yearMenuOpen.value;
-  if (yearMenuOpen.value) {
-    majorMenuOpen.value = false;
-  }
-}
-
-function selectYear(value) {
-  filters.classYear = value;
-  yearMenuOpen.value = false;
-}
-
-function toggleMajorMenu() {
-  majorMenuOpen.value = !majorMenuOpen.value;
-  if (majorMenuOpen.value) {
-    yearMenuOpen.value = false;
-  }
-}
-
-function selectMajor(value) {
-  filters.major = value;
-  majorMenuOpen.value = false;
-}
-
 function openDetail(item) {
   viewOpen.value = true;
   viewClosing.value = false;
@@ -523,21 +453,8 @@ function closeView() {
   }, 260);
 }
 
-function handleDocumentClick(event) {
-  if (event.target.closest(".student-select")) {
-    return;
-  }
-  yearMenuOpen.value = false;
-  majorMenuOpen.value = false;
-}
-
 onMounted(() => {
-  document.addEventListener("click", handleDocumentClick);
   fetchStudents();
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleDocumentClick);
 });
 
 function setPage(page) {
@@ -668,72 +585,6 @@ function loadUser() {
   gap: 8px;
 }
 
-.student-select {
-  position: relative;
-  overflow: visible;
-}
-
-.student-select-trigger {
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-}
-
-.student-select-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  max-height: 190px;
-  overflow-y: auto;
-  border-radius: 16px;
-  border: 1px solid rgba(3, 107, 114, 0.18);
-  background-color: rgba(255, 255, 255, 0.6);
-  background-image: linear-gradient(
-    130deg,
-    rgba(205, 255, 249, 0.9),
-    rgba(197, 217, 226, 0.7)
-  );
-  box-shadow: 0 18px 38px rgba(3, 107, 114, 0.18);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  z-index: 30;
-  padding: 6px;
-  display: grid;
-  gap: 4px;
-}
-
-.student-select-option {
-  border: none;
-  background: transparent;
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  color: #0f4d55;
-  font-size: 13px;
-}
-
-.student-select-option:hover {
-  background: rgba(205, 255, 249, 0.9);
-}
-
-.student-dropdown-enter-active,
-.student-dropdown-leave-active {
-  transition: opacity 160ms ease, transform 160ms ease;
-}
-
-.student-dropdown-enter-from,
-.student-dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-6px) scale(0.98);
-}
-
-.student-dropdown-enter-to,
-.student-dropdown-leave-from {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
 
 .student-filter-inline {
   display: flex;
