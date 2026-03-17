@@ -85,7 +85,7 @@
           />
           <div class="info-hero-text">
             <div class="info-hero-title">基础信息</div>
-            <div class="info-hero-subtitle">请确保信息完整准确</div>
+            <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
           </div>
           <div class="info-actions">
             <button class="ghost-button" type="button" @click="enterEdit">
