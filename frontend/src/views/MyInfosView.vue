@@ -206,13 +206,16 @@
           <div class="info-form-grid">
             <label class="field-card">
               <span class="info-label">民族</span>
-              <input
-                v-model="info.ethnicity"
-                class="info-input"
-                type="text"
-                placeholder="请输入民族"
-                :disabled="!isEditing"
-              />
+              <div class="class-inline">
+                <input
+                  v-model="info.ethnicity"
+                  class="info-input"
+                  type="text"
+                  placeholder="请输入民族"
+                  :disabled="!isEditing"
+                />
+                <span class="class-text">族</span>
+              </div>
             </label>
             <label class="field-card">
               <span class="info-label">政治面貌</span>
