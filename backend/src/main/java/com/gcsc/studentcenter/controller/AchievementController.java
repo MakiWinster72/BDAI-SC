@@ -1,8 +1,7 @@
 package com.gcsc.studentcenter.controller;
 
-import com.gcsc.studentcenter.dto.AchievementCreateRequest;
-import com.gcsc.studentcenter.dto.AchievementResponse;
-import com.gcsc.studentcenter.dto.AchievementUpdateRequest;
+import com.gcsc.studentcenter.dto.AchievementRecordRequest;
+import com.gcsc.studentcenter.dto.AchievementRecordResponse;
 import com.gcsc.studentcenter.service.AchievementService;
 import com.gcsc.studentcenter.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -27,63 +26,68 @@ public class AchievementController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AchievementResponse>> list(
-        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
+    public ResponseEntity<List<AchievementRecordResponse>> list(
+        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+        @RequestParam(value = "category", required = false) String category
     ) {
         String username = resolveUsername(authHeader);
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(achievementService.list(username));
+        return ResponseEntity.ok(achievementService.list(username, category));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AchievementResponse> getById(
+    @GetMapping("/{category}/{id}")
+    public ResponseEntity<AchievementRecordResponse> getById(
         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+        @PathVariable("category") String category,
         @PathVariable("id") Long id
     ) {
         String username = resolveUsername(authHeader);
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(achievementService.getById(username, id));
+        return ResponseEntity.ok(achievementService.getById(username, category, id));
     }
 
-    @PostMapping
-    public ResponseEntity<AchievementResponse> create(
+    @PostMapping("/{category}")
+    public ResponseEntity<AchievementRecordResponse> create(
         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-        @RequestBody AchievementCreateRequest request
+        @PathVariable("category") String category,
+        @RequestBody AchievementRecordRequest request
     ) {
         String username = resolveUsername(authHeader);
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(achievementService.create(username, request));
+        return ResponseEntity.ok(achievementService.create(username, category, request));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AchievementResponse> update(
+    @PutMapping("/{category}/{id}")
+    public ResponseEntity<AchievementRecordResponse> update(
         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+        @PathVariable("category") String category,
         @PathVariable("id") Long id,
-        @RequestBody AchievementUpdateRequest request
+        @RequestBody AchievementRecordRequest request
     ) {
         String username = resolveUsername(authHeader);
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(achievementService.update(username, id, request));
+        return ResponseEntity.ok(achievementService.update(username, category, id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{category}/{id}")
     public ResponseEntity<Void> delete(
         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+        @PathVariable("category") String category,
         @PathVariable("id") Long id
     ) {
         String username = resolveUsername(authHeader);
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        achievementService.delete(username, id);
+        achievementService.delete(username, category, id);
         return ResponseEntity.ok().build();
     }
 

@@ -118,20 +118,16 @@
             <div v-else class="achievement-card-placeholder">未上传图片</div>
           </div>
           <div class="achievement-card-body">
-            <div class="achievement-card-title">{{ item.name }}</div>
-            <div class="achievement-card-dates">
-              <span
-                >起止：{{ item.startDate || "-" }}
-                {{ item.endDate || "-" }}</span
-              >
-              <span class="date-spacer"></span>
-              <span>获得日期：{{ item.awardDate || "-" }}</span>
+            <div class="achievement-card-title">{{ item.title || "-" }}</div>
+            <div v-if="item.dateLabel" class="achievement-card-dates">
+              <span>{{ item.dateLabel }}：{{ item.dateValue || "-" }}</span>
             </div>
-            <div class="achievement-card-text">
-              {{ item.description || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ item.thoughts || "-" }}
+            <div
+              v-for="line in item.previewFields"
+              :key="line"
+              class="achievement-card-text"
+            >
+              {{ line }}
             </div>
           </div>
         </article>
@@ -203,20 +199,16 @@
             <div v-else class="achievement-card-placeholder">未上传图片</div>
           </div>
           <div class="achievement-detail-body">
-            <div class="achievement-card-title">{{ viewItem.name }}</div>
-            <div class="achievement-card-dates">
-              <span
-                >起止：{{ viewItem.startDate || "-" }}
-                {{ viewItem.endDate || "-" }}</span
-              >
-              <span class="date-spacer"></span>
-              <span>获得日期：{{ viewItem.awardDate || "-" }}</span>
+            <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
+            <div v-if="viewItem.dateLabel" class="achievement-card-dates">
+              <span>{{ viewItem.dateLabel }}：{{ viewItem.dateValue || "-" }}</span>
             </div>
-            <div class="achievement-card-text">
-              {{ viewItem.description || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ viewItem.thoughts || "-" }}
+            <div
+              v-for="line in viewItem.fieldLines"
+              :key="line"
+              class="achievement-card-text"
+            >
+              {{ line }}
             </div>
             <div class="achievement-card-actions">
               <button class="post-action" type="button" @click="editFromView">
@@ -970,28 +962,25 @@ async function saveAchievement() {
     errorMessage.value = "请先选择成就分类";
     return;
   }
+  const category =
+    form.category || (activeCategory.value === "all" ? "" : activeCategory.value);
+  if (!category) {
+    errorMessage.value = "请先选择成就分类";
+    return;
+  }
   const titleKey = config.titleKey;
-  const noteKey = config.noteKey;
-  const dateKey = config.dateKey;
-  const description = config.fields
-    .filter((field) => field.key !== titleKey && field.key !== noteKey)
-    .map((field) => `${field.label}：${form.fields[field.key] || ""}`)
-    .join("\n");
+  const titleValue = (form.fields[titleKey] || "").trim();
+  if (!titleValue) {
+    errorMessage.value = "请填写必填项";
+    return;
+  }
   const payload = {
-    name: (form.fields[titleKey] || "").trim(),
-    startDate: null,
-    endDate: null,
-    awardDate: dateKey ? form.fields[dateKey] || null : null,
-    description,
-    thoughts: noteKey ? (form.fields[noteKey] || "").trim() : "",
     imageUrl: form.imageUrl || null,
-    category:
-      form.category ||
-      (activeCategory.value === "all" ? null : activeCategory.value),
+    fields: { ...form.fields },
   };
   try {
     if (editId.value) {
-      const { data } = await updateAchievement(editId.value, payload);
+      const { data } = await updateAchievement(category, editId.value, payload);
       achievements.value = achievements.value.map((item) =>
         item.id === data.id ? normalizeAchievement(data) : item,
       );
@@ -999,7 +988,7 @@ async function saveAchievement() {
         viewItem.value = normalizeAchievement(data);
       }
     } else {
-      const { data } = await createAchievement(payload);
+      const { data } = await createAchievement(category, payload);
       achievements.value = [normalizeAchievement(data), ...achievements.value];
     }
     resetForm();
@@ -1036,14 +1025,25 @@ function resolveMediaUrl(url) {
 }
 
 function normalizeAchievement(item) {
+  const config = categoryFieldMap[item.category] || null;
+  const fields = item.fields || {};
+  const titleKey = config?.titleKey;
+  const dateKey = config?.dateKey;
+  const dateLabel =
+    config?.fields.find((field) => field.key === dateKey)?.label || "";
+  const fieldLines = config
+    ? config.fields.map(
+        (field) => `${field.label}：${fields[field.key] || "-"}`,
+      )
+    : [];
   return {
     id: item.id,
-    name: item.name,
-    startDate: item.startDate,
-    endDate: item.endDate,
-    awardDate: item.awardDate,
-    description: item.description,
-    thoughts: item.thoughts,
+    title: titleKey ? fields[titleKey] : "",
+    dateLabel,
+    dateValue: dateKey ? fields[dateKey] : "",
+    fields,
+    fieldLines,
+    previewFields: fieldLines.slice(0, 2),
     image: resolveMediaUrl(item.imageUrl),
     category: item.category || "",
   };
@@ -1071,10 +1071,10 @@ function editFromView() {
   const item = viewItem.value;
   editId.value = item.id;
   form.category = item.category || "";
-  form.fields = {};
+  form.fields = { ...(item.fields || {}) };
   form.imageUrl = item.image ? item.image.replace(API_BASE, "") : "";
   imagePreview.value = item.image || "";
-  applyFieldValuesFromItem(item);
+  applyFieldDefaults();
   viewOpen.value = false;
   viewClosing.value = true;
   editorOpen.value = true;
@@ -1102,7 +1102,7 @@ async function confirmDelete() {
   }
   deleteBusy.value = true;
   try {
-    await deleteAchievement(viewItem.value.id);
+    await deleteAchievement(viewItem.value.category, viewItem.value.id);
     achievements.value = achievements.value.filter(
       (item) => item.id !== viewItem.value.id,
     );
@@ -1145,27 +1145,6 @@ function syncCategoryFromRoute() {
   }
 }
 
-function parseDescription(text) {
-  const result = {};
-  (text || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .forEach((line) => {
-      let index = line.indexOf("：");
-      if (index < 0) {
-        index = line.indexOf(":");
-      }
-      if (index < 0) {
-        return;
-      }
-      const label = line.slice(0, index).trim();
-      const value = line.slice(index + 1).trim();
-      result[label] = value;
-    });
-  return result;
-}
-
 function applyFieldDefaults() {
   const config = activeFormConfig.value;
   if (!config) {
@@ -1181,30 +1160,6 @@ function applyFieldDefaults() {
   if (hasStudentName && !form.fields.studentName) {
     form.fields.studentName = profile.displayName || profile.username || "";
   }
-}
-
-function applyFieldValuesFromItem(item) {
-  const config = activeFormConfig.value;
-  if (!config) {
-    return;
-  }
-  const byLabel = parseDescription(item.description || "");
-  config.fields.forEach((field) => {
-    if (field.key === config.titleKey) {
-      form.fields[field.key] = item.name || "";
-      return;
-    }
-    if (field.key === config.noteKey) {
-      form.fields[field.key] = item.thoughts || "";
-      return;
-    }
-    if (field.key === config.dateKey) {
-      form.fields[field.key] = item.awardDate || "";
-      return;
-    }
-    form.fields[field.key] = byLabel[field.label] || "";
-  });
-  applyFieldDefaults();
 }
 
 onMounted(() => {
