@@ -117,7 +117,33 @@
             <img v-if="item.image" :src="item.image" alt="成就图片" />
             <div v-else class="achievement-card-placeholder">未上传图片</div>
           </div>
-          <div class="achievement-card-body">
+          <div v-if="item.category === 'contest'" class="achievement-card-body">
+            <div class="achievement-card-title-row">
+              <div class="achievement-card-title">{{ item.title || "-" }}</div>
+              <span
+                v-if="formatContestAwardPill(item.fields)"
+                class="achievement-award-pill"
+              >
+                {{ formatContestAwardPill(item.fields) }}
+              </span>
+            </div>
+            <div class="achievement-card-date-italic">
+              {{ formatContestDate(item.fields) }}
+            </div>
+            <div class="achievement-card-text">
+              {{ formatContestCategoryLine(item.fields) }}
+            </div>
+            <div class="achievement-card-text">
+              {{ formatContestMembers(item.fields) }}
+            </div>
+            <div class="achievement-card-text">
+              {{ formatContestAwardLine(item.fields) }}
+            </div>
+            <div class="achievement-card-organizer">
+              {{ formatContestOrganizer(item.fields) }}
+            </div>
+          </div>
+          <div v-else class="achievement-card-body">
             <div class="achievement-card-title">{{ item.title || "-" }}</div>
             <div v-if="item.dateLabel" class="achievement-card-dates">
               <span>{{ item.dateLabel }}：{{ item.dateValue || "-" }}</span>
@@ -199,16 +225,47 @@
             <div v-else class="achievement-card-placeholder">未上传图片</div>
           </div>
           <div class="achievement-detail-body">
-            <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
-            <div v-if="viewItem.dateLabel" class="achievement-card-dates">
-              <span>{{ viewItem.dateLabel }}：{{ viewItem.dateValue || "-" }}</span>
+            <div v-if="viewItem.category === 'contest'">
+              <div class="achievement-card-title-row">
+                <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
+                <span
+                  v-if="formatContestAwardPill(viewItem.fields)"
+                  class="achievement-award-pill"
+                >
+                  {{ formatContestAwardPill(viewItem.fields) }}
+                </span>
+              </div>
+              <div class="achievement-card-date-italic">
+                {{ formatContestDate(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatContestStudentNo(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatContestCategoryLine(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatContestMembers(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatContestAwardLine(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-organizer">
+                {{ formatContestOrganizer(viewItem.fields) }}
+              </div>
             </div>
-            <div
-              v-for="line in viewItem.fieldLines"
-              :key="line"
-              class="achievement-card-text"
-            >
-              {{ line }}
+            <div v-else>
+              <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
+              <div v-if="viewItem.dateLabel" class="achievement-card-dates">
+                <span>{{ viewItem.dateLabel }}：{{ viewItem.dateValue || "-" }}</span>
+              </div>
+              <div
+                v-for="line in viewItem.fieldLines"
+                :key="line"
+                class="achievement-card-text"
+              >
+                {{ line }}
+              </div>
             </div>
             <div class="achievement-card-actions">
               <button class="post-action" type="button" @click="editFromView">
@@ -1022,6 +1079,42 @@ function resolveMediaUrl(url) {
     return url;
   }
   return `${API_BASE}${url}`;
+}
+
+function formatContestDate(fields = {}) {
+  return fields.awardDate || "-";
+}
+
+function formatContestAwardPill(fields = {}) {
+  const parts = [fields.awardCategory, fields.awardLevel].filter(Boolean);
+  return parts.join(" ");
+}
+
+function formatContestStudentNo(fields = {}) {
+  return `学号：${fields.studentNo || "-"}`;
+}
+
+function formatContestCategoryLine(fields = {}) {
+  const parts = [fields.contestCategory, fields.contestType].filter(Boolean);
+  const text = parts.length ? parts.join(" · ") : "-";
+  return `类别：${text}`;
+}
+
+function formatContestMembers(fields = {}) {
+  const peopleParts = [fields.studentName, fields.teamMembers].filter(Boolean);
+  const people = peopleParts.length ? peopleParts.join("、") : "-";
+  const teachers = fields.instructors ? ` | 指导老师：${fields.instructors}` : "";
+  return `成员：${people}${teachers}`;
+}
+
+function formatContestAwardLine(fields = {}) {
+  const count = fields.awardCount || "-";
+  const remark = fields.remark ? ` · ${fields.remark}` : "";
+  return `获奖人数：${count}${remark}`;
+}
+
+function formatContestOrganizer(fields = {}) {
+  return `主办单位：${fields.organizer || "-"}`;
 }
 
 function normalizeAchievement(item) {
