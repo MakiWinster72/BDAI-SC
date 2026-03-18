@@ -111,6 +111,7 @@
           v-for="item in filteredAchievements"
           :key="item.id"
           class="achievement-card"
+          :class="{ 'achievement-card-paper': item.category === 'paper' }"
           @click="openDetail(item)"
         >
           <div class="achievement-card-image">
@@ -142,6 +143,21 @@
             <div class="achievement-card-organizer">
               {{ formatContestOrganizer(item.fields) }}
             </div>
+          </div>
+            <div v-else-if="item.category === 'paper'" class="achievement-card-body">
+              <div class="achievement-card-title achievement-paper-title">
+                {{ item.title || "-" }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatPaperJournal(item.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatPaperAuthors(item.fields) }}
+              </div>
+            <div class="achievement-card-text">
+              {{ formatPaperDate(item.fields) }}
+            </div>
+            <div class="achievement-paper-tag" aria-hidden="true">学术论文</div>
           </div>
           <div v-else class="achievement-card-body">
             <div class="achievement-card-title">{{ item.title || "-" }}</div>
@@ -254,6 +270,20 @@
                 {{ formatContestOrganizer(viewItem.fields) }}
               </div>
             </div>
+            <div v-else-if="viewItem.category === 'paper'">
+              <div class="achievement-card-title achievement-paper-title">
+                {{ viewItem.title || "-" }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatPaperJournal(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatPaperAuthors(viewItem.fields) }}
+              </div>
+            <div class="achievement-card-text">
+              {{ formatPaperDate(viewItem.fields) }}
+            </div>
+          </div>
             <div v-else>
               <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
               <div v-if="viewItem.dateLabel" class="achievement-card-dates">
@@ -1115,6 +1145,20 @@ function formatContestAwardLine(fields = {}) {
 
 function formatContestOrganizer(fields = {}) {
   return `主办单位：${fields.organizer || "-"}`;
+}
+
+function formatPaperJournal(fields = {}) {
+  return fields.journalName || "-";
+}
+
+function formatPaperAuthors(fields = {}) {
+  const name = fields.studentName || "-";
+  const order = fields.authorOrder ? `（${fields.authorOrder}）` : "";
+  return `${name}${order}`;
+}
+
+function formatPaperDate(fields = {}) {
+  return fields.publishDate || "-";
 }
 
 function normalizeAchievement(item) {

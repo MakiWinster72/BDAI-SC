@@ -1120,6 +1120,48 @@ body {
   transition: box-shadow 220ms ease, transform 220ms ease;
 }
 
+.achievement-card-paper {
+  position: relative;
+  overflow: hidden;
+}
+
+.achievement-card-paper .achievement-card-body {
+  padding-bottom: 28px;
+}
+
+.achievement-paper-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d3f45;
+}
+
+.achievement-paper-date {
+  font-size: 13px;
+  color: #5b7077;
+}
+
+.achievement-card-paper .achievement-card-body {
+  gap: 8px;
+}
+
+.achievement-card-paper .achievement-card-text {
+  color: #4f676f;
+}
+
+.achievement-paper-tag {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: rgba(13, 63, 69, 0.2);
+  font-family: "Montserrat", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  font-style: italic;
+  pointer-events: none;
+}
+
 .achievement-card:hover {
   box-shadow: 0 18px 36px rgba(3, 107, 114, 0.2);
   transform: translateY(-2px);
@@ -1340,6 +1382,10 @@ body {
 
 .achievement-view .achievement-card-text {
   font-size: 14.5px;
+}
+
+.achievement-view .achievement-card-text + .achievement-card-text {
+  margin-top: 4px;
 }
 
 .achievement-view .achievement-card-date-italic {
