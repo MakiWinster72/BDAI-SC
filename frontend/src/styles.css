@@ -512,11 +512,52 @@ body {
 }
 
 .menu-drawer-panel {
+  --drawer-item-height: 32px;
+  --drawer-item-gap: 6px;
+  position: relative;
   display: grid;
-  gap: 6px;
+  gap: var(--drawer-item-gap);
   padding: 8px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.menu-drawer-panel-enter-active,
+.menu-drawer-panel-leave-active {
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease,
+    max-height 0.45s ease;
+  transform-origin: top;
+}
+
+.menu-drawer-panel-enter-from,
+.menu-drawer-panel-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+}
+
+.menu-drawer-panel-enter-to,
+.menu-drawer-panel-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 420px;
+}
+
+.menu-drawer-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: var(--drawer-item-height);
+  border-radius: 10px;
+  background: #036b72;
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease;
+  z-index: 0;
 }
 
 .menu-drawer-item {
@@ -528,12 +569,20 @@ body {
   border: none;
   width: 100%;
   text-align: left;
+  height: var(--drawer-item-height);
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .menu-drawer-item.active {
-  background: #036b72;
   color: #fff;
+  background: transparent;
 }
 
 .dashboard-right {

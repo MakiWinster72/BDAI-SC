@@ -58,18 +58,25 @@
               <span>{{ item.label }}</span>
               <span class="menu-drawer-caret" aria-hidden="true"></span>
             </button>
-            <div v-show="achievementsOpen" class="menu-drawer-panel">
-              <button
-                v-for="entry in achievementEntries"
-                :key="entry.key"
-                class="menu-drawer-item"
-                :class="{ active: activeCategory === entry.key }"
-                type="button"
-                @click="handleAchievementEntry(entry.key)"
-              >
-                {{ entry.label }}
-              </button>
-            </div>
+            <transition name="menu-drawer-panel">
+              <div v-show="achievementsOpen" class="menu-drawer-panel">
+                <div
+                  class="menu-drawer-indicator"
+                  :style="drawerIndicatorStyle"
+                  aria-hidden="true"
+                ></div>
+                <button
+                  v-for="entry in achievementEntries"
+                  :key="entry.key"
+                  class="menu-drawer-item"
+                  :class="{ active: activeCategory === entry.key }"
+                  type="button"
+                  @click="handleAchievementEntry(entry.key)"
+                >
+                  {{ entry.label }}
+                </button>
+              </div>
+            </transition>
           </div>
           <button
             v-else
@@ -646,6 +653,17 @@ const achievementEntries = [
   { key: "research", label: "学生参与教师科研项目情况" },
   { key: "works", label: "创作、表演的代表性作品" },
 ];
+
+const activeCategoryIndex = computed(() => {
+  const index = achievementEntries.findIndex(
+    (entry) => entry.key === activeCategory.value,
+  );
+  return index === -1 ? 0 : index;
+});
+
+const drawerIndicatorStyle = computed(() => ({
+  transform: `translateY(calc(${activeCategoryIndex.value} * (var(--drawer-item-height) + var(--drawer-item-gap))))`,
+}));
 
 const form = reactive({
   imageUrl: "",
