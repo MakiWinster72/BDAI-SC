@@ -1,5 +1,8 @@
 <template>
-  <div class="dashboard-layout">
+  <div
+    class="dashboard-layout"
+    :class="{ 'dashboard-layout-embedded': isEmbedded }"
+  >
     <transition name="publisher-backdrop">
       <div
         v-if="sidebarOpen"
@@ -636,6 +639,25 @@ const activeCategory = ref("all");
 
 const achievements = ref([]);
 
+const activeStudentQuery = computed(() => {
+  const rawName = route.query.studentName;
+  const rawNo = route.query.studentNo;
+  const rawEmbed = route.query.embed;
+  const studentName = typeof rawName === "string" ? rawName.trim() : "";
+  const studentNo = typeof rawNo === "string" ? rawNo.trim() : "";
+  const embedValue = typeof rawEmbed === "string" ? rawEmbed.trim() : "";
+  return {
+    studentName,
+    studentNo,
+    embedValue,
+  };
+});
+
+const isEmbedded = computed(() => {
+  const value = activeStudentQuery.value.embedValue;
+  return value === "1" || value.toLowerCase() === "true";
+});
+
 const achievementEntries = [
   { key: "all", label: "全部" },
   { key: "contest", label: "学科竞赛、文体艺术" },
@@ -1082,14 +1104,34 @@ const activeFormConfig = computed(() => {
   return categoryFieldMap[editorCategory.value] || null;
 });
 const filteredAchievements = computed(() => {
-  if (activeCategory.value === "all") {
-    return achievements.value;
+  const baseList =
+    activeCategory.value === "all"
+      ? achievements.value
+      : achievements.value.filter(
+          (item) => item.category === activeCategory.value,
+        );
+  const { studentName, studentNo } = activeStudentQuery.value;
+  if (!studentName && !studentNo) {
+    return baseList;
   }
-  return achievements.value.filter(
-    (item) => item.category === activeCategory.value,
-  );
+  const normalizeText = (value) => String(value || "").trim().toLowerCase();
+  const targetName = normalizeText(studentName);
+  const targetNo = normalizeText(studentNo);
+  return baseList.filter((item) => {
+    const fields = item.fields || {};
+    const itemNo = normalizeText(fields.studentNo);
+    const itemName = normalizeText(fields.studentName);
+    if (targetNo) {
+      return itemNo ? itemNo === targetNo : true;
+    }
+    return itemName ? itemName === targetName : true;
+  });
 });
 const emptyMessage = computed(() => {
+  const { studentName, studentNo } = activeStudentQuery.value;
+  if (studentName || studentNo) {
+    return "该学生暂无成就。";
+  }
   if (activeCategory.value === "all") {
     return "还没有成就，点击右下角添加。";
   }
@@ -1128,12 +1170,24 @@ function loadUser() {
 }
 
 function getCurrentStudentNo() {
+  const { studentNo } = activeStudentQuery.value;
+  if (studentNo) {
+    return studentNo;
+  }
   try {
     const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
     return raw.studentNo || profile.studentNo || "";
   } catch {
     return profile.studentNo || "";
   }
+}
+
+function getCurrentStudentName() {
+  const { studentName } = activeStudentQuery.value;
+  if (studentName) {
+    return studentName;
+  }
+  return profile.displayName || profile.username || "";
 }
 
 function handleMenuClick(key) {
@@ -1178,7 +1232,18 @@ function handleAchievementEntry(key) {
   achievementsOpen.value = true;
   activeMenu.value = "achievements";
   sidebarOpen.value = false;
-  router.push({ path: "/achievements", query: { category: safeKey } });
+  const { studentName, studentNo, embedValue } = activeStudentQuery.value;
+  const query = { category: safeKey };
+  if (studentName) {
+    query.studentName = studentName;
+  }
+  if (studentNo) {
+    query.studentNo = studentNo;
+  }
+  if (embedValue) {
+    query.embed = embedValue;
+  }
+  router.push({ path: "/achievements", query });
 }
 
 function openSidebar() {
@@ -1514,7 +1579,18 @@ async function confirmDelete() {
 
 async function fetchAchievements() {
   try {
-    const { data } = await getAchievements();
+    const params = {};
+    if (activeCategory.value && activeCategory.value !== "all") {
+      params.category = activeCategory.value;
+    }
+    const { studentName, studentNo } = activeStudentQuery.value;
+    if (studentName) {
+      params.studentName = studentName;
+    }
+    if (studentNo) {
+      params.studentNo = studentNo;
+    }
+    const { data } = await getAchievements(params);
     achievements.value = Array.isArray(data)
       ? dedupeAchievements(data.map(normalizeAchievement))
       : [];
@@ -1535,9 +1611,20 @@ function syncCategoryFromRoute() {
   activeCategory.value = safeCategory;
   achievementsOpen.value = true;
   if (rawCategory !== safeCategory) {
+    const { studentName, studentNo, embedValue } = activeStudentQuery.value;
+    const query = { category: safeCategory };
+    if (studentName) {
+      query.studentName = studentName;
+    }
+    if (studentNo) {
+      query.studentNo = studentNo;
+    }
+    if (embedValue) {
+      query.embed = embedValue;
+    }
     router.replace({
       path: "/achievements",
-      query: { category: safeCategory },
+      query,
     });
   }
 }
@@ -1555,19 +1642,20 @@ function applyFieldDefaults() {
     form.fields.studentNo = getCurrentStudentNo();
   }
   if (hasStudentName && !form.fields.studentName) {
-    form.fields.studentName = profile.displayName || profile.username || "";
+    form.fields.studentName = getCurrentStudentName();
   }
 }
 
 onMounted(() => {
-  fetchAchievements();
   syncCategoryFromRoute();
+  fetchAchievements();
 });
 
 watch(
-  () => route.query.category,
+  () => [route.query.category, route.query.studentNo, route.query.studentName],
   () => {
     syncCategoryFromRoute();
+    fetchAchievements();
   },
 );
 

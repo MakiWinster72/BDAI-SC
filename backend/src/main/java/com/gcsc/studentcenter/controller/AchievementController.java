@@ -28,13 +28,15 @@ public class AchievementController {
     @GetMapping
     public ResponseEntity<List<AchievementRecordResponse>> list(
         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-        @RequestParam(value = "category", required = false) String category
+        @RequestParam(value = "category", required = false) String category,
+        @RequestParam(value = "studentNo", required = false) String studentNo,
+        @RequestParam(value = "studentName", required = false) String studentName
     ) {
         String username = resolveUsername(authHeader);
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(achievementService.list(username, category));
+        return ResponseEntity.ok(achievementService.list(username, category, studentNo, studentName));
     }
 
     @GetMapping("/{category}/{id}")

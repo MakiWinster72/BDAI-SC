@@ -1,9 +1,9 @@
 import request from './request'
 
-export function getAchievements() {
+export function getAchievements(params = {}) {
   const token = localStorage.getItem('gcsc_token')
   const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  return request.get('/api/achievements', { headers })
+  return request.get('/api/achievements', { headers, params })
 }
 
 export function getAchievement(category, id) {

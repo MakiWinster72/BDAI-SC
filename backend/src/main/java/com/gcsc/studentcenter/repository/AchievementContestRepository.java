@@ -7,4 +7,13 @@ import java.util.List;
 
 public interface AchievementContestRepository extends JpaRepository<AchievementContest, Long> {
     List<AchievementContest> findAllByAuthor_UsernameOrderByCreatedAtDesc(String username);
+
+    List<AchievementContest> findAllByStudentNoOrderByCreatedAtDesc(String studentNo);
+
+    List<AchievementContest> findAllByStudentNameOrderByCreatedAtDesc(String studentName);
+
+    List<AchievementContest> findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(
+        String studentNo,
+        String studentName
+    );
 }

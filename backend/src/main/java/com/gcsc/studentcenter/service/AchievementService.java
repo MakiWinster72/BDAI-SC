@@ -46,7 +46,20 @@ public class AchievementService {
         this.achievementWorksRepository = achievementWorksRepository;
     }
 
-    public List<AchievementRecordResponse> list(String username, String category) {
+    public List<AchievementRecordResponse> list(
+        String username,
+        String category,
+        String studentNo,
+        String studentName
+    ) {
+        String safeStudentNo = normalizeStudentParam(studentNo);
+        String safeStudentName = normalizeStudentParam(studentName);
+        boolean hasStudentFilter = !safeStudentNo.isEmpty() || !safeStudentName.isEmpty();
+        AppUser user = appUserRepository.findByUsername(username).orElse(null);
+        boolean allowStudentFilter = hasStudentFilter && isPrivileged(user);
+        if (allowStudentFilter) {
+            return listByStudent(safeStudentNo, safeStudentName, category);
+        }
         if (category == null || category.isBlank()) {
             return listAll(username);
         }
@@ -209,6 +222,193 @@ public class AchievementService {
         return all.stream()
             .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
             .collect(Collectors.toList());
+    }
+
+    private List<AchievementRecordResponse> listByStudent(
+        String studentNo,
+        String studentName,
+        String category
+    ) {
+        if (category == null || category.isBlank()) {
+            return listAllByStudent(studentNo, studentName);
+        }
+        String normalized = normalizeCategory(category);
+        if (normalized == null) {
+            return listAllByStudent(studentNo, studentName);
+        }
+        switch (normalized) {
+            case "contest":
+                return fetchContestByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "paper":
+                return fetchPaperByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "journal":
+                return fetchJournalByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "patent":
+                return fetchPatentByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "certificate":
+                return fetchCertificateByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "research":
+                return fetchResearchByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "works":
+                return fetchWorksByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            default:
+                throw new IllegalArgumentException("无效的成就分类");
+        }
+    }
+
+    private List<AchievementRecordResponse> listAllByStudent(String studentNo, String studentName) {
+        List<AchievementRecordResponse> all = new ArrayList<>();
+        all.addAll(fetchContestByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchPaperByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchJournalByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchPatentByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchCertificateByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchResearchByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchWorksByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        return all.stream()
+            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+            .collect(Collectors.toList());
+    }
+
+    private List<AchievementContest> fetchContestByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementContestRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementContestRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementContestRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AchievementPaper> fetchPaperByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementPaperRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementPaperRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementPaperRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AchievementJournal> fetchJournalByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementJournalRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementJournalRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementJournalRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AchievementPatent> fetchPatentByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementPatentRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementPatentRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementPatentRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AchievementCertificate> fetchCertificateByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementCertificateRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementCertificateRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementCertificateRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AchievementResearch> fetchResearchByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementResearchRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementResearchRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementResearchRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AchievementWorks> fetchWorksByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementWorksRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementWorksRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementWorksRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private boolean isPrivileged(AppUser user) {
+        if (user == null || user.getRole() == null) {
+            return false;
+        }
+        return user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.TEACHER;
+    }
+
+    private String normalizeStudentParam(String value) {
+        if (value == null) {
+            return "";
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? "" : trimmed;
     }
 
     private AchievementContest loadContest(String username, Long id) {

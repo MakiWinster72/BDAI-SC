@@ -287,6 +287,16 @@ body {
   gap: 18px;
 }
 
+.dashboard-layout.dashboard-layout-embedded {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 12px;
+}
+
+.dashboard-layout.dashboard-layout-embedded .dashboard-left,
+.dashboard-layout.dashboard-layout-embedded .mobile-capsule {
+  display: none;
+}
+
 .dashboard-left {
   display: flex;
   flex-direction: column;

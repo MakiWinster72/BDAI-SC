@@ -198,7 +198,11 @@
       </transition>
       <section
         class="student-detail-view"
-        :class="{ open: viewOpen, closing: viewClosing }"
+        :class="{
+          open: viewOpen,
+          closing: viewClosing,
+          split: achievementsOpen || achievementsClosing,
+        }"
         :aria-hidden="!viewOpen"
       >
         <header class="publisher-header">
@@ -221,6 +225,15 @@
             <div class="info-hero-text">
               <div class="info-hero-title">{{ viewItem.fullName || "未命名" }}</div>
               <div class="info-hero-subtitle">学号：{{ viewItem.studentNo || "-" }}</div>
+            </div>
+            <div class="info-actions info-actions-single">
+              <button
+                class="action-button"
+                type="button"
+                @click="openAchievements"
+              >
+                个人成就
+              </button>
             </div>
           </div>
 
@@ -492,6 +505,27 @@
           </div>
         </div>
       </section>
+
+      <section
+        class="student-achievements-view"
+        :class="{ open: achievementsOpen, closing: achievementsClosing }"
+        :aria-hidden="!achievementsOpen"
+      >
+        <header class="publisher-header">
+          <div class="publisher-title">个人成就</div>
+          <button class="publisher-close" type="button" @click="closeAchievements">
+            关闭
+          </button>
+        </header>
+        <div class="student-achievements-body" v-if="viewItem">
+          <iframe
+            class="student-achievements-frame"
+            :key="achievementUrl"
+            :src="achievementUrl"
+            title="学生个人成就"
+          ></iframe>
+        </div>
+      </section>
     </main>
   </div>
 </template>
@@ -520,6 +554,8 @@ const viewOpen = ref(false);
 const viewClosing = ref(false);
 const viewItem = ref(null);
 const viewLoading = ref(false);
+const achievementsOpen = ref(false);
+const achievementsClosing = ref(false);
 
 const classYearOptions = Array.from({ length: 11 }, (_, index) => 2020 + index);
 const majorOptions = [
@@ -575,6 +611,22 @@ const educationRows = computed(() => {
       item.isCurrent
     );
   });
+});
+
+const achievementUrl = computed(() => {
+  if (!viewItem.value) {
+    return "/achievements?category=all";
+  }
+  const params = new URLSearchParams();
+  params.set("category", "all");
+  if (viewItem.value.studentNo) {
+    params.set("studentNo", viewItem.value.studentNo);
+  }
+  if (viewItem.value.fullName) {
+    params.set("studentName", viewItem.value.fullName);
+  }
+  params.set("embed", "1");
+  return `/achievements?${params.toString()}`;
 });
 
 watch(
@@ -655,6 +707,8 @@ function openDetail(item) {
   viewClosing.value = false;
   viewLoading.value = true;
   viewItem.value = null;
+  achievementsOpen.value = false;
+  achievementsClosing.value = false;
   getStudentProfileById(item.id)
     .then(({ data }) => {
       viewItem.value = data || null;
@@ -668,12 +722,31 @@ function openDetail(item) {
 }
 
 function closeView() {
+  if (achievementsOpen.value) {
+    closeAchievements();
+  }
   viewOpen.value = false;
   viewClosing.value = true;
   setTimeout(() => {
     viewItem.value = null;
     viewLoading.value = false;
     viewClosing.value = false;
+  }, 260);
+}
+
+function openAchievements() {
+  if (!viewItem.value) {
+    return;
+  }
+  achievementsOpen.value = true;
+  achievementsClosing.value = false;
+}
+
+function closeAchievements() {
+  achievementsOpen.value = false;
+  achievementsClosing.value = true;
+  setTimeout(() => {
+    achievementsClosing.value = false;
   }, 260);
 }
 
@@ -1010,7 +1083,9 @@ function loadUser() {
   transition:
     transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.75s ease,
-    filter 0.75s ease;
+    filter 0.75s ease,
+    left 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.75s cubic-bezier(0.22, 1, 0.36, 1);
   max-height: 84vh;
   display: flex;
   flex-direction: column;
@@ -1020,6 +1095,12 @@ function loadUser() {
   padding: 12px 14px 16px;
 }
 
+.student-detail-view.split {
+  left: 16px;
+  width: min(720px, calc(50vw - 24px));
+  transform: translate(0, 120%) scale(0.98);
+}
+
 .student-detail-view.open {
   transform: translate(-50%, 0) scale(1);
   opacity: 1;
@@ -1027,10 +1108,18 @@ function loadUser() {
   pointer-events: auto;
 }
 
+.student-detail-view.split.open {
+  transform: translate(0, 0) scale(1);
+}
+
 .student-detail-view.closing {
   transform: translate(-50%, 120%) scale(0.98);
   opacity: 0;
   filter: blur(6px);
+}
+
+.student-detail-view.split.closing {
+  transform: translate(0, 120%) scale(0.98);
 }
 
 .student-detail-view::-webkit-scrollbar {
@@ -1046,5 +1135,100 @@ function loadUser() {
 .info-static {
   display: flex;
   align-items: center;
+}
+
+.info-actions-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.student-achievements-view {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: min(720px, calc(50vw - 24px));
+  height: 84vh;
+  transform: translate(0, 120%) scale(0.98);
+  opacity: 0;
+  filter: blur(6px);
+  pointer-events: none;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(
+    140deg,
+    rgba(205, 255, 249, 0.92),
+    rgba(197, 217, 226, 0.78)
+  );
+  box-shadow: 0 28px 70px rgba(3, 107, 114, 0.22);
+  backdrop-filter: blur(12px);
+  z-index: 72;
+  transition:
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.75s ease,
+    filter 0.75s ease;
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  padding: 12px 14px 16px;
+}
+
+.student-achievements-view.open {
+  transform: translate(0, 0) scale(1);
+  opacity: 1;
+  filter: blur(0px);
+  pointer-events: auto;
+}
+
+.student-achievements-view.closing {
+  transform: translate(0, 120%) scale(0.98);
+  opacity: 0;
+  filter: blur(6px);
+}
+
+.student-achievements-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.student-achievements-frame {
+  border: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+@media (max-width: 1100px) {
+  .student-detail-view.split {
+    left: 50%;
+    width: min(980px, calc(100vw - 32px));
+    transform: translate(-50%, 120%) scale(0.98);
+  }
+
+  .student-detail-view.split.open {
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  .student-detail-view.split.closing {
+    transform: translate(-50%, 120%) scale(0.98);
+  }
+
+  .student-achievements-view {
+    left: 50%;
+    right: auto;
+    width: min(980px, calc(100vw - 32px));
+    height: 84vh;
+    transform: translate(-50%, 120%) scale(0.98);
+  }
+
+  .student-achievements-view.open {
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  .student-achievements-view.closing {
+    transform: translate(-50%, 120%) scale(0.98);
+  }
 }
 </style>
