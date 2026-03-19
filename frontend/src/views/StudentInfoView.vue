@@ -838,6 +838,7 @@ import * as XLSX from "xlsx";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfileById, searchStudentProfiles } from "../api/profile";
+import { listAchievements } from "../api/achievement";
 
 const router = useRouter();
 const API_BASE = "http://localhost:8080";
@@ -866,6 +867,7 @@ const exportPreviewClosing = ref(false);
 const previewActiveSheet = ref("main");
 const previewLoading = ref(false);
 const previewDetailRows = ref([]);
+const previewAchievementData = ref([]);
 let previewRequestId = 0;
 const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
@@ -981,6 +983,19 @@ const exportGroups = [
       { key: "developmentTargetDate", label: "确定发展对象时间" },
       { key: "probationaryMemberDate", label: "接收为预备党员时间" },
       { key: "fullMemberDate", label: "转为正式党员时间" },
+    ],
+  },
+  {
+    id: "achievement",
+    label: "个人成就",
+    fields: [
+      { key: "ach_contest", label: "学科竞赛、文体艺术" },
+      { key: "ach_paper", label: "发表学术论文" },
+      { key: "ach_journal", label: "发表期刊作品" },
+      { key: "ach_patent", label: "专利（著作权）授权数（项）" },
+      { key: "ach_certificate", label: "职业资格证书" },
+      { key: "ach_research", label: "学生参与教师科研项目情况" },
+      { key: "ach_works", label: "创作、表演的代表性作品" },
     ],
   },
 ];
@@ -1488,14 +1503,96 @@ const PARTY_FIELD_META = {
   },
 };
 
+const ACHIEVEMENT_CATEGORIES = [
+  { key: "contest", label: "学科竞赛、文体艺术", selectKey: "ach_contest" },
+  { key: "paper", label: "发表学术论文", selectKey: "ach_paper" },
+  { key: "journal", label: "发表期刊作品", selectKey: "ach_journal" },
+  { key: "patent", label: "专利（著作权）授权数（项）", selectKey: "ach_patent" },
+  { key: "certificate", label: "职业资格证书", selectKey: "ach_certificate" },
+  { key: "research", label: "学生参与教师科研项目情况", selectKey: "ach_research" },
+  { key: "works", label: "创作、表演的代表性作品", selectKey: "ach_works" },
+];
+
+const ACHIEVEMENT_FIELDS = {
+  certificate: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "certificateType", label: "证书类型" },
+    { key: "certificateName", label: "证书名称" },
+    { key: "obtainDate", label: "获得日期" },
+  ],
+  contest: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "contestName", label: "竞赛名称" },
+    { key: "organizer", label: "主办方" },
+    { key: "contestCategory", label: "竞赛类别" },
+    { key: "awardCategory", label: "奖项类别" },
+    { key: "awardLevel", label: "奖项等级" },
+    { key: "contestType", label: "竞赛类型" },
+    { key: "awardDate", label: "获奖日期" },
+    { key: "awardCount", label: "获奖人数/数量" },
+    { key: "teamMembers", label: "团队成员" },
+    { key: "instructors", label: "指导教师" },
+    { key: "remark", label: "备注" },
+  ],
+  journal: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "workTitle", label: "作品题目" },
+    { key: "publicationName", label: "刊物名称" },
+    { key: "publishDate", label: "发表日期" },
+  ],
+  paper: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "paperTitle", label: "论文题目" },
+    { key: "journalName", label: "期刊名称" },
+    { key: "publishDate", label: "发表日期" },
+    { key: "authorOrder", label: "作者排序" },
+    { key: "indexed", label: "收录情况" },
+  ],
+  patent: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "patentName", label: "专利名称" },
+    { key: "patentType", label: "专利类型" },
+    { key: "grantNo", label: "授权号" },
+    { key: "grantDate", label: "授权日期" },
+    { key: "firstInventor", label: "第一发明人" },
+  ],
+  research: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "projectName", label: "项目名称" },
+    { key: "teacherNo", label: "教师工号" },
+    { key: "projectLeader", label: "项目负责人" },
+  ],
+  works: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "workName", label: "作品名称" },
+    { key: "workCategory", label: "作品类别" },
+    { key: "workType", label: "作品类型" },
+    { key: "publishDate", label: "发布日期" },
+    { key: "publishOccasion", label: "发布场合" },
+    { key: "organizer", label: "主办方" },
+    { key: "impactScope", label: "影响范围" },
+    { key: "note", label: "备注说明" },
+  ],
+};
+
 function shouldIncludeMainSheet(selectedKeys) {
   const hasEdu = EDUCATION_FIELD_ORDER.some((key) => selectedKeys.has(key));
   const hasParty = PARTY_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasAchievement = ACHIEVEMENT_CATEGORIES.some((item) =>
+    selectedKeys.has(item.selectKey),
+  );
   const hasNonBaseMain = MAIN_FIELD_ORDER.some(
     (key) => !IDENTITY_KEYS.includes(key) && selectedKeys.has(key),
   );
   const hasAnyMain = MAIN_FIELD_ORDER.some((key) => selectedKeys.has(key));
-  if (hasEdu || hasParty) {
+  if (hasEdu || hasParty || hasAchievement) {
     return hasNonBaseMain;
   }
   return hasAnyMain;
@@ -1519,6 +1616,32 @@ const previewSheets = computed(() => {
   const partyTable = buildPartyTable(previewStudents.value, keys);
   if (partyTable) {
     sheets.push({ id: "party", label: "团组织与入党信息", table: partyTable });
+  }
+  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+    keys.has(item.selectKey),
+  );
+  if (activeAchievementCategories.length) {
+    const overview = buildAchievementOverview(
+      previewStudents.value,
+      keys,
+      previewAchievementData.value,
+    );
+    sheets.push({
+      id: "achievement-overview",
+      label: "成就总览",
+      table: overview,
+    });
+    activeAchievementCategories.forEach((category) => {
+      const detailTable = buildAchievementDetailTable(
+        category.key,
+        previewAchievementData.value,
+      );
+      sheets.push({
+        id: `achievement-${category.key}`,
+        label: category.label,
+        table: detailTable,
+      });
+    });
   }
   return sheets;
 });
@@ -1550,6 +1673,7 @@ async function refreshPreviewData() {
   const ids = selectedIds.value.slice(0, 3);
   if (!ids.length) {
     previewDetailRows.value = [];
+    previewAchievementData.value = [];
     return;
   }
   previewLoading.value = true;
@@ -1565,7 +1689,21 @@ async function refreshPreviewData() {
     if (requestId !== previewRequestId) {
       return;
     }
-    previewDetailRows.value = results.filter(Boolean);
+    const detailRows = results.filter(Boolean);
+    previewDetailRows.value = detailRows;
+    const selectedKeys = getSelectedExportKeys();
+    const hasAchievement = ACHIEVEMENT_CATEGORIES.some((item) =>
+      selectedKeys.has(item.selectKey),
+    );
+    if (hasAchievement && detailRows.length) {
+      const achievements = await fetchAchievementsForStudents(detailRows);
+      if (requestId !== previewRequestId) {
+        return;
+      }
+      previewAchievementData.value = achievements;
+    } else {
+      previewAchievementData.value = [];
+    }
   } finally {
     if (requestId === previewRequestId) {
       previewLoading.value = false;
@@ -1693,12 +1831,12 @@ async function handleExport() {
       return false;
     }
     if (shouldIncludeMainSheet(selectedKeys)) {
-      const table = buildStudentTable(rows, selectedKeys);
-      if (table) {
-        const worksheet = XLSX.utils.aoa_to_sheet(table);
-        worksheet["!cols"] = computeColumnWidths(table);
-        XLSX.utils.book_append_sheet(workbook, worksheet, "学生");
-      }
+    const table = buildStudentTable(rows, selectedKeys);
+    if (table) {
+      const worksheet = XLSX.utils.aoa_to_sheet(table);
+      worksheet["!cols"] = computeColumnWidths(table);
+      XLSX.utils.book_append_sheet(workbook, worksheet, "学生");
+    }
     }
     const educationTable = buildEducationTable(rows, selectedKeys);
     if (educationTable) {
@@ -1711,6 +1849,29 @@ async function handleExport() {
       const partySheet = XLSX.utils.aoa_to_sheet(partyTable);
       partySheet["!cols"] = computeColumnWidths(partyTable);
       XLSX.utils.book_append_sheet(workbook, partySheet, "团组织与入党信息");
+    }
+    const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+      selectedKeys.has(item.selectKey),
+    );
+    if (activeAchievementCategories.length) {
+      const achievementData = await fetchAchievementsForStudents(rows);
+      const overview = buildAchievementOverview(
+        rows,
+        selectedKeys,
+        achievementData,
+      );
+      const overviewSheet = XLSX.utils.aoa_to_sheet(overview);
+      overviewSheet["!cols"] = computeColumnWidths(overview);
+      XLSX.utils.book_append_sheet(workbook, overviewSheet, "成就总览");
+      activeAchievementCategories.forEach((category) => {
+        const detailTable = buildAchievementDetailTable(
+          category.key,
+          achievementData,
+        );
+        const detailSheet = XLSX.utils.aoa_to_sheet(detailTable);
+        detailSheet["!cols"] = computeColumnWidths(detailTable);
+        XLSX.utils.book_append_sheet(workbook, detailSheet, category.label);
+      });
     }
     XLSX.writeFile(workbook, `students_export_${formatTimestamp()}.xlsx`, {
       compression: true,
@@ -1820,6 +1981,68 @@ function buildPartyTable(rows, selectedKeys) {
     ]);
   });
   return lines;
+}
+
+async function fetchAchievementsForStudents(rows) {
+  const tasks = rows.map((item) => {
+    const studentNo = item.studentNo || "";
+    const studentName = item.fullName || item.name || "";
+    if (!studentNo && !studentName) {
+      return Promise.resolve({ studentNo, studentName, records: [] });
+    }
+    return listAchievements({ studentNo, studentName })
+      .then(({ data }) => ({
+        studentNo,
+        studentName,
+        records: Array.isArray(data) ? data : [],
+      }))
+      .catch(() => ({ studentNo, studentName, records: [] }));
+  });
+  return Promise.all(tasks);
+}
+
+function buildAchievementOverview(rows, selectedKeys, achievementData) {
+  const baseFields = IDENTITY_FIELDS.filter((field) =>
+    selectedKeys.has(field.key),
+  );
+  const activeCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+    selectedKeys.has(item.selectKey),
+  );
+  const header = [
+    ...baseFields.map((field) => field.label),
+    ...activeCategories.map((item) => item.label),
+  ];
+  const body = rows.map((item) => {
+    const baseValues = baseFields.map((field) => field.getter(item));
+    const studentNo = item.studentNo || "";
+    const studentName = item.fullName || item.name || "";
+    const recordEntry = achievementData.find(
+      (entry) =>
+        (studentNo && entry.studentNo === studentNo) ||
+        (studentName && entry.studentName === studentName),
+    );
+    const records = recordEntry?.records || [];
+    const categoryFlags = activeCategories.map((category) =>
+      records.some((record) => record.category === category.key) ? "1" : "",
+    );
+    return [...baseValues, ...categoryFlags];
+  });
+  return [header, ...body];
+}
+
+function buildAchievementDetailTable(categoryKey, achievementData) {
+  const fields = ACHIEVEMENT_FIELDS[categoryKey] || [];
+  const header = fields.map((field) => field.label);
+  const rows = [];
+  achievementData.forEach((entry) => {
+    entry.records
+      .filter((record) => record.category === categoryKey)
+      .forEach((record) => {
+        const values = fields.map((field) => record.fields?.[field.key] || "");
+        rows.push(values);
+      });
+  });
+  return [header, ...rows];
 }
 
 function buildStudentCsv(rows) {
