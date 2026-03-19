@@ -1358,14 +1358,16 @@ async function confirmEdit() {
     info.dormRoomNo,
     info.dormRoom,
   );
-  const educationExperiences = educationItems.map((item) => ({
-    startDate: item.startDate,
-    endDate: item.endDate,
-    schoolName: item.schoolName,
-    educationLevel: item.educationLevel,
-    witness: item.witness,
-    isCurrent: item.isCurrent,
-  }));
+  const educationExperiences = educationItems
+    .filter((item) => !isEducationRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      schoolName: item.schoolName,
+      educationLevel: item.educationLevel,
+      witness: item.witness,
+      isCurrent: item.isCurrent,
+    }));
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
