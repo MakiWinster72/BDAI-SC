@@ -148,16 +148,26 @@
         <section class="info-card student-results-card">
           <div class="info-section-title">筛选结果</div>
           <div v-if="pagedStudents.length" class="student-list">
-            <div v-for="item in pagedStudents" :key="item.id" class="student-row">
+            <div
+              v-for="item in pagedStudents"
+              :key="item.id"
+              class="student-row"
+            >
               <input v-model="selectedIds" type="checkbox" :value="item.id" />
               <div class="student-main">
                 <div class="student-name">{{ item.name }}</div>
                 <div class="student-meta">
-                  {{ item.gradeYear }}级 {{ item.college }} {{ item.major }}{{ item.classNo }}班 ·
+                  {{ item.gradeYear }}级 {{ item.major }}{{ item.classNo }}班
                   {{ item.studentNo }}
                 </div>
               </div>
-              <button class="ghost-button" type="button" @click="openDetail(item)">详情</button>
+              <button
+                class="ghost-button"
+                type="button"
+                @click="openDetail(item)"
+              >
+                详情
+              </button>
             </div>
           </div>
           <div v-else class="empty-tip">没有匹配的学生。</div>
@@ -220,11 +230,17 @@
                 :src="resolveMediaUrl(viewItem.avatarUrl)"
                 alt="头像"
               />
-              <span v-else>{{ (viewItem.fullName || "同学").slice(0, 1) }}</span>
+              <span v-else>{{
+                (viewItem.fullName || "同学").slice(0, 1)
+              }}</span>
             </button>
             <div class="info-hero-text">
-              <div class="info-hero-title">{{ viewItem.fullName || "未命名" }}</div>
-              <div class="info-hero-subtitle">学号：{{ viewItem.studentNo || "-" }}</div>
+              <div class="info-hero-title">
+                {{ viewItem.fullName || "未命名" }}
+              </div>
+              <div class="info-hero-subtitle">
+                学号：{{ viewItem.studentNo || "-" }}
+              </div>
             </div>
             <div class="info-actions info-actions-single">
               <button
@@ -242,11 +258,15 @@
             <div class="info-form-grid">
               <div class="field-card">
                 <span class="info-label">名字</span>
-                <div class="info-input info-static">{{ viewItem.fullName || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.fullName || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">学号</span>
-                <div class="info-input info-static">{{ viewItem.studentNo || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.studentNo || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">年级</span>
@@ -256,7 +276,9 @@
               </div>
               <div class="field-card">
                 <span class="info-label">学院</span>
-                <div class="info-input info-static">{{ viewItem.college || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.college || "-" }}
+                </div>
               </div>
               <div class="field-card field-full">
                 <span class="info-label">班级</span>
@@ -266,19 +288,27 @@
               </div>
               <div class="field-card">
                 <span class="info-label">入学时间</span>
-                <div class="info-input info-static">{{ viewItem.enrollmentDate || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.enrollmentDate || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">学生类别</span>
-                <div class="info-input info-static">{{ viewItem.studentCategory || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.studentCategory || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">班主任</span>
-                <div class="info-input info-static">{{ viewItem.classTeacher || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.classTeacher || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">辅导员</span>
-                <div class="info-input info-static">{{ viewItem.counselor || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.counselor || "-" }}
+                </div>
               </div>
             </div>
           </div>
@@ -288,27 +318,39 @@
             <div class="info-form-grid">
               <div class="field-card">
                 <span class="info-label">民族</span>
-                <div class="info-input info-static">{{ viewItem.ethnicity || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.ethnicity || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">政治面貌</span>
-                <div class="info-input info-static">{{ viewItem.politicalStatus || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.politicalStatus || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">手机号码</span>
-                <div class="info-input info-static">{{ viewItem.phone || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.phone || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">身份证件号</span>
-                <div class="info-input info-static">{{ viewItem.idNo || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.idNo || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">籍贯</span>
-                <div class="info-input info-static">{{ viewItem.nativePlace || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.nativePlace || "-" }}
+                </div>
               </div>
               <div class="field-card field-full">
                 <span class="info-label">住址</span>
-                <div class="info-input info-static">{{ viewItem.address || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.address || "-" }}
+                </div>
               </div>
             </div>
           </div>
@@ -322,21 +364,32 @@
                   {{ viewItem.offCampusLiving ? "是" : "否" }}
                 </div>
               </div>
-              <div class="field-card field-full" v-if="viewItem.offCampusLiving">
+              <div
+                class="field-card field-full"
+                v-if="viewItem.offCampusLiving"
+              >
                 <span class="info-label">外居住详细地址</span>
-                <div class="info-input info-static">{{ viewItem.offCampusAddress || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.offCampusAddress || "-" }}
+                </div>
               </div>
               <div class="field-card" v-if="!viewItem.offCampusLiving">
                 <span class="info-label">住宿校区</span>
-                <div class="info-input info-static">{{ viewItem.dormCampus || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.dormCampus || "-" }}
+                </div>
               </div>
               <div class="field-card" v-if="!viewItem.offCampusLiving">
                 <span class="info-label">住宿楼栋</span>
-                <div class="info-input info-static">{{ viewItem.dormBuilding || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.dormBuilding || "-" }}
+                </div>
               </div>
               <div class="field-card" v-if="!viewItem.offCampusLiving">
                 <span class="info-label">住宿房间</span>
-                <div class="info-input info-static">{{ viewItem.dormRoom || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.dormRoom || "-" }}
+                </div>
               </div>
             </div>
           </div>
@@ -359,12 +412,20 @@
               <div class="field-card">
                 <span class="info-label">入团时间</span>
                 <div class="info-input info-static">
-                  {{ formatDateOrStatus(viewItem.leagueJoinDate, viewItem.leagueDeveloping, "正在发展") }}
+                  {{
+                    formatDateOrStatus(
+                      viewItem.leagueJoinDate,
+                      viewItem.leagueDeveloping,
+                      "正在发展",
+                    )
+                  }}
                 </div>
               </div>
               <div class="field-card">
                 <span class="info-label">团号</span>
-                <div class="info-input info-static">{{ viewItem.leagueNo || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.leagueNo || "-" }}
+                </div>
               </div>
               <div class="field-card field-full">
                 <span class="info-label">是否申请入党</span>
@@ -381,31 +442,61 @@
               <div class="field-card">
                 <span class="info-label">确定积极分子时间</span>
                 <div class="info-input info-static">
-                  {{ formatDateOrStatus(viewItem.activistDate, viewItem.activistDeveloping, "正在发展") }}
+                  {{
+                    formatDateOrStatus(
+                      viewItem.activistDate,
+                      viewItem.activistDeveloping,
+                      "正在发展",
+                    )
+                  }}
                 </div>
               </div>
               <div class="field-card">
                 <span class="info-label">上党课时间</span>
                 <div class="info-input info-static">
-                  {{ formatDateOrStatus(viewItem.partyTrainingDate, viewItem.partyTrainingPending, "暂未报名") }}
+                  {{
+                    formatDateOrStatus(
+                      viewItem.partyTrainingDate,
+                      viewItem.partyTrainingPending,
+                      "暂未报名",
+                    )
+                  }}
                 </div>
               </div>
               <div class="field-card">
                 <span class="info-label">确定发展对象时间</span>
                 <div class="info-input info-static">
-                  {{ formatDateOrStatus(viewItem.developmentTargetDate, viewItem.developmentTargetDeveloping, "正在发展") }}
+                  {{
+                    formatDateOrStatus(
+                      viewItem.developmentTargetDate,
+                      viewItem.developmentTargetDeveloping,
+                      "正在发展",
+                    )
+                  }}
                 </div>
               </div>
               <div class="field-card">
                 <span class="info-label">接收为预备党员时间</span>
                 <div class="info-input info-static">
-                  {{ formatDateOrStatus(viewItem.probationaryMemberDate, viewItem.probationaryDeveloping, "正在发展") }}
+                  {{
+                    formatDateOrStatus(
+                      viewItem.probationaryMemberDate,
+                      viewItem.probationaryDeveloping,
+                      "正在发展",
+                    )
+                  }}
                 </div>
               </div>
               <div class="field-card">
                 <span class="info-label">转为正式党员时间</span>
                 <div class="info-input info-static">
-                  {{ formatDateOrStatus(viewItem.fullMemberDate, viewItem.fullMemberDeveloping, "正在发展") }}
+                  {{
+                    formatDateOrStatus(
+                      viewItem.fullMemberDate,
+                      viewItem.fullMemberDeveloping,
+                      "正在发展",
+                    )
+                  }}
                 </div>
               </div>
             </div>
@@ -424,10 +515,15 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(item, index) in educationRows" :key="`edu-view-${index}`">
+                  <tr
+                    v-for="(item, index) in educationRows"
+                    :key="`edu-view-${index}`"
+                  >
                     <td>
                       <div class="education-period">
-                        <div class="info-input info-static">{{ item.startDate || "-" }}</div>
+                        <div class="info-input info-static">
+                          {{ item.startDate || "-" }}
+                        </div>
                         <span class="education-sep">至</span>
                         <div class="info-input info-static">
                           {{ item.isCurrent ? "至今" : item.endDate || "-" }}
@@ -435,13 +531,19 @@
                       </div>
                     </td>
                     <td>
-                      <div class="info-input info-static">{{ item.schoolName || "-" }}</div>
+                      <div class="info-input info-static">
+                        {{ item.schoolName || "-" }}
+                      </div>
                     </td>
                     <td>
-                      <div class="info-input info-static">{{ item.educationLevel || "-" }}</div>
+                      <div class="info-input info-static">
+                        {{ item.educationLevel || "-" }}
+                      </div>
                     </td>
                     <td>
-                      <div class="info-input info-static">{{ item.witness || "-" }}</div>
+                      <div class="info-input info-static">
+                        {{ item.witness || "-" }}
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -456,36 +558,52 @@
               <div class="family-section-title">父亲</div>
               <div class="field-card">
                 <span class="info-label">姓名</span>
-                <div class="info-input info-static">{{ viewItem.fatherName || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.fatherName || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">手机号码</span>
-                <div class="info-input info-static">{{ viewItem.fatherPhone || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.fatherPhone || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">工作单位</span>
-                <div class="info-input info-static">{{ viewItem.fatherWorkUnit || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.fatherWorkUnit || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">职务</span>
-                <div class="info-input info-static">{{ viewItem.fatherTitle || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.fatherTitle || "-" }}
+                </div>
               </div>
               <div class="family-section-title">母亲</div>
               <div class="field-card">
                 <span class="info-label">姓名</span>
-                <div class="info-input info-static">{{ viewItem.motherName || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.motherName || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">手机号码</span>
-                <div class="info-input info-static">{{ viewItem.motherPhone || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.motherPhone || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">工作单位</span>
-                <div class="info-input info-static">{{ viewItem.motherWorkUnit || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.motherWorkUnit || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">职务</span>
-                <div class="info-input info-static">{{ viewItem.motherTitle || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.motherTitle || "-" }}
+                </div>
               </div>
             </div>
           </div>
@@ -495,11 +613,15 @@
             <div class="info-form-grid">
               <div class="field-card">
                 <span class="info-label">紧急联系人电话</span>
-                <div class="info-input info-static">{{ viewItem.emergencyPhone || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.emergencyPhone || "-" }}
+                </div>
               </div>
               <div class="field-card">
                 <span class="info-label">紧急联系人的关系</span>
-                <div class="info-input info-static">{{ viewItem.emergencyRelation || "-" }}</div>
+                <div class="info-input info-static">
+                  {{ viewItem.emergencyRelation || "-" }}
+                </div>
               </div>
             </div>
           </div>
@@ -513,7 +635,11 @@
       >
         <header class="publisher-header">
           <div class="publisher-title">个人成就</div>
-          <button class="publisher-close" type="button" @click="closeAchievements">
+          <button
+            class="publisher-close"
+            type="button"
+            @click="closeAchievements"
+          >
             关闭
           </button>
         </header>
@@ -580,15 +706,14 @@ const availableMajors = computed(() => {
   return majorOptions;
 });
 
-
 const hasActiveFilters = computed(() => {
   return Boolean(
     filters.classYear ||
-      filters.major ||
-      filters.classNo ||
-      filters.isHkMoTw ||
-      filters.isSpecial ||
-      filters.keyword,
+    filters.major ||
+    filters.classNo ||
+    filters.isHkMoTw ||
+    filters.isSpecial ||
+    filters.keyword,
   );
 });
 
@@ -971,7 +1096,6 @@ function loadUser() {
 .stepper-input {
   text-align: center;
 }
-
 
 .student-filter-inline {
   display: flex;
