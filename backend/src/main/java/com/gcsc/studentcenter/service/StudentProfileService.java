@@ -127,6 +127,7 @@ public class StudentProfileService {
     @Transactional(readOnly = true)
     public StudentSearchResponse searchProfiles(
         Integer classYear,
+        String classNo,
         String college,
         String major,
         Boolean hkMoTw,
@@ -139,6 +140,7 @@ public class StudentProfileService {
         int pageSize = Math.max(size, 1);
         Page<StudentSearchItemResponse> result = studentProfileRepository.searchProfiles(
             classYear,
+            normalize(classNo),
             normalize(college),
             normalize(major),
             hkMoTw,

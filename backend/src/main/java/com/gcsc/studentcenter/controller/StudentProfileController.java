@@ -48,6 +48,7 @@ public class StudentProfileController {
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "5") int size,
         @RequestParam(required = false) Integer classYear,
+        @RequestParam(required = false) String classNo,
         @RequestParam(required = false) String college,
         @RequestParam(required = false) String major,
         @RequestParam(required = false) Boolean hkMoTw,
@@ -57,6 +58,7 @@ public class StudentProfileController {
         return ResponseEntity.ok(
             studentProfileService.searchProfiles(
                 classYear,
+                classNo,
                 college,
                 major,
                 hkMoTw,

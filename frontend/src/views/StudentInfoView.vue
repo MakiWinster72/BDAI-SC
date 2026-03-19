@@ -795,7 +795,7 @@ async function fetchStudents() {
       params.major = filters.major;
     }
     if (filters.classNo) {
-      params.classNo = Number(filters.classNo);
+      params.classNo = String(filters.classNo).trim();
     }
     if (filters.isHkMoTw) {
       params.hkMoTw = true;

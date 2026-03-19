@@ -31,6 +31,7 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
         join sp.user u
         where u.role = com.gcsc.studentcenter.entity.UserRole.STUDENT
             and (:classYear is null or sp.classYear = :classYear)
+            and (:classNo is null or sp.classNo = :classNo)
             and (:college is null or sp.college = :college)
             and (:major is null or sp.classMajor = :major)
             and (:hkMoTw is null or sp.hkMoTw = :hkMoTw)
@@ -48,6 +49,7 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
         """)
     Page<StudentSearchItemResponse> searchProfiles(
         @Param("classYear") Integer classYear,
+        @Param("classNo") String classNo,
         @Param("college") String college,
         @Param("major") String major,
         @Param("hkMoTw") Boolean hkMoTw,
