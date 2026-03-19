@@ -487,13 +487,21 @@
             <label class="field-card" v-if="!info.offCampusLiving">
               <!-- TODO: 等待佩佩姐发文件 -->
               <span class="info-label">住宿楼栋</span>
-              <input
+              <select
                 v-model="info.dormBuilding"
                 class="info-input"
-                type="text"
-                placeholder="如：1号楼"
                 :disabled="dormBuildingDisabled"
-              />
+              >
+                <option disabled value="">选择住宿楼栋</option>
+                <option
+                  v-for="item in dormBuildingOptions"
+                  :key="item.value"
+                  :value="item.value"
+                  :disabled="item.disabled"
+                >
+                  {{ item.label }}
+                </option>
+              </select>
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
               <span class="info-label">住宿房间</span>
@@ -1094,6 +1102,35 @@ const majorOptionsByCollege = {
 const studentCategoryOptions = ["本科", "研究生"];
 const politicalStatusOptions = ["群众", "共青团员", "中共预备党员", "中共党员"];
 const dormCampusOptions = ["佛山校区", "广州校区"];
+const dormBuildingOptions = computed(() => {
+  if (info.dormCampus === "佛山校区") {
+    return [
+      ...Array.from({ length: 21 }, (_, index) => {
+        const label = `${index + 1}号楼`;
+        return { label, value: label };
+      }),
+      { label: "有为9栋", value: "有为9栋" },
+      { label: "有为21栋", value: "有为21栋" },
+      {
+        label: "教师公寓（请选择校外居住）",
+        value: "教师公寓",
+        disabled: true,
+      },
+    ];
+  }
+  if (info.dormCampus === "广州校区") {
+    return [
+      ...Array.from({ length: 16 }, (_, index) => {
+        const label = `${index + 17}号楼`;
+        return { label, value: label };
+      }),
+      { label: "凌云楼", value: "凌云楼" },
+      { label: "揽月楼", value: "揽月楼" },
+      { label: "丽枫酒店", value: "丽枫酒店" },
+    ];
+  }
+  return [];
+});
 const educationItems = reactive(
   Array.from({ length: 5 }, () => createEducationItem()),
 );
@@ -1858,6 +1895,22 @@ watch(
     }
     if (!majorOptionsByCollege[college].includes(info.classMajor)) {
       info.classMajor = "";
+    }
+  },
+);
+
+watch(
+  () => info.dormCampus,
+  () => {
+    if (!info.dormCampus) {
+      info.dormBuilding = "";
+      return;
+    }
+    const exists = dormBuildingOptions.value.some(
+      (item) => item.value === info.dormBuilding && !item.disabled,
+    );
+    if (!exists) {
+      info.dormBuilding = "";
     }
   },
 );
