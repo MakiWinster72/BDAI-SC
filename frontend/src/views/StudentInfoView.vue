@@ -1065,6 +1065,8 @@ async function handleExport() {
     const worksheet = XLSX.utils.aoa_to_sheet(table);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "学生");
+    const educationSheet = XLSX.utils.aoa_to_sheet(buildEducationTable(rows));
+    XLSX.utils.book_append_sheet(workbook, educationSheet, "教育经历");
     XLSX.writeFile(workbook, `students_export_${formatTimestamp()}.xlsx`, {
       compression: true,
     });
@@ -1199,6 +1201,45 @@ function buildStudentTable(rows) {
     item.emergencyRelation || "",
   ]);
   return [header, ...body];
+}
+
+function buildEducationTable(rows) {
+  const header = ["学号", "姓名", "时间段", "学校名称", "学历", "证明人"];
+  const lines = [header];
+  rows.forEach((item) => {
+    const base = {
+      studentNo: item.studentNo || "",
+      name: item.fullName || item.name || "",
+    };
+    const experiences = Array.isArray(item.educationExperiences)
+      ? item.educationExperiences.filter(Boolean)
+      : [];
+    if (!experiences.length) {
+      lines.push([
+        base.studentNo,
+        base.name,
+        "",
+        "",
+        "",
+        "",
+      ]);
+      return;
+    }
+    experiences.forEach((edu) => {
+      const start = edu.startDate || "";
+      const end = edu.isCurrent ? "至今" : edu.endDate || "";
+      const period = [start, end].filter(Boolean).join("~");
+      lines.push([
+        base.studentNo,
+        base.name,
+        period,
+        edu.schoolName || "",
+        edu.educationLevel || "",
+        edu.witness || "",
+      ]);
+    });
+  });
+  return lines;
 }
 
 function buildStudentCsv(rows) {
