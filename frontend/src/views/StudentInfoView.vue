@@ -1105,10 +1105,6 @@ function buildStudentTable(rows) {
   const header = [
     "姓名",
     "学号",
-    "年级",
-    "学院",
-    "专业",
-    "班级",
     "班级名称",
     "入学时间",
     "学生类别",
@@ -1141,10 +1137,6 @@ function buildStudentTable(rows) {
   const body = rows.map((item) => [
     item.fullName || item.name || "",
     item.studentNo || "",
-    item.classYear || item.gradeYear || "",
-    item.college || "",
-    item.classMajor || item.major || "",
-    item.classNo || "",
     buildClassName(item) || "",
     item.enrollmentDate || "",
     item.studentCategory || "",
