@@ -690,6 +690,7 @@
         class="export-dialog"
         :class="{
           open: exportDialogOpen,
+          closing: exportDialogClosing,
           split: exportPreviewOpen || exportPreviewClosing,
         }"
       >
@@ -760,7 +761,7 @@
           <button
             class="ghost-button"
             type="button"
-            @click="toggleExportPreview"
+            @click="exportPreviewOpen ? closeExportPreview() : openExportPreview()"
           >
             {{ exportPreviewOpen ? "关闭预览" : "预览" }}
           </button>
@@ -785,7 +786,7 @@
           <button
             class="ghost-button"
             type="button"
-            @click="toggleExportPreview"
+            @click="closeExportPreview"
           >
             关闭
           </button>
@@ -859,6 +860,7 @@ const viewItem = ref(null);
 const viewLoading = ref(false);
 const selectAllLoading = ref(false);
 const exportDialogOpen = ref(false);
+const exportDialogClosing = ref(false);
 const exportPreviewOpen = ref(false);
 const exportPreviewClosing = ref(false);
 const previewActiveSheet = ref("main");
@@ -1599,12 +1601,17 @@ function getSelectedExportKeys() {
 
 function openExportDialog() {
   exportDialogOpen.value = true;
+  exportDialogClosing.value = false;
 }
 
 function closeExportDialog() {
   exportDialogOpen.value = false;
+  exportDialogClosing.value = true;
   exportPreviewOpen.value = false;
   exportPreviewClosing.value = false;
+  setTimeout(() => {
+    exportDialogClosing.value = false;
+  }, 260);
 }
 
 function isGroupSelected(group) {
@@ -1635,17 +1642,17 @@ function setPreviewSheet(id) {
   previewActiveSheet.value = id;
 }
 
-function toggleExportPreview() {
-  if (exportPreviewOpen.value) {
-    exportPreviewOpen.value = false;
-    exportPreviewClosing.value = true;
-    setTimeout(() => {
-      exportPreviewClosing.value = false;
-    }, 260);
-    return;
-  }
+function openExportPreview() {
   exportPreviewOpen.value = true;
   exportPreviewClosing.value = false;
+}
+
+function closeExportPreview() {
+  exportPreviewOpen.value = false;
+  exportPreviewClosing.value = true;
+  setTimeout(() => {
+    exportPreviewClosing.value = false;
+  }, 260);
 }
 
 
@@ -2211,6 +2218,7 @@ function loadUser() {
   width: min(860px, calc(100vw - 32px));
   transform: translate(-50%, 120%) scale(0.98);
   opacity: 0;
+  filter: blur(6px);
   pointer-events: none;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -2223,8 +2231,11 @@ function loadUser() {
   backdrop-filter: blur(12px);
   z-index: 90;
   transition:
-    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.6s ease;
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.75s ease,
+    filter 0.75s ease,
+    left 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.75s cubic-bezier(0.22, 1, 0.36, 1);
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -2234,17 +2245,30 @@ function loadUser() {
 .export-dialog.open {
   transform: translate(-50%, 0) scale(1);
   opacity: 1;
+  filter: blur(0px);
   pointer-events: auto;
 }
 
+.export-dialog.closing {
+  transform: translate(-50%, 120%) scale(0.98);
+  opacity: 0;
+  filter: blur(6px);
+}
+
 .export-dialog.split {
-  left: 16px;
-  width: min(560px, calc(50vw - 24px));
+  left: 8px;
+  width: calc(50vw - 16px);
   transform: translate(0, 120%) scale(0.98);
 }
 
 .export-dialog.split.open {
   transform: translate(0, 0) scale(1);
+  filter: blur(0px);
+}
+
+.export-dialog.split.closing {
+  transform: translate(0, 120%) scale(0.98);
+  filter: blur(6px);
 }
 
 .export-dialog-header {
@@ -2341,9 +2365,9 @@ function loadUser() {
 
 .export-preview-view {
   position: fixed;
-  right: 16px;
+  right: 8px;
   bottom: 16px;
-  width: min(720px, calc(50vw - 24px));
+  width: calc(50vw - 16px);
   height: 80vh;
   transform: translate(0, 120%) scale(0.98);
   opacity: 0;
@@ -2466,6 +2490,10 @@ function loadUser() {
 
   .export-dialog.split.open {
     transform: translate(-50%, 0) scale(1);
+  }
+
+  .export-dialog.split.closing {
+    transform: translate(-50%, 120%) scale(0.98);
   }
 
   .export-preview-view {
