@@ -58,25 +58,18 @@
               <span>{{ item.label }}</span>
               <span class="menu-drawer-caret" aria-hidden="true"></span>
             </button>
-            <transition name="menu-drawer-panel">
-              <div v-show="achievementsOpen" class="menu-drawer-panel">
-                <div
-                  class="menu-drawer-indicator"
-                  :style="drawerIndicatorStyle"
-                  aria-hidden="true"
-                ></div>
-                <button
-                  v-for="entry in achievementEntries"
-                  :key="entry.key"
-                  class="menu-drawer-item"
-                  :class="{ active: activeAchievement === entry.key }"
-                  type="button"
-                  @click="handleAchievementEntry(entry.key)"
-                >
-                  {{ entry.label }}
-                </button>
-              </div>
-            </transition>
+            <div v-show="achievementsOpen" class="menu-drawer-panel">
+              <button
+                v-for="entry in achievementEntries"
+                :key="entry.key"
+                class="menu-drawer-item"
+                :class="{ active: activeAchievement === entry.key }"
+                type="button"
+                @click="handleAchievementEntry(entry.key)"
+              >
+                {{ entry.label }}
+              </button>
+            </div>
           </div>
           <button
             v-else
@@ -222,6 +215,7 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
+                :max="today"
                 :disabled="!isEditing"
               />
             </label>
@@ -474,6 +468,7 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
+                :max="today"
                 :disabled="leagueApplicationDisabled"
               />
             </label>
@@ -485,6 +480,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="leagueJoinDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -537,6 +533,7 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
+                :max="today"
                 :disabled="applicationDateDisabled"
               />
             </label>
@@ -548,6 +545,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="activistDateDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -568,6 +566,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="partyTrainingDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -588,6 +587,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="developmentTargetDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -608,6 +608,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="probationaryDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -628,6 +629,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="fullMemberDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -657,7 +659,10 @@
                 </tr>
               </thead>
               <transition-group name="education-row" tag="tbody">
-                <tr v-for="(item, index) in educationItems" :key="`edu-${index}`">
+                <tr
+                  v-for="(item, index) in educationItems"
+                  :key="`edu-${index}`"
+                >
                   <td>
                     <div class="education-period">
                       <input
@@ -665,6 +670,7 @@
                         class="info-input"
                         type="date"
                         lang="zh-CN"
+                        :max="today"
                         :disabled="isEducationRowDisabled(index)"
                       />
                       <span class="education-sep">至</span>
@@ -673,13 +679,19 @@
                         class="info-input"
                         type="date"
                         lang="zh-CN"
-                        :disabled="isEducationRowDisabled(index) || item.isCurrent"
+                        :max="today"
+                        :disabled="
+                          isEducationRowDisabled(index) || item.isCurrent
+                        "
                       />
                       <label class="info-choice info-choice-muted">
                         <input
                           v-model="item.isCurrent"
                           type="checkbox"
-                          :disabled="isEducationRowDisabled(index) || isEducationCurrentDisabled(item)"
+                          :disabled="
+                            isEducationRowDisabled(index) ||
+                            isEducationCurrentDisabled(item)
+                          "
                           @change="handleEducationCurrentChange(item, index)"
                         />
                         至今
@@ -914,6 +926,7 @@ const avatarInput = ref(null);
 const sidebarOpen = ref(false);
 const achievementsOpen = ref(false);
 const educationTableWrap = ref(null);
+const today = getTodayString();
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -988,6 +1001,12 @@ const dormCampusOptions = ["佛山校区", "广州校区"];
 const educationItems = reactive(
   Array.from({ length: 5 }, () => createEducationItem()),
 );
+
+function getTodayString() {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
+}
 
 function createEducationItem() {
   return {
@@ -1089,10 +1108,13 @@ const currentEducationIndex = computed(() =>
   educationItems.findIndex((entry) => entry.isCurrent),
 );
 
-function handleEducationCurrentChange(item, index) {
+async function handleEducationCurrentChange(item, index) {
   if (item.isCurrent) {
     item.endDate = "";
-    clearEducationRowsAfter(index);
+    await animateEducationHeightWithUpdate(() => {
+      clearEducationRowsAfter(index);
+      pruneEducationRowsAfter(index);
+    });
   }
 }
 
@@ -1120,6 +1142,32 @@ function clearEducationRowsAfter(index) {
     entry.witness = "";
     entry.isCurrent = false;
   });
+}
+
+function pruneEducationRowsAfter(index) {
+  if (educationItems.length <= index + 1) {
+    return;
+  }
+  const kept = educationItems.slice(0, index + 1);
+  educationItems.slice(index + 1).forEach((entry) => {
+    if (!isEducationRowEmpty(entry)) {
+      kept.push(entry);
+    }
+  });
+  if (kept.length !== educationItems.length) {
+    educationItems.splice(0, educationItems.length, ...kept);
+  }
+}
+
+function isEducationRowEmpty(entry) {
+  return (
+    !entry.startDate &&
+    !entry.endDate &&
+    !entry.schoolName &&
+    !entry.educationLevel &&
+    !entry.witness &&
+    !entry.isCurrent
+  );
 }
 
 const dormBuildingDisabled = computed(
@@ -1236,7 +1284,9 @@ function handleAchievementEntry(key) {
   if (!isMenuEnabled("achievements")) {
     return;
   }
-  const safeKey = achievementEntries.some((entry) => entry.key === key) ? key : "all";
+  const safeKey = achievementEntries.some((entry) => entry.key === key)
+    ? key
+    : "all";
   activeAchievement.value = safeKey;
   activeMenu.value = "achievements";
   sidebarOpen.value = false;
@@ -1319,14 +1369,16 @@ async function confirmEdit() {
     info.dormRoomNo,
     info.dormRoom,
   );
-  const educationExperiences = educationItems.map((item) => ({
-    startDate: item.startDate,
-    endDate: item.endDate,
-    schoolName: item.schoolName,
-    educationLevel: item.educationLevel,
-    witness: item.witness,
-    isCurrent: item.isCurrent,
-  }));
+  const educationExperiences = educationItems
+    .filter((item) => !isEducationRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      schoolName: item.schoolName,
+      educationLevel: item.educationLevel,
+      witness: item.witness,
+      isCurrent: item.isCurrent,
+    }));
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
@@ -1544,10 +1596,11 @@ function applyEducationExperiences(rawItems) {
     witness: item?.witness || "",
     isCurrent: Boolean(item?.isCurrent),
   }));
-  while (normalized.length < 5) {
-    normalized.push(createEducationItem());
+  const filtered = normalized.filter((item) => !isEducationRowEmpty(item));
+  if (!filtered.length) {
+    filtered.push(createEducationItem());
   }
-  educationItems.splice(0, educationItems.length, ...normalized);
+  educationItems.splice(0, educationItems.length, ...filtered);
 }
 
 function saveUser(data) {
@@ -1692,7 +1745,6 @@ watch(
     info.fullMemberDate = "";
   },
 );
-
 
 function loadUser() {
   try {
