@@ -1861,6 +1861,18 @@ async function handleExport() {
         achievementData,
       );
       const overviewSheet = XLSX.utils.aoa_to_sheet(overview);
+      const baseFieldCount = IDENTITY_FIELDS.filter((field) =>
+        selectedKeys.has(field.key),
+      ).length;
+      activeAchievementCategories.forEach((category, index) => {
+        const cell = XLSX.utils.encode_cell({ r: 0, c: baseFieldCount + index });
+        if (!overviewSheet[cell]) {
+          return;
+        }
+        overviewSheet[cell].l = {
+          Target: `#'${category.label}'!A1`,
+        };
+      });
       overviewSheet["!cols"] = computeColumnWidths(overview);
       XLSX.utils.book_append_sheet(workbook, overviewSheet, "成就总览");
       activeAchievementCategories.forEach((category) => {
