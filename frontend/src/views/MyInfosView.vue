@@ -1469,7 +1469,8 @@ async function confirmEdit() {
 }
 
 function buildClassName(year, major, no, fallback) {
-  if (fallback) {
+  const hasParts = Boolean(year || major || no);
+  if (!hasParts && fallback) {
     return fallback;
   }
   const safeYear = year ? `${year}级` : "";
