@@ -920,6 +920,13 @@ function formatDateOrStatus(dateValue, statusFlag, statusText) {
   return dateValue || "-";
 }
 
+function formatDateOrEmpty(dateValue, statusFlag, statusText) {
+  if (statusFlag) {
+    return statusText;
+  }
+  return dateValue || "";
+}
+
 function buildClassName(item) {
   if (!item) {
     return "";
@@ -1220,7 +1227,7 @@ function buildPartyTable(rows) {
       item.fullName || item.name || "",
       formatYesNo(item.leagueJoined),
       item.leagueApplicationDate || "",
-      formatDateOrStatus(
+      formatDateOrEmpty(
         item.leagueJoinDate,
         item.leagueDeveloping,
         "正在发展",
@@ -1228,27 +1235,27 @@ function buildPartyTable(rows) {
       item.leagueNo || "",
       formatYesNo(item.partyApplied),
       item.applicationDate || "",
-      formatDateOrStatus(
+      formatDateOrEmpty(
         item.activistDate,
         item.activistDeveloping,
         "正在发展",
       ),
-      formatDateOrStatus(
+      formatDateOrEmpty(
         item.partyTrainingDate,
         item.partyTrainingPending,
         "暂未报名",
       ),
-      formatDateOrStatus(
+      formatDateOrEmpty(
         item.developmentTargetDate,
         item.developmentTargetDeveloping,
         "正在发展",
       ),
-      formatDateOrStatus(
+      formatDateOrEmpty(
         item.probationaryMemberDate,
         item.probationaryDeveloping,
         "正在发展",
       ),
-      formatDateOrStatus(
+      formatDateOrEmpty(
         item.fullMemberDate,
         item.fullMemberDeveloping,
         "正在发展",
