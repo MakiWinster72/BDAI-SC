@@ -1206,8 +1206,9 @@ function buildEducationTable(rows) {
 
 function buildPartyTable(rows) {
   const header = [
-    "学号",
     "姓名",
+    "班级",
+    "学号",
     "是否入团",
     "提交入团申请书时间",
     "入团时间",
@@ -1223,8 +1224,9 @@ function buildPartyTable(rows) {
   const lines = [header];
   rows.forEach((item) => {
     lines.push([
-      item.studentNo || "",
       item.fullName || item.name || "",
+      buildClassName(item) || "",
+      item.studentNo || "",
       formatYesNo(item.leagueJoined),
       item.leagueApplicationDate || "",
       formatDateOrEmpty(
