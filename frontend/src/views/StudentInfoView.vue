@@ -1262,6 +1262,8 @@ const IDENTITY_FIELDS = [
   { key: "studentNo", label: "学号", getter: (item) => item.studentNo || "" },
 ];
 
+const IDENTITY_KEYS = IDENTITY_FIELDS.map((field) => field.key);
+
 const MAIN_FIELD_ORDER = [
   "name",
   "className",
@@ -1452,6 +1454,19 @@ function toggleAllSelections(checked) {
   });
 }
 
+function shouldIncludeMainSheet(selectedKeys) {
+  const hasEdu = EDUCATION_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasParty = PARTY_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasNonBaseMain = MAIN_FIELD_ORDER.some(
+    (key) => !IDENTITY_KEYS.includes(key) && selectedKeys.has(key),
+  );
+  const hasAnyMain = MAIN_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  if (hasEdu || hasParty) {
+    return hasNonBaseMain;
+  }
+  return hasAnyMain;
+}
+
 async function confirmExport() {
   const success = await handleExport();
   if (success) {
@@ -1488,11 +1503,13 @@ async function handleExport() {
       window.alert("请选择至少一个导出字段。");
       return false;
     }
-    const table = buildStudentTable(rows, selectedKeys);
-    if (table) {
-      const worksheet = XLSX.utils.aoa_to_sheet(table);
-      worksheet["!cols"] = computeColumnWidths(table);
-      XLSX.utils.book_append_sheet(workbook, worksheet, "学生");
+    if (shouldIncludeMainSheet(selectedKeys)) {
+      const table = buildStudentTable(rows, selectedKeys);
+      if (table) {
+        const worksheet = XLSX.utils.aoa_to_sheet(table);
+        worksheet["!cols"] = computeColumnWidths(table);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "学生");
+      }
     }
     const educationTable = buildEducationTable(rows, selectedKeys);
     if (educationTable) {
