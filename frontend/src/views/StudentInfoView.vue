@@ -1357,8 +1357,6 @@ const MAIN_FIELD_ORDER = [
   "dormCampus",
   "dormBuilding",
   "dormRoom",
-  "hkMoTw",
-  "specialStudent",
   "fatherName",
   "fatherPhone",
   "fatherWorkUnit",
@@ -1367,6 +1365,8 @@ const MAIN_FIELD_ORDER = [
   "motherPhone",
   "motherWorkUnit",
   "motherTitle",
+  "hkMoTw",
+  "specialStudent",
   "emergencyPhone",
   "emergencyRelation",
 ];
