@@ -194,6 +194,18 @@
                 @change="applyPageInput"
               />
             </div>
+            <div class="page-size">
+              <span class="info-label">每页</span>
+              <select v-model.number="pageSize" class="info-input page-size-input">
+                <option
+                  v-for="size in pageSizeOptions"
+                  :key="size"
+                  :value="size"
+                >
+                  {{ size }}
+                </option>
+              </select>
+            </div>
             <button class="action-button" type="button">导出</button>
           </div>
         </section>
@@ -675,7 +687,8 @@ const students = ref([]);
 const totalPages = ref(1);
 const totalItems = ref(0);
 const loading = ref(false);
-const pageSize = 5;
+const pageSizeOptions = [10, 20, 30, 50];
+const pageSize = ref(20);
 const viewOpen = ref(false);
 const viewClosing = ref(false);
 const viewItem = ref(null);
@@ -775,6 +788,15 @@ watch(currentPage, () => {
   fetchStudents();
 });
 
+watch(pageSize, () => {
+  pageInput.value = null;
+  if (currentPage.value === 1) {
+    fetchStudents();
+    return;
+  }
+  currentPage.value = 1;
+});
+
 function resetResults() {
   students.value = [];
   totalPages.value = 1;
@@ -786,7 +808,7 @@ async function fetchStudents() {
   try {
     const params = {
       page: currentPage.value,
-      size: pageSize,
+      size: pageSize.value,
     };
     if (filters.classYear) {
       params.classYear = filters.classYear;
@@ -1154,6 +1176,17 @@ function loadUser() {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.page-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-size-input {
+  width: 90px;
+  height: 32px;
 }
 
 .page-button {
