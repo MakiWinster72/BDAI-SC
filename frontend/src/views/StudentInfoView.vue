@@ -55,7 +55,7 @@
       </header>
 
       <section class="info-shell student-right-stack">
-        <section class="info-card student-filter-card">
+        <section v-show="!gridFullscreen" class="info-card student-filter-card">
           <div class="student-filter-header">
             <div class="info-section-title">搜索</div>
             <input
@@ -206,7 +206,11 @@
               </button>
             </div>
           </div>
-          <div v-if="gridViewOpen" class="student-grid-wrap">
+          <div
+            v-if="gridViewOpen"
+            class="student-grid-wrap"
+            :class="{ fullscreen: gridFullscreen }"
+          >
             <AgGridVue
               class="ag-theme-quartz student-grid"
               :row-data="gridActiveSheetData.rowData"
@@ -219,6 +223,13 @@
               :pagination-page-size="100"
               :suppress-cell-focus="true"
             />
+            <button
+              class="student-grid-fullscreen"
+              type="button"
+              @click="toggleGridFullscreen"
+            >
+              {{ gridFullscreen ? "退出全屏" : "全屏" }}
+            </button>
           </div>
           <div v-else-if="pagedStudents.length" class="student-list">
             <div
@@ -282,7 +293,14 @@
                 </option>
               </select>
             </div>
-            <button class="action-button" type="button">导出</button>
+            <button
+              class="action-button"
+              type="button"
+              :disabled="exportDisabled"
+              @click="openExportDialog"
+            >
+              {{ exportLabel }}
+            </button>
           </div>
         </section>
       </section>
@@ -1028,6 +1046,7 @@ const gridAchievementData = ref([]);
 const gridFieldDialogOpen = ref(false);
 const gridFieldDialogClosing = ref(false);
 const gridActiveSheet = ref("main");
+const gridFullscreen = ref(false);
 let gridRequestId = 0;
 const previewActiveSheet = ref("main");
 const previewLoading = ref(false);
@@ -1442,6 +1461,10 @@ function toggleGridView() {
   if (gridViewOpen.value) {
     fetchGridStudents();
   }
+}
+
+function toggleGridFullscreen() {
+  gridFullscreen.value = !gridFullscreen.value;
 }
 
 function openGridFieldDialog() {
@@ -3017,6 +3040,42 @@ function loadUser() {
   height: 520px;
   border-radius: 12px;
   overflow: hidden;
+}
+
+.student-grid-wrap {
+  position: relative;
+}
+
+.student-grid-wrap.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: #f7fafb;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-grid-wrap.fullscreen .student-grid {
+  height: calc(100vh - 32px);
+  border-radius: 16px;
+}
+
+.student-grid-fullscreen {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  border: none;
+  background: rgba(3, 107, 114, 0.12);
+  color: #036b72;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.student-grid-fullscreen:hover {
+  background: rgba(3, 107, 114, 0.2);
 }
 
 .student-search {
