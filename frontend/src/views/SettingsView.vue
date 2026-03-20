@@ -176,7 +176,7 @@ function handleMenuClick(key) {
   }
   sidebarOpen.value = false;
   if (key === "achievements") {
-    router.push("/achievements");
+    router.push({ path: "/achievements", query: { category: "all" } });
     return;
   }
   if (key === "my-info") {

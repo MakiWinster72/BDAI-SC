@@ -6,29 +6,26 @@
 
       <form @submit.prevent="handleRegister">
         <div class="form-row">
-          <label class="form-label" for="displayName">显示名称</label>
+          <label class="form-label" for="displayName">名字</label>
           <input
             id="displayName"
             v-model.trim="form.displayName"
             class="form-input"
             type="text"
-            placeholder="例如：张三"
+            placeholder="请输入真实名字"
             autocomplete="nickname"
             required
           />
         </div>
 
         <div class="form-row">
-          <label class="form-label" for="username">
-            用户名
-            <small>用于登录</small>
-          </label>
+          <label class="form-label" for="username"> 学号 </label>
           <input
             id="username"
             v-model.trim="form.username"
             class="form-input"
             type="text"
-            placeholder="4-32 位字符"
+            placeholder="请输入学号"
             autocomplete="username"
             required
           />
@@ -48,7 +45,7 @@
         </div>
 
         <button class="action-button" :disabled="isSubmitting" type="submit">
-          {{ isSubmitting ? '注册中...' : '注册' }}
+          {{ isSubmitting ? "注册中..." : "注册" }}
         </button>
       </form>
 
@@ -63,39 +60,39 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { register } from '../api/auth'
+import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { register } from "../api/auth";
 
-const router = useRouter()
+const router = useRouter();
 
 const form = reactive({
-  displayName: '',
-  username: '',
-  password: ''
-})
+  displayName: "",
+  username: "",
+  password: "",
+});
 
-const isSubmitting = ref(false)
-const feedback = reactive({ text: '', type: '' })
+const isSubmitting = ref(false);
+const feedback = reactive({ text: "", type: "" });
 
 function parseError(error) {
   if (error?.response?.data?.message) {
-    return error.response.data.message
+    return error.response.data.message;
   }
-  return '请求失败，请检查后端服务是否启动'
+  return "请求失败，请检查后端服务是否启动";
 }
 
 async function handleRegister() {
-  feedback.text = ''
-  feedback.type = ''
-  isSubmitting.value = true
+  feedback.text = "";
+  feedback.type = "";
+  isSubmitting.value = true;
 
   try {
-    const { data } = await register(form)
-    feedback.text = data.message || '注册成功'
-    feedback.type = 'success'
+    const { data } = await register(form);
+    feedback.text = data.message || "注册成功";
+    feedback.type = "success";
     localStorage.setItem(
-      'gcsc_user',
+      "gcsc_user",
       JSON.stringify({
         username: data.username,
         displayName: data.displayName,
@@ -103,19 +100,19 @@ async function handleRegister() {
         role: data.role,
         studentNo: data.studentNo,
         className: data.className,
-        college: data.college
-      })
-    )
-    localStorage.setItem('gcsc_token', data.token || '')
+        college: data.college,
+      }),
+    );
+    localStorage.setItem("gcsc_token", data.token || "");
 
     setTimeout(() => {
-      router.push('/myinfos')
-    }, 600)
+      router.push("/myinfos");
+    }, 600);
   } catch (error) {
-    feedback.text = parseError(error)
-    feedback.type = 'error'
+    feedback.text = parseError(error);
+    feedback.type = "error";
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
 }
 </script>

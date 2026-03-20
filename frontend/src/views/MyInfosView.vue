@@ -39,20 +39,52 @@
       </section>
 
       <section class="menu-card">
-        <button
-          v-for="item in menuItems"
-          :key="item.key"
-          class="menu-item"
-          :class="{
-            active: activeMenu === item.key,
-            disabled: !isMenuEnabled(item.key),
-          }"
-          type="button"
-          :disabled="!isMenuEnabled(item.key)"
-          @click="handleMenuClick(item.key)"
-        >
-          {{ item.label }}
-        </button>
+        <template v-for="item in menuItems" :key="item.key">
+          <div
+            v-if="item.key === 'achievements'"
+            class="menu-drawer"
+            :class="{ open: achievementsOpen }"
+          >
+            <button
+              class="menu-item menu-drawer-trigger"
+              :class="{
+                active: activeMenu === item.key,
+                disabled: !isMenuEnabled(item.key),
+              }"
+              type="button"
+              :disabled="!isMenuEnabled(item.key)"
+              @click="toggleAchievements"
+            >
+              <span>{{ item.label }}</span>
+              <span class="menu-drawer-caret" aria-hidden="true"></span>
+            </button>
+            <div v-show="achievementsOpen" class="menu-drawer-panel">
+              <button
+                v-for="entry in achievementEntries"
+                :key="entry.key"
+                class="menu-drawer-item"
+                :class="{ active: activeAchievement === entry.key }"
+                type="button"
+                @click="handleAchievementEntry(entry.key)"
+              >
+                {{ entry.label }}
+              </button>
+            </div>
+          </div>
+          <button
+            v-else
+            class="menu-item"
+            :class="{
+              active: activeMenu === item.key,
+              disabled: !isMenuEnabled(item.key),
+            }"
+            type="button"
+            :disabled="!isMenuEnabled(item.key)"
+            @click="handleMenuClick(item.key)"
+          >
+            {{ item.label }}
+          </button>
+        </template>
       </section>
     </aside>
 
@@ -88,6 +120,11 @@
             <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
           </div>
           <div class="info-actions">
+            <ExportPdfButton
+              :get-student="buildPdfStudentSnapshot"
+              :resolve-media-url="resolveMediaUrl"
+              button-class="ghost-button"
+            />
             <button class="ghost-button" type="button" @click="enterEdit">
               编辑
             </button>
@@ -183,6 +220,7 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
+                :max="today"
                 :disabled="!isEditing"
               />
             </label>
@@ -299,11 +337,55 @@
             <label class="field-card field-full">
               <!-- TODO: 做地址选择器 -->
               <span class="info-label">住址</span>
+              <div class="info-inline address-inline">
+                <select
+                  v-model="info.addressProvince"
+                  class="info-input"
+                  :disabled="!isEditing"
+                >
+                  <option disabled value="">选择省份</option>
+                  <option
+                    v-for="item in addressProvinceOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+                <select
+                  v-model="info.addressCity"
+                  class="info-input"
+                  :disabled="!isEditing || !addressCityOptions.length"
+                >
+                  <option disabled value="">选择城市</option>
+                  <option
+                    v-for="item in addressCityOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+                <select
+                  v-model="info.addressCounty"
+                  class="info-input"
+                  :disabled="!isEditing || !addressCountyOptions.length"
+                >
+                  <option disabled value="">选择区县</option>
+                  <option
+                    v-for="item in addressCountyOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+              </div>
               <input
-                v-model="info.address"
-                class="info-input"
+                v-model="info.addressDetail"
+                class="info-input address-detail"
                 type="text"
-                placeholder="请输入住址"
+                placeholder="请输入详细地址"
                 :disabled="!isEditing"
               />
             </label>
@@ -338,10 +420,53 @@
             </div>
             <label class="field-card field-full" v-if="info.offCampusLiving">
               <span class="info-label">外居住详细地址</span>
-              <!-- TODO: 做地址选择器 -->
+              <div class="info-inline address-inline">
+                <select
+                  v-model="info.offCampusProvince"
+                  class="info-input"
+                  :disabled="!isEditing"
+                >
+                  <option disabled value="">选择省份</option>
+                  <option
+                    v-for="item in addressProvinceOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+                <select
+                  v-model="info.offCampusCity"
+                  class="info-input"
+                  :disabled="!isEditing || !offCampusCityOptions.length"
+                >
+                  <option disabled value="">选择城市</option>
+                  <option
+                    v-for="item in offCampusCityOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+                <select
+                  v-model="info.offCampusCounty"
+                  class="info-input"
+                  :disabled="!isEditing || !offCampusCountyOptions.length"
+                >
+                  <option disabled value="">选择区县</option>
+                  <option
+                    v-for="item in offCampusCountyOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+              </div>
               <input
-                v-model="info.offCampusAddress"
-                class="info-input"
+                v-model="info.offCampusDetail"
+                class="info-input address-detail"
                 type="text"
                 placeholder="请输入详细地址"
                 :disabled="!isEditing"
@@ -367,13 +492,21 @@
             <label class="field-card" v-if="!info.offCampusLiving">
               <!-- TODO: 等待佩佩姐发文件 -->
               <span class="info-label">住宿楼栋</span>
-              <input
+              <select
                 v-model="info.dormBuilding"
                 class="info-input"
-                type="text"
-                placeholder="如：1号楼"
                 :disabled="dormBuildingDisabled"
-              />
+              >
+                <option disabled value="">选择住宿楼栋</option>
+                <option
+                  v-for="item in dormBuildingOptions"
+                  :key="item.value"
+                  :value="item.value"
+                  :disabled="item.disabled"
+                >
+                  {{ item.label }}
+                </option>
+              </select>
             </label>
             <label class="field-card" v-if="!info.offCampusLiving">
               <span class="info-label">住宿房间</span>
@@ -435,6 +568,7 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
+                :max="today"
                 :disabled="leagueApplicationDisabled"
               />
             </label>
@@ -446,6 +580,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="leagueJoinDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -498,6 +633,7 @@
                 class="info-input"
                 type="date"
                 lang="zh-CN"
+                :max="today"
                 :disabled="applicationDateDisabled"
               />
             </label>
@@ -509,6 +645,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="activistDateDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -529,6 +666,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="partyTrainingDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -549,6 +687,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="developmentTargetDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -569,6 +708,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="probationaryDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -589,6 +729,7 @@
                   class="info-input"
                   type="date"
                   lang="zh-CN"
+                  :max="today"
                   :disabled="fullMemberDisabled"
                 />
                 <label class="info-choice info-choice-muted">
@@ -605,6 +746,7 @@
         </div>
 
         <div class="info-card">
+          <!-- TODO: 高度设置为两行 -->
           <div class="info-section-title">教育经历</div>
           <div class="info-hint">从小学开始填</div>
           <div ref="educationTableWrap" class="education-table-wrap">
@@ -618,7 +760,10 @@
                 </tr>
               </thead>
               <transition-group name="education-row" tag="tbody">
-                <tr v-for="(item, index) in educationItems" :key="`edu-${index}`">
+                <tr
+                  v-for="(item, index) in educationItems"
+                  :key="`edu-${index}`"
+                >
                   <td>
                     <div class="education-period">
                       <input
@@ -626,6 +771,7 @@
                         class="info-input"
                         type="date"
                         lang="zh-CN"
+                        :max="today"
                         :disabled="isEducationRowDisabled(index)"
                       />
                       <span class="education-sep">至</span>
@@ -634,13 +780,19 @@
                         class="info-input"
                         type="date"
                         lang="zh-CN"
-                        :disabled="isEducationRowDisabled(index) || item.isCurrent"
+                        :max="today"
+                        :disabled="
+                          isEducationRowDisabled(index) || item.isCurrent
+                        "
                       />
                       <label class="info-choice info-choice-muted">
                         <input
                           v-model="item.isCurrent"
                           type="checkbox"
-                          :disabled="isEducationRowDisabled(index) || isEducationCurrentDisabled(item)"
+                          :disabled="
+                            isEducationRowDisabled(index) ||
+                            isEducationCurrentDisabled(item)
+                          "
                           @change="handleEducationCurrentChange(item, index)"
                         />
                         至今
@@ -859,7 +1011,9 @@
 <script setup>
 import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
+import ExportPdfButton from "../components/ExportPdfButton.vue";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
+import { regionData, codeToText } from "element-china-area-data";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
@@ -869,10 +1023,13 @@ const FIXED_COLLEGE = "大数据与人工智能学院";
 
 const profile = reactive(loadUser());
 const activeMenu = ref("my-info");
+const activeAchievement = ref("all");
 const isEditing = ref(false);
 const avatarInput = ref(null);
 const sidebarOpen = ref(false);
+const achievementsOpen = ref(false);
 const educationTableWrap = ref(null);
+const today = getTodayString();
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -898,6 +1055,14 @@ const info = reactive({
   counselor: "",
   phone: "",
   address: "",
+  addressProvince: "",
+  addressCity: "",
+  addressCounty: "",
+  addressDetail: "",
+  offCampusProvince: "",
+  offCampusCity: "",
+  offCampusCounty: "",
+  offCampusDetail: "",
   idNo: "",
   nativePlace: "",
   leagueNo: "",
@@ -944,9 +1109,44 @@ const majorOptionsByCollege = {
 const studentCategoryOptions = ["本科", "研究生"];
 const politicalStatusOptions = ["群众", "共青团员", "中共预备党员", "中共党员"];
 const dormCampusOptions = ["佛山校区", "广州校区"];
+const dormBuildingOptions = computed(() => {
+  if (info.dormCampus === "佛山校区") {
+    return [
+      ...Array.from({ length: 21 }, (_, index) => {
+        const label = `${index + 1}号楼`;
+        return { label, value: label };
+      }),
+      { label: "有为9栋", value: "有为9栋" },
+      { label: "有为21栋", value: "有为21栋" },
+      {
+        label: "教师公寓（请选择校外居住）",
+        value: "教师公寓",
+        disabled: true,
+      },
+    ];
+  }
+  if (info.dormCampus === "广州校区") {
+    return [
+      ...Array.from({ length: 16 }, (_, index) => {
+        const label = `${index + 17}号楼`;
+        return { label, value: label };
+      }),
+      { label: "凌云楼", value: "凌云楼" },
+      { label: "揽月楼", value: "揽月楼" },
+      { label: "丽枫酒店", value: "丽枫酒店" },
+    ];
+  }
+  return [];
+});
 const educationItems = reactive(
   Array.from({ length: 5 }, () => createEducationItem()),
 );
+
+function getTodayString() {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
+}
 
 function createEducationItem() {
   return {
@@ -1000,6 +1200,27 @@ async function animateEducationHeightWithUpdate(updateFn) {
 }
 
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
+const achievementEntries = [
+  { key: "all", label: "全部" },
+  { key: "contest", label: "学科竞赛、文体艺术" },
+  { key: "paper", label: "发表学术论文" },
+  { key: "journal", label: "发表期刊作品" },
+  { key: "patent", label: "专利(著作权)授权数(项)" },
+  { key: "certificate", label: "职业资格证书" },
+  { key: "research", label: "学生参与教师科研项目情况" },
+  { key: "works", label: "创作、表演的代表性作品" },
+];
+
+const activeAchievementIndex = computed(() => {
+  const index = achievementEntries.findIndex(
+    (entry) => entry.key === activeAchievement.value,
+  );
+  return index === -1 ? 0 : index;
+});
+
+const drawerIndicatorStyle = computed(() => ({
+  transform: `translateY(calc(${activeAchievementIndex.value} * (var(--drawer-item-height) + var(--drawer-item-gap))))`,
+}));
 
 const avatarText = computed(() => {
   const name = profile.displayName || profile.username || "同学";
@@ -1019,6 +1240,39 @@ const roleLabel = computed(() => {
 const classMajorOptions = computed(() => {
   return majorOptionsByCollege[info.college] || [];
 });
+const addressProvinceOptions = computed(() =>
+  regionData.map((item) => ({ value: item.value, label: item.label })),
+);
+const addressCityOptions = computed(() => {
+  const province = regionData.find(
+    (item) => item.value === info.addressProvince,
+  );
+  return province?.children || [];
+});
+const addressCountyOptions = computed(() => {
+  const province = regionData.find(
+    (item) => item.value === info.addressProvince,
+  );
+  const city = province?.children?.find(
+    (entry) => entry.value === info.addressCity,
+  );
+  return city?.children || [];
+});
+const offCampusCityOptions = computed(() => {
+  const province = regionData.find(
+    (item) => item.value === info.offCampusProvince,
+  );
+  return province?.children || [];
+});
+const offCampusCountyOptions = computed(() => {
+  const province = regionData.find(
+    (item) => item.value === info.offCampusProvince,
+  );
+  const city = province?.children?.find(
+    (entry) => entry.value === info.offCampusCity,
+  );
+  return city?.children || [];
+});
 
 const hasEducationCurrent = computed(() =>
   educationItems.some((entry) => entry.isCurrent),
@@ -1027,10 +1281,13 @@ const currentEducationIndex = computed(() =>
   educationItems.findIndex((entry) => entry.isCurrent),
 );
 
-function handleEducationCurrentChange(item, index) {
+async function handleEducationCurrentChange(item, index) {
   if (item.isCurrent) {
     item.endDate = "";
-    clearEducationRowsAfter(index);
+    await animateEducationHeightWithUpdate(() => {
+      clearEducationRowsAfter(index);
+      pruneEducationRowsAfter(index);
+    });
   }
 }
 
@@ -1058,6 +1315,32 @@ function clearEducationRowsAfter(index) {
     entry.witness = "";
     entry.isCurrent = false;
   });
+}
+
+function pruneEducationRowsAfter(index) {
+  if (educationItems.length <= index + 1) {
+    return;
+  }
+  const kept = educationItems.slice(0, index + 1);
+  educationItems.slice(index + 1).forEach((entry) => {
+    if (!isEducationRowEmpty(entry)) {
+      kept.push(entry);
+    }
+  });
+  if (kept.length !== educationItems.length) {
+    educationItems.splice(0, educationItems.length, ...kept);
+  }
+}
+
+function isEducationRowEmpty(entry) {
+  return (
+    !entry.startDate &&
+    !entry.endDate &&
+    !entry.schoolName &&
+    !entry.educationLevel &&
+    !entry.witness &&
+    !entry.isCurrent
+  );
 }
 
 const dormBuildingDisabled = computed(
@@ -1149,7 +1432,7 @@ function handleMenuClick(key) {
     return;
   }
   if (key === "achievements") {
-    router.push("/achievements");
+    toggleAchievements();
     return;
   }
   if (key === "student-info") {
@@ -1157,6 +1440,30 @@ function handleMenuClick(key) {
     return;
   }
   router.push("/myinfos");
+}
+
+function toggleAchievements() {
+  if (!isMenuEnabled("achievements")) {
+    return;
+  }
+  achievementsOpen.value = !achievementsOpen.value;
+  if (achievementsOpen.value) {
+    activeMenu.value = "achievements";
+    handleAchievementEntry("all");
+  }
+}
+
+function handleAchievementEntry(key) {
+  if (!isMenuEnabled("achievements")) {
+    return;
+  }
+  const safeKey = achievementEntries.some((entry) => entry.key === key)
+    ? key
+    : "all";
+  activeAchievement.value = safeKey;
+  activeMenu.value = "achievements";
+  sidebarOpen.value = false;
+  router.push({ path: "/achievements", query: { category: safeKey } });
 }
 
 function openSidebar() {
@@ -1230,19 +1537,35 @@ async function confirmEdit() {
     info.classNo,
     info.className,
   );
+  const address = buildAddress(
+    info.addressProvince,
+    info.addressCity,
+    info.addressCounty,
+    info.addressDetail,
+    info.address,
+  );
+  const offCampusAddress = buildAddress(
+    info.offCampusProvince,
+    info.offCampusCity,
+    info.offCampusCounty,
+    info.offCampusDetail,
+    info.offCampusAddress,
+  );
   const dormRoom = buildDormRoom(
     info.dormFloor,
     info.dormRoomNo,
     info.dormRoom,
   );
-  const educationExperiences = educationItems.map((item) => ({
-    startDate: item.startDate,
-    endDate: item.endDate,
-    schoolName: item.schoolName,
-    educationLevel: item.educationLevel,
-    witness: item.witness,
-    isCurrent: item.isCurrent,
-  }));
+  const educationExperiences = educationItems
+    .filter((item) => !isEducationRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      schoolName: item.schoolName,
+      educationLevel: item.educationLevel,
+      witness: item.witness,
+      isCurrent: item.isCurrent,
+    }));
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
@@ -1260,11 +1583,11 @@ async function confirmEdit() {
     dormBuilding: info.dormBuilding,
     dormRoom,
     offCampusLiving: info.offCampusLiving,
-    offCampusAddress: info.offCampusAddress,
+    offCampusAddress,
     classTeacher: info.classTeacher,
     counselor: info.counselor,
     phone: info.phone,
-    address: info.address,
+    address,
     idNo: info.idNo,
     nativePlace: info.nativePlace,
     leagueNo: info.leagueNo,
@@ -1343,8 +1666,99 @@ async function confirmEdit() {
   }
 }
 
+function buildPdfStudentSnapshot() {
+  const studentName =
+    info.name || profile.displayName || profile.username || "";
+  const studentNo = info.studentNo || profile.studentNo || "";
+  const className = buildClassName(
+    info.classYear,
+    info.classMajor,
+    info.classNo,
+    info.className,
+  );
+  const addressText = buildAddress(
+    info.addressProvince,
+    info.addressCity,
+    info.addressCounty,
+    info.addressDetail,
+    info.address,
+  );
+  const offCampusAddress = buildAddress(
+    info.offCampusProvince,
+    info.offCampusCity,
+    info.offCampusCounty,
+    info.offCampusDetail,
+    info.offCampusAddress,
+  );
+  const educationExperiences = educationItems
+    .filter((item) => !isEducationRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      schoolName: item.schoolName,
+      educationLevel: item.educationLevel,
+      witness: item.witness,
+      isCurrent: item.isCurrent,
+    }));
+  return {
+    fullName: studentName,
+    studentNo,
+    classYear: info.classYear,
+    classMajor: info.classMajor,
+    classNo: info.classNo,
+    className,
+    college: info.college,
+    enrollmentDate: info.enrollmentDate,
+    studentCategory: info.studentCategory,
+    classTeacher: info.classTeacher,
+    counselor: info.counselor,
+    ethnicity: info.ethnicity,
+    politicalStatus: info.politicalStatus,
+    phone: info.phone,
+    idNo: info.idNo,
+    nativePlace: info.nativePlace,
+    address: addressText,
+    dormCampus: info.dormCampus,
+    dormBuilding: info.dormBuilding,
+    dormRoom: info.dormRoom,
+    offCampusLiving: info.offCampusLiving,
+    offCampusAddress,
+    emergencyPhone: info.emergencyPhone,
+    emergencyRelation: info.emergencyRelation,
+    fatherName: info.fatherName,
+    fatherPhone: info.fatherPhone,
+    fatherWorkUnit: info.fatherWorkUnit,
+    fatherTitle: info.fatherTitle,
+    motherName: info.motherName,
+    motherPhone: info.motherPhone,
+    motherWorkUnit: info.motherWorkUnit,
+    motherTitle: info.motherTitle,
+    leagueNo: info.leagueNo,
+    leagueApplicationDate: info.leagueApplicationDate,
+    leagueJoinDate: info.leagueJoinDate,
+    leagueJoined: info.leagueJoined,
+    leagueDeveloping: info.leagueDeveloping,
+    partyApplied: info.partyApplied,
+    notDeveloped: info.notDeveloped,
+    applicationDate: info.applicationDate,
+    activistDate: info.activistDate,
+    activistDeveloping: info.activistDeveloping,
+    partyTrainingDate: info.partyTrainingDate,
+    partyTrainingPending: info.partyTrainingPending,
+    developmentTargetDate: info.developmentTargetDate,
+    developmentTargetDeveloping: info.developmentTargetDeveloping,
+    probationaryMemberDate: info.probationaryMemberDate,
+    probationaryDeveloping: info.probationaryDeveloping,
+    fullMemberDate: info.fullMemberDate,
+    fullMemberDeveloping: info.fullMemberDeveloping,
+    educationExperiences,
+    avatarUrl: info.avatarUrl,
+  };
+}
+
 function buildClassName(year, major, no, fallback) {
-  if (fallback) {
+  const hasParts = Boolean(year || major || no);
+  if (!hasParts && fallback) {
     return fallback;
   }
   const safeYear = year ? `${year}级` : "";
@@ -1361,6 +1775,76 @@ function buildDormRoom(floor, roomNo, fallback) {
     return `${safeFloor}层${safeRoomNo}号`.trim();
   }
   return fallback || "";
+}
+
+function buildAddress(province, city, county, detail, fallback) {
+  const parts = [
+    codeToText[province],
+    codeToText[city],
+    codeToText[county],
+  ].filter(Boolean);
+  const safeDetail = String(detail || "").trim();
+  const combined = [...parts, safeDetail].filter(Boolean).join("");
+  if (combined) {
+    return combined;
+  }
+  return String(fallback || "").trim();
+}
+
+function parseAddressToRegion(rawAddress) {
+  const address = String(rawAddress || "").trim();
+  if (!address) {
+    return {
+      province: "",
+      city: "",
+      county: "",
+      detail: "",
+    };
+  }
+  const province = regionData.find((item) => address.startsWith(item.label));
+  if (!province) {
+    return {
+      province: "",
+      city: "",
+      county: "",
+      detail: address,
+    };
+  }
+  let remaining = address.slice(province.label.length);
+  let city = province.children?.find((item) =>
+    remaining.startsWith(item.label),
+  );
+  let county = null;
+
+  if (city) {
+    remaining = remaining.slice(city.label.length);
+    county = city.children?.find((item) => remaining.startsWith(item.label));
+    if (county) {
+      remaining = remaining.slice(county.label.length);
+    }
+  } else {
+    for (const candidate of province.children || []) {
+      for (const item of candidate.children || []) {
+        const prefix = `${candidate.label}${item.label}`;
+        if (remaining.startsWith(prefix)) {
+          city = candidate;
+          county = item;
+          remaining = remaining.slice(prefix.length);
+          break;
+        }
+      }
+      if (city) {
+        break;
+      }
+    }
+  }
+
+  return {
+    province: province.value,
+    city: city?.value || "",
+    county: county?.value || "",
+    detail: remaining.trim(),
+  };
 }
 
 function parseDormRoom(rawValue) {
@@ -1404,10 +1888,20 @@ function applyProfileResponse(data) {
   info.dormRoomNo = parsedDormRoom.roomNo;
   info.offCampusLiving = Boolean(data.offCampusLiving);
   info.offCampusAddress = data.offCampusAddress || "";
+  const parsedOffCampusAddress = parseAddressToRegion(info.offCampusAddress);
+  info.offCampusProvince = parsedOffCampusAddress.province;
+  info.offCampusCity = parsedOffCampusAddress.city;
+  info.offCampusCounty = parsedOffCampusAddress.county;
+  info.offCampusDetail = parsedOffCampusAddress.detail;
   info.classTeacher = data.classTeacher || "";
   info.counselor = data.counselor || "";
   info.phone = data.phone || "";
   info.address = data.address || "";
+  const parsedAddress = parseAddressToRegion(info.address);
+  info.addressProvince = parsedAddress.province;
+  info.addressCity = parsedAddress.city;
+  info.addressCounty = parsedAddress.county;
+  info.addressDetail = parsedAddress.detail;
   info.idNo = data.idNo || "";
   info.nativePlace = data.nativePlace || "";
   info.leagueNo = data.leagueNo || "";
@@ -1460,10 +1954,11 @@ function applyEducationExperiences(rawItems) {
     witness: item?.witness || "",
     isCurrent: Boolean(item?.isCurrent),
   }));
-  while (normalized.length < 5) {
-    normalized.push(createEducationItem());
+  const filtered = normalized.filter((item) => !isEducationRowEmpty(item));
+  if (!filtered.length) {
+    filtered.push(createEducationItem());
   }
-  educationItems.splice(0, educationItems.length, ...normalized);
+  educationItems.splice(0, educationItems.length, ...filtered);
 }
 
 function saveUser(data) {
@@ -1499,6 +1994,10 @@ watch(
       info.dormRoomNo = "";
     } else {
       info.offCampusAddress = "";
+      info.offCampusProvince = "";
+      info.offCampusCity = "";
+      info.offCampusCounty = "";
+      info.offCampusDetail = "";
     }
   },
 );
@@ -1512,6 +2011,104 @@ watch(
     }
     if (!majorOptionsByCollege[college].includes(info.classMajor)) {
       info.classMajor = "";
+    }
+  },
+);
+
+watch(
+  () => info.dormCampus,
+  () => {
+    if (!info.dormCampus) {
+      info.dormBuilding = "";
+      return;
+    }
+    const exists = dormBuildingOptions.value.some(
+      (item) => item.value === info.dormBuilding && !item.disabled,
+    );
+    if (!exists) {
+      info.dormBuilding = "";
+    }
+  },
+);
+
+watch(
+  () => info.addressProvince,
+  () => {
+    if (!info.addressProvince) {
+      info.addressCity = "";
+      info.addressCounty = "";
+      return;
+    }
+    if (
+      !addressCityOptions.value.some((item) => item.value === info.addressCity)
+    ) {
+      info.addressCity = "";
+    }
+    if (
+      !addressCountyOptions.value.some(
+        (item) => item.value === info.addressCounty,
+      )
+    ) {
+      info.addressCounty = "";
+    }
+  },
+);
+
+watch(
+  () => info.addressCity,
+  () => {
+    if (!info.addressCity) {
+      info.addressCounty = "";
+      return;
+    }
+    if (
+      !addressCountyOptions.value.some(
+        (item) => item.value === info.addressCounty,
+      )
+    ) {
+      info.addressCounty = "";
+    }
+  },
+);
+
+watch(
+  () => info.offCampusProvince,
+  () => {
+    if (!info.offCampusProvince) {
+      info.offCampusCity = "";
+      info.offCampusCounty = "";
+      return;
+    }
+    if (
+      !offCampusCityOptions.value.some(
+        (item) => item.value === info.offCampusCity,
+      )
+    ) {
+      info.offCampusCity = "";
+    }
+    if (
+      !offCampusCountyOptions.value.some(
+        (item) => item.value === info.offCampusCounty,
+      )
+    ) {
+      info.offCampusCounty = "";
+    }
+  },
+);
+
+watch(
+  () => info.offCampusCity,
+  () => {
+    if (!info.offCampusCity) {
+      info.offCampusCounty = "";
+      return;
+    }
+    if (
+      !offCampusCountyOptions.value.some(
+        (item) => item.value === info.offCampusCounty,
+      )
+    ) {
+      info.offCampusCounty = "";
     }
   },
 );
@@ -1608,7 +2205,6 @@ watch(
     info.fullMemberDate = "";
   },
 );
-
 
 function loadUser() {
   try {
