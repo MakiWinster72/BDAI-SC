@@ -55,7 +55,7 @@
       </header>
 
       <section class="info-shell student-right-stack">
-        <section class="info-card student-filter-card">
+        <section v-show="!gridFullscreen" class="info-card student-filter-card">
           <div class="student-filter-header">
             <div class="info-section-title">搜索</div>
             <input
@@ -64,8 +64,24 @@
               type="text"
               placeholder="搜索姓名 / 班别 / 学院 / 学号"
             />
+            <button
+              class="student-grid-toggle"
+              type="button"
+              @click="toggleGridView"
+              :title="gridViewOpen ? '切换列表视图' : '切换表格视图'"
+            >
+              <span class="grid-toggle-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path
+                    d="M7 7h10v3h2V5H5v5h2V7zm10 10H7v-3H5v5h14v-5h-2v3zM9 10l-3 2 3 2v-4zm6 4 3-2-3-2v4z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              {{ gridViewOpen ? "切换列表" : "切换表格" }}
+            </button>
           </div>
-          <div class="student-filter-grid">
+          <div v-if="!gridViewOpen" class="student-filter-grid">
             <div class="student-filter-row">
               <div class="student-filter-field">
                 <span class="info-label">年级</span>
@@ -143,10 +159,34 @@
               </label>
             </div>
           </div>
+          <div v-if="gridViewOpen" class="student-grid-tabs">
+            <button
+              class="student-grid-tab student-grid-tab-add"
+              type="button"
+              @click="openGridFieldDialog"
+              title="选择字段"
+            >
+              +
+            </button>
+            <button
+              v-for="sheet in gridSheets"
+              :key="sheet.id"
+              class="student-grid-tab"
+              :class="{ active: sheet.id === gridActiveSheet }"
+              type="button"
+              @click="gridActiveSheet = sheet.id"
+            >
+              {{ sheet.label }}
+            </button>
+            <span v-if="gridLoading" class="student-grid-status">加载中...</span>
+            <span v-else class="student-grid-status"
+              >共 {{ gridActiveSheetData.rowData.length }} 条</span
+            >
+          </div>
         </section>
 
-        <section class="info-card student-results-card">
-          <div class="student-results-header">
+      <section class="info-card student-results-card">
+          <div v-if="!gridViewOpen" class="student-results-header">
             <div class="info-section-title">筛选结果</div>
             <div class="student-results-actions">
               <button
@@ -166,7 +206,33 @@
               </button>
             </div>
           </div>
-          <div v-if="pagedStudents.length" class="student-list">
+          <div
+            v-if="gridViewOpen"
+            ref="gridWrapRef"
+            class="student-grid-wrap"
+            :class="{ fullscreen: gridFullscreen }"
+          >
+            <AgGridVue
+              class="ag-theme-quartz student-grid"
+              :row-data="gridActiveSheetData.rowData"
+              :column-defs="gridActiveSheetData.colDefs"
+              :default-col-def="gridDefaultColDef"
+              :locale-text="gridLocaleText"
+              :locale-text-func="gridLocaleTextFunc"
+              :animate-rows="true"
+              :pagination="true"
+              :pagination-page-size="100"
+              :suppress-cell-focus="true"
+            />
+            <button
+              class="student-grid-fullscreen"
+              type="button"
+              @click="toggleGridFullscreen"
+            >
+              {{ gridFullscreen ? "退出全屏" : "全屏" }}
+            </button>
+          </div>
+          <div v-else-if="pagedStudents.length" class="student-list">
             <div
               v-for="item in pagedStudents"
               :key="item.id"
@@ -191,7 +257,7 @@
           </div>
           <div v-else class="empty-tip">没有匹配的学生。</div>
 
-          <div class="student-pagination">
+          <div v-if="!gridViewOpen" class="student-pagination">
             <div class="student-pages">
               <button
                 v-for="page in totalPages"
@@ -228,9 +294,89 @@
                 </option>
               </select>
             </div>
-            <button class="action-button" type="button">导出</button>
+            <button
+              class="action-button"
+              type="button"
+              :disabled="exportDisabled"
+              @click="openExportDialog"
+            >
+              {{ exportLabel }}
+            </button>
           </div>
         </section>
+      </section>
+
+      <transition name="export-dialog-backdrop">
+        <div
+          v-if="gridFieldDialogOpen"
+          class="grid-field-dialog-backdrop"
+          @click="closeGridFieldDialog"
+        ></div>
+      </transition>
+      <section
+        class="grid-field-dialog"
+        :class="{ open: gridFieldDialogOpen, closing: gridFieldDialogClosing }"
+      >
+        <header class="export-dialog-header">
+          <div class="export-dialog-title">
+            选择显示字段
+            <label class="export-all-toggle">
+              <input
+                type="checkbox"
+                :checked="isAllSelected"
+                @change="toggleAllSelections($event.target.checked)"
+              />
+              <span>全选</span>
+            </label>
+          </div>
+          <button class="ghost-button" type="button" @click="closeGridFieldDialog">
+            关闭
+          </button>
+        </header>
+        <div class="export-dialog-body">
+          <div
+            v-for="group in exportGroups"
+            :key="group.id"
+            class="export-group"
+          >
+            <label class="export-group-title">
+              <span>{{ group.label }}</span>
+              <input
+                type="checkbox"
+                :checked="isGroupChecked(group)"
+                @change="toggleGroupSelection(group, $event.target.checked)"
+              />
+            </label>
+            <div class="export-group-options">
+              <template v-if="group.id === 'family'">
+                <div
+                  v-for="(row, index) in familyRows"
+                  :key="`grid-family-row-${index}`"
+                  class="export-option-row"
+                >
+                  <label
+                    v-for="field in row"
+                    :key="field.key"
+                    class="export-option"
+                  >
+                    <input v-model="exportSelections[field.key]" type="checkbox" />
+                    <span>{{ field.label }}</span>
+                  </label>
+                </div>
+              </template>
+              <template v-else>
+                <label
+                  v-for="field in group.fields"
+                  :key="field.key"
+                  class="export-option"
+                >
+                  <input v-model="exportSelections[field.key]" type="checkbox" />
+                  <span>{{ field.label }}</span>
+                </label>
+              </template>
+            </div>
+          </div>
+        </div>
       </section>
 
       <transition name="publisher-backdrop">
@@ -858,6 +1004,9 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { AgGridVue } from "ag-grid-vue3";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
 import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
 import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
 import { useRouter } from "vue-router";
@@ -891,6 +1040,16 @@ const exportDialogOpen = ref(false);
 const exportDialogClosing = ref(false);
 const exportPreviewOpen = ref(false);
 const exportPreviewClosing = ref(false);
+const gridViewOpen = ref(false);
+const gridLoading = ref(false);
+const gridDetailRows = ref([]);
+const gridAchievementData = ref([]);
+const gridFieldDialogOpen = ref(false);
+const gridFieldDialogClosing = ref(false);
+const gridActiveSheet = ref("main");
+const gridFullscreen = ref(false);
+const gridHasFullDetail = ref(false);
+let gridRequestId = 0;
 const previewActiveSheet = ref("main");
 const previewLoading = ref(false);
 const previewDetailRows = ref([]);
@@ -912,6 +1071,75 @@ const majorOptions = [
   "大数据管理与应用（佛山校区全学段）",
   "大数据管理与应用（数字治理）",
 ];
+
+const gridDefaultColDef = {
+  sortable: true,
+  filter: true,
+  resizable: true,
+  minWidth: 90,
+  flex: 1,
+};
+
+const gridLocaleText = {
+  // 过滤器与菜单
+  page: "页",
+  more: "更多",
+  to: "至",
+  of: "共",
+  next: "下一页",
+  last: "末页",
+  first: "首页",
+  previous: "上一页",
+  loadingOoo: "加载中...",
+  selectAll: "全选",
+  searchOoo: "搜索...",
+  blank: "空值",
+  notBlank: "非空",
+  filterOoo: "筛选...",
+  applyFilter: "应用筛选",
+  equals: "等于",
+  notEqual: "不等于",
+  contains: "包含",
+  notContains: "不包含",
+  startsWith: "以...开头",
+  endsWith: "以...结尾",
+  lessThan: "小于",
+  greaterThan: "大于",
+  lessThanOrEqual: "小于等于",
+  greaterThanOrEqual: "大于等于",
+  inRange: "范围",
+  setFilter: "集合筛选",
+  columns: "列",
+  filters: "筛选",
+  reset: "重置",
+  group: "分组",
+  rowGroupColumnsEmptyMessage: "拖拽列到这里进行分组",
+  pivotColumnsEmptyMessage: "拖拽列到这里进行透视",
+  noRowsToShow: "暂无数据",
+  // TODO: 翻译“Page Size”
+  // 聚合
+  sum: "求和",
+  min: "最小值",
+  max: "最大值",
+  none: "无",
+  count: "计数",
+  avg: "平均值",
+  // 其他
+  copy: "复制",
+  copyWithHeaders: "复制（含表头）",
+  paste: "粘贴",
+  export: "导出",
+  csvExport: "导出 CSV",
+  excelExport: "导出 Excel",
+};
+
+const gridLocaleTextFunc = (key, defaultValue) => {
+  if (key in gridLocaleText) {
+    return gridLocaleText[key];
+  }
+  return defaultValue;
+};
+
 
 const filters = reactive({
   classYear: "",
@@ -1138,17 +1366,26 @@ watch(
     currentPage.value = 1;
     pageInput.value = null;
     selectedIds.value = [];
+    if (gridViewOpen.value) {
+      fetchGridStudents();
+      return;
+    }
     fetchStudents();
   },
   { deep: true },
 );
 
 watch(currentPage, () => {
-  fetchStudents();
+  if (!gridViewOpen.value) {
+    fetchStudents();
+  }
 });
 
 watch(pageSize, () => {
   pageInput.value = null;
+  if (gridViewOpen.value) {
+    return;
+  }
   if (currentPage.value === 1) {
     fetchStudents();
     return;
@@ -1171,6 +1408,7 @@ async function fetchStudents() {
     students.value = (data?.items || []).map((item) => ({
       id: item.id,
       name: item.fullName || "未命名",
+      className: buildClassName(item),
       gradeYear: item.classYear || "",
       college: item.college || "",
       major: item.classMajor || "",
@@ -1187,6 +1425,145 @@ async function fetchStudents() {
     loading.value = false;
   }
 }
+
+async function fetchGridStudents() {
+  gridLoading.value = true;
+  const requestId = ++gridRequestId;
+  try {
+    const size = 200;
+    const { data } = await searchStudentProfiles(buildSearchParams(1, size));
+    if (requestId !== gridRequestId) {
+      return;
+    }
+    const items = [...(data?.items || [])];
+    const pages = data?.totalPages || 1;
+    for (let page = 2; page <= pages; page += 1) {
+      const { data: pageData } = await searchStudentProfiles(
+        buildSearchParams(page, size),
+      );
+      if (requestId !== gridRequestId) {
+        return;
+      }
+      items.push(...(pageData?.items || []));
+    }
+    gridDetailRows.value = items;
+    gridHasFullDetail.value = false;
+    gridAchievementData.value = [];
+    const selectedKeys = getSelectedExportKeys();
+    if (gridNeedsDetail(selectedKeys) && items.length) {
+      await fetchGridDetails(items, requestId);
+    }
+  } catch {
+    gridDetailRows.value = [];
+    gridAchievementData.value = [];
+    gridHasFullDetail.value = false;
+  } finally {
+    if (requestId === gridRequestId) {
+      gridLoading.value = false;
+    }
+  }
+}
+
+async function fetchGridDetails(items, requestId) {
+  const results = await Promise.all(
+    items.map((item) =>
+      getStudentProfileById(item.id)
+        .then(({ data }) => data || null)
+        .catch(() => null),
+    ),
+  );
+  if (requestId !== gridRequestId) {
+    return;
+  }
+  const detailRows = results.filter(Boolean);
+  if (detailRows.length) {
+    gridDetailRows.value = detailRows;
+    gridHasFullDetail.value = true;
+  }
+}
+
+function toggleGridView() {
+  gridViewOpen.value = !gridViewOpen.value;
+  if (gridViewOpen.value) {
+    fetchGridStudents();
+  }
+}
+
+function toggleGridFullscreen() {
+  const el = gridWrapRef.value;
+  if (!el) {
+    gridFullscreen.value = !gridFullscreen.value;
+    return;
+  }
+  const start = el.getBoundingClientRect();
+  gridFullscreen.value = !gridFullscreen.value;
+  nextTick(() => {
+    const end = el.getBoundingClientRect();
+    const dx = start.left - end.left;
+    const dy = start.top - end.top;
+    const sx = start.width / end.width;
+    const sy = start.height / end.height;
+    el.style.transformOrigin = "top left";
+    el.style.transition = "transform 420ms cubic-bezier(0.22, 1, 0.36, 1)";
+    el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+    requestAnimationFrame(() => {
+      el.style.transform = "";
+    });
+    const cleanup = () => {
+      el.style.transition = "";
+      el.style.transform = "";
+      el.style.transformOrigin = "";
+      el.removeEventListener("transitionend", cleanup);
+    };
+    el.addEventListener("transitionend", cleanup);
+  });
+}
+
+function openGridFieldDialog() {
+  gridFieldDialogOpen.value = true;
+  gridFieldDialogClosing.value = false;
+}
+
+function closeGridFieldDialog() {
+  gridFieldDialogOpen.value = false;
+  gridFieldDialogClosing.value = true;
+  setTimeout(() => {
+    gridFieldDialogClosing.value = false;
+  }, 260);
+}
+
+watch(
+  () => gridActiveSheet.value,
+  (sheetId) => {
+    if (!sheetId.startsWith("achievement")) {
+      return;
+    }
+    if (!gridDetailRows.value.length || gridAchievementData.value.length) {
+      return;
+    }
+    fetchAchievementsForStudents(gridDetailRows.value).then((data) => {
+      gridAchievementData.value = Array.isArray(data) ? data : [];
+    });
+  },
+);
+
+watch(
+  exportSelections,
+  () => {
+    if (!gridViewOpen.value) {
+      return;
+    }
+    const selectedKeys = getSelectedExportKeys();
+    if (!gridNeedsDetail(selectedKeys)) {
+      return;
+    }
+    if (gridHasFullDetail.value || !gridDetailRows.value.length) {
+      return;
+    }
+    fetchGridDetails(gridDetailRows.value, gridRequestId);
+  },
+  { deep: true },
+);
 
 function openDetail(item) {
   viewOpen.value = true;
@@ -1710,6 +2087,102 @@ function shouldIncludeMainSheet(selectedKeys) {
   return hasAnyMain;
 }
 
+function gridNeedsDetail(selectedKeys) {
+  const hasEdu = EDUCATION_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasParty = PARTY_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasNonBaseMain = MAIN_FIELD_ORDER.some(
+    (key) => !IDENTITY_KEYS.includes(key) && selectedKeys.has(key),
+  );
+  return hasEdu || hasParty || hasNonBaseMain;
+}
+
+const gridSelectedKeys = computed(() => getSelectedExportKeys());
+const gridSheets = computed(() => {
+  const keys = gridSelectedKeys.value;
+  const sheets = [];
+  if (shouldIncludeMainSheet(keys)) {
+    const table = buildStudentTable(gridDetailRows.value, keys);
+    if (table) {
+      sheets.push({ id: "main", label: "学生", table });
+    }
+  }
+  const educationTable = buildEducationTable(gridDetailRows.value, keys);
+  if (educationTable) {
+    sheets.push({ id: "education", label: "教育经历", table: educationTable });
+  }
+  const partyTable = buildPartyTable(gridDetailRows.value, keys);
+  if (partyTable) {
+    sheets.push({ id: "party", label: "团组织与入党信息", table: partyTable });
+  }
+  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+    keys.has(item.selectKey),
+  );
+  if (activeAchievementCategories.length) {
+    const overview = buildAchievementOverview(
+      gridDetailRows.value,
+      keys,
+      gridAchievementData.value,
+    );
+    sheets.push({
+      id: "achievement-overview",
+      label: "成就总览",
+      table: overview,
+    });
+    activeAchievementCategories.forEach((category) => {
+      const detailTable = buildAchievementDetailTable(
+        category.key,
+        gridAchievementData.value,
+      );
+      sheets.push({
+        id: `achievement-${category.key}`,
+        label: category.label,
+        table: detailTable,
+      });
+    });
+  }
+  return sheets;
+});
+
+const gridActiveSheetData = computed(() => {
+  const sheet =
+    gridSheets.value.find((item) => item.id === gridActiveSheet.value) ||
+    gridSheets.value[0];
+  if (!sheet || !Array.isArray(sheet.table) || !sheet.table.length) {
+    return { colDefs: [], rowData: [] };
+  }
+  const [header, ...rows] = sheet.table;
+  const colDefs = header.map((label, index) => ({
+    field: `col${index}`,
+    headerName: label,
+    minWidth: 120,
+    flex: 1,
+    sortable: true,
+    filter: true,
+  }));
+  const rowData = rows.map((row) => {
+    const obj = {};
+    header.forEach((_, index) => {
+      obj[`col${index}`] = row[index] ?? "";
+    });
+    return obj;
+  });
+  return { colDefs, rowData };
+});
+
+watch(
+  () => gridSheets.value,
+  (sheets) => {
+    if (!sheets.length) {
+      gridActiveSheet.value = "main";
+      return;
+    }
+    if (!sheets.some((item) => item.id === gridActiveSheet.value)) {
+      gridActiveSheet.value = sheets[0].id;
+    }
+  },
+  { deep: true },
+);
+
 const previewStudents = computed(() => previewDetailRows.value);
 const previewSelectedKeys = computed(() => getSelectedExportKeys());
 const previewSheets = computed(() => {
@@ -1866,6 +2339,10 @@ function closeExportDialog() {
 
 function isGroupSelected(group) {
   return group.fields.every((field) => exportSelections[field.key]);
+}
+
+function isGroupChecked(group) {
+  return isGroupSelected(group);
 }
 
 const isAllSelected = computed(() =>
@@ -2040,7 +2517,11 @@ function buildExportTables(rows, selectedKeys, achievementData) {
     selectedKeys.has(item.selectKey),
   );
   if (activeAchievementCategories.length) {
-    const overview = buildAchievementOverview(rows, selectedKeys, achievementData);
+    const overview = buildAchievementOverview(
+      rows,
+      selectedKeys,
+      achievementData,
+    );
     tables.push({ title: "成就总览", table: overview });
     activeAchievementCategories.forEach((category) => {
       const detailTable = buildAchievementDetailTable(
@@ -2092,7 +2573,11 @@ async function handleExportPdf() {
       window.alert("没有可导出的内容。");
       return;
     }
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4",
+    });
     await ensurePdfFonts(doc);
     tables.forEach((item, index) => {
       if (index > 0) {
@@ -2302,9 +2787,7 @@ async function loadPdfFontBase64(url, cacheKey) {
   let binary = "";
   const chunkSize = 0x8000;
   for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(
-      ...bytes.subarray(index, index + chunkSize),
-    );
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
   }
   const base64 = btoa(binary);
   if (cacheKey === "regular") {
@@ -2317,10 +2800,7 @@ async function loadPdfFontBase64(url, cacheKey) {
 
 async function ensurePdfFonts(doc) {
   const base64 = await loadPdfFontBase64(harmonyFontUrl, "regular");
-  const blackBase64 = await loadPdfFontBase64(
-    harmonyFontBlackUrl,
-    "black",
-  );
+  const blackBase64 = await loadPdfFontBase64(harmonyFontBlackUrl, "black");
   doc.addFileToVFS("HarmonyOS_Sans_SC_Regular.ttf", base64);
   doc.addFont("HarmonyOS_Sans_SC_Regular.ttf", PDF_FONT_NAME, "normal");
   doc.addFileToVFS("HarmonyOS_Sans_SC_Black.ttf", blackBase64);
@@ -2461,6 +2941,220 @@ function loadUser() {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.student-grid-toggle {
+  border: none;
+  background: rgba(3, 107, 114, 0.08);
+  color: #036b72;
+  padding: 0 12px;
+  height: 36px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.student-grid-toggle:hover {
+  background: rgba(3, 107, 114, 0.16);
+}
+
+.student-grid-toggle:active {
+  transform: scale(0.98);
+}
+
+.grid-toggle-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+}
+
+.grid-toggle-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.student-grid-wrap {
+  margin-top: 14px;
+}
+
+.student-grid-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: #4f5d63;
+  font-size: 13px;
+}
+
+.student-grid-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.student-grid-title {
+  font-weight: 600;
+  color: #203035;
+}
+
+.student-grid-status {
+  color: #5b6b71;
+}
+
+.student-grid-field-group {
+  display: grid;
+  gap: 6px;
+}
+
+.student-grid-field-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #203035;
+}
+
+.student-grid-field-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a5a60;
+  font-size: 13px;
+}
+
+.student-grid-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.student-filter-card .student-grid-tabs {
+  margin-top: 12px;
+}
+
+.student-grid-tab {
+  border: 1px solid rgba(3, 107, 114, 0.2);
+  background: #fff;
+  color: #0f4d55;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.student-grid-tab.active {
+  background: rgba(3, 107, 114, 0.12);
+  border-color: rgba(3, 107, 114, 0.35);
+  font-weight: 600;
+}
+
+.grid-field-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 18, 20, 0.35);
+  backdrop-filter: blur(8px);
+  z-index: 70;
+}
+
+.grid-field-dialog {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  width: min(860px, calc(100vw - 32px));
+  max-height: 84vh;
+  transform: translate(-50%, 120%) scale(0.98);
+  opacity: 0;
+  filter: blur(6px);
+  pointer-events: none;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(
+    140deg,
+    rgba(205, 255, 249, 0.92),
+    rgba(197, 217, 226, 0.78)
+  );
+  box-shadow: 0 28px 70px rgba(3, 107, 114, 0.22);
+  backdrop-filter: blur(12px);
+  z-index: 80;
+  transition:
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.75s ease,
+    filter 0.75s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  scrollbar-width: none;
+  padding: 12px 14px 16px;
+}
+
+.grid-field-dialog.open {
+  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
+  filter: blur(0px);
+  pointer-events: auto;
+}
+
+.grid-field-dialog.closing {
+  transform: translate(-50%, 120%) scale(0.98);
+  opacity: 0;
+  filter: blur(6px);
+}
+
+.grid-field-dialog::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.student-grid {
+  width: 100%;
+  height: 520px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.student-grid-wrap {
+  position: relative;
+}
+
+.student-grid-wrap.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: #f7fafb;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-grid-wrap.fullscreen .student-grid {
+  height: calc(100vh - 32px);
+  border-radius: 16px;
+}
+
+.student-grid-fullscreen {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  border: none;
+  background: rgba(3, 107, 114, 0.12);
+  color: #036b72;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.student-grid-fullscreen:hover {
+  background: rgba(3, 107, 114, 0.2);
 }
 
 .student-search {
