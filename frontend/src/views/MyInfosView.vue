@@ -120,6 +120,11 @@
             <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
           </div>
           <div class="info-actions">
+            <ExportPdfButton
+              :get-student="buildPdfStudentSnapshot"
+              :resolve-media-url="resolveMediaUrl"
+              button-class="ghost-button"
+            />
             <button class="ghost-button" type="button" @click="enterEdit">
               编辑
             </button>
@@ -1005,6 +1010,7 @@
 <script setup>
 import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
+import ExportPdfButton from "../components/ExportPdfButton.vue";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { regionData, codeToText } from "element-china-area-data";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
@@ -1203,6 +1209,7 @@ const achievementEntries = [
   { key: "research", label: "学生参与教师科研项目情况" },
   { key: "works", label: "创作、表演的代表性作品" },
 ];
+
 
 const activeAchievementIndex = computed(() => {
   const index = achievementEntries.findIndex(
@@ -1653,6 +1660,95 @@ async function confirmEdit() {
   } catch (err) {
     console.error(err);
   }
+}
+
+function buildPdfStudentSnapshot() {
+  const studentName = info.name || profile.displayName || profile.username || "";
+  const studentNo = info.studentNo || profile.studentNo || "";
+  const className = buildClassName(
+    info.classYear,
+    info.classMajor,
+    info.classNo,
+    info.className,
+  );
+  const addressText = buildAddress(
+    info.addressProvince,
+    info.addressCity,
+    info.addressCounty,
+    info.addressDetail,
+    info.address,
+  );
+  const offCampusAddress = buildAddress(
+    info.offCampusProvince,
+    info.offCampusCity,
+    info.offCampusCounty,
+    info.offCampusDetail,
+    info.offCampusAddress,
+  );
+  const educationExperiences = educationItems
+    .filter((item) => !isEducationRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      schoolName: item.schoolName,
+      educationLevel: item.educationLevel,
+      witness: item.witness,
+      isCurrent: item.isCurrent,
+    }));
+  return {
+    fullName: studentName,
+    studentNo,
+    classYear: info.classYear,
+    classMajor: info.classMajor,
+    classNo: info.classNo,
+    className,
+    college: info.college,
+    enrollmentDate: info.enrollmentDate,
+    studentCategory: info.studentCategory,
+    classTeacher: info.classTeacher,
+    counselor: info.counselor,
+    ethnicity: info.ethnicity,
+    politicalStatus: info.politicalStatus,
+    phone: info.phone,
+    idNo: info.idNo,
+    nativePlace: info.nativePlace,
+    address: addressText,
+    dormCampus: info.dormCampus,
+    dormBuilding: info.dormBuilding,
+    dormRoom: info.dormRoom,
+    offCampusLiving: info.offCampusLiving,
+    offCampusAddress,
+    emergencyPhone: info.emergencyPhone,
+    emergencyRelation: info.emergencyRelation,
+    fatherName: info.fatherName,
+    fatherPhone: info.fatherPhone,
+    fatherWorkUnit: info.fatherWorkUnit,
+    fatherTitle: info.fatherTitle,
+    motherName: info.motherName,
+    motherPhone: info.motherPhone,
+    motherWorkUnit: info.motherWorkUnit,
+    motherTitle: info.motherTitle,
+    leagueNo: info.leagueNo,
+    leagueApplicationDate: info.leagueApplicationDate,
+    leagueJoinDate: info.leagueJoinDate,
+    leagueJoined: info.leagueJoined,
+    leagueDeveloping: info.leagueDeveloping,
+    partyApplied: info.partyApplied,
+    notDeveloped: info.notDeveloped,
+    applicationDate: info.applicationDate,
+    activistDate: info.activistDate,
+    activistDeveloping: info.activistDeveloping,
+    partyTrainingDate: info.partyTrainingDate,
+    partyTrainingPending: info.partyTrainingPending,
+    developmentTargetDate: info.developmentTargetDate,
+    developmentTargetDeveloping: info.developmentTargetDeveloping,
+    probationaryMemberDate: info.probationaryMemberDate,
+    probationaryDeveloping: info.probationaryDeveloping,
+    fullMemberDate: info.fullMemberDate,
+    fullMemberDeveloping: info.fullMemberDeveloping,
+    educationExperiences,
+    avatarUrl: info.avatarUrl,
+  };
 }
 
 function buildClassName(year, major, no, fallback) {

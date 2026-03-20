@@ -2080,6 +2080,12 @@ body {
   width: 100%;
 }
 
+@media (min-width: 980px) {
+  .info-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .info-actions .action-button {
   width: 100%;
   padding: 0 18px;

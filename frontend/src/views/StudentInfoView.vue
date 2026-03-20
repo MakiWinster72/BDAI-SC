@@ -276,7 +276,7 @@
                 学号：{{ viewItem.studentNo || "-" }}
               </div>
             </div>
-            <div class="info-actions info-actions-single">
+            <div class="info-actions info-actions-double">
               <button
                 class="action-button"
                 type="button"
@@ -284,6 +284,11 @@
               >
                 个人成就
               </button>
+              <ExportPdfButton
+                :student="viewItem"
+                :resolve-media-url="resolveMediaUrl"
+                :disabled="!viewItem"
+              />
             </div>
           </div>
 
@@ -851,10 +856,15 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
+import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfileById, searchStudentProfiles } from "../api/profile";
 import { listAchievements } from "../api/achievement";
+import ExportPdfButton from "../components/ExportPdfButton.vue";
 
 const router = useRouter();
 const API_BASE = "http://localhost:8080";
@@ -886,6 +896,10 @@ const previewLoading = ref(false);
 const previewDetailRows = ref([]);
 const previewAchievementData = ref([]);
 let previewRequestId = 0;
+const PDF_FONT_NAME = "HarmonyOSSansSC";
+const PDF_FONT_BLACK = "HarmonyOSSansSCBlack";
+let pdfFontBase64 = null;
+let pdfFontBlackBase64 = null;
 const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
 
@@ -2006,6 +2020,101 @@ async function handleExport() {
   return true;
 }
 
+function buildExportTables(rows, selectedKeys, achievementData) {
+  const tables = [];
+  if (shouldIncludeMainSheet(selectedKeys)) {
+    const table = buildStudentTable(rows, selectedKeys);
+    if (table) {
+      tables.push({ title: "学生", table });
+    }
+  }
+  const educationTable = buildEducationTable(rows, selectedKeys);
+  if (educationTable) {
+    tables.push({ title: "教育经历", table: educationTable });
+  }
+  const partyTable = buildPartyTable(rows, selectedKeys);
+  if (partyTable) {
+    tables.push({ title: "团组织与入党信息", table: partyTable });
+  }
+  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+    selectedKeys.has(item.selectKey),
+  );
+  if (activeAchievementCategories.length) {
+    const overview = buildAchievementOverview(rows, selectedKeys, achievementData);
+    tables.push({ title: "成就总览", table: overview });
+    activeAchievementCategories.forEach((category) => {
+      const detailTable = buildAchievementDetailTable(
+        category.key,
+        achievementData,
+      );
+      tables.push({ title: category.label, table: detailTable });
+    });
+  }
+  return tables;
+}
+
+async function handleExportPdf() {
+  if (exporting.value) {
+    return;
+  }
+  if (!selectedIds.value.length) {
+    window.alert("请先选择学生再导出。");
+    return;
+  }
+  exporting.value = true;
+  try {
+    const ids = [...selectedIds.value];
+    const results = await Promise.all(
+      ids.map((id) =>
+        getStudentProfileById(id)
+          .then(({ data }) => data || null)
+          .catch(() => null),
+      ),
+    );
+    const rows = results.filter(Boolean);
+    if (!rows.length) {
+      window.alert("没有获取到学生详情，请稍后再试。");
+      return;
+    }
+    const selectedKeys = getSelectedExportKeys();
+    if (!selectedKeys.size) {
+      window.alert("请选择至少一个导出字段。");
+      return;
+    }
+    const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+      selectedKeys.has(item.selectKey),
+    );
+    const achievementData = activeAchievementCategories.length
+      ? await fetchAchievementsForStudents(rows)
+      : [];
+    const tables = buildExportTables(rows, selectedKeys, achievementData);
+    if (!tables.length) {
+      window.alert("没有可导出的内容。");
+      return;
+    }
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    await ensurePdfFonts(doc);
+    tables.forEach((item, index) => {
+      if (index > 0) {
+        doc.addPage("a4", "landscape");
+        doc.setFont(PDF_FONT_NAME, "normal");
+      }
+      doc.setFontSize(14);
+      doc.text(item.title, 40, 32);
+      autoTable(doc, {
+        head: [item.table[0] || []],
+        body: item.table.slice(1),
+        startY: 48,
+        styles: { fontSize: 9, cellPadding: 4, font: PDF_FONT_NAME },
+        headStyles: { fillColor: [31, 79, 87], textColor: 255 },
+      });
+    });
+    doc.save(`students_export_${formatTimestamp()}.pdf`);
+  } finally {
+    exporting.value = false;
+  }
+}
+
 function buildStudentTable(rows, selectedKeys) {
   const activeFields = MAIN_FIELD_ORDER.filter((key) => selectedKeys.has(key));
   if (!activeFields.length) {
@@ -2178,6 +2287,45 @@ function escapeCsvCell(value) {
     return `"${text.replace(/"/g, '""')}"`;
   }
   return text;
+}
+
+async function loadPdfFontBase64(url, cacheKey) {
+  if (cacheKey === "regular" && pdfFontBase64) {
+    return pdfFontBase64;
+  }
+  if (cacheKey === "black" && pdfFontBlackBase64) {
+    return pdfFontBlackBase64;
+  }
+  const response = await fetch(url);
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(index, index + chunkSize),
+    );
+  }
+  const base64 = btoa(binary);
+  if (cacheKey === "regular") {
+    pdfFontBase64 = base64;
+  } else if (cacheKey === "black") {
+    pdfFontBlackBase64 = base64;
+  }
+  return base64;
+}
+
+async function ensurePdfFonts(doc) {
+  const base64 = await loadPdfFontBase64(harmonyFontUrl, "regular");
+  const blackBase64 = await loadPdfFontBase64(
+    harmonyFontBlackUrl,
+    "black",
+  );
+  doc.addFileToVFS("HarmonyOS_Sans_SC_Regular.ttf", base64);
+  doc.addFont("HarmonyOS_Sans_SC_Regular.ttf", PDF_FONT_NAME, "normal");
+  doc.addFileToVFS("HarmonyOS_Sans_SC_Black.ttf", blackBase64);
+  doc.addFont("HarmonyOS_Sans_SC_Black.ttf", PDF_FONT_BLACK, "normal");
+  doc.setFont(PDF_FONT_NAME, "normal");
 }
 
 function formatYesNo(value) {
@@ -2869,6 +3017,10 @@ function loadUser() {
 
 .info-actions-single {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.info-actions-double {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .student-achievements-view {
