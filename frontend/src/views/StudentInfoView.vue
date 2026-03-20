@@ -2239,15 +2239,19 @@ async function handleExportPdfResume() {
 
     // 住宿信息
     addSectionTitle("住宿信息");
-    addKeyValueTable([
-      ["是否在外居住", formatYesNo(student.offCampusLiving)],
-      ["外居住地址", student.offCampusAddress || ""],
-      ["住宿校区", student.dormCampus || ""],
-      ["住宿楼栋", student.dormBuilding || ""],
-      ["住宿房间", student.dormRoom || ""],
-      ["港澳台", formatYesNo(student.hkMoTw)],
-      ["特殊学生", formatYesNo(student.specialStudent)],
-    ]);
+    if (student.offCampusLiving) {
+      addKeyValueTable([
+        ["是否在外居住", "是"],
+        ["外居住地址", student.offCampusAddress || ""],
+      ]);
+    } else {
+      addKeyValueTable([
+        ["是否在外居住", "否"],
+        ["住宿校区", student.dormCampus || ""],
+        ["住宿楼栋", student.dormBuilding || ""],
+        ["住宿房间", student.dormRoom || ""],
+      ]);
+    }
 
     // 家庭信息
     addSectionTitle("家庭信息");
@@ -2260,6 +2264,8 @@ async function handleExportPdfResume() {
       ["母亲电话", student.motherPhone || ""],
       ["母亲工作单位", student.motherWorkUnit || ""],
       ["母亲职务", student.motherTitle || ""],
+      ["港澳台", formatYesNo(student.hkMoTw)],
+      ["特殊学生", formatYesNo(student.specialStudent)],
     ]);
 
     // 紧急联系人
