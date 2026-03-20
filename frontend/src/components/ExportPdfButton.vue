@@ -1,6 +1,6 @@
 <template>
   <button
-    class="action-button"
+    :class="buttonClass"
     type="button"
     :disabled="isDisabled"
     @click="handleExport"
@@ -29,6 +29,10 @@ const props = defineProps({
   label: {
     type: String,
     default: "导出PDF",
+  },
+  buttonClass: {
+    type: String,
+    default: "action-button",
   },
   loadingText: {
     type: String,

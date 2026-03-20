@@ -120,16 +120,17 @@
             <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
           </div>
           <div class="info-actions">
+            <ExportPdfButton
+              :get-student="buildPdfStudentSnapshot"
+              :resolve-media-url="resolveMediaUrl"
+              button-class="ghost-button"
+            />
             <button class="ghost-button" type="button" @click="enterEdit">
               编辑
             </button>
             <button class="action-button" type="button" @click="confirmEdit">
               确认
             </button>
-            <ExportPdfButton
-              :get-student="buildPdfStudentSnapshot"
-              :resolve-media-url="resolveMediaUrl"
-            />
           </div>
         </div>
 
