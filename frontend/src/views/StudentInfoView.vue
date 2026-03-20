@@ -1151,30 +1151,8 @@ function resetResults() {
 async function fetchStudents() {
   loading.value = true;
   try {
-    const params = {
-      page: currentPage.value,
-      size: pageSize.value,
-    };
-    if (filters.classYear) {
-      params.classYear = filters.classYear;
-    }
-    if (filters.major) {
-      params.major = filters.major;
-    }
-    if (filters.classNo) {
-      params.classNo = String(filters.classNo).trim();
-    }
-    if (filters.isHkMoTw) {
-      params.hkMoTw = true;
-    }
-    if (filters.isSpecial) {
-      params.specialStudent = true;
-    }
-    if (filters.keyword && filters.keyword.trim()) {
-      params.keyword = filters.keyword.trim();
-    }
     const { data } = await searchStudentProfiles(
-      buildSearchParams(currentPage.value, pageSize),
+      buildSearchParams(currentPage.value, pageSize.value),
     );
     students.value = (data?.items || []).map((item) => ({
       id: item.id,
