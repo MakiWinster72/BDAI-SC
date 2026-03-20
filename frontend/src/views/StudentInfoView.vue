@@ -2277,19 +2277,75 @@ async function handleExportPdfResume() {
 
     // 团组织与入党信息
     addSectionTitle("团组织与入党信息");
-    addKeyValueTable([
-      ["是否入团", formatYesNo(student.leagueJoined)],
-      ["提交入团申请书时间", student.leagueApplicationDate || ""],
-      ["入团时间", formatDateOrEmpty(student.leagueJoinDate, student.leagueDeveloping, "正在发展")],
-      ["团号", student.leagueNo || ""],
-      ["是否申请入党", formatYesNo(student.partyApplied)],
-      ["提交入党申请书时间", student.applicationDate || ""],
-      ["确定积极分子时间", formatDateOrEmpty(student.activistDate, student.activistDeveloping, "正在发展")],
-      ["上党课时间", formatDateOrEmpty(student.partyTrainingDate, student.partyTrainingPending, "暂未报名")],
-      ["确定发展对象时间", formatDateOrEmpty(student.developmentTargetDate, student.developmentTargetDeveloping, "正在发展")],
-      ["接收为预备党员时间", formatDateOrEmpty(student.probationaryMemberDate, student.probationaryDeveloping, "正在发展")],
-      ["转为正式党员时间", formatDateOrEmpty(student.fullMemberDate, student.fullMemberDeveloping, "正在发展")],
-    ]);
+    const partyRows = [];
+    const leagueJoined = student.leagueJoined === true;
+    const partyApplied = student.partyApplied === true;
+    if (!leagueJoined) {
+      partyRows.push(["入团情况", "未申请入团"]);
+    } else {
+      partyRows.push(
+        ["是否入团", "是"],
+        ["提交入团申请书时间", student.leagueApplicationDate || ""],
+        [
+          "入团时间",
+          formatDateOrEmpty(
+            student.leagueJoinDate,
+            student.leagueDeveloping,
+            "正在发展",
+          ),
+        ],
+        ["团号", student.leagueNo || ""],
+      );
+    }
+    if (!partyApplied) {
+      partyRows.push(["入党情况", "未申请入党"]);
+    } else {
+      partyRows.push(
+        ["是否申请入党", "是"],
+        ["提交入党申请书时间", student.applicationDate || ""],
+        [
+          "确定积极分子时间",
+          formatDateOrEmpty(
+            student.activistDate,
+            student.activistDeveloping,
+            "正在发展",
+          ),
+        ],
+        [
+          "上党课时间",
+          formatDateOrEmpty(
+            student.partyTrainingDate,
+            student.partyTrainingPending,
+            "暂未报名",
+          ),
+        ],
+        [
+          "确定发展对象时间",
+          formatDateOrEmpty(
+            student.developmentTargetDate,
+            student.developmentTargetDeveloping,
+            "正在发展",
+          ),
+        ],
+        [
+          "接收为预备党员时间",
+          formatDateOrEmpty(
+            student.probationaryMemberDate,
+            student.probationaryDeveloping,
+            "正在发展",
+          ),
+        ],
+        [
+          "转为正式党员时间",
+          formatDateOrEmpty(
+            student.fullMemberDate,
+            student.fullMemberDeveloping,
+            "正在发展",
+          ),
+        ],
+      );
+    }
+    addKeyValueTable(partyRows);
 
     // 教育经历
     addSectionTitle("教育经历");
