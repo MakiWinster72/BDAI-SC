@@ -268,13 +268,21 @@
                 学号：{{ viewItem.studentNo || "-" }}
               </div>
             </div>
-            <div class="info-actions info-actions-single">
+            <div class="info-actions info-actions-double">
               <button
                 class="action-button"
                 type="button"
                 @click="openAchievements"
               >
                 个人成就
+              </button>
+              <button
+                class="action-button"
+                type="button"
+                :disabled="pdfExporting"
+                @click="handleExportPdfResume"
+              >
+                {{ pdfExporting ? "导出中..." : "导出PDF" }}
               </button>
             </div>
           </div>
@@ -843,6 +851,10 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
+import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { getStudentProfileById, searchStudentProfiles } from "../api/profile";
@@ -856,6 +868,7 @@ const activeMenu = ref("student-info");
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 const selectedIds = ref([]);
 const exporting = ref(false);
+const pdfExporting = ref(false);
 const currentPage = ref(1);
 const pageInput = ref(null);
 const students = ref([]);
@@ -877,6 +890,10 @@ const previewLoading = ref(false);
 const previewDetailRows = ref([]);
 const previewAchievementData = ref([]);
 let previewRequestId = 0;
+const PDF_FONT_NAME = "HarmonyOSSansSC";
+const PDF_FONT_BLACK = "HarmonyOSSansSCBlack";
+let pdfFontBase64 = null;
+let pdfFontBlackBase64 = null;
 const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
 
@@ -1988,6 +2005,348 @@ async function handleExport() {
   return true;
 }
 
+function buildExportTables(rows, selectedKeys, achievementData) {
+  const tables = [];
+  if (shouldIncludeMainSheet(selectedKeys)) {
+    const table = buildStudentTable(rows, selectedKeys);
+    if (table) {
+      tables.push({ title: "学生", table });
+    }
+  }
+  const educationTable = buildEducationTable(rows, selectedKeys);
+  if (educationTable) {
+    tables.push({ title: "教育经历", table: educationTable });
+  }
+  const partyTable = buildPartyTable(rows, selectedKeys);
+  if (partyTable) {
+    tables.push({ title: "团组织与入党信息", table: partyTable });
+  }
+  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+    selectedKeys.has(item.selectKey),
+  );
+  if (activeAchievementCategories.length) {
+    const overview = buildAchievementOverview(rows, selectedKeys, achievementData);
+    tables.push({ title: "成就总览", table: overview });
+    activeAchievementCategories.forEach((category) => {
+      const detailTable = buildAchievementDetailTable(
+        category.key,
+        achievementData,
+      );
+      tables.push({ title: category.label, table: detailTable });
+    });
+  }
+  return tables;
+}
+
+async function handleExportPdf() {
+  if (exporting.value) {
+    return;
+  }
+  if (!selectedIds.value.length) {
+    window.alert("请先选择学生再导出。");
+    return;
+  }
+  exporting.value = true;
+  try {
+    const ids = [...selectedIds.value];
+    const results = await Promise.all(
+      ids.map((id) =>
+        getStudentProfileById(id)
+          .then(({ data }) => data || null)
+          .catch(() => null),
+      ),
+    );
+    const rows = results.filter(Boolean);
+    if (!rows.length) {
+      window.alert("没有获取到学生详情，请稍后再试。");
+      return;
+    }
+    const selectedKeys = getSelectedExportKeys();
+    if (!selectedKeys.size) {
+      window.alert("请选择至少一个导出字段。");
+      return;
+    }
+    const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+      selectedKeys.has(item.selectKey),
+    );
+    const achievementData = activeAchievementCategories.length
+      ? await fetchAchievementsForStudents(rows)
+      : [];
+    const tables = buildExportTables(rows, selectedKeys, achievementData);
+    if (!tables.length) {
+      window.alert("没有可导出的内容。");
+      return;
+    }
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    await ensurePdfFonts(doc);
+    tables.forEach((item, index) => {
+      if (index > 0) {
+        doc.addPage("a4", "landscape");
+        doc.setFont(PDF_FONT_NAME, "normal");
+      }
+      doc.setFontSize(14);
+      doc.text(item.title, 40, 32);
+      autoTable(doc, {
+        head: [item.table[0] || []],
+        body: item.table.slice(1),
+        startY: 48,
+        styles: { fontSize: 9, cellPadding: 4, font: PDF_FONT_NAME },
+        headStyles: { fillColor: [205, 255, 249] },
+      });
+    });
+    doc.save(`students_export_${formatTimestamp()}.pdf`);
+  } finally {
+    exporting.value = false;
+  }
+}
+
+async function handleExportPdfResume() {
+  if (pdfExporting.value) {
+    return;
+  }
+  if (!viewItem.value) {
+    return;
+  }
+  pdfExporting.value = true;
+  try {
+    const student = viewItem.value;
+    const studentNo = student.studentNo || "";
+    const studentName = student.fullName || student.name || "";
+    const achievements = studentNo || studentName
+      ? await listAchievements({ studentNo, studentName })
+          .then(({ data }) => (Array.isArray(data) ? data : []))
+          .catch(() => [])
+      : [];
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    await ensurePdfFonts(doc);
+
+    const marginX = 40;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const maxY = pageHeight - 40;
+    let currentY = 40;
+
+    const ensureSpace = (heightNeeded) => {
+      if (currentY + heightNeeded > maxY) {
+        doc.addPage();
+        doc.setFont(PDF_FONT_NAME, "normal");
+        currentY = 40;
+      }
+    };
+
+    const addSectionTitle = (title) => {
+      const topGap = 20;
+      const bottomGap = 0;
+      ensureSpace(topGap + bottomGap + 10);
+      currentY += topGap;
+      doc.setFont(PDF_FONT_BLACK, "normal");
+      doc.setFontSize(13);
+      doc.text(title, marginX, currentY);
+      currentY += bottomGap;
+      doc.setFont(PDF_FONT_NAME, "normal");
+    };
+
+    const addKeyValueTable = (rows, columns = 2) => {
+      const rowPairs = [];
+      for (let i = 0; i < rows.length; i += columns) {
+        const slice = rows.slice(i, i + columns);
+        const flat = [];
+        slice.forEach(([label, value]) => {
+          flat.push(label, value);
+        });
+        if (slice.length < columns) {
+          flat.push("");
+          flat.push("");
+        }
+        rowPairs.push(flat);
+      }
+      const head = [
+        Array.from({ length: columns }).flatMap(() => ["字段", "内容"]),
+      ];
+      autoTable(doc, {
+        head,
+        body: rowPairs,
+        startY: currentY + 6,
+        styles: { fontSize: 9, cellPadding: 4, font: PDF_FONT_NAME },
+        headStyles: { fillColor: [205, 255, 249] },
+        theme: "grid",
+      });
+      currentY = doc.lastAutoTable.finalY + 14;
+    };
+
+    // Header with avatar + base info
+    const avatarSize = 88;
+    if (student.avatarUrl) {
+      const avatarUrl = resolveMediaUrl(student.avatarUrl);
+      try {
+        const response = await fetch(avatarUrl);
+        const blob = await response.blob();
+        const dataUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        const format = blob.type.includes("png") ? "PNG" : "JPEG";
+        doc.addImage(dataUrl, format, marginX, currentY, avatarSize, avatarSize);
+      } catch {
+        // ignore avatar failures
+      }
+    }
+
+    const infoX = marginX + avatarSize + 20;
+    const lineHeight = 18;
+    doc.setFont(PDF_FONT_BLACK, "normal");
+    doc.setFontSize(18);
+    doc.text(studentName || "未命名", infoX, currentY + 18);
+    doc.setFont(PDF_FONT_NAME, "normal");
+    doc.setFontSize(11);
+    const infoLines = [
+      `学号：${studentNo || "-"}`,
+      `班级：${buildClassName(student) || "-"}`,
+      `学院：${student.college || "-"}`,
+    ];
+    infoLines.forEach((line, index) => {
+      doc.text(line, infoX, currentY + 40 + index * lineHeight);
+    });
+    currentY += Math.max(avatarSize, 40 + infoLines.length * lineHeight) + 20;
+
+    // 学籍信息
+    addSectionTitle("学籍信息");
+    addKeyValueTable([
+      ["姓名", studentName || ""],
+      ["学号", studentNo || ""],
+      ["年级", student.classYear ? `${student.classYear}级` : ""],
+      ["学院", student.college || ""],
+      ["专业", student.classMajor || ""],
+      ["班级", buildClassName(student) || ""],
+      ["入学时间", student.enrollmentDate || ""],
+      ["学生类别", student.studentCategory || ""],
+      ["班主任", student.classTeacher || ""],
+      ["辅导员", student.counselor || ""],
+    ]);
+
+    // 个人证件与联系方式
+    addSectionTitle("个人证件与联系方式");
+    addKeyValueTable([
+      ["民族", student.ethnicity || ""],
+      ["政治面貌", student.politicalStatus || ""],
+      ["手机号码", student.phone || ""],
+      ["身份证号", student.idNo || ""],
+      ["籍贯", student.nativePlace || ""],
+      ["住址", student.address || ""],
+    ]);
+
+    // 住宿信息
+    addSectionTitle("住宿信息");
+    addKeyValueTable([
+      ["是否在外居住", formatYesNo(student.offCampusLiving)],
+      ["外居住地址", student.offCampusAddress || ""],
+      ["住宿校区", student.dormCampus || ""],
+      ["住宿楼栋", student.dormBuilding || ""],
+      ["住宿房间", student.dormRoom || ""],
+      ["港澳台", formatYesNo(student.hkMoTw)],
+      ["特殊学生", formatYesNo(student.specialStudent)],
+    ]);
+
+    // 家庭信息
+    addSectionTitle("家庭信息");
+    addKeyValueTable([
+      ["父亲姓名", student.fatherName || ""],
+      ["父亲电话", student.fatherPhone || ""],
+      ["父亲工作单位", student.fatherWorkUnit || ""],
+      ["父亲职务", student.fatherTitle || ""],
+      ["母亲姓名", student.motherName || ""],
+      ["母亲电话", student.motherPhone || ""],
+      ["母亲工作单位", student.motherWorkUnit || ""],
+      ["母亲职务", student.motherTitle || ""],
+    ]);
+
+    // 紧急联系人
+    addSectionTitle("紧急联系人");
+    addKeyValueTable([
+      ["紧急联系人电话", student.emergencyPhone || ""],
+      ["紧急联系人关系", student.emergencyRelation || ""],
+    ]);
+
+    // 团组织与入党信息
+    addSectionTitle("团组织与入党信息");
+    addKeyValueTable([
+      ["是否入团", formatYesNo(student.leagueJoined)],
+      ["提交入团申请书时间", student.leagueApplicationDate || ""],
+      ["入团时间", formatDateOrEmpty(student.leagueJoinDate, student.leagueDeveloping, "正在发展")],
+      ["团号", student.leagueNo || ""],
+      ["是否申请入党", formatYesNo(student.partyApplied)],
+      ["提交入党申请书时间", student.applicationDate || ""],
+      ["确定积极分子时间", formatDateOrEmpty(student.activistDate, student.activistDeveloping, "正在发展")],
+      ["上党课时间", formatDateOrEmpty(student.partyTrainingDate, student.partyTrainingPending, "暂未报名")],
+      ["确定发展对象时间", formatDateOrEmpty(student.developmentTargetDate, student.developmentTargetDeveloping, "正在发展")],
+      ["接收为预备党员时间", formatDateOrEmpty(student.probationaryMemberDate, student.probationaryDeveloping, "正在发展")],
+      ["转为正式党员时间", formatDateOrEmpty(student.fullMemberDate, student.fullMemberDeveloping, "正在发展")],
+    ]);
+
+    // 教育经历
+    addSectionTitle("教育经历");
+    if (Array.isArray(student.educationExperiences) && student.educationExperiences.length) {
+      autoTable(doc, {
+        head: [["时间段", "学校名称", "学历", "证明人"]],
+        body: student.educationExperiences.map((edu) => {
+          const start = edu.startDate || "";
+          const end = edu.isCurrent ? "至今" : edu.endDate || "";
+          return [
+            [start, end].filter(Boolean).join("~"),
+            edu.schoolName || "",
+            edu.educationLevel || "",
+            edu.witness || "",
+          ];
+        }),
+        startY: currentY + 6,
+        styles: { fontSize: 9, cellPadding: 4, font: PDF_FONT_NAME },
+        headStyles: { fillColor: [205, 255, 249] },
+        theme: "grid",
+      });
+      currentY = doc.lastAutoTable.finalY + 14;
+    } else {
+      doc.setFontSize(10);
+      doc.text("暂无教育经历", marginX, currentY + 12);
+      currentY += 20;
+    }
+
+    // 个人成就
+    addSectionTitle("个人成就");
+    if (!achievements.length) {
+      doc.setFontSize(10);
+      doc.text("暂无个人成就", marginX, currentY + 12);
+      currentY += 20;
+    } else {
+      const grouped = achievements.reduce((acc, record) => {
+        const category = record.category || "other";
+        acc[category] = acc[category] || [];
+        acc[category].push(record);
+        return acc;
+      }, {});
+      for (const category of ACHIEVEMENT_CATEGORIES) {
+        const records = grouped[category.key] || [];
+        if (!records.length) {
+          continue;
+        }
+        addSectionTitle(category.label);
+        for (const record of records) {
+          const fields = ACHIEVEMENT_FIELDS[category.key] || [];
+          const rowValues = fields.map((field) => [
+            field.label,
+            record.fields?.[field.key] || "",
+          ]);
+          addKeyValueTable(rowValues, 1);
+        }
+      }
+    }
+
+    doc.save(`student_resume_${formatTimestamp()}.pdf`);
+  } finally {
+    pdfExporting.value = false;
+  }
+}
+
 function buildStudentTable(rows, selectedKeys) {
   const activeFields = MAIN_FIELD_ORDER.filter((key) => selectedKeys.has(key));
   if (!activeFields.length) {
@@ -2160,6 +2519,45 @@ function escapeCsvCell(value) {
     return `"${text.replace(/"/g, '""')}"`;
   }
   return text;
+}
+
+async function loadPdfFontBase64(url, cacheKey) {
+  if (cacheKey === "regular" && pdfFontBase64) {
+    return pdfFontBase64;
+  }
+  if (cacheKey === "black" && pdfFontBlackBase64) {
+    return pdfFontBlackBase64;
+  }
+  const response = await fetch(url);
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(index, index + chunkSize),
+    );
+  }
+  const base64 = btoa(binary);
+  if (cacheKey === "regular") {
+    pdfFontBase64 = base64;
+  } else if (cacheKey === "black") {
+    pdfFontBlackBase64 = base64;
+  }
+  return base64;
+}
+
+async function ensurePdfFonts(doc) {
+  const base64 = await loadPdfFontBase64(harmonyFontUrl, "regular");
+  const blackBase64 = await loadPdfFontBase64(
+    harmonyFontBlackUrl,
+    "black",
+  );
+  doc.addFileToVFS("HarmonyOS_Sans_SC_Regular.ttf", base64);
+  doc.addFont("HarmonyOS_Sans_SC_Regular.ttf", PDF_FONT_NAME, "normal");
+  doc.addFileToVFS("HarmonyOS_Sans_SC_Black.ttf", blackBase64);
+  doc.addFont("HarmonyOS_Sans_SC_Black.ttf", PDF_FONT_BLACK, "normal");
+  doc.setFont(PDF_FONT_NAME, "normal");
 }
 
 function formatYesNo(value) {
@@ -2840,6 +3238,10 @@ function loadUser() {
 
 .info-actions-single {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.info-actions-double {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .student-achievements-view {
