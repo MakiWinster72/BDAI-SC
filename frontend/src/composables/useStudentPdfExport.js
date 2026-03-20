@@ -131,9 +131,7 @@ async function loadPdfFontBase64(url, cacheKey) {
   let binary = "";
   const chunkSize = 0x8000;
   for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(
-      ...bytes.subarray(index, index + chunkSize),
-    );
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
   }
   const base64 = btoa(binary);
   if (cacheKey === "regular") {
@@ -146,10 +144,7 @@ async function loadPdfFontBase64(url, cacheKey) {
 
 async function ensurePdfFonts(doc) {
   const base64 = await loadPdfFontBase64(harmonyFontUrl, "regular");
-  const blackBase64 = await loadPdfFontBase64(
-    harmonyFontBlackUrl,
-    "black",
-  );
+  const blackBase64 = await loadPdfFontBase64(harmonyFontBlackUrl, "black");
   doc.addFileToVFS("HarmonyOS_Sans_SC_Regular.ttf", base64);
   doc.addFont("HarmonyOS_Sans_SC_Regular.ttf", PDF_FONT_NAME, "normal");
   doc.addFileToVFS("HarmonyOS_Sans_SC_Black.ttf", blackBase64);
@@ -201,7 +196,8 @@ export function useStudentPdfExport() {
       const studentNo =
         (getStudentNo && getStudentNo(student)) || student.studentNo || "";
       const className =
-        (getClassName && getClassName(student)) || buildDefaultClassName(student);
+        (getClassName && getClassName(student)) ||
+        buildDefaultClassName(student);
       const college =
         (getCollege && getCollege(student)) || student.college || "";
       const addressText =
@@ -243,8 +239,8 @@ export function useStudentPdfExport() {
       };
 
       const addSectionTitle = (title, opts = {}) => {
-        const topGap = 50;
-        const bottomGap = 20;
+        const topGap = 30;
+        const bottomGap = 10;
         const minContentHeight = opts.minContentHeight ?? 60;
         if (currentY + topGap + bottomGap + minContentHeight > maxY) {
           doc.addPage();
@@ -303,7 +299,14 @@ export function useStudentPdfExport() {
             reader.readAsDataURL(blob);
           });
           const format = blob.type.includes("png") ? "PNG" : "JPEG";
-          doc.addImage(dataUrl, format, marginX, currentY, avatarSize, avatarSize);
+          doc.addImage(
+            dataUrl,
+            format,
+            marginX,
+            currentY,
+            avatarSize,
+            avatarSize,
+          );
         } catch {
           // ignore avatar failures
         }
@@ -485,8 +488,8 @@ export function useStudentPdfExport() {
           }`,
         );
       }
-      const pendingFlags = nodes.map((label) =>
-        label.includes("正在发展") || label.includes("暂未报名"),
+      const pendingFlags = nodes.map(
+        (label) => label.includes("正在发展") || label.includes("暂未报名"),
       );
       const pendingIndex = pendingFlags.findIndex((flag) => flag);
       const maxTextWidth = nodes.reduce((max, label) => {
