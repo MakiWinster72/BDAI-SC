@@ -208,6 +208,7 @@
           </div>
           <div
             v-if="gridViewOpen"
+            ref="gridWrapRef"
             class="student-grid-wrap"
             :class="{ fullscreen: gridFullscreen }"
           >
@@ -1047,6 +1048,7 @@ const gridFieldDialogOpen = ref(false);
 const gridFieldDialogClosing = ref(false);
 const gridActiveSheet = ref("main");
 const gridFullscreen = ref(false);
+const gridHasFullDetail = ref(false);
 let gridRequestId = 0;
 const previewActiveSheet = ref("main");
 const previewLoading = ref(false);
@@ -1445,14 +1447,38 @@ async function fetchGridStudents() {
       items.push(...(pageData?.items || []));
     }
     gridDetailRows.value = items;
+    gridHasFullDetail.value = false;
     gridAchievementData.value = [];
+    const selectedKeys = getSelectedExportKeys();
+    if (gridNeedsDetail(selectedKeys) && items.length) {
+      await fetchGridDetails(items, requestId);
+    }
   } catch {
     gridDetailRows.value = [];
     gridAchievementData.value = [];
+    gridHasFullDetail.value = false;
   } finally {
     if (requestId === gridRequestId) {
       gridLoading.value = false;
     }
+  }
+}
+
+async function fetchGridDetails(items, requestId) {
+  const results = await Promise.all(
+    items.map((item) =>
+      getStudentProfileById(item.id)
+        .then(({ data }) => data || null)
+        .catch(() => null),
+    ),
+  );
+  if (requestId !== gridRequestId) {
+    return;
+  }
+  const detailRows = results.filter(Boolean);
+  if (detailRows.length) {
+    gridDetailRows.value = detailRows;
+    gridHasFullDetail.value = true;
   }
 }
 
@@ -1464,7 +1490,33 @@ function toggleGridView() {
 }
 
 function toggleGridFullscreen() {
+  const el = gridWrapRef.value;
+  if (!el) {
+    gridFullscreen.value = !gridFullscreen.value;
+    return;
+  }
+  const start = el.getBoundingClientRect();
   gridFullscreen.value = !gridFullscreen.value;
+  nextTick(() => {
+    const end = el.getBoundingClientRect();
+    const dx = start.left - end.left;
+    const dy = start.top - end.top;
+    const sx = start.width / end.width;
+    const sy = start.height / end.height;
+    el.style.transformOrigin = "top left";
+    el.style.transition = "transform 420ms cubic-bezier(0.22, 1, 0.36, 1)";
+    el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+    requestAnimationFrame(() => {
+      el.style.transform = "";
+    });
+    const cleanup = () => {
+      el.style.transition = "";
+      el.style.transform = "";
+      el.style.transformOrigin = "";
+      el.removeEventListener("transitionend", cleanup);
+    };
+    el.addEventListener("transitionend", cleanup);
+  });
 }
 
 function openGridFieldDialog() {
@@ -1493,6 +1545,24 @@ watch(
       gridAchievementData.value = Array.isArray(data) ? data : [];
     });
   },
+);
+
+watch(
+  exportSelections,
+  () => {
+    if (!gridViewOpen.value) {
+      return;
+    }
+    const selectedKeys = getSelectedExportKeys();
+    if (!gridNeedsDetail(selectedKeys)) {
+      return;
+    }
+    if (gridHasFullDetail.value || !gridDetailRows.value.length) {
+      return;
+    }
+    fetchGridDetails(gridDetailRows.value, gridRequestId);
+  },
+  { deep: true },
 );
 
 function openDetail(item) {
@@ -2015,6 +2085,15 @@ function shouldIncludeMainSheet(selectedKeys) {
     return hasNonBaseMain;
   }
   return hasAnyMain;
+}
+
+function gridNeedsDetail(selectedKeys) {
+  const hasEdu = EDUCATION_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasParty = PARTY_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasNonBaseMain = MAIN_FIELD_ORDER.some(
+    (key) => !IDENTITY_KEYS.includes(key) && selectedKeys.has(key),
+  );
+  return hasEdu || hasParty || hasNonBaseMain;
 }
 
 const gridSelectedKeys = computed(() => getSelectedExportKeys());
