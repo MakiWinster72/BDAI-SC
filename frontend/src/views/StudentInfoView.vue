@@ -183,10 +183,62 @@
             </div>
           </div>
           <div v-if="gridViewOpen" class="student-grid-wrap">
+            <div class="student-grid-toolbar">
+              <span class="student-grid-title">表格视图</span>
+              <div class="student-grid-actions">
+                <button
+                  class="student-grid-toggle student-grid-field-toggle"
+                  type="button"
+                  @click="gridFieldPanelOpen = !gridFieldPanelOpen"
+                >
+                  {{ gridFieldPanelOpen ? "收起字段" : "选择字段" }}
+                </button>
+                <span v-if="gridLoading" class="student-grid-status">加载中...</span>
+                <span v-else class="student-grid-status"
+                  >共 {{ gridActiveSheetData.rowData.length }} 条</span
+                >
+              </div>
+            </div>
+            <div v-if="gridFieldPanelOpen" class="student-grid-field-panel">
+              <div
+                v-for="group in exportGroups"
+                :key="group.id"
+                class="student-grid-field-group"
+              >
+                <label class="student-grid-field-title">
+                  {{ group.label }}
+                  <input
+                    type="checkbox"
+                    :checked="isGroupChecked(group)"
+                    @change="toggleGroupSelection(group, $event.target.checked)"
+                  />
+                </label>
+                <label
+                  v-for="field in group.fields"
+                  :key="field.key"
+                  class="student-grid-field-item"
+                >
+                  <input type="checkbox" v-model="exportSelections[field.key]" />
+                  <span>{{ field.label }}</span>
+                </label>
+              </div>
+            </div>
+            <div v-if="gridSheets.length" class="student-grid-tabs">
+              <button
+                v-for="sheet in gridSheets"
+                :key="sheet.id"
+                class="student-grid-tab"
+                :class="{ active: sheet.id === gridActiveSheet }"
+                type="button"
+                @click="gridActiveSheet = sheet.id"
+              >
+                {{ sheet.label }}
+              </button>
+            </div>
             <AgGridVue
               class="ag-theme-quartz student-grid"
-              :row-data="gridRows"
-              :column-defs="gridColumnDefs"
+              :row-data="gridActiveSheetData.rowData"
+              :column-defs="gridActiveSheetData.colDefs"
               :default-col-def="gridDefaultColDef"
               :locale-text="gridLocaleText"
               :locale-text-func="gridLocaleTextFunc"
@@ -926,7 +978,10 @@ const exportPreviewOpen = ref(false);
 const exportPreviewClosing = ref(false);
 const gridViewOpen = ref(false);
 const gridLoading = ref(false);
-const gridRows = ref([]);
+const gridDetailRows = ref([]);
+const gridAchievementData = ref([]);
+const gridFieldPanelOpen = ref(false);
+const gridActiveSheet = ref("main");
 let gridRequestId = 0;
 const previewActiveSheet = ref("main");
 const previewLoading = ref(false);
@@ -948,17 +1003,6 @@ const majorOptions = [
   "电子商务",
   "大数据管理与应用（佛山校区全学段）",
   "大数据管理与应用（数字治理）",
-];
-
-const gridColumnDefs = [
-  { field: "name", headerName: "姓名", minWidth: 120 },
-  { field: "studentNo", headerName: "学号", minWidth: 140 },
-  { field: "className", headerName: "班级", minWidth: 160 },
-  { field: "gradeYear", headerName: "年级", minWidth: 100 },
-  { field: "college", headerName: "学院", minWidth: 180 },
-  { field: "major", headerName: "专业", minWidth: 160 },
-  { field: "hkMoTw", headerName: "港澳台", minWidth: 100 },
-  { field: "specialStudent", headerName: "特殊学生", minWidth: 120 },
 ];
 
 const gridDefaultColDef = {
@@ -1028,6 +1072,7 @@ const gridLocaleTextFunc = (key, defaultValue) => {
   }
   return defaultValue;
 };
+
 
 const filters = reactive({
   classYear: "",
@@ -1334,20 +1379,11 @@ async function fetchGridStudents() {
       }
       items.push(...(pageData?.items || []));
     }
-    gridRows.value = items.map((item) => ({
-      id: item.id,
-      name: item.fullName || "未命名",
-      className: buildClassName(item),
-      gradeYear: item.classYear ? `${item.classYear}级` : "",
-      college: item.college || "",
-      major: item.classMajor || "",
-      classNo: item.classNo || "",
-      studentNo: item.studentNo || "",
-      hkMoTw: item.hkMoTw ? "是" : "否",
-      specialStudent: item.specialStudent ? "是" : "否",
-    }));
+    gridDetailRows.value = items;
+    gridAchievementData.value = [];
   } catch {
-    gridRows.value = [];
+    gridDetailRows.value = [];
+    gridAchievementData.value = [];
   } finally {
     if (requestId === gridRequestId) {
       gridLoading.value = false;
@@ -1361,6 +1397,21 @@ function toggleGridView() {
     fetchGridStudents();
   }
 }
+
+watch(
+  () => gridActiveSheet.value,
+  (sheetId) => {
+    if (!sheetId.startsWith("achievement")) {
+      return;
+    }
+    if (!gridDetailRows.value.length || gridAchievementData.value.length) {
+      return;
+    }
+    fetchAchievementsForStudents(gridDetailRows.value).then((data) => {
+      gridAchievementData.value = Array.isArray(data) ? data : [];
+    });
+  },
+);
 
 function openDetail(item) {
   viewOpen.value = true;
@@ -1884,6 +1935,93 @@ function shouldIncludeMainSheet(selectedKeys) {
   return hasAnyMain;
 }
 
+const gridSelectedKeys = computed(() => getSelectedExportKeys());
+const gridSheets = computed(() => {
+  const keys = gridSelectedKeys.value;
+  const sheets = [];
+  if (shouldIncludeMainSheet(keys)) {
+    const table = buildStudentTable(gridDetailRows.value, keys);
+    if (table) {
+      sheets.push({ id: "main", label: "学生", table });
+    }
+  }
+  const educationTable = buildEducationTable(gridDetailRows.value, keys);
+  if (educationTable) {
+    sheets.push({ id: "education", label: "教育经历", table: educationTable });
+  }
+  const partyTable = buildPartyTable(gridDetailRows.value, keys);
+  if (partyTable) {
+    sheets.push({ id: "party", label: "团组织与入党信息", table: partyTable });
+  }
+  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
+    keys.has(item.selectKey),
+  );
+  if (activeAchievementCategories.length) {
+    const overview = buildAchievementOverview(
+      gridDetailRows.value,
+      keys,
+      gridAchievementData.value,
+    );
+    sheets.push({
+      id: "achievement-overview",
+      label: "成就总览",
+      table: overview,
+    });
+    activeAchievementCategories.forEach((category) => {
+      const detailTable = buildAchievementDetailTable(
+        category.key,
+        gridAchievementData.value,
+      );
+      sheets.push({
+        id: `achievement-${category.key}`,
+        label: category.label,
+        table: detailTable,
+      });
+    });
+  }
+  return sheets;
+});
+
+const gridActiveSheetData = computed(() => {
+  const sheet =
+    gridSheets.value.find((item) => item.id === gridActiveSheet.value) ||
+    gridSheets.value[0];
+  if (!sheet || !Array.isArray(sheet.table) || !sheet.table.length) {
+    return { colDefs: [], rowData: [] };
+  }
+  const [header, ...rows] = sheet.table;
+  const colDefs = header.map((label, index) => ({
+    field: `col${index}`,
+    headerName: label,
+    minWidth: 120,
+    flex: 1,
+    sortable: true,
+    filter: true,
+  }));
+  const rowData = rows.map((row) => {
+    const obj = {};
+    header.forEach((_, index) => {
+      obj[`col${index}`] = row[index] ?? "";
+    });
+    return obj;
+  });
+  return { colDefs, rowData };
+});
+
+watch(
+  () => gridSheets.value,
+  (sheets) => {
+    if (!sheets.length) {
+      gridActiveSheet.value = "main";
+      return;
+    }
+    if (!sheets.some((item) => item.id === gridActiveSheet.value)) {
+      gridActiveSheet.value = sheets[0].id;
+    }
+  },
+  { deep: true },
+);
+
 const previewStudents = computed(() => previewDetailRows.value);
 const previewSelectedKeys = computed(() => getSelectedExportKeys());
 const previewSheets = computed(() => {
@@ -2040,6 +2178,10 @@ function closeExportDialog() {
 
 function isGroupSelected(group) {
   return group.fields.every((field) => exportSelections[field.key]);
+}
+
+function isGroupChecked(group) {
+  return isGroupSelected(group);
 }
 
 const isAllSelected = computed(() =>
@@ -2689,6 +2831,12 @@ function loadUser() {
   font-size: 13px;
 }
 
+.student-grid-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .student-grid-title {
   font-weight: 600;
   color: #203035;
@@ -2696,6 +2844,60 @@ function loadUser() {
 
 .student-grid-status {
   color: #5b6b71;
+}
+
+.student-grid-field-panel {
+  border: 1px solid rgba(3, 107, 114, 0.15);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.student-grid-field-group {
+  display: grid;
+  gap: 6px;
+}
+
+.student-grid-field-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #203035;
+}
+
+.student-grid-field-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a5a60;
+  font-size: 13px;
+}
+
+.student-grid-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.student-grid-tab {
+  border: 1px solid rgba(3, 107, 114, 0.2);
+  background: #fff;
+  color: #0f4d55;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.student-grid-tab.active {
+  background: rgba(3, 107, 114, 0.12);
+  border-color: rgba(3, 107, 114, 0.35);
+  font-weight: 600;
 }
 
 .student-grid {
