@@ -84,6 +84,7 @@ public class StudentProfileService {
         profile.setPhone(normalize(request.getPhone()));
         profile.setAddress(normalize(request.getAddress()));
         profile.setIdNo(normalize(request.getIdNo()));
+        profile.setBirthDate(request.getBirthDate());
         profile.setNativePlace(normalize(request.getNativePlace()));
         profile.setLeagueNo(normalize(request.getLeagueNo()));
         profile.setLeagueApplicationDate(request.getLeagueApplicationDate());
@@ -188,6 +189,7 @@ public class StudentProfileService {
             profile != null ? profile.getPhone() : null,
             profile != null ? profile.getAddress() : null,
             profile != null ? profile.getIdNo() : null,
+            profile != null ? profile.getBirthDate() : null,
             profile != null ? profile.getNativePlace() : null,
             profile != null ? profile.getDormCampus() : null,
             profile != null ? profile.getDormBuilding() : null,

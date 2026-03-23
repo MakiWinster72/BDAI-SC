@@ -90,6 +90,9 @@ public class StudentProfile {
     @Column(name = "id_no", length = 32)
     private String idNo;
 
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
     @Column(name = "native_place", length = 64)
     private String nativePlace;
 
@@ -362,6 +365,14 @@ public class StudentProfile {
 
     public void setIdNo(String idNo) {
         this.idNo = idNo;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 
     public String getNativePlace() {

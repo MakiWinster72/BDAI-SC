@@ -322,6 +322,17 @@
               />
             </label>
             <label class="field-card">
+              <span class="info-label">出生年月</span>
+              <input
+                v-model="info.birthDate"
+                class="info-input"
+                type="date"
+                lang="zh-CN"
+                :max="today"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
               <!-- TODO: 做地址选择器 -->
               <span class="info-label">籍贯</span>
               <input
@@ -1062,6 +1073,7 @@ const info = reactive({
   offCampusCounty: "",
   offCampusDetail: "",
   idNo: "",
+  birthDate: "",
   nativePlace: "",
   leagueNo: "",
   leagueApplicationDate: "",
@@ -1594,6 +1606,7 @@ async function confirmEdit() {
     phone: info.phone,
     address,
     idNo: info.idNo,
+    birthDate: info.birthDate || null,
     nativePlace: info.nativePlace,
     leagueNo: info.leagueNo,
     leagueApplicationDate: info.leagueApplicationDate || null,
@@ -1721,6 +1734,7 @@ function buildPdfStudentSnapshot() {
     politicalStatus: info.politicalStatus,
     phone: info.phone,
     idNo: info.idNo,
+    birthDate: info.birthDate,
     nativePlace: info.nativePlace,
     address: addressText,
     dormCampus: info.dormCampus,
@@ -1908,6 +1922,7 @@ function applyProfileResponse(data) {
   info.addressCounty = parsedAddress.county;
   info.addressDetail = parsedAddress.detail;
   info.idNo = data.idNo || "";
+  info.birthDate = data.birthDate || "";
   info.nativePlace = data.nativePlace || "";
   info.leagueNo = data.leagueNo || "";
   info.leagueApplicationDate = data.leagueApplicationDate || "";

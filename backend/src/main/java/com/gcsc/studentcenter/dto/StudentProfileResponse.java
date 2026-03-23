@@ -22,6 +22,7 @@ public class StudentProfileResponse {
     private String phone;
     private String address;
     private String idNo;
+    private LocalDate birthDate;
     private String nativePlace;
     private String dormCampus;
     private String dormBuilding;
@@ -81,6 +82,7 @@ public class StudentProfileResponse {
         String phone,
         String address,
         String idNo,
+        LocalDate birthDate,
         String nativePlace,
         String dormCampus,
         String dormBuilding,
@@ -139,6 +141,7 @@ public class StudentProfileResponse {
         this.phone = phone;
         this.address = address;
         this.idNo = idNo;
+        this.birthDate = birthDate;
         this.nativePlace = nativePlace;
         this.dormCampus = dormCampus;
         this.dormBuilding = dormBuilding;
@@ -250,6 +253,10 @@ public class StudentProfileResponse {
 
     public String getIdNo() {
         return idNo;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
     }
 
     public String getNativePlace() {

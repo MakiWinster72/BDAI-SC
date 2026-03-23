@@ -26,6 +26,7 @@ public class StudentProfileRequest {
     private String phone;
     private String address;
     private String idNo;
+    private LocalDate birthDate;
     private String nativePlace;
     private String leagueNo;
     private LocalDate leagueApplicationDate;
@@ -233,6 +234,14 @@ public class StudentProfileRequest {
 
     public void setIdNo(String idNo) {
         this.idNo = idNo;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 
     public String getNativePlace() {
