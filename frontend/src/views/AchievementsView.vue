@@ -161,7 +161,10 @@
               {{ formatContestOrganizer(item.fields) }}
             </div>
           </div>
-          <div v-else-if="item.category === 'paper'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'paper'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -176,7 +179,10 @@
             </div>
             <div class="achievement-paper-tag" aria-hidden="true">学术论文</div>
           </div>
-          <div v-else-if="item.category === 'journal'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'journal'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -189,9 +195,14 @@
             <div class="achievement-card-text">
               {{ formatJournalDate(item.fields) }}
             </div>
-            <div class="achievement-journal-tag" aria-hidden="true">期刊作品</div>
+            <div class="achievement-journal-tag" aria-hidden="true">
+              期刊作品
+            </div>
           </div>
-          <div v-else-if="item.category === 'patent'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'patent'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -228,7 +239,10 @@
               职业资格证书
             </div>
           </div>
-          <div v-else-if="item.category === 'research'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'research'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -238,9 +252,14 @@
             <div class="achievement-card-text">
               {{ formatResearchTeacher(item.fields) }}
             </div>
-            <div class="achievement-research-tag" aria-hidden="true">科研项目</div>
+            <div class="achievement-research-tag" aria-hidden="true">
+              科研项目
+            </div>
           </div>
-          <div v-else-if="item.category === 'works'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'works'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -338,13 +357,30 @@
         <div v-if="viewLoading" class="empty-tip">加载中...</div>
         <div v-else-if="viewItem" class="achievement-view-body">
           <div class="achievement-detail-image">
-            <img v-if="viewItem.image" :src="viewItem.image" alt="成就图片" />
+            <img v-if="viewActiveImage" :src="viewActiveImage" alt="成就图片" />
             <div v-else class="achievement-card-placeholder">未上传图片</div>
+          </div>
+          <div
+            v-if="viewItem.imageUrls && viewItem.imageUrls.length > 1"
+            class="achievement-detail-gallery"
+          >
+            <button
+              v-for="(image, index) in viewItem.imageUrls"
+              :key="`${image}-${index}`"
+              class="detail-thumb"
+              :class="{ active: viewImageIndex === index }"
+              type="button"
+              @click="selectViewImage(index)"
+            >
+              <img :src="image" alt="成就图片缩略图" />
+            </button>
           </div>
           <div class="achievement-detail-body">
             <div v-if="viewItem.category === 'contest'">
               <div class="achievement-card-title-row">
-                <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
+                <div class="achievement-card-title">
+                  {{ viewItem.title || "-" }}
+                </div>
                 <span
                   v-if="formatContestAwardPill(viewItem.fields)"
                   class="achievement-award-pill"
@@ -384,81 +420,87 @@
               <div class="achievement-card-text">
                 {{ formatPaperDate(viewItem.fields) }}
               </div>
-          </div>
-          <div v-else-if="viewItem.category === 'journal'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
             </div>
-            <div class="achievement-card-text">
-              {{ formatJournalPublication(viewItem.fields) }}
+            <div v-else-if="viewItem.category === 'journal'">
+              <div class="achievement-card-title achievement-paper-title">
+                {{ viewItem.title || "-" }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatJournalPublication(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatJournalAuthor(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatJournalDate(viewItem.fields) }}
+              </div>
             </div>
-            <div class="achievement-card-text">
-              {{ formatJournalAuthor(viewItem.fields) }}
+            <div v-else-if="viewItem.category === 'patent'">
+              <div class="achievement-card-title achievement-paper-title">
+                {{ viewItem.title || "-" }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatPatentGrantNo(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatPatentInventor(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatPatentDate(viewItem.fields) }}
+              </div>
             </div>
-            <div class="achievement-card-text">
-              {{ formatJournalDate(viewItem.fields) }}
+            <div v-else-if="viewItem.category === 'certificate'">
+              <div class="achievement-card-title achievement-paper-title">
+                {{ viewItem.title || "-" }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatCertificateType(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatCertificateOwner(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatCertificateDate(viewItem.fields) }}
+              </div>
             </div>
-          </div>
-          <div v-else-if="viewItem.category === 'patent'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
+            <div v-else-if="viewItem.category === 'research'">
+              <div class="achievement-card-title achievement-paper-title">
+                {{ viewItem.title || "-" }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatResearchLeader(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatResearchTeacher(viewItem.fields) }}
+              </div>
             </div>
-            <div class="achievement-card-text">
-              {{ formatPatentGrantNo(viewItem.fields) }}
+            <div v-else-if="viewItem.category === 'works'">
+              <div class="achievement-card-title achievement-paper-title">
+                {{ viewItem.title || "-" }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatWorksCategory(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatWorksOccasion(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-text">
+                {{ formatWorksDate(viewItem.fields) }}
+              </div>
+              <div class="achievement-card-organizer">
+                {{ formatWorksOrganizer(viewItem.fields) }}
+              </div>
             </div>
-            <div class="achievement-card-text">
-              {{ formatPatentInventor(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatPatentDate(viewItem.fields) }}
-            </div>
-          </div>
-          <div v-else-if="viewItem.category === 'certificate'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatCertificateType(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatCertificateOwner(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatCertificateDate(viewItem.fields) }}
-            </div>
-          </div>
-          <div v-else-if="viewItem.category === 'research'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatResearchLeader(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatResearchTeacher(viewItem.fields) }}
-            </div>
-          </div>
-          <div v-else-if="viewItem.category === 'works'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatWorksCategory(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatWorksOccasion(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatWorksDate(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-organizer">
-              {{ formatWorksOrganizer(viewItem.fields) }}
-            </div>
-          </div>
             <div v-else>
-              <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
+              <div class="achievement-card-title">
+                {{ viewItem.title || "-" }}
+              </div>
               <div v-if="viewItem.dateLabel" class="achievement-card-dates">
-                <span>{{ viewItem.dateLabel }}：{{ viewItem.dateValue || "-" }}</span>
+                <span
+                  >{{ viewItem.dateLabel }}：{{
+                    viewItem.dateValue || "-"
+                  }}</span
+                >
               </div>
               <div
                 v-for="line in viewItem.fieldLines"
@@ -466,6 +508,30 @@
                 class="achievement-card-text"
               >
                 {{ line }}
+              </div>
+            </div>
+            <div
+              v-if="viewItem.attachments && viewItem.attachments.length"
+              class="achievement-attachments"
+            >
+              <div class="attachment-title">附件</div>
+              <div class="attachment-list">
+                <div
+                  v-for="(file, index) in viewItem.attachments"
+                  :key="`${file.url}-${index}`"
+                  class="attachment-item"
+                >
+                  <img :src="attachmentIcon(file)" alt="" />
+                  <div class="attachment-name">{{ file.name }}</div>
+                  <a
+                    class="attachment-link"
+                    :href="file.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    查看
+                  </a>
+                </div>
               </div>
             </div>
             <div class="achievement-card-actions">
@@ -505,10 +571,84 @@
           </button>
         </header>
         <div class="achievement-grid">
-          <button class="achievement-image" type="button" @click="triggerImage">
-            <img v-if="imagePreview" :src="imagePreview" alt="成就图片" />
-            <span v-else>选择图片</span>
-          </button>
+          <div class="achievement-media-panel">
+            <div class="media-header">
+              <div>
+                <div class="media-title">图片(可选)</div>
+                <div class="media-subtitle">最多 3 张</div>
+              </div>
+            </div>
+
+            <div
+              v-if="imagePreviews.length === 0"
+              class="media-empty-state"
+              @click="triggerImage"
+            >
+              <div class="media-empty-icon">+</div>
+              <div class="media-empty-text">点击添加图片</div>
+            </div>
+
+            <div v-else-if="imagePreviews.length === 1" class="media-single">
+              <button
+                class="media-single-item"
+                type="button"
+                @click="selectEditorImage(0)"
+              >
+                <img :src="imagePreviews[0]" alt="成就图片" />
+                <span class="media-remove" @click.stop="removeImage(0)"
+                  >移除</span
+                >
+              </button>
+              <button class="media-add-btn" type="button" @click="triggerImage">
+                <span>+</span>
+              </button>
+            </div>
+
+            <div v-else-if="imagePreviews.length === 2" class="media-two">
+              <button
+                v-for="(image, index) in imagePreviews"
+                :key="`${image}-${index}`"
+                class="media-thumb"
+                type="button"
+                @click="selectEditorImage(index)"
+              >
+                <img :src="image" alt="成就图片" />
+                <span class="media-remove" @click.stop="removeImage(index)"
+                  >移除</span
+                >
+              </button>
+              <button
+                class="media-thumb media-add"
+                type="button"
+                @click="triggerImage"
+              >
+                <span>+</span>
+              </button>
+            </div>
+
+            <div v-else class="media-grid">
+              <button
+                v-for="(image, index) in imagePreviews"
+                :key="`${image}-${index}`"
+                class="media-thumb"
+                type="button"
+                @click="selectEditorImage(index)"
+              >
+                <img :src="image" alt="成就图片" />
+                <span class="media-remove" @click.stop="removeImage(index)">
+                  移除
+                </span>
+              </button>
+              <button
+                v-if="imagePreviews.length < MAX_IMAGE_COUNT"
+                class="media-thumb media-add"
+                type="button"
+                @click="triggerImage"
+              >
+                <span>+</span>
+              </button>
+            </div>
+          </div>
 
           <div class="achievement-fields">
             <div class="field-row">
@@ -557,6 +697,61 @@
                 ></textarea>
               </div>
             </div>
+            <div class="achievement-attachments-panel">
+              <div class="media-header">
+                <div>
+                  <div class="media-title">附件</div>
+                  <div class="media-subtitle">支持多文件</div>
+                </div>
+              </div>
+              <div v-if="!attachmentPreviews.length" class="media-empty">
+                暂无附件
+              </div>
+              <div v-else class="attachment-list">
+                <div
+                  v-for="(file, index) in attachmentPreviews"
+                  :key="`${file.url}-${index}`"
+                  class="attachment-item"
+                >
+                  <img :src="attachmentIcon(file)" alt="" />
+                  <div class="attachment-name">{{ file.name }}</div>
+                  <button
+                    class="attachment-remove"
+                    type="button"
+                    @click="removeAttachment(index)"
+                  >
+                    移除
+                  </button>
+                </div>
+              </div>
+              <div class="attachment-formats" @click="triggerAttachment">
+                <div class="format-row">
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/doc.svg" alt="" />
+                    <span class="format-label">文档</span>
+                    <span class="format-exts">docx/doc/pdf/xls/xlsx/pptx/ppt</span>
+                  </div>
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/image.svg" alt="" />
+                    <span class="format-label">图片</span>
+                    <span class="format-exts">jpeg/jpg/png/heif</span>
+                  </div>
+                </div>
+                <div class="format-row">
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/video.svg" alt="" />
+                    <span class="format-label">视频</span>
+                    <span class="format-exts">mp4/mov</span>
+                  </div>
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/zip.svg" alt="" />
+                    <span class="format-label">压缩包</span>
+                    <span class="format-exts">zip/rar/7z</span>
+                  </div>
+                </div>
+              </div>
+              <div class="media-tip">单个不超过 {{ attachmentLimitLabel }}</div>
+            </div>
 
             <div class="achievement-actions">
               <button class="ghost-button" type="button" @click="closeEditor">
@@ -604,9 +799,18 @@
       <input
         ref="imageInput"
         type="file"
-        accept="image/*"
+        accept=".jpeg,.jpg,.png,.heif,image/jpeg,image/png,image/heif"
+        multiple
         hidden
         @change="onImageChange"
+      />
+      <input
+        ref="attachmentInput"
+        type="file"
+        accept=".docx,.doc,.pdf,.xls,.xlsx,.zip,.rar,.7z,.pptx,.ppt,.mp4,.mov,.jpeg,.jpg,.png,.heif,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,video/mp4,video/quicktime,image/jpeg,image/png,image/heif"
+        multiple
+        hidden
+        @change="onAttachmentChange"
       />
     </main>
   </div>
@@ -631,12 +835,13 @@ const profile = reactive(loadUser());
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
 const imageInput = ref(null);
-const imagePreview = ref("");
+const attachmentInput = ref(null);
 const errorMessage = ref("");
 const viewOpen = ref(false);
 const viewLoading = ref(false);
 const viewItem = ref(null);
 const viewClosing = ref(false);
+const viewImageIndex = ref(0);
 const editId = ref(null);
 const deleteDialogOpen = ref(false);
 const deleteBusy = ref(false);
@@ -689,6 +894,8 @@ const drawerIndicatorStyle = computed(() => ({
 
 const form = reactive({
   imageUrl: "",
+  imageUrls: [],
+  attachments: [],
   category: "",
   fields: {},
 });
@@ -1132,7 +1339,10 @@ const filteredAchievements = computed(() => {
   if (!studentName && !studentNo) {
     return baseList;
   }
-  const normalizeText = (value) => String(value || "").trim().toLowerCase();
+  const normalizeText = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase();
   const targetName = normalizeText(studentName);
   const targetNo = normalizeText(studentNo);
   return baseList.filter((item) => {
@@ -1291,9 +1501,10 @@ function goToSettings() {
 
 function resetForm() {
   form.imageUrl = "";
+  form.imageUrls = [];
+  form.attachments = [];
   form.category = "";
   form.fields = {};
-  imagePreview.value = "";
 }
 
 async function saveAchievement() {
@@ -1303,7 +1514,8 @@ async function saveAchievement() {
     return;
   }
   const category =
-    form.category || (activeCategory.value === "all" ? "" : activeCategory.value);
+    form.category ||
+    (activeCategory.value === "all" ? "" : activeCategory.value);
   if (!category) {
     errorMessage.value = "请先选择成就分类";
     return;
@@ -1315,8 +1527,12 @@ async function saveAchievement() {
     return;
   }
   const payload = {
-    imageUrl: form.imageUrl || null,
-    fields: { ...form.fields },
+    imageUrl: form.imageUrls[0] || form.imageUrl || null,
+    fields: {
+      ...form.fields,
+      [IMAGE_URLS_FIELD]: JSON.stringify(form.imageUrls || []),
+      [ATTACHMENTS_FIELD]: JSON.stringify(form.attachments || []),
+    },
   };
   try {
     if (editId.value) {
@@ -1348,15 +1564,70 @@ function triggerImage() {
   imageInput.value && imageInput.value.click();
 }
 
+function triggerAttachment() {
+  attachmentInput.value && attachmentInput.value.click();
+}
+
 async function onImageChange(event) {
-  const [file] = Array.from(event.target.files || []);
+  const files = Array.from(event.target.files || []);
   event.target.value = "";
-  if (!file) {
+  if (!files.length) {
     return;
   }
-  const { data } = await uploadMedia(file);
-  form.imageUrl = data.url;
-  imagePreview.value = resolveMediaUrl(data.url);
+  const remaining = MAX_IMAGE_COUNT - form.imageUrls.length;
+  if (remaining <= 0) {
+    errorMessage.value = `最多上传${MAX_IMAGE_COUNT}张图片`;
+    return;
+  }
+  const uploadList = files.slice(0, remaining);
+  for (const file of uploadList) {
+    if (!isAllowedImage(file)) {
+      errorMessage.value = "仅支持 jpeg/jpg/png/heif 图片格式";
+      continue;
+    }
+    if (!isFileSizeAllowed(file, uploadLimitConfig.mediaMaxMB)) {
+      errorMessage.value = `图片大小不可超过 ${mediaLimitLabel.value}`;
+      continue;
+    }
+    try {
+      const { data } = await uploadMedia(file);
+      if (data?.url) {
+        form.imageUrls.push(data.url);
+      }
+    } catch (err) {
+      errorMessage.value = err?.response?.data?.message || "图片上传失败";
+    }
+  }
+}
+
+async function onAttachmentChange(event) {
+  const files = Array.from(event.target.files || []);
+  event.target.value = "";
+  if (!files.length) {
+    return;
+  }
+  for (const file of files) {
+    if (!isAllowedAttachment(file)) {
+      errorMessage.value = "附件格式不支持";
+      continue;
+    }
+    if (!isFileSizeAllowed(file, uploadLimitConfig.attachmentMaxMB)) {
+      errorMessage.value = `附件大小不可超过 ${attachmentLimitLabel.value}`;
+      continue;
+    }
+    try {
+      const { data } = await uploadMedia(file);
+      if (data?.url) {
+        form.attachments.push({
+          url: data.url,
+          name: data.originalName || file.name,
+          mediaType: data.mediaType || resolveMediaTypeByExtension(file.name),
+        });
+      }
+    } catch (err) {
+      errorMessage.value = err?.response?.data?.message || "附件上传失败";
+    }
+  }
 }
 
 function resolveMediaUrl(url) {
@@ -1391,7 +1662,9 @@ function formatContestCategoryLine(fields = {}) {
 function formatContestMembers(fields = {}) {
   const peopleParts = [fields.studentName, fields.teamMembers].filter(Boolean);
   const people = peopleParts.length ? peopleParts.join("、") : "-";
-  const teachers = fields.instructors ? ` | 指导老师：${fields.instructors}` : "";
+  const teachers = fields.instructors
+    ? ` | 指导老师：${fields.instructors}`
+    : "";
   return `成员：${people}${teachers}`;
 }
 
@@ -1507,6 +1780,8 @@ function dedupeAchievements(list) {
 function normalizeAchievement(item) {
   const config = categoryFieldMap[item.category] || null;
   const fields = item.fields || {};
+  const imageUrls = resolveImageUrls(item);
+  const attachments = resolveAttachments(fields);
   const titleKey = config?.titleKey;
   const dateKey = config?.dateKey;
   const dateLabel =
@@ -1524,13 +1799,16 @@ function normalizeAchievement(item) {
     fields,
     fieldLines,
     previewFields: fieldLines.slice(0, 2),
-    image: resolveMediaUrl(item.imageUrl),
+    image: imageUrls[0] || "",
+    imageUrls,
+    attachments,
     category: item.category || "",
   };
 }
 
 function openDetail(item) {
   viewItem.value = item;
+  viewImageIndex.value = 0;
   viewOpen.value = true;
   viewClosing.value = false;
 }
@@ -1552,8 +1830,14 @@ function editFromView() {
   editId.value = item.id;
   form.category = item.category || "";
   form.fields = { ...(item.fields || {}) };
-  form.imageUrl = item.image ? item.image.replace(API_BASE, "") : "";
-  imagePreview.value = item.image || "";
+  form.imageUrls = (item.imageUrls || [])
+    .map((url) => stripMediaUrl(url))
+    .filter(Boolean);
+  form.imageUrl = form.imageUrls[0] || "";
+  form.attachments = (item.attachments || []).map((entry) => ({
+    ...entry,
+    url: stripMediaUrl(entry.url),
+  }));
   applyFieldDefaults();
   viewOpen.value = false;
   viewClosing.value = true;
@@ -1573,6 +1857,26 @@ function closeDelete() {
     return;
   }
   deleteDialogOpen.value = false;
+}
+
+function selectViewImage(index) {
+  viewImageIndex.value = index;
+}
+
+function selectEditorImage(index) {
+  if (index < 0 || index >= form.imageUrls.length) {
+    return;
+  }
+  const [selected] = form.imageUrls.splice(index, 1);
+  form.imageUrls.unshift(selected);
+}
+
+function removeImage(index) {
+  form.imageUrls.splice(index, 1);
+}
+
+function removeAttachment(index) {
+  form.attachments.splice(index, 1);
 }
 
 async function confirmDelete() {
@@ -1661,6 +1965,168 @@ function applyFieldDefaults() {
   }
   if (hasStudentName && !form.fields.studentName) {
     form.fields.studentName = getCurrentStudentName();
+  }
+}
+
+const MAX_IMAGE_COUNT = 3;
+const IMAGE_URLS_FIELD = "_imageUrls";
+const ATTACHMENTS_FIELD = "_attachments";
+const uploadLimitConfig = reactive({
+  mediaMaxMB: 10,
+  attachmentMaxMB: 50,
+});
+
+const mediaLimitLabel = computed(() =>
+  formatFileSize(uploadLimitConfig.mediaMaxMB),
+);
+const attachmentLimitLabel = computed(() =>
+  formatFileSize(uploadLimitConfig.attachmentMaxMB),
+);
+
+const imagePreviews = computed(() =>
+  (form.imageUrls || []).map((url) => resolveMediaUrl(url)),
+);
+const attachmentPreviews = computed(() =>
+  (form.attachments || []).map((file) => ({
+    ...file,
+    url: resolveMediaUrl(file.url),
+  })),
+);
+const viewActiveImage = computed(() => {
+  if (!viewItem.value?.imageUrls?.length) {
+    return "";
+  }
+  return viewItem.value.imageUrls[viewImageIndex.value] || "";
+});
+
+function setUploadLimits({ mediaMaxMB, attachmentMaxMB }) {
+  // Hook: adjust upload size display limits from outside if needed.
+  if (Number.isFinite(mediaMaxMB) && mediaMaxMB > 0) {
+    uploadLimitConfig.mediaMaxMB = mediaMaxMB;
+  }
+  if (Number.isFinite(attachmentMaxMB) && attachmentMaxMB > 0) {
+    uploadLimitConfig.attachmentMaxMB = attachmentMaxMB;
+  }
+}
+
+const attachmentIconMap = {
+  doc: "/assets/icons/doc.svg",
+  docx: "/assets/icons/doc.svg",
+  pdf: "/assets/icons/pdf.svg",
+  xls: "/assets/icons/excel.svg",
+  xlsx: "/assets/icons/excel.svg",
+  ppt: "/assets/icons/ppt.svg",
+  pptx: "/assets/icons/ppt.svg",
+  zip: "/assets/icons/zip.svg",
+  rar: "/assets/icons/zip.svg",
+  "7z": "/assets/icons/zip.svg",
+  mp4: "/assets/icons/video.svg",
+  mov: "/assets/icons/video.svg",
+  jpeg: "/assets/icons/image.svg",
+  jpg: "/assets/icons/image.svg",
+  png: "/assets/icons/image.svg",
+  heif: "/assets/icons/image.svg",
+};
+
+function attachmentIcon(file) {
+  const ext = resolveMediaTypeByExtension(file.name || file.url || "");
+  return attachmentIconMap[ext] || "/assets/icons/doc.svg";
+}
+
+function isAllowedImage(file) {
+  const ext = resolveMediaTypeByExtension(file.name || "");
+  return ["jpeg", "jpg", "png", "heif"].includes(ext);
+}
+
+function isAllowedAttachment(file) {
+  const ext = resolveMediaTypeByExtension(file.name || "");
+  return [
+    "docx",
+    "doc",
+    "pdf",
+    "xls",
+    "xlsx",
+    "zip",
+    "rar",
+    "7z",
+    "pptx",
+    "ppt",
+    "mp4",
+    "mov",
+    "jpeg",
+    "jpg",
+    "png",
+    "heif",
+  ].includes(ext);
+}
+
+function isFileSizeAllowed(file, limitMb) {
+  if (!Number.isFinite(limitMb)) {
+    return true;
+  }
+  return file.size / (1024 * 1024) <= limitMb;
+}
+
+function formatFileSize(value) {
+  return `${value}MB`;
+}
+
+function resolveMediaTypeByExtension(name = "") {
+  const cleanName = name.toLowerCase();
+  const parts = cleanName.split(".");
+  if (parts.length < 2) {
+    return "";
+  }
+  return parts.pop() || "";
+}
+
+function stripMediaUrl(url) {
+  if (!url) {
+    return "";
+  }
+  if (url.startsWith(API_BASE)) {
+    return url.replace(API_BASE, "");
+  }
+  return url;
+}
+
+function resolveImageUrls(item) {
+  const urls = [];
+  if (item?.imageUrl) {
+    urls.push(resolveMediaUrl(item.imageUrl));
+  }
+  const rawField = item?.fields?.[IMAGE_URLS_FIELD];
+  const parsed = parseJsonArray(rawField);
+  parsed.forEach((url) => {
+    const resolved = resolveMediaUrl(url);
+    if (resolved && !urls.includes(resolved)) {
+      urls.push(resolved);
+    }
+  });
+  return urls.slice(0, MAX_IMAGE_COUNT);
+}
+
+function resolveAttachments(fields = {}) {
+  const raw = fields[ATTACHMENTS_FIELD];
+  const parsed = parseJsonArray(raw);
+  return parsed
+    .map((item) => ({
+      url: resolveMediaUrl(item.url),
+      name: item.name || item.originalName || "附件",
+      mediaType: item.mediaType || "",
+    }))
+    .filter((item) => item.url);
+}
+
+function parseJsonArray(value) {
+  if (!value) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    return [];
   }
 }
 
