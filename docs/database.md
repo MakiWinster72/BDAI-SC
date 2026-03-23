@@ -238,6 +238,7 @@ users
 | dorm_room                     | varchar(64)  | YES  |     | NULL    |                | 宿舍房间                 |
 | enrollment_date               | date         | YES  |     | NULL    |                | 入学日期                 |
 | ethnicity                     | varchar(32)  | YES  |     | NULL    |                | 民族                     |
+| backup_contact                | varchar(128) | YES  |     | NULL    |                | 备用联系方式（QQ/邮箱） |
 | father_name                   | varchar(64)  | YES  |     | NULL    |                | 父亲姓名                 |
 | father_phone                  | varchar(32)  | YES  |     | NULL    |                | 父亲联系电话             |
 | father_title                  | varchar(64)  | YES  |     | NULL    |                | 父亲职务                 |
