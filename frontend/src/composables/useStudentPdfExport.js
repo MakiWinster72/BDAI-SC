@@ -348,6 +348,7 @@ export function useStudentPdfExport() {
         ["民族", student.ethnicity || ""],
         ["政治面貌", student.politicalStatus || ""],
         ["手机号码", student.phone || ""],
+        ["备用联系方式（QQ/邮箱）", student.backupContact || ""],
         ["身份证号", student.idNo || ""],
         ["籍贯", student.nativePlace || ""],
         ["住址", addressText || ""],

@@ -24,6 +24,7 @@ public class StudentProfileRequest {
     private String classTeacher;
     private String counselor;
     private String phone;
+    private String backupContact;
     private String address;
     private String idNo;
     private LocalDate birthDate;
@@ -219,6 +220,14 @@ public class StudentProfileRequest {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getBackupContact() {
+        return backupContact;
+    }
+
+    public void setBackupContact(String backupContact) {
+        this.backupContact = backupContact;
     }
 
     public String getAddress() {

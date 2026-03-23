@@ -178,14 +178,16 @@
             >
               {{ sheet.label }}
             </button>
-            <span v-if="gridLoading" class="student-grid-status">加载中...</span>
+            <span v-if="gridLoading" class="student-grid-status"
+              >加载中...</span
+            >
             <span v-else class="student-grid-status"
               >共 {{ gridActiveSheetData.rowData.length }} 条</span
             >
           </div>
         </section>
 
-      <section class="info-card student-results-card">
+        <section class="info-card student-results-card">
           <div v-if="!gridViewOpen" class="student-results-header">
             <div class="info-section-title">筛选结果</div>
             <div class="student-results-actions">
@@ -329,7 +331,11 @@
               <span>全选</span>
             </label>
           </div>
-          <button class="ghost-button" type="button" @click="closeGridFieldDialog">
+          <button
+            class="ghost-button"
+            type="button"
+            @click="closeGridFieldDialog"
+          >
             关闭
           </button>
         </header>
@@ -359,7 +365,10 @@
                     :key="field.key"
                     class="export-option"
                   >
-                    <input v-model="exportSelections[field.key]" type="checkbox" />
+                    <input
+                      v-model="exportSelections[field.key]"
+                      type="checkbox"
+                    />
                     <span>{{ field.label }}</span>
                   </label>
                 </div>
@@ -370,7 +379,10 @@
                   :key="field.key"
                   class="export-option"
                 >
-                  <input v-model="exportSelections[field.key]" type="checkbox" />
+                  <input
+                    v-model="exportSelections[field.key]"
+                    type="checkbox"
+                  />
                   <span>{{ field.label }}</span>
                 </label>
               </template>
@@ -517,6 +529,12 @@
                 <span class="info-label">手机号码</span>
                 <div class="info-input info-static">
                   {{ viewItem.phone || "-" }}
+                </div>
+              </div>
+              <div class="field-card">
+                <span class="info-label">备用联系方式（微信/QQ/邮箱）</span>
+                <div class="info-input info-static">
+                  {{ viewItem.backupContact || "-" }}
                 </div>
               </div>
               <div class="field-card">
@@ -1140,7 +1158,6 @@ const gridLocaleTextFunc = (key, defaultValue) => {
   return defaultValue;
 };
 
-
 const filters = reactive({
   classYear: "",
   major: "",
@@ -1177,6 +1194,7 @@ const exportGroups = [
       { key: "ethnicity", label: "民族" },
       { key: "politicalStatus", label: "政治面貌" },
       { key: "phone", label: "手机号码" },
+      { key: "backupContact", label: "备用联系方式（QQ/邮箱）" },
       { key: "idNo", label: "身份证号" },
       { key: "nativePlace", label: "籍贯" },
       { key: "address", label: "住址" },
@@ -1789,6 +1807,7 @@ const MAIN_FIELD_ORDER = [
   "ethnicity",
   "politicalStatus",
   "phone",
+  "backupContact",
   "idNo",
   "nativePlace",
   "address",
@@ -1831,6 +1850,10 @@ const MAIN_FIELD_META = {
     getter: (item) => item.politicalStatus || "",
   },
   phone: { label: "手机号码", getter: (item) => item.phone || "" },
+  backupContact: {
+    label: "备用联系方式（QQ/邮箱）",
+    getter: (item) => item.backupContact || "",
+  },
   idNo: { label: "身份证号", getter: (item) => item.idNo || "" },
   nativePlace: { label: "籍贯", getter: (item) => item.nativePlace || "" },
   address: { label: "住址", getter: (item) => item.address || "" },

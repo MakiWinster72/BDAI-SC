@@ -84,6 +84,9 @@ public class StudentProfile {
     @Column(name = "phone", length = 32)
     private String phone;
 
+    @Column(name = "backup_contact", length = 128)
+    private String backupContact;
+
     @Column(name = "address", length = 255)
     private String address;
 
@@ -353,6 +356,14 @@ public class StudentProfile {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getBackupContact() {
+        return backupContact;
+    }
+
+    public void setBackupContact(String backupContact) {
+        this.backupContact = backupContact;
     }
 
     public String getAddress() {

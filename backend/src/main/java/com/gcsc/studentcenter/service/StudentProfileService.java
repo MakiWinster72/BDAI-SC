@@ -84,6 +84,7 @@ public class StudentProfileService {
         profile.setClassTeacher(normalize(request.getClassTeacher()));
         profile.setCounselor(normalize(request.getCounselor()));
         profile.setPhone(normalize(request.getPhone()));
+        profile.setBackupContact(normalize(request.getBackupContact()));
         profile.setAddress(normalize(request.getAddress()));
         profile.setIdNo(normalize(request.getIdNo()));
         profile.setBirthDate(request.getBirthDate());
@@ -190,6 +191,7 @@ public class StudentProfileService {
             profile != null ? profile.getEthnicity() : null,
             profile != null ? profile.getPoliticalStatus() : null,
             profile != null ? profile.getPhone() : null,
+            profile != null ? profile.getBackupContact() : null,
             profile != null ? profile.getAddress() : null,
             profile != null ? profile.getIdNo() : null,
             profile != null ? profile.getBirthDate() : null,

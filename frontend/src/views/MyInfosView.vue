@@ -309,6 +309,16 @@
               />
             </label>
             <label class="field-card">
+              <span class="info-label">备用联系方式（微信/QQ/邮箱）</span>
+              <input
+                v-model="info.backupContact"
+                class="info-input"
+                type="text"
+                placeholder="请输入备用联系方式"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card">
               <span class="info-label">身份证件号</span>
               <input
                 v-model="info.idNo"
@@ -1174,6 +1184,7 @@ const info = reactive({
   classTeacher: "",
   counselor: "",
   phone: "",
+  backupContact: "",
   address: "",
   addressProvince: "",
   addressCity: "",
@@ -1845,6 +1856,7 @@ async function confirmEdit() {
     classTeacher: info.classTeacher,
     counselor: info.counselor,
     phone: info.phone,
+    backupContact: info.backupContact,
     address,
     idNo: info.idNo,
     birthDate: info.birthDate || null,
@@ -1985,6 +1997,7 @@ function buildPdfStudentSnapshot() {
     ethnicity: info.ethnicity,
     politicalStatus: info.politicalStatus,
     phone: info.phone,
+    backupContact: info.backupContact,
     idNo: info.idNo,
     birthDate: info.birthDate,
     nativePlace: info.nativePlace,
@@ -2168,6 +2181,7 @@ function applyProfileResponse(data) {
   info.classTeacher = data.classTeacher || "";
   info.counselor = data.counselor || "";
   info.phone = data.phone || "";
+  info.backupContact = data.backupContact || "";
   info.address = data.address || "";
   const parsedAddress = parseAddressToRegion(info.address);
   info.addressProvince = parsedAddress.province;

@@ -20,6 +20,7 @@ public class StudentProfileResponse {
     private String ethnicity;
     private String politicalStatus;
     private String phone;
+    private String backupContact;
     private String address;
     private String idNo;
     private LocalDate birthDate;
@@ -81,6 +82,7 @@ public class StudentProfileResponse {
         String ethnicity,
         String politicalStatus,
         String phone,
+        String backupContact,
         String address,
         String idNo,
         LocalDate birthDate,
@@ -141,6 +143,7 @@ public class StudentProfileResponse {
         this.ethnicity = ethnicity;
         this.politicalStatus = politicalStatus;
         this.phone = phone;
+        this.backupContact = backupContact;
         this.address = address;
         this.idNo = idNo;
         this.birthDate = birthDate;
@@ -248,6 +251,10 @@ public class StudentProfileResponse {
 
     public String getPhone() {
         return phone;
+    }
+
+    public String getBackupContact() {
+        return backupContact;
     }
 
     public String getAddress() {
