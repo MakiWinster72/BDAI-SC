@@ -864,6 +864,116 @@
         </div>
 
         <div class="info-card">
+          <div class="info-section-title">学生干部经历</div>
+          <div ref="cadreTableWrap" class="education-table-wrap">
+            <table class="education-table education-table-three">
+              <thead>
+                <tr>
+                  <th>时间段</th>
+                  <th>部门/班级</th>
+                  <th>职位</th>
+                </tr>
+              </thead>
+              <transition-group name="education-row" tag="tbody">
+                <template
+                  v-for="(item, index) in cadreItems"
+                  :key="`cadre-${index}`"
+                >
+                  <tr>
+                    <td>
+                      <div class="education-period">
+                        <input
+                          v-model="item.startDate"
+                          class="info-input"
+                          type="date"
+                          lang="zh-CN"
+                          :max="today"
+                          :disabled="isCadreRowDisabled(index)"
+                        />
+                        <span class="education-sep">至</span>
+                        <input
+                          v-model="item.endDate"
+                          class="info-input"
+                          type="date"
+                          lang="zh-CN"
+                          :max="today"
+                          :disabled="
+                            isCadreRowDisabled(index) || item.isCurrent
+                          "
+                        />
+                        <label class="info-choice info-choice-muted">
+                          <input
+                            v-model="item.isCurrent"
+                            type="checkbox"
+                            :disabled="
+                              isCadreRowDisabled(index) ||
+                              isCadreCurrentDisabled(item)
+                            "
+                            @change="handleCadreCurrentChange(item, index)"
+                          />
+                          至今
+                        </label>
+                      </div>
+                    </td>
+                    <td>
+                      <input
+                        v-model="item.department"
+                        class="info-input"
+                        type="text"
+                        placeholder="部门/班级"
+                        :disabled="isCadreRowDisabled(index)"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        v-model="item.position"
+                        class="info-input"
+                        type="text"
+                        placeholder="职位"
+                        :disabled="isCadreRowDisabled(index)"
+                      />
+                    </td>
+                  </tr>
+                  <tr class="education-row-full">
+                    <td class="education-cell-full" colspan="3">
+                      <textarea
+                        v-model="item.description"
+                        class="info-input"
+                        rows="2"
+                        placeholder="简述你在该职位的职责/成就"
+                        :disabled="isCadreRowDisabled(index)"
+                      ></textarea>
+                    </td>
+                  </tr>
+                </template>
+              </transition-group>
+            </table>
+            <div class="education-controls-wrap">
+              <div class="education-controls">
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing"
+                  aria-label="增加一行"
+                  @click="addCadreRow"
+                >
+                  +
+                </button>
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing || cadreItems.length <= 1"
+                  aria-label="减少一行"
+                  @click="removeCadreRow"
+                >
+                  −
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
           <!-- TODO: 单亲/离异等待现场演示求助 -->
           <div class="info-section-title">家庭信息</div>
           <div class="info-form-grid family-grid">
@@ -1038,6 +1148,7 @@ const avatarInput = ref(null);
 const sidebarOpen = ref(false);
 const achievementsOpen = ref(false);
 const educationTableWrap = ref(null);
+const cadreTableWrap = ref(null);
 const today = getTodayString();
 
 const info = reactive({
@@ -1158,6 +1269,7 @@ const dormBuildingOptions = computed(() => {
 const educationItems = reactive(
   Array.from({ length: 5 }, () => createEducationItem()),
 );
+const cadreItems = reactive(Array.from({ length: 5 }, () => createCadreItem()));
 
 function getTodayString() {
   const now = new Date();
@@ -1172,6 +1284,17 @@ function createEducationItem() {
     schoolName: "",
     educationLevel: "",
     witness: "",
+    isCurrent: false,
+  };
+}
+
+function createCadreItem() {
+  return {
+    startDate: "",
+    endDate: "",
+    department: "",
+    position: "",
+    description: "",
     isCurrent: false,
   };
 }
@@ -1191,8 +1314,48 @@ async function removeEducationRow() {
   });
 }
 
+async function addCadreRow() {
+  await animateCadreHeightWithUpdate(() => {
+    cadreItems.push(createCadreItem());
+  });
+}
+
+async function removeCadreRow() {
+  if (cadreItems.length <= 1) {
+    return;
+  }
+  await animateCadreHeightWithUpdate(() => {
+    cadreItems.pop();
+  });
+}
+
 async function animateEducationHeightWithUpdate(updateFn) {
   const el = educationTableWrap.value;
+  if (!el) {
+    updateFn();
+    return;
+  }
+  const startHeight = el.getBoundingClientRect().height;
+  updateFn();
+  await nextTick();
+  const targetHeight = el.getBoundingClientRect().height;
+  el.style.height = `${startHeight}px`;
+  el.style.overflow = "hidden";
+  requestAnimationFrame(() => {
+    el.style.transition = "height 260ms ease";
+    el.style.height = `${targetHeight}px`;
+  });
+  const cleanup = () => {
+    el.style.height = "";
+    el.style.transition = "";
+    el.style.overflow = "";
+    el.removeEventListener("transitionend", cleanup);
+  };
+  el.addEventListener("transitionend", cleanup);
+}
+
+async function animateCadreHeightWithUpdate(updateFn) {
+  const el = cadreTableWrap.value;
   if (!el) {
     updateFn();
     return;
@@ -1297,6 +1460,12 @@ const hasEducationCurrent = computed(() =>
 const currentEducationIndex = computed(() =>
   educationItems.findIndex((entry) => entry.isCurrent),
 );
+const hasCadreCurrent = computed(() =>
+  cadreItems.some((entry) => entry.isCurrent),
+);
+const currentCadreIndex = computed(() =>
+  cadreItems.findIndex((entry) => entry.isCurrent),
+);
 
 async function handleEducationCurrentChange(item, index) {
   if (item.isCurrent) {
@@ -1308,11 +1477,28 @@ async function handleEducationCurrentChange(item, index) {
   }
 }
 
+async function handleCadreCurrentChange(item, index) {
+  if (item.isCurrent) {
+    item.endDate = "";
+    await animateCadreHeightWithUpdate(() => {
+      clearCadreRowsAfter(index);
+      pruneCadreRowsAfter(index);
+    });
+  }
+}
+
 function isEducationCurrentDisabled(item) {
   if (item.isCurrent) {
     return false;
   }
   return hasEducationCurrent.value;
+}
+
+function isCadreCurrentDisabled(item) {
+  if (item.isCurrent) {
+    return false;
+  }
+  return hasCadreCurrent.value;
 }
 
 function isEducationRowDisabled(index) {
@@ -1323,6 +1509,14 @@ function isEducationRowDisabled(index) {
   return currentIndex !== -1 && index > currentIndex;
 }
 
+function isCadreRowDisabled(index) {
+  if (!isEditing.value) {
+    return true;
+  }
+  const currentIndex = currentCadreIndex.value;
+  return currentIndex !== -1 && index > currentIndex;
+}
+
 function clearEducationRowsAfter(index) {
   educationItems.slice(index + 1).forEach((entry) => {
     entry.startDate = "";
@@ -1330,6 +1524,17 @@ function clearEducationRowsAfter(index) {
     entry.schoolName = "";
     entry.educationLevel = "";
     entry.witness = "";
+    entry.isCurrent = false;
+  });
+}
+
+function clearCadreRowsAfter(index) {
+  cadreItems.slice(index + 1).forEach((entry) => {
+    entry.startDate = "";
+    entry.endDate = "";
+    entry.department = "";
+    entry.position = "";
+    entry.description = "";
     entry.isCurrent = false;
   });
 }
@@ -1349,6 +1554,21 @@ function pruneEducationRowsAfter(index) {
   }
 }
 
+function pruneCadreRowsAfter(index) {
+  if (cadreItems.length <= index + 1) {
+    return;
+  }
+  const kept = cadreItems.slice(0, index + 1);
+  cadreItems.slice(index + 1).forEach((entry) => {
+    if (!isCadreRowEmpty(entry)) {
+      kept.push(entry);
+    }
+  });
+  if (kept.length !== cadreItems.length) {
+    cadreItems.splice(0, cadreItems.length, ...kept);
+  }
+}
+
 function isEducationRowEmpty(entry) {
   return (
     !entry.startDate &&
@@ -1356,6 +1576,17 @@ function isEducationRowEmpty(entry) {
     !entry.schoolName &&
     !entry.educationLevel &&
     !entry.witness &&
+    !entry.isCurrent
+  );
+}
+
+function isCadreRowEmpty(entry) {
+  return (
+    !entry.startDate &&
+    !entry.endDate &&
+    !entry.department &&
+    !entry.position &&
+    !entry.description &&
     !entry.isCurrent
   );
 }
@@ -1583,6 +1814,16 @@ async function confirmEdit() {
       witness: item.witness,
       isCurrent: item.isCurrent,
     }));
+  const cadreExperiences = cadreItems
+    .filter((item) => !isCadreRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      department: item.department,
+      position: item.position,
+      description: item.description,
+      isCurrent: item.isCurrent,
+    }));
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
@@ -1637,6 +1878,7 @@ async function confirmEdit() {
     motherWorkUnit: info.motherWorkUnit,
     motherTitle: info.motherTitle,
     educationExperiences,
+    cadreExperiences,
   };
   if (info.offCampusLiving) {
     payload.dormCampus = null;
@@ -1718,6 +1960,16 @@ function buildPdfStudentSnapshot() {
       witness: item.witness,
       isCurrent: item.isCurrent,
     }));
+  const cadreExperiences = cadreItems
+    .filter((item) => !isCadreRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      department: item.department,
+      position: item.position,
+      description: item.description,
+      isCurrent: item.isCurrent,
+    }));
   return {
     fullName: studentName,
     studentNo,
@@ -1771,6 +2023,7 @@ function buildPdfStudentSnapshot() {
     fullMemberDate: info.fullMemberDate,
     fullMemberDeveloping: info.fullMemberDeveloping,
     educationExperiences,
+    cadreExperiences,
     avatarUrl: info.avatarUrl,
   };
 }
@@ -1953,6 +2206,7 @@ function applyProfileResponse(data) {
   info.motherWorkUnit = data.motherWorkUnit || "";
   info.motherTitle = data.motherTitle || "";
   applyEducationExperiences(data.educationExperiences);
+  applyCadreExperiences(data.cadreExperiences);
 
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;
@@ -1979,6 +2233,23 @@ function applyEducationExperiences(rawItems) {
     filtered.push(createEducationItem());
   }
   educationItems.splice(0, educationItems.length, ...filtered);
+}
+
+function applyCadreExperiences(rawItems) {
+  const nextItems = Array.isArray(rawItems) ? rawItems : [];
+  const normalized = nextItems.map((item) => ({
+    startDate: item?.startDate || "",
+    endDate: item?.isCurrent ? "" : item?.endDate || "",
+    department: item?.department || "",
+    position: item?.position || "",
+    description: item?.description || "",
+    isCurrent: Boolean(item?.isCurrent),
+  }));
+  const filtered = normalized.filter((item) => !isCadreRowEmpty(item));
+  if (!filtered.length) {
+    filtered.push(createCadreItem());
+  }
+  cadreItems.splice(0, cadreItems.length, ...filtered);
 }
 
 function saveUser(data) {

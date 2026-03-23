@@ -1921,6 +1921,10 @@ body {
     minmax(120px, 1fr);
 }
 
+.education-table.education-table-three {
+  --edu-cols: minmax(240px, 1.6fr) minmax(160px, 1.4fr) minmax(140px, 1fr);
+}
+
 .education-table thead {
   display: block;
 }
@@ -1958,6 +1962,22 @@ body {
 
 .education-table tbody tr:nth-child(even) {
   background: rgba(3, 107, 114, 0.03);
+}
+
+.education-row-full {
+  grid-template-columns: 1fr;
+}
+
+.education-row-full .education-cell-full {
+  grid-column: 1 / -1;
+}
+
+.education-row-full .info-input {
+  height: auto;
+  min-height: 76px;
+  padding: 8px 12px;
+  line-height: 1.4;
+  resize: vertical;
 }
 
 .education-row-enter-active,
@@ -2956,5 +2976,29 @@ body {
 
   .family-grid {
     grid-template-columns: 1fr;
+  }
+
+  .education-table {
+    min-width: 100%;
+  }
+
+  .education-controls-wrap {
+    min-width: 100%;
+  }
+
+  .education-period {
+    flex-wrap: wrap;
+  }
+
+  .education-period .info-input {
+    flex: 1 1 140px;
+  }
+
+  .info-inline-date {
+    flex-wrap: wrap;
+  }
+
+  .info-inline-date .info-input {
+    min-width: 0;
   }
 }
