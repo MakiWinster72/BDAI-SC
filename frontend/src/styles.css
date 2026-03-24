@@ -1025,6 +1025,8 @@ body {
   border: 1px solid rgba(3, 107, 114, 0.16);
   background: rgba(255, 255, 255, 0.85);
   box-shadow: 0 14px 34px rgba(3, 107, 114, 0.12);
+  position: sticky;
+  top: 16px;
 }
 
 .media-header {
@@ -3218,6 +3220,10 @@ body {
 
   .achievement-grid {
     grid-template-columns: 1fr;
+  }
+
+  .achievement-media-panel {
+    position: static;
   }
 
   .achievement-card {

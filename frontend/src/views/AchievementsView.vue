@@ -700,7 +700,7 @@
             <div class="achievement-attachments-panel">
               <div class="media-header">
                 <div>
-                  <div class="media-title">附件</div>
+                  <div class="media-title">附件(可选)</div>
                   <div class="media-subtitle">支持多文件</div>
                 </div>
               </div>
