@@ -1038,6 +1038,8 @@ const achievementEntries = [
   { key: "certificate", label: "职业资格证书" },
   { key: "research", label: "学生参与教师科研项目情况" },
   { key: "works", label: "创作、表演的代表性作品" },
+  { key: "doubleHundred", label: "双百工程" },
+  { key: "ieerTraining", label: "大学生创新创业训练计划项目" },
 ];
 
 const activeCategoryIndex = computed(() => {
@@ -1382,6 +1384,138 @@ const categoryFieldMap = {
         kind: "textarea",
         rows: 2,
         placeholder: "补充说明",
+      },
+    ],
+  },
+  doubleHundred: {
+    titleKey: "projectName",
+    dateKey: "projectDate",
+    fields: [
+      {
+        key: "projectCategory",
+        label: "项目类别",
+        kind: "input",
+        placeholder: "请输入项目类别",
+      },
+      {
+        key: "projectDomain",
+        label: "项目所属领域",
+        kind: "input",
+        placeholder: "请输入项目所属领域",
+      },
+      {
+        key: "projectName",
+        label: "申报作品名",
+        kind: "input",
+        placeholder: "请输入申报作品名",
+      },
+      {
+        key: "projectLeader",
+        label: "项目负责人",
+        kind: "input",
+        placeholder: "请输入项目负责人",
+      },
+      {
+        key: "leaderStudentNo",
+        label: "负责人学号",
+        kind: "input",
+        placeholder: "请输入负责人学号",
+      },
+      {
+        key: "educationLevel",
+        label: "本科/研究生",
+        kind: "input",
+        placeholder: "请输入本科或研究生",
+      },
+      {
+        key: "teamMembers",
+        label: "项目其他成员",
+        kind: "input",
+        placeholder: "请输入项目其他成员",
+      },
+      {
+        key: "instructors",
+        label: "指导老师（全体）",
+        kind: "input",
+        placeholder: "请输入指导老师",
+      },
+      {
+        key: "teamSize",
+        label: "项目人数",
+        kind: "input",
+        placeholder: "请输入项目人数",
+      },
+      {
+        key: "plannedLevel",
+        label: "拟立项等级",
+        kind: "input",
+        placeholder: "请输入拟立项等级",
+      },
+      {
+        key: "college",
+        label: "学院",
+        kind: "input",
+        placeholder: "请输入学院",
+      },
+      {
+        key: "finalLevel",
+        label: "结项等级",
+        kind: "input",
+        placeholder: "优秀/良好/合格/不合格",
+      },
+    ],
+  },
+  ieerTraining: {
+    titleKey: "projectName",
+    dateKey: "projectDate",
+    fields: [
+      {
+        key: "collegeName",
+        label: "学院名称",
+        kind: "input",
+        placeholder: "请输入学院名称",
+      },
+      {
+        key: "projectName",
+        label: "项目名称",
+        kind: "input",
+        placeholder: "请输入项目名称",
+      },
+      {
+        key: "projectType",
+        label: "项目类型",
+        kind: "input",
+        placeholder: "请输入项目类型",
+      },
+      {
+        key: "projectLeader",
+        label: "项目负责人姓名",
+        kind: "input",
+        placeholder: "请输入项目负责人姓名",
+      },
+      {
+        key: "instructorName",
+        label: "指导教师姓名",
+        kind: "input",
+        placeholder: "请输入指导教师姓名",
+      },
+      {
+        key: "recommendedLevel",
+        label: "推荐项目级别",
+        kind: "input",
+        placeholder: "请输入推荐项目级别",
+      },
+      {
+        key: "isKeyArea",
+        label: "是否推荐为重点领域支持项目",
+        kind: "input",
+        placeholder: "是/否",
+      },
+      {
+        key: "finalStatus",
+        label: "结项情况",
+        kind: "input",
+        placeholder: "优秀/通过/延期结项/终止项目",
       },
     ],
   },
