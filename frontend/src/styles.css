@@ -1961,7 +1961,6 @@ body {
   font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
-  margin-top: 4px;
 }
 
 .detail-badges {
@@ -1969,6 +1968,7 @@ body {
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 4px;
+  align-items: center;
 }
 
 .detail-type-badge {
