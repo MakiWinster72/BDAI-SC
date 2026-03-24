@@ -12,6 +12,7 @@
     "ag-grid-community": "^31.3.2",
     "ag-grid-vue3": "^31.3.2",
     "axios": "^1.7.7",
+    "docx-preview": "^0.3.7",
     "element-china-area-data": "^6.1.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",

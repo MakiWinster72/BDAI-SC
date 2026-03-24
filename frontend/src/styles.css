@@ -1296,6 +1296,28 @@ body {
   text-decoration: underline;
 }
 
+.attachment-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(3, 107, 114, 0.08);
+  color: #0a5c66;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.attachment-download:hover {
+  background: rgba(3, 107, 114, 0.15);
+  color: #036b72;
+  transform: translateY(-1px);
+}
+
 .achievement-fields {
   display: grid;
   gap: 12px;
@@ -3713,6 +3735,353 @@ body {
 
 .viewer-video {
   background: #000;
+}
+
+.viewer-document {
+  width: 92vw;
+  max-width: 1100px;
+  height: 85vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.4),
+    0 48px 100px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewer-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #5b717a;
+  font-size: 14px;
+}
+
+.viewer-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(3, 107, 114, 0.15);
+  border-top-color: #036b72;
+  border-radius: 50%;
+  animation: viewer-spin 0.8s linear infinite;
+}
+
+@keyframes viewer-spin {
+  to { transform: rotate(360deg); }
+}
+
+.viewer-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  background: #fff;
+  min-height: 0;
+}
+
+.viewer-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.viewer-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(250, 172, 44, 0.12);
+  border-bottom: 1px solid rgba(250, 172, 44, 0.25);
+  color: #935500;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* PPTX notice */
+.viewer-pptx-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.pptx-icon {
+  font-size: 64px;
+  opacity: 0.6;
+}
+
+.pptx-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0d3f45;
+}
+
+.pptx-hint {
+  font-size: 13px;
+  color: #5b717a;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.pptx-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: #036b72;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.pptx-download-btn:hover {
+  background: #04555d;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(3, 107, 114, 0.25);
+  text-decoration: none;
+  color: #fff;
+}
+
+/* PDF styles */
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.4),
+    0 48px 100px rgba(0, 0, 0, 0.3);
+}
+
+.viewer-doc-full {
+  width: 92vw;
+  max-width: 1100px;
+  height: 85vh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.viewer-doc-full .viewer-content-wrapper {
+  padding: 0;
+}
+
+.viewer-content-full {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.viewer-content-full .pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pdf-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #5b717a;
+  text-align: center;
+}
+
+.pdf-error-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.pdf-error-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3a4a50;
+}
+
+.pdf-error-hint {
+  font-size: 13px;
+  color: #7a8a90;
+}
+
+/* Document styles */
+.docx-container {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #1a1a1a;
+}
+
+.docx-container p {
+  margin: 0 0 12px;
+}
+
+.docx-container h1,
+.docx-container h2,
+.docx-container h3,
+.docx-container h4 {
+  margin: 16px 0 8px;
+  font-weight: 700;
+  color: #0d3f45;
+}
+
+.docx-container table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.docx-container td,
+.docx-container th {
+  border: 1px solid #d0d0d0;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.docx-container th {
+  background: rgba(3, 107, 114, 0.08);
+  font-weight: 700;
+}
+
+.docx-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #5b717a;
+  text-align: center;
+}
+
+.docx-error-icon,
+.sheet-error-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.docx-error-text,
+.sheet-error-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3a4a50;
+}
+
+.docx-error-hint,
+.sheet-error-hint {
+  font-size: 13px;
+  color: #7a8a90;
+}
+
+/* Sheet styles */
+.sheet-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+}
+
+.sheet-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(3, 107, 114, 0.12);
+  background: rgba(3, 107, 114, 0.03);
+  overflow-x: auto;
+}
+
+.sheet-tab {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b717a;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.sheet-tab:hover {
+  background: rgba(3, 107, 114, 0.08);
+  color: #036b72;
+}
+
+.sheet-tab.active {
+  background: #036b72;
+  color: #fff;
+}
+
+.sheet-content {
+  flex: 1;
+  overflow: auto;
+}
+
+.sheet-table-wrapper {
+  padding: 16px;
+  overflow: auto;
+}
+
+.sheet-table-wrapper table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+.sheet-table-wrapper td,
+.sheet-table-wrapper th {
+  border: 1px solid #d8e0e3;
+  padding: 6px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sheet-table-wrapper th {
+  background: rgba(3, 107, 114, 0.08);
+  font-weight: 700;
+  color: #0d3f45;
+  position: sticky;
+  top: 0;
+}
+
+.sheet-table-wrapper tr:nth-child(even) {
+  background: rgba(3, 107, 114, 0.03);
+}
+
+.sheet-footer {
+  padding: 8px 16px;
+  border-top: 1px solid rgba(3, 107, 114, 0.12);
+  font-size: 12px;
+  color: #7a8a90;
+  background: rgba(3, 107, 114, 0.03);
+}
+
+.sheet-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #5b717a;
+  text-align: center;
 }
 
 .viewer-dots {

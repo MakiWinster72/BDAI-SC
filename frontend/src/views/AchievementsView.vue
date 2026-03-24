@@ -684,20 +684,33 @@
                   <img :src="attachmentIcon(file)" alt="" />
                   <div class="attachment-name">{{ file.name }}</div>
                   <button
-                    v-if="isVideoFile(file)"
+                    v-if="isVideoFile(file) || isDocumentFile(file) || isSheetFile(file) || isPdfFile(file)"
                     class="attachment-link"
                     @click="showPreview([file.url], 0)"
                   >
-                    查看
+                    预览
                   </button>
                   <a
-                    v-else
+                    v-else-if="!isPptxFile(file)"
                     class="attachment-link"
                     :href="file.url"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     查看
+                  </a>
+                  <a
+                    class="attachment-download"
+                    :href="file.url"
+                    download
+                    rel="noopener noreferrer"
+                    title="下载"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
                   </a>
                 </div>
               </div>
@@ -970,12 +983,41 @@
               <Transition :name="'slide-' + slideDirection" mode="out-in">
                 <div class="viewer-media" :key="previewIndex">
                   <video
-                    v-if="isMediaVideo(previewImages[previewIndex])"
+                    v-if="previewType === 'video'"
                     :src="previewImages[previewIndex]"
                     class="viewer-video"
                     controls
                     autoplay
                   ></video>
+                  <div
+                    v-else-if="previewType === 'document' || previewType === 'sheet' || previewType === 'pdf'"
+                    class="viewer-document"
+                    :class="{ 'viewer-doc-full': previewType === 'pdf' }"
+                  >
+                    <div v-if="previewLoading" class="viewer-loading">
+                      <div class="viewer-spinner"></div>
+                      <span>加载中...</span>
+                    </div>
+                    <div v-else class="viewer-content-wrapper">
+                      <div v-if="previewType === 'document'" class="viewer-tip">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="12" y1="16" x2="12" y2="12"></line>
+                          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        因渲染限制，预览与实际文件可能存在样式差异
+                      </div>
+                      <div v-if="previewType === 'sheet'" class="viewer-tip">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="12" y1="16" x2="12" y2="12"></line>
+                          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        点击工作表标签可切换Sheet | 因渲染限制，预览与实际可能存在差异
+                      </div>
+                      <div v-html="previewContent" class="viewer-content" :class="{ 'viewer-content-full': previewType === 'pdf' }"></div>
+                    </div>
+                  </div>
                   <img
                     v-else
                     :src="previewImages[previewIndex]"
@@ -1057,7 +1099,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import {
@@ -1067,6 +1109,9 @@ import {
   updateAchievement,
 } from "../api/achievements";
 import { uploadMedia } from "../api/upload";
+import { renderDocx } from "../utils/docxRenderer";
+import { renderSheet } from "../utils/sheetRenderer";
+import { renderPdf } from "../utils/pdfRenderer";
 import { API_BASE } from "../api/request";
 
 const router = useRouter();
@@ -1091,12 +1136,34 @@ const activeCategory = ref("all");
 const previewImages = ref([]);
 const previewIndex = ref(0);
 const previewVisible = ref(false);
+const previewType = ref("image");
+const previewContent = ref("");
+const previewLoading = ref(false);
+const previewWorkbook = ref(null);
 const slideDirection = ref("right");
 
 function isMediaVideo(url) {
   if (!url) return false;
   const ext = resolveMediaTypeByExtension(url);
   return ["mp4", "mov", "webm"].includes(ext);
+}
+
+function isMediaDocument(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["doc", "docx"].includes(ext);
+}
+
+function isMediaSheet(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["xls", "xlsx"].includes(ext);
+}
+
+function isMediaPdf(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["pdf"].includes(ext);
 }
 
 const achievements = ref([]);
@@ -2250,11 +2317,131 @@ function isVideoFile(file) {
   return ["mp4", "mov"].includes(ext);
 }
 
+function isDocumentFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["doc", "docx"].includes(ext);
+}
+
+function isSheetFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["xls", "xlsx"].includes(ext);
+}
+
+function isPdfFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["pdf"].includes(ext);
+}
+
+function isPptxFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["ppt", "pptx"].includes(ext);
+}
+
 function showPreview(urls, index = 0) {
   previewImages.value = urls;
   previewIndex.value = index;
   previewVisible.value = true;
   document.body.style.overflow = 'hidden';
+  previewContent.value = "";
+  previewLoading.value = false;
+  // Detect media type
+  if (urls.length > 0) {
+    const url = urls[index];
+    if (isMediaVideo(url)) {
+      previewType.value = "video";
+    } else if (isMediaDocument(url)) {
+      previewType.value = "document";
+      loadDocumentPreview(url);
+    } else if (isMediaSheet(url)) {
+      previewType.value = "sheet";
+      loadSheetPreview(url);
+    } else if (isMediaPdf(url)) {
+      previewType.value = "pdf";
+      loadPdfPreview(url);
+    } else {
+      previewType.value = "image";
+    }
+  }
+}
+
+async function loadDocumentPreview(url) {
+  previewLoading.value = true;
+  try {
+    const html = await renderDocx(url);
+    previewContent.value = html;
+  } catch (e) {
+    previewContent.value = `<div class="docx-error"><div>加载失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+async function loadSheetPreview(url) {
+  previewLoading.value = true;
+  try {
+    const result = await renderSheet(url);
+    previewContent.value = result.html;
+    // Store workbook for sheet switching
+    if (result.workbook) {
+      previewWorkbook.value = result.workbook;
+    }
+  } catch (e) {
+    previewContent.value = `<div class="sheet-error"><div>加载失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+async function loadPdfPreview(url) {
+  previewLoading.value = true;
+  try {
+    const html = await renderPdf(url);
+    previewContent.value = html;
+  } catch (e) {
+    previewContent.value = `<div class="pdf-error"><div>加载失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+async function switchSheet(sheetIndex) {
+  if (!previewWorkbook.value) return;
+  previewLoading.value = true;
+  try {
+    const XLSX = await import("xlsx");
+    const sheetNames = previewWorkbook.value.SheetNames;
+    const sheet = previewWorkbook.value.Sheets[sheetNames[sheetIndex]];
+    const html = XLSX.utils.sheet_to_html(sheet, {
+      header: true,
+      footer: false,
+      editable: false,
+    });
+    // Build new tabs
+    const tabs = sheetNames.map((name, i) => `
+      <div class="sheet-tab ${i === sheetIndex ? 'active' : ''}" onclick="window.__switchSheet(${i})">
+        ${name}
+      </div>
+    `).join('');
+    previewContent.value = `
+      <div class="sheet-container">
+        <div class="sheet-tabs">${tabs}</div>
+        <div class="sheet-content">
+          <div class="sheet-table-wrapper">${html}</div>
+        </div>
+        <div class="sheet-footer">
+          <span>${sheetNames.length} 个工作表</span>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    previewContent.value = `<div class="sheet-error"><div>切换失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
 }
 
 function hidePreview() {
@@ -2548,6 +2735,10 @@ function parseJsonArray(value) {
 onMounted(() => {
   syncCategoryFromRoute();
   fetchAchievements();
+  // Expose sheet switcher globally for v-html content
+  window.__switchSheet = (index) => {
+    switchSheet(index);
+  };
 });
 
 watch(
@@ -2564,4 +2755,24 @@ watch(
     applyFieldDefaults();
   },
 );
+
+// Delegate sheet tab clicks after content renders
+watch(previewContent, () => {
+  if (previewType.value === 'sheet') {
+    nextTick(() => {
+      const container = document.querySelector(".viewer-document");
+      if (container) {
+        container.onclick = (e) => {
+          const tab = e.target.closest(".sheet-tab");
+          if (tab) {
+            const idx = parseInt(tab.dataset.sheet, 10);
+            if (!isNaN(idx)) {
+              switchSheet(idx);
+            }
+          }
+        };
+      }
+    });
+  }
+});
 </script>
