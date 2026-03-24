@@ -372,6 +372,7 @@
               class="media-single-img"
               :src="viewItem.imageUrls[0]"
               alt="成就图片"
+              @click="showPreview(viewItem.imageUrls, 0)"
             />
           </div>
 
@@ -379,10 +380,10 @@
             v-else-if="viewItem.imageUrls.length === 2"
             class="achievement-view-media achievement-view-media-2"
           >
-            <div class="media-2-cell">
+            <div class="media-2-cell" @click="showPreview(viewItem.imageUrls, 0)">
               <img :src="viewItem.imageUrls[0]" alt="成就图片" />
             </div>
-            <div class="media-2-cell">
+            <div class="media-2-cell" @click="showPreview(viewItem.imageUrls, 1)">
               <img :src="viewItem.imageUrls[1]" alt="成就图片" />
             </div>
           </div>
@@ -392,13 +393,13 @@
             class="achievement-view-media achievement-view-media-3"
           >
             <div class="media-3-grid">
-              <div class="media-3-cell media-3-top-left">
+              <div class="media-3-cell media-3-top-left" @click="showPreview(viewItem.imageUrls, 0)">
                 <img :src="viewItem.imageUrls[0]" alt="成就图片" />
               </div>
-              <div class="media-3-cell media-3-top-right">
+              <div class="media-3-cell media-3-top-right" @click="showPreview(viewItem.imageUrls, 1)">
                 <img :src="viewItem.imageUrls[1]" alt="成就图片" />
               </div>
-              <div class="media-3-cell media-3-bottom">
+              <div class="media-3-cell media-3-bottom" @click="showPreview(viewItem.imageUrls, 2)">
                 <img :src="viewItem.imageUrls[2]" alt="成就图片" />
               </div>
             </div>
@@ -682,7 +683,15 @@
                 >
                   <img :src="attachmentIcon(file)" alt="" />
                   <div class="attachment-name">{{ file.name }}</div>
+                  <button
+                    v-if="isVideoFile(file)"
+                    class="attachment-link"
+                    @click="showPreview([file.url], 0)"
+                  >
+                    查看
+                  </button>
                   <a
+                    v-else
                     class="attachment-link"
                     :href="file.url"
                     target="_blank"
@@ -929,6 +938,77 @@
         </div>
       </section>
 
+      <!-- Media Preview -->
+      <Teleport to="body">
+        <Transition name="viewer" appear>
+          <div v-if="previewVisible" class="viewer-backdrop" @click="hidePreview">
+            <div class="viewer-header" @click.stop>
+              <div class="viewer-counter">
+                <span class="viewer-current">{{ previewIndex + 1 }}</span>
+                <span class="viewer-sep">/</span>
+                <span class="viewer-total">{{ previewImages.length }}</span>
+              </div>
+              <button class="viewer-close" @click="hidePreview">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="viewer-stage" @click.stop>
+              <button
+                v-if="previewImages.length > 1 && previewIndex > 0"
+                class="viewer-arrow viewer-prev"
+                @click="previewPrev"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+
+              <Transition :name="'slide-' + slideDirection" mode="out-in">
+                <div class="viewer-media" :key="previewIndex">
+                  <video
+                    v-if="isMediaVideo(previewImages[previewIndex])"
+                    :src="previewImages[previewIndex]"
+                    class="viewer-video"
+                    controls
+                    autoplay
+                  ></video>
+                  <img
+                    v-else
+                    :src="previewImages[previewIndex]"
+                    class="viewer-image"
+                    alt=""
+                  />
+                </div>
+              </Transition>
+
+              <button
+                v-if="previewImages.length > 1 && previewIndex < previewImages.length - 1"
+                class="viewer-arrow viewer-next"
+                @click="previewNext"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            <div class="viewer-dots" v-if="previewImages.length > 1" @click.stop>
+              <button
+                v-for="(_, i) in previewImages"
+                :key="i"
+                class="viewer-dot"
+                :class="{ active: i === previewIndex }"
+                @click="previewIndex = i; slideDirection = i > previewIndex ? 'right' : 'left'"
+              ></button>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+
       <div
         v-if="deleteDialogOpen"
         class="dialog-backdrop"
@@ -1008,6 +1088,16 @@ const deleteBusy = ref(false);
 const sidebarOpen = ref(false);
 const achievementsOpen = ref(true);
 const activeCategory = ref("all");
+const previewImages = ref([]);
+const previewIndex = ref(0);
+const previewVisible = ref(false);
+const slideDirection = ref("right");
+
+function isMediaVideo(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["mp4", "mov", "webm"].includes(ext);
+}
 
 const achievements = ref([]);
 
@@ -2146,6 +2236,44 @@ function openDelete() {
     return;
   }
   deleteDialogOpen.value = true;
+}
+
+function isVideoUrl(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["mp4", "mov"].includes(ext);
+}
+
+function isVideoFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["mp4", "mov"].includes(ext);
+}
+
+function showPreview(urls, index = 0) {
+  previewImages.value = urls;
+  previewIndex.value = index;
+  previewVisible.value = true;
+  document.body.style.overflow = 'hidden';
+}
+
+function hidePreview() {
+  previewVisible.value = false;
+  document.body.style.overflow = '';
+}
+
+function previewPrev() {
+  if (previewIndex.value > 0) {
+    slideDirection.value = "left";
+    previewIndex.value--;
+  }
+}
+
+function previewNext() {
+  if (previewIndex.value < previewImages.value.length - 1) {
+    slideDirection.value = "right";
+    previewIndex.value++;
+  }
 }
 
 function closeDelete() {
