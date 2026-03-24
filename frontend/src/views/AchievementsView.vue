@@ -161,7 +161,10 @@
               {{ formatContestOrganizer(item.fields) }}
             </div>
           </div>
-          <div v-else-if="item.category === 'paper'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'paper'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -176,7 +179,10 @@
             </div>
             <div class="achievement-paper-tag" aria-hidden="true">学术论文</div>
           </div>
-          <div v-else-if="item.category === 'journal'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'journal'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -189,9 +195,14 @@
             <div class="achievement-card-text">
               {{ formatJournalDate(item.fields) }}
             </div>
-            <div class="achievement-journal-tag" aria-hidden="true">期刊作品</div>
+            <div class="achievement-journal-tag" aria-hidden="true">
+              期刊作品
+            </div>
           </div>
-          <div v-else-if="item.category === 'patent'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'patent'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -228,7 +239,10 @@
               职业资格证书
             </div>
           </div>
-          <div v-else-if="item.category === 'research'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'research'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
@@ -238,26 +252,30 @@
             <div class="achievement-card-text">
               {{ formatResearchTeacher(item.fields) }}
             </div>
-            <div class="achievement-research-tag" aria-hidden="true">科研项目</div>
+            <div class="achievement-research-tag" aria-hidden="true">
+              科研项目
+            </div>
           </div>
-          <div v-else-if="item.category === 'works'" class="achievement-card-body">
+          <div
+            v-else-if="item.category === 'works'"
+            class="achievement-card-body"
+          >
             <div class="achievement-card-title achievement-paper-title">
               {{ item.title || "-" }}
             </div>
-            <div class="achievement-card-text">
-              {{ formatWorksCategory(item.fields) }}
+            <div class="achievement-card-meta">
+              <span class="achievement-card-meta-item">{{ formatWorksCategory(item.fields) }}</span>
+              <span class="achievement-card-meta-dot">·</span>
+              <span class="achievement-card-meta-item">{{ formatWorksDate(item.fields) }}</span>
             </div>
-            <div class="achievement-card-text">
+            <div class="achievement-card-text" v-if="item.fields.publishOccasion">
               {{ formatWorksOccasion(item.fields) }}
             </div>
-            <div class="achievement-card-text">
-              {{ formatWorksDate(item.fields) }}
+            <div class="achievement-card-text" v-if="item.fields.studentName">
+              {{ item.fields.studentName }}
             </div>
             <div class="achievement-works-tag" aria-hidden="true">
               {{ formatWorksTag(item.fields) }}
-            </div>
-            <div class="achievement-card-organizer">
-              {{ formatWorksOrganizer(item.fields) }}
             </div>
           </div>
           <div v-else class="achievement-card-body">
@@ -336,146 +354,376 @@
           </button>
         </header>
         <div v-if="viewLoading" class="empty-tip">加载中...</div>
-        <div v-else-if="viewItem" class="achievement-view-body">
-          <div class="achievement-detail-image">
-            <img v-if="viewItem.image" :src="viewItem.image" alt="成就图片" />
-            <div v-else class="achievement-card-placeholder">未上传图片</div>
+        <div
+          v-else-if="viewItem"
+          class="achievement-view-body"
+          :class="{ 'no-media': !viewItem.imageUrls?.length }"
+          >
+          <div
+            v-if="!viewItem.imageUrls?.length"
+            class="achievement-view-media"
+          ></div>
+
+          <div
+            v-else-if="viewItem.imageUrls.length === 1"
+            class="achievement-view-media"
+          >
+            <img
+              class="media-single-img"
+              :src="viewItem.imageUrls[0]"
+              alt="成就图片"
+              @click="showPreview(viewItem.imageUrls, 0)"
+            />
           </div>
+
+          <div
+            v-else-if="viewItem.imageUrls.length === 2"
+            class="achievement-view-media achievement-view-media-2"
+          >
+            <div class="media-2-cell" @click="showPreview(viewItem.imageUrls, 0)">
+              <img :src="viewItem.imageUrls[0]" alt="成就图片" />
+            </div>
+            <div class="media-2-cell" @click="showPreview(viewItem.imageUrls, 1)">
+              <img :src="viewItem.imageUrls[1]" alt="成就图片" />
+            </div>
+          </div>
+
+          <div
+            v-else
+            class="achievement-view-media achievement-view-media-3"
+          >
+            <div class="media-3-grid">
+              <div class="media-3-cell media-3-top-left" @click="showPreview(viewItem.imageUrls, 0)">
+                <img :src="viewItem.imageUrls[0]" alt="成就图片" />
+              </div>
+              <div class="media-3-cell media-3-top-right" @click="showPreview(viewItem.imageUrls, 1)">
+                <img :src="viewItem.imageUrls[1]" alt="成就图片" />
+              </div>
+              <div class="media-3-cell media-3-bottom" @click="showPreview(viewItem.imageUrls, 2)">
+                <img :src="viewItem.imageUrls[2]" alt="成就图片" />
+              </div>
+            </div>
+          </div>
+
           <div class="achievement-detail-body">
-            <div v-if="viewItem.category === 'contest'">
-              <div class="achievement-card-title-row">
-                <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
-                <span
-                  v-if="formatContestAwardPill(viewItem.fields)"
-                  class="achievement-award-pill"
-                >
+            <!-- contest -->
+            <template v-if="viewItem.category === 'contest'">
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+                <span v-if="formatContestAwardPill(viewItem.fields)" class="detail-award-pill">
                   {{ formatContestAwardPill(viewItem.fields) }}
                 </span>
               </div>
-              <div class="achievement-card-date-italic">
-                {{ formatContestDate(viewItem.fields) }}
+              <div class="detail-date">{{ formatContestDate(viewItem.fields) }}</div>
+              <div class="detail-group">
+                <div class="detail-group-label">基本信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">学号</span>
+                  <span class="detail-value">{{ viewItem.fields.studentNo || "-" }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">姓名</span>
+                  <span class="detail-value">{{ viewItem.fields.studentName || "-" }}</span>
+                </div>
               </div>
-              <div class="achievement-card-text">
-                {{ formatContestStudentNo(viewItem.fields) }}
+              <div class="detail-group">
+                <div class="detail-group-label">参赛信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">竞赛名称</span>
+                  <span class="detail-value">{{ viewItem.fields.contestName || "-" }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">竞赛类别</span>
+                  <span class="detail-value">{{ [viewItem.fields.contestCategory, viewItem.fields.contestType].filter(Boolean).join(' · ') || "-" }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">获奖类别</span>
+                  <span class="detail-value">{{ [viewItem.fields.awardCategory, viewItem.fields.awardLevel].filter(Boolean).join(' · ') || "-" }}</span>
+                </div>
               </div>
-              <div class="achievement-card-text">
-                {{ formatContestCategoryLine(viewItem.fields) }}
+              <div class="detail-group">
+                <div class="detail-group-label">团队信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">团队成员</span>
+                  <span class="detail-value">{{ [viewItem.fields.studentName, viewItem.fields.teamMembers].filter(Boolean).join('、') || "-" }}</span>
+                </div>
+                <div class="detail-row" v-if="viewItem.fields.instructors">
+                  <span class="detail-label">指导老师</span>
+                  <span class="detail-value">{{ viewItem.fields.instructors }}</span>
+                </div>
               </div>
-              <div class="achievement-card-text">
-                {{ formatContestMembers(viewItem.fields) }}
+              <div class="detail-group">
+                <div class="detail-group-label">获奖信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">获奖人数</span>
+                  <span class="detail-value">{{ viewItem.fields.awardCount || "-" }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">备注</span>
+                  <span class="detail-value">{{ viewItem.fields.remark || "-" }}</span>
+                </div>
               </div>
-              <div class="achievement-card-text">
-                {{ formatContestAwardLine(viewItem.fields) }}
+              <div class="detail-group">
+                <div class="detail-row">
+                  <span class="detail-label">主办单位</span>
+                  <span class="detail-value">{{ viewItem.fields.organizer || "-" }}</span>
+                </div>
               </div>
-              <div class="achievement-card-organizer">
-                {{ formatContestOrganizer(viewItem.fields) }}
+            </template>
+
+            <!-- paper -->
+            <template v-else-if="viewItem.category === 'paper'">
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+                <span class="detail-category-tag">学术论文</span>
               </div>
-            </div>
-            <div v-else-if="viewItem.category === 'paper'">
-              <div class="achievement-card-title achievement-paper-title">
-                {{ viewItem.title || "-" }}
+              <div class="detail-group">
+                <div class="detail-group-label">期刊信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">发表期刊</span>
+                  <span class="detail-value">{{ viewItem.fields.journalName || "-" }}</span>
+                </div>
+                <div class="detail-row" v-if="viewItem.fields.indexed">
+                  <span class="detail-label">收录情况</span>
+                  <span class="detail-value">{{ viewItem.fields.indexed }}</span>
+                </div>
               </div>
-              <div class="achievement-card-text">
-                {{ formatPaperJournal(viewItem.fields) }}
+              <div class="detail-group">
+                <div class="detail-group-label">作者信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">作者</span>
+                  <span class="detail-value">{{ viewItem.fields.studentName || "-" }}<template v-if="viewItem.fields.authorOrder">（{{ viewItem.fields.authorOrder }}）</template></span>
+                </div>
               </div>
-              <div class="achievement-card-text">
-                {{ formatPaperAuthors(viewItem.fields) }}
+              <div class="detail-group">
+                <div class="detail-row">
+                  <span class="detail-label">发表时间</span>
+                  <span class="detail-value">{{ viewItem.fields.publishDate || "-" }}</span>
+                </div>
               </div>
-              <div class="achievement-card-text">
-                {{ formatPaperDate(viewItem.fields) }}
+            </template>
+
+            <!-- journal -->
+            <template v-else-if="viewItem.category === 'journal'">
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+                <span class="detail-category-tag">期刊作品</span>
               </div>
-          </div>
-          <div v-else-if="viewItem.category === 'journal'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatJournalPublication(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatJournalAuthor(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatJournalDate(viewItem.fields) }}
-            </div>
-          </div>
-          <div v-else-if="viewItem.category === 'patent'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatPatentGrantNo(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatPatentInventor(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatPatentDate(viewItem.fields) }}
-            </div>
-          </div>
-          <div v-else-if="viewItem.category === 'certificate'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatCertificateType(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatCertificateOwner(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatCertificateDate(viewItem.fields) }}
-            </div>
-          </div>
-          <div v-else-if="viewItem.category === 'research'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatResearchLeader(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatResearchTeacher(viewItem.fields) }}
-            </div>
-          </div>
-          <div v-else-if="viewItem.category === 'works'">
-            <div class="achievement-card-title achievement-paper-title">
-              {{ viewItem.title || "-" }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatWorksCategory(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatWorksOccasion(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-text">
-              {{ formatWorksDate(viewItem.fields) }}
-            </div>
-            <div class="achievement-card-organizer">
-              {{ formatWorksOrganizer(viewItem.fields) }}
-            </div>
-          </div>
-            <div v-else>
-              <div class="achievement-card-title">{{ viewItem.title || "-" }}</div>
-              <div v-if="viewItem.dateLabel" class="achievement-card-dates">
-                <span>{{ viewItem.dateLabel }}：{{ viewItem.dateValue || "-" }}</span>
+              <div class="detail-group">
+                <div class="detail-group-label">刊物信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">刊物名称</span>
+                  <span class="detail-value">{{ viewItem.fields.publicationName || "-" }}</span>
+                </div>
+              </div>
+              <div class="detail-group">
+                <div class="detail-group-label">作者信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">作者</span>
+                  <span class="detail-value">{{ viewItem.fields.studentName || "-" }}</span>
+                </div>
+              </div>
+              <div class="detail-group">
+                <div class="detail-row">
+                  <span class="detail-label">发表时间</span>
+                  <span class="detail-value">{{ viewItem.fields.publishDate || "-" }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- patent -->
+            <template v-else-if="viewItem.category === 'patent'">
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+                <span class="detail-category-tag">{{ viewItem.fields.patentType || "专利" }}</span>
+              </div>
+              <div class="detail-group">
+                <div class="detail-group-label">专利信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">授权号</span>
+                  <span class="detail-value">{{ viewItem.fields.grantNo || "-" }}</span>
+                </div>
+              </div>
+              <div class="detail-group">
+                <div class="detail-group-label">发明人信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">发明人</span>
+                  <span class="detail-value">{{ viewItem.fields.studentName || "-" }}<template v-if="viewItem.fields.firstInventor">（{{ viewItem.fields.firstInventor }}）</template></span>
+                </div>
+              </div>
+              <div class="detail-group">
+                <div class="detail-row">
+                  <span class="detail-label">获批时间</span>
+                  <span class="detail-value">{{ viewItem.fields.grantDate || "-" }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- certificate -->
+            <template v-else-if="viewItem.category === 'certificate'">
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+                <span class="detail-category-tag">职业资格证书</span>
+              </div>
+              <div class="detail-group">
+                <div class="detail-group-label">证书信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">证书类别</span>
+                  <span class="detail-value">{{ viewItem.fields.certificateType || "-" }}</span>
+                </div>
+              </div>
+              <div class="detail-group">
+                <div class="detail-group-label">持证人</div>
+                <div class="detail-row">
+                  <span class="detail-label">姓名</span>
+                  <span class="detail-value">{{ viewItem.fields.studentName || "-" }}</span>
+                </div>
+              </div>
+              <div class="detail-group">
+                <div class="detail-row">
+                  <span class="detail-label">获得时间</span>
+                  <span class="detail-value">{{ viewItem.fields.obtainDate || "-" }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- research -->
+            <template v-else-if="viewItem.category === 'research'">
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+                <span class="detail-category-tag">科研项目</span>
+              </div>
+              <div class="detail-group">
+                <div class="detail-group-label">项目信息</div>
+                <div class="detail-row">
+                  <span class="detail-label">项目负责人</span>
+                  <span class="detail-value">{{ viewItem.fields.projectLeader || "-" }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">教师工号</span>
+                  <span class="detail-value">{{ viewItem.fields.teacherNo || "-" }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- works -->
+            <template v-else-if="viewItem.category === 'works'">
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+                <div class="detail-badges">
+                  <span class="detail-category-tag">{{ viewItem.fields.workCategory || "创作作品" }}</span>
+                  <span v-if="viewItem.fields.workType" class="detail-type-badge">{{ viewItem.fields.workType }}</span>
+                </div>
+              </div>
+              <div class="detail-date">{{ viewItem.fields.publishDate || "-" }}</div>
+
+              <div class="detail-info-strip">
+                <div class="detail-strip-item" v-if="viewItem.fields.impactScope">
+                  <span class="strip-icon">◎</span>
+                  <span>{{ viewItem.fields.impactScope }}</span>
+                </div>
+                <div class="detail-strip-item" v-if="viewItem.fields.publishOccasion">
+                  <span class="strip-icon">◈</span>
+                  <span>{{ viewItem.fields.publishOccasion }}</span>
+                </div>
+              </div>
+
+              <div class="detail-group" v-if="viewItem.fields.studentName || viewItem.fields.studentNo">
+                <div class="detail-group-label">创作者</div>
+                <div class="detail-row" v-if="viewItem.fields.studentName">
+                  <span class="detail-label">姓名</span>
+                  <span class="detail-value">{{ viewItem.fields.studentName }}</span>
+                </div>
+                <div class="detail-row" v-if="viewItem.fields.studentNo">
+                  <span class="detail-label">学号</span>
+                  <span class="detail-value">{{ viewItem.fields.studentNo }}</span>
+                </div>
+              </div>
+
+              <div class="detail-group" v-if="viewItem.fields.organizer">
+                <div class="detail-group-label">主办单位</div>
+                <div class="detail-row">
+                  <span class="detail-value">{{ viewItem.fields.organizer }}</span>
+                </div>
+              </div>
+
+              <div class="detail-note" v-if="viewItem.fields.note">
+                <div class="detail-note-label">说明</div>
+                <div class="detail-note-text">{{ viewItem.fields.note }}</div>
+              </div>
+            </template>
+
+            <!-- fallback -->
+            <template v-else>
+              <div class="detail-header">
+                <div class="detail-title">{{ viewItem.title || "-" }}</div>
+              </div>
+              <div v-if="viewItem.dateLabel" class="detail-date">
+                {{ viewItem.dateLabel }}：{{ viewItem.dateValue || "-" }}
               </div>
               <div
                 v-for="line in viewItem.fieldLines"
                 :key="line"
-                class="achievement-card-text"
+                class="detail-row"
               >
-                {{ line }}
+                <span class="detail-value">{{ line }}</span>
+              </div>
+            </template>
+
+            <div
+              v-if="viewItem.attachments && viewItem.attachments.length"
+              class="detail-attachments"
+            >
+              <div class="detail-attachments-title">附件</div>
+              <div class="attachment-list">
+                <div
+                  v-for="(file, index) in viewItem.attachments"
+                  :key="`${file.url}-${index}`"
+                  class="attachment-item"
+                >
+                  <img :src="attachmentIcon(file)" alt="" />
+                  <div class="attachment-name">{{ file.name }}</div>
+                  <button
+                    v-if="isVideoFile(file) || isDocumentFile(file) || isSheetFile(file) || isPdfFile(file)"
+                    class="attachment-link"
+                    @click="showPreview([file.url], 0)"
+                  >
+                    预览
+                  </button>
+                  <a
+                    v-else-if="!isPptxFile(file)"
+                    class="attachment-link"
+                    :href="file.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    查看
+                  </a>
+                  <a
+                    class="attachment-download"
+                    :href="file.url"
+                    download
+                    rel="noopener noreferrer"
+                    title="下载"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                  </a>
+                </div>
               </div>
             </div>
-            <div class="achievement-card-actions">
+
+            <div class="detail-actions">
               <button class="post-action" type="button" @click="editFromView">
                 编辑
               </button>
               <button
                 class="post-action danger"
                 type="button"
-                @click="openDelete"
+                @click.stop="openDelete"
               >
                 删除
               </button>
@@ -505,10 +753,84 @@
           </button>
         </header>
         <div class="achievement-grid">
-          <button class="achievement-image" type="button" @click="triggerImage">
-            <img v-if="imagePreview" :src="imagePreview" alt="成就图片" />
-            <span v-else>选择图片</span>
-          </button>
+          <div class="achievement-media-panel">
+            <div class="media-header">
+              <div>
+                <div class="media-title">图片(可选)</div>
+                <div class="media-subtitle">最多 3 张</div>
+              </div>
+            </div>
+
+            <div
+              v-if="imagePreviews.length === 0"
+              class="media-empty-state"
+              @click="triggerImage"
+            >
+              <div class="media-empty-icon">+</div>
+              <div class="media-empty-text">点击添加图片</div>
+            </div>
+
+            <div v-else-if="imagePreviews.length === 1" class="media-single">
+              <button
+                class="media-single-item"
+                type="button"
+                @click="selectEditorImage(0)"
+              >
+                <img :src="imagePreviews[0]" alt="成就图片" />
+                <span class="media-remove" @click.stop="removeImage(0)"
+                  >移除</span
+                >
+              </button>
+              <button class="media-add-btn" type="button" @click="triggerImage">
+                <span>+</span>
+              </button>
+            </div>
+
+            <div v-else-if="imagePreviews.length === 2" class="media-two">
+              <button
+                v-for="(image, index) in imagePreviews"
+                :key="`${image}-${index}`"
+                class="media-thumb"
+                type="button"
+                @click="selectEditorImage(index)"
+              >
+                <img :src="image" alt="成就图片" />
+                <span class="media-remove" @click.stop="removeImage(index)"
+                  >移除</span
+                >
+              </button>
+              <button
+                class="media-thumb media-add"
+                type="button"
+                @click="triggerImage"
+              >
+                <span>+</span>
+              </button>
+            </div>
+
+            <div v-else class="media-grid">
+              <button
+                v-for="(image, index) in imagePreviews"
+                :key="`${image}-${index}`"
+                class="media-thumb"
+                type="button"
+                @click="selectEditorImage(index)"
+              >
+                <img :src="image" alt="成就图片" />
+                <span class="media-remove" @click.stop="removeImage(index)">
+                  移除
+                </span>
+              </button>
+              <button
+                v-if="imagePreviews.length < MAX_IMAGE_COUNT"
+                class="media-thumb media-add"
+                type="button"
+                @click="triggerImage"
+              >
+                <span>+</span>
+              </button>
+            </div>
+          </div>
 
           <div class="achievement-fields">
             <div class="field-row">
@@ -557,6 +879,61 @@
                 ></textarea>
               </div>
             </div>
+            <div class="achievement-attachments-panel">
+              <div class="media-header">
+                <div>
+                  <div class="media-title">附件(可选)</div>
+                  <div class="media-subtitle">支持多文件</div>
+                </div>
+              </div>
+              <div v-if="!attachmentPreviews.length" class="media-empty">
+                暂无附件
+              </div>
+              <div v-else class="attachment-list">
+                <div
+                  v-for="(file, index) in attachmentPreviews"
+                  :key="`${file.url}-${index}`"
+                  class="attachment-item"
+                >
+                  <img :src="attachmentIcon(file)" alt="" />
+                  <div class="attachment-name">{{ file.name }}</div>
+                  <button
+                    class="attachment-remove"
+                    type="button"
+                    @click="removeAttachment(index)"
+                  >
+                    移除
+                  </button>
+                </div>
+              </div>
+              <div class="attachment-formats" @click="triggerAttachment">
+                <div class="format-row">
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/doc.svg" alt="" />
+                    <span class="format-label">文档</span>
+                    <span class="format-exts">docx/doc/pdf/xls/xlsx/pptx/ppt</span>
+                  </div>
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/image.svg" alt="" />
+                    <span class="format-label">图片</span>
+                    <span class="format-exts">jpeg/jpg/png/heif</span>
+                  </div>
+                </div>
+                <div class="format-row">
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/video.svg" alt="" />
+                    <span class="format-label">视频</span>
+                    <span class="format-exts">mp4/mov</span>
+                  </div>
+                  <div class="format-item">
+                    <img class="format-icon" src="/assets/icons/zip.svg" alt="" />
+                    <span class="format-label">压缩包</span>
+                    <span class="format-exts">zip/rar/7z</span>
+                  </div>
+                </div>
+              </div>
+              <div class="media-tip">单个不超过 {{ attachmentLimitLabel }}</div>
+            </div>
 
             <div class="achievement-actions">
               <button class="ghost-button" type="button" @click="closeEditor">
@@ -574,46 +951,155 @@
         </div>
       </section>
 
-      <transition name="dialog-fade">
-        <div
-          v-if="deleteDialogOpen"
-          class="dialog-backdrop"
-          @click="closeDelete"
-        ></div>
-      </transition>
-      <transition name="dialog-pop">
-        <section v-if="deleteDialogOpen" class="dialog-card" @click.stop>
-          <header class="dialog-header">确认删除</header>
-          <div class="dialog-body">删除后无法恢复，确定要删除这条动态吗？</div>
-          <div class="dialog-actions">
-            <button class="ghost-button" type="button" @click="closeDelete">
-              取消
-            </button>
-            <button
-              class="action-button"
-              type="button"
-              :disabled="deleteBusy"
-              @click="confirmDelete"
-            >
-              确定删除
-            </button>
+      <!-- Media Preview -->
+      <Teleport to="body">
+        <Transition name="viewer" appear>
+          <div v-if="previewVisible" class="viewer-backdrop" @click="hidePreview">
+            <div class="viewer-header" @click.stop>
+              <div class="viewer-counter">
+                <span class="viewer-current">{{ previewIndex + 1 }}</span>
+                <span class="viewer-sep">/</span>
+                <span class="viewer-total">{{ previewImages.length }}</span>
+              </div>
+              <button class="viewer-close" @click="hidePreview">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="viewer-stage" @click.stop>
+              <button
+                v-if="previewImages.length > 1 && previewIndex > 0"
+                class="viewer-arrow viewer-prev"
+                @click="previewPrev"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+
+              <Transition :name="'slide-' + slideDirection" mode="out-in">
+                <div class="viewer-media" :key="previewIndex">
+                  <video
+                    v-if="previewType === 'video'"
+                    :src="previewImages[previewIndex]"
+                    class="viewer-video"
+                    controls
+                    autoplay
+                  ></video>
+                  <div
+                    v-else-if="previewType === 'document' || previewType === 'sheet' || previewType === 'pdf'"
+                    class="viewer-document"
+                    :class="{ 'viewer-doc-full': previewType === 'pdf' }"
+                  >
+                    <div v-if="previewLoading" class="viewer-loading">
+                      <div class="viewer-spinner"></div>
+                      <span>加载中...</span>
+                    </div>
+                    <div v-else class="viewer-content-wrapper">
+                      <div v-if="previewType === 'document'" class="viewer-tip">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="12" y1="16" x2="12" y2="12"></line>
+                          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        因渲染限制，预览与实际文件可能存在样式差异
+                      </div>
+                      <div v-if="previewType === 'sheet'" class="viewer-tip">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="12" y1="16" x2="12" y2="12"></line>
+                          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        点击工作表标签可切换Sheet | 因渲染限制，预览与实际可能存在差异
+                      </div>
+                      <div v-html="previewContent" class="viewer-content" :class="{ 'viewer-content-full': previewType === 'pdf' || previewType === 'document' }"></div>
+                    </div>
+                  </div>
+                  <img
+                    v-else
+                    :src="previewImages[previewIndex]"
+                    class="viewer-image"
+                    alt=""
+                  />
+                </div>
+              </Transition>
+
+              <button
+                v-if="previewImages.length > 1 && previewIndex < previewImages.length - 1"
+                class="viewer-arrow viewer-next"
+                @click="previewNext"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            <div class="viewer-dots" v-if="previewImages.length > 1" @click.stop>
+              <button
+                v-for="(_, i) in previewImages"
+                :key="i"
+                class="viewer-dot"
+                :class="{ active: i === previewIndex }"
+                @click="previewIndex = i; slideDirection = i > previewIndex ? 'right' : 'left'"
+              ></button>
+            </div>
           </div>
-        </section>
-      </transition>
+        </Transition>
+      </Teleport>
+
+      <div
+        v-if="deleteDialogOpen"
+        class="dialog-backdrop"
+        @click="closeDelete"
+      ></div>
+      <section
+        v-if="deleteDialogOpen"
+        class="dialog-card"
+        @click.stop
+      >
+        <header class="dialog-header">确认删除</header>
+        <div class="dialog-body">删除后无法恢复，确定要删除这条动态吗？</div>
+        <div class="dialog-actions">
+          <button class="ghost-button" type="button" @click="closeDelete">
+            取消
+          </button>
+          <button
+            class="action-button"
+            type="button"
+            :disabled="deleteBusy"
+            @click="confirmDelete"
+          >
+            确定删除
+          </button>
+        </div>
+      </section>
 
       <input
         ref="imageInput"
         type="file"
-        accept="image/*"
+        accept=".jpeg,.jpg,.png,.heif,image/jpeg,image/png,image/heif"
+        multiple
         hidden
         @change="onImageChange"
+      />
+      <input
+        ref="attachmentInput"
+        type="file"
+        accept=".docx,.doc,.pdf,.xls,.xlsx,.zip,.rar,.7z,.pptx,.ppt,.mp4,.mov,.jpeg,.jpg,.png,.heif,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,video/mp4,video/quicktime,image/jpeg,image/png,image/heif"
+        multiple
+        hidden
+        @change="onAttachmentChange"
       />
     </main>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import {
@@ -623,6 +1109,9 @@ import {
   updateAchievement,
 } from "../api/achievements";
 import { uploadMedia } from "../api/upload";
+import { renderDocx } from "../utils/docxRenderer";
+import { renderSheet } from "../utils/sheetRenderer";
+import { renderPdf } from "../utils/pdfRenderer";
 import { API_BASE } from "../api/request";
 
 const router = useRouter();
@@ -631,18 +1120,51 @@ const profile = reactive(loadUser());
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
 const imageInput = ref(null);
-const imagePreview = ref("");
+const attachmentInput = ref(null);
 const errorMessage = ref("");
 const viewOpen = ref(false);
 const viewLoading = ref(false);
 const viewItem = ref(null);
 const viewClosing = ref(false);
+const viewExitUp = ref(false);
 const editId = ref(null);
 const deleteDialogOpen = ref(false);
 const deleteBusy = ref(false);
 const sidebarOpen = ref(false);
 const achievementsOpen = ref(true);
 const activeCategory = ref("all");
+const previewImages = ref([]);
+const previewIndex = ref(0);
+const previewVisible = ref(false);
+const previewType = ref("image");
+const previewContent = ref("");
+const previewLoading = ref(false);
+const previewWorkbook = ref(null);
+const slideDirection = ref("right");
+
+function isMediaVideo(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["mp4", "mov", "webm"].includes(ext);
+}
+
+function isMediaDocument(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["doc", "docx"].includes(ext);
+}
+
+function isMediaSheet(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["xls", "xlsx"].includes(ext);
+}
+
+function isMediaPdf(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["pdf"].includes(ext);
+}
 
 const achievements = ref([]);
 
@@ -674,6 +1196,8 @@ const achievementEntries = [
   { key: "certificate", label: "职业资格证书" },
   { key: "research", label: "学生参与教师科研项目情况" },
   { key: "works", label: "创作、表演的代表性作品" },
+  { key: "doubleHundred", label: "双百工程" },
+  { key: "ieerTraining", label: "大学生创新创业训练计划项目" },
 ];
 
 const activeCategoryIndex = computed(() => {
@@ -689,6 +1213,8 @@ const drawerIndicatorStyle = computed(() => ({
 
 const form = reactive({
   imageUrl: "",
+  imageUrls: [],
+  attachments: [],
   category: "",
   fields: {},
 });
@@ -1019,6 +1545,138 @@ const categoryFieldMap = {
       },
     ],
   },
+  doubleHundred: {
+    titleKey: "projectName",
+    dateKey: "projectDate",
+    fields: [
+      {
+        key: "projectCategory",
+        label: "项目类别",
+        kind: "input",
+        placeholder: "请输入项目类别",
+      },
+      {
+        key: "projectDomain",
+        label: "项目所属领域",
+        kind: "input",
+        placeholder: "请输入项目所属领域",
+      },
+      {
+        key: "projectName",
+        label: "申报作品名",
+        kind: "input",
+        placeholder: "请输入申报作品名",
+      },
+      {
+        key: "projectLeader",
+        label: "项目负责人",
+        kind: "input",
+        placeholder: "请输入项目负责人",
+      },
+      {
+        key: "leaderStudentNo",
+        label: "负责人学号",
+        kind: "input",
+        placeholder: "请输入负责人学号",
+      },
+      {
+        key: "educationLevel",
+        label: "本科/研究生",
+        kind: "input",
+        placeholder: "请输入本科或研究生",
+      },
+      {
+        key: "teamMembers",
+        label: "项目其他成员",
+        kind: "input",
+        placeholder: "请输入项目其他成员",
+      },
+      {
+        key: "instructors",
+        label: "指导老师（全体）",
+        kind: "input",
+        placeholder: "请输入指导老师",
+      },
+      {
+        key: "teamSize",
+        label: "项目人数",
+        kind: "input",
+        placeholder: "请输入项目人数",
+      },
+      {
+        key: "plannedLevel",
+        label: "拟立项等级",
+        kind: "input",
+        placeholder: "请输入拟立项等级",
+      },
+      {
+        key: "college",
+        label: "学院",
+        kind: "input",
+        placeholder: "请输入学院",
+      },
+      {
+        key: "finalLevel",
+        label: "结项等级",
+        kind: "input",
+        placeholder: "优秀/良好/合格/不合格",
+      },
+    ],
+  },
+  ieerTraining: {
+    titleKey: "projectName",
+    dateKey: "projectDate",
+    fields: [
+      {
+        key: "collegeName",
+        label: "学院名称",
+        kind: "input",
+        placeholder: "请输入学院名称",
+      },
+      {
+        key: "projectName",
+        label: "项目名称",
+        kind: "input",
+        placeholder: "请输入项目名称",
+      },
+      {
+        key: "projectType",
+        label: "项目类型",
+        kind: "input",
+        placeholder: "请输入项目类型",
+      },
+      {
+        key: "projectLeader",
+        label: "项目负责人姓名",
+        kind: "input",
+        placeholder: "请输入项目负责人姓名",
+      },
+      {
+        key: "instructorName",
+        label: "指导教师姓名",
+        kind: "input",
+        placeholder: "请输入指导教师姓名",
+      },
+      {
+        key: "recommendedLevel",
+        label: "推荐项目级别",
+        kind: "input",
+        placeholder: "请输入推荐项目级别",
+      },
+      {
+        key: "isKeyArea",
+        label: "是否推荐为重点领域支持项目",
+        kind: "input",
+        placeholder: "是/否",
+      },
+      {
+        key: "finalStatus",
+        label: "结项情况",
+        kind: "input",
+        placeholder: "优秀/通过/延期结项/终止项目",
+      },
+    ],
+  },
 };
 const categoryHints = {
   contest: {
@@ -1132,7 +1790,10 @@ const filteredAchievements = computed(() => {
   if (!studentName && !studentNo) {
     return baseList;
   }
-  const normalizeText = (value) => String(value || "").trim().toLowerCase();
+  const normalizeText = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase();
   const targetName = normalizeText(studentName);
   const targetNo = normalizeText(studentNo);
   return baseList.filter((item) => {
@@ -1291,9 +1952,10 @@ function goToSettings() {
 
 function resetForm() {
   form.imageUrl = "";
+  form.imageUrls = [];
+  form.attachments = [];
   form.category = "";
   form.fields = {};
-  imagePreview.value = "";
 }
 
 async function saveAchievement() {
@@ -1303,7 +1965,8 @@ async function saveAchievement() {
     return;
   }
   const category =
-    form.category || (activeCategory.value === "all" ? "" : activeCategory.value);
+    form.category ||
+    (activeCategory.value === "all" ? "" : activeCategory.value);
   if (!category) {
     errorMessage.value = "请先选择成就分类";
     return;
@@ -1315,8 +1978,12 @@ async function saveAchievement() {
     return;
   }
   const payload = {
-    imageUrl: form.imageUrl || null,
-    fields: { ...form.fields },
+    imageUrl: form.imageUrls[0] || form.imageUrl || null,
+    fields: {
+      ...form.fields,
+      [IMAGE_URLS_FIELD]: JSON.stringify(form.imageUrls || []),
+      [ATTACHMENTS_FIELD]: JSON.stringify(form.attachments || []),
+    },
   };
   try {
     if (editId.value) {
@@ -1348,15 +2015,70 @@ function triggerImage() {
   imageInput.value && imageInput.value.click();
 }
 
+function triggerAttachment() {
+  attachmentInput.value && attachmentInput.value.click();
+}
+
 async function onImageChange(event) {
-  const [file] = Array.from(event.target.files || []);
+  const files = Array.from(event.target.files || []);
   event.target.value = "";
-  if (!file) {
+  if (!files.length) {
     return;
   }
-  const { data } = await uploadMedia(file);
-  form.imageUrl = data.url;
-  imagePreview.value = resolveMediaUrl(data.url);
+  const remaining = MAX_IMAGE_COUNT - form.imageUrls.length;
+  if (remaining <= 0) {
+    errorMessage.value = `最多上传${MAX_IMAGE_COUNT}张图片`;
+    return;
+  }
+  const uploadList = files.slice(0, remaining);
+  for (const file of uploadList) {
+    if (!isAllowedImage(file)) {
+      errorMessage.value = "仅支持 jpeg/jpg/png/heif 图片格式";
+      continue;
+    }
+    if (!isFileSizeAllowed(file, uploadLimitConfig.mediaMaxMB)) {
+      errorMessage.value = `图片大小不可超过 ${mediaLimitLabel.value}`;
+      continue;
+    }
+    try {
+      const { data } = await uploadMedia(file);
+      if (data?.url) {
+        form.imageUrls.push(data.url);
+      }
+    } catch (err) {
+      errorMessage.value = err?.response?.data?.message || "图片上传失败";
+    }
+  }
+}
+
+async function onAttachmentChange(event) {
+  const files = Array.from(event.target.files || []);
+  event.target.value = "";
+  if (!files.length) {
+    return;
+  }
+  for (const file of files) {
+    if (!isAllowedAttachment(file)) {
+      errorMessage.value = "附件格式不支持";
+      continue;
+    }
+    if (!isFileSizeAllowed(file, uploadLimitConfig.attachmentMaxMB)) {
+      errorMessage.value = `附件大小不可超过 ${attachmentLimitLabel.value}`;
+      continue;
+    }
+    try {
+      const { data } = await uploadMedia(file);
+      if (data?.url) {
+        form.attachments.push({
+          url: data.url,
+          name: data.originalName || file.name,
+          mediaType: data.mediaType || resolveMediaTypeByExtension(file.name),
+        });
+      }
+    } catch (err) {
+      errorMessage.value = err?.response?.data?.message || "附件上传失败";
+    }
+  }
 }
 
 function resolveMediaUrl(url) {
@@ -1391,7 +2113,9 @@ function formatContestCategoryLine(fields = {}) {
 function formatContestMembers(fields = {}) {
   const peopleParts = [fields.studentName, fields.teamMembers].filter(Boolean);
   const people = peopleParts.length ? peopleParts.join("、") : "-";
-  const teachers = fields.instructors ? ` | 指导老师：${fields.instructors}` : "";
+  const teachers = fields.instructors
+    ? ` | 指导老师：${fields.instructors}`
+    : "";
   return `成员：${people}${teachers}`;
 }
 
@@ -1507,6 +2231,8 @@ function dedupeAchievements(list) {
 function normalizeAchievement(item) {
   const config = categoryFieldMap[item.category] || null;
   const fields = item.fields || {};
+  const imageUrls = resolveImageUrls(item);
+  const attachments = resolveAttachments(fields);
   const titleKey = config?.titleKey;
   const dateKey = config?.dateKey;
   const dateLabel =
@@ -1524,7 +2250,9 @@ function normalizeAchievement(item) {
     fields,
     fieldLines,
     previewFields: fieldLines.slice(0, 2),
-    image: resolveMediaUrl(item.imageUrl),
+    image: imageUrls[0] || "",
+    imageUrls,
+    attachments,
     category: item.category || "",
   };
 }
@@ -1552,8 +2280,14 @@ function editFromView() {
   editId.value = item.id;
   form.category = item.category || "";
   form.fields = { ...(item.fields || {}) };
-  form.imageUrl = item.image ? item.image.replace(API_BASE, "") : "";
-  imagePreview.value = item.image || "";
+  form.imageUrls = (item.imageUrls || [])
+    .map((url) => stripMediaUrl(url))
+    .filter(Boolean);
+  form.imageUrl = form.imageUrls[0] || "";
+  form.attachments = (item.attachments || []).map((entry) => ({
+    ...entry,
+    url: stripMediaUrl(entry.url),
+  }));
   applyFieldDefaults();
   viewOpen.value = false;
   viewClosing.value = true;
@@ -1565,14 +2299,192 @@ function editFromView() {
 }
 
 function openDelete() {
+  if (deleteDialogOpen.value) {
+    return;
+  }
   deleteDialogOpen.value = true;
 }
 
+function isVideoUrl(url) {
+  if (!url) return false;
+  const ext = resolveMediaTypeByExtension(url);
+  return ["mp4", "mov"].includes(ext);
+}
+
+function isVideoFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["mp4", "mov"].includes(ext);
+}
+
+function isDocumentFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["doc", "docx"].includes(ext);
+}
+
+function isSheetFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["xls", "xlsx"].includes(ext);
+}
+
+function isPdfFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["pdf"].includes(ext);
+}
+
+function isPptxFile(file) {
+  if (!file || !file.name) return false;
+  const ext = resolveMediaTypeByExtension(file.name);
+  return ["ppt", "pptx"].includes(ext);
+}
+
+function showPreview(urls, index = 0) {
+  previewImages.value = urls;
+  previewIndex.value = index;
+  previewVisible.value = true;
+  document.body.style.overflow = 'hidden';
+  previewContent.value = "";
+  previewLoading.value = false;
+  // Detect media type
+  if (urls.length > 0) {
+    const url = urls[index];
+    if (isMediaVideo(url)) {
+      previewType.value = "video";
+    } else if (isMediaDocument(url)) {
+      previewType.value = "document";
+      loadDocumentPreview(url);
+    } else if (isMediaSheet(url)) {
+      previewType.value = "sheet";
+      loadSheetPreview(url);
+    } else if (isMediaPdf(url)) {
+      previewType.value = "pdf";
+      loadPdfPreview(url);
+    } else {
+      previewType.value = "image";
+    }
+  }
+}
+
+async function loadDocumentPreview(url) {
+  previewLoading.value = true;
+  try {
+    const html = await renderDocx(url);
+    previewContent.value = html;
+  } catch (e) {
+    previewContent.value = `<div class="docx-error"><div>加载失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+async function loadSheetPreview(url) {
+  previewLoading.value = true;
+  try {
+    const result = await renderSheet(url);
+    previewContent.value = result.html;
+    // Store workbook for sheet switching
+    if (result.workbook) {
+      previewWorkbook.value = result.workbook;
+    }
+  } catch (e) {
+    previewContent.value = `<div class="sheet-error"><div>加载失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+async function loadPdfPreview(url) {
+  previewLoading.value = true;
+  try {
+    const html = await renderPdf(url);
+    previewContent.value = html;
+  } catch (e) {
+    previewContent.value = `<div class="pdf-error"><div>加载失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+async function switchSheet(sheetIndex) {
+  if (!previewWorkbook.value) return;
+  previewLoading.value = true;
+  try {
+    const XLSX = await import("xlsx");
+    const sheetNames = previewWorkbook.value.SheetNames;
+    const sheet = previewWorkbook.value.Sheets[sheetNames[sheetIndex]];
+    const html = XLSX.utils.sheet_to_html(sheet, {
+      header: true,
+      footer: false,
+      editable: false,
+    });
+    // Build new tabs
+    const tabs = sheetNames.map((name, i) => `
+      <div class="sheet-tab ${i === sheetIndex ? 'active' : ''}" onclick="window.__switchSheet(${i})">
+        ${name}
+      </div>
+    `).join('');
+    previewContent.value = `
+      <div class="sheet-container">
+        <div class="sheet-tabs">${tabs}</div>
+        <div class="sheet-content">
+          <div class="sheet-table-wrapper">${html}</div>
+        </div>
+        <div class="sheet-footer">
+          <span>${sheetNames.length} 个工作表</span>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    previewContent.value = `<div class="sheet-error"><div>切换失败</div></div>`;
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+function hidePreview() {
+  previewVisible.value = false;
+  document.body.style.overflow = '';
+}
+
+function previewPrev() {
+  if (previewIndex.value > 0) {
+    slideDirection.value = "left";
+    previewIndex.value--;
+  }
+}
+
+function previewNext() {
+  if (previewIndex.value < previewImages.value.length - 1) {
+    slideDirection.value = "right";
+    previewIndex.value++;
+  }
+}
+
 function closeDelete() {
-  if (deleteBusy.value) {
+  if (deleteBusy.value || !deleteDialogOpen.value) {
     return;
   }
   deleteDialogOpen.value = false;
+}
+
+
+function selectEditorImage(index) {
+  if (index < 0 || index >= form.imageUrls.length) {
+    return;
+  }
+  const [selected] = form.imageUrls.splice(index, 1);
+  form.imageUrls.unshift(selected);
+}
+
+function removeImage(index) {
+  form.imageUrls.splice(index, 1);
+}
+
+function removeAttachment(index) {
+  form.attachments.splice(index, 1);
 }
 
 async function confirmDelete() {
@@ -1586,12 +2498,12 @@ async function confirmDelete() {
     achievements.value = achievements.value.filter(
       (item) => item.id !== viewItem.value.id,
     );
-    closeDelete();
     closeView();
   } catch (err) {
     errorMessage.value = err?.response?.data?.message || "删除失败";
   } finally {
     deleteBusy.value = false;
+    closeDelete();
   }
 }
 
@@ -1664,9 +2576,169 @@ function applyFieldDefaults() {
   }
 }
 
+const MAX_IMAGE_COUNT = 3;
+const IMAGE_URLS_FIELD = "_imageUrls";
+const ATTACHMENTS_FIELD = "_attachments";
+const uploadLimitConfig = reactive({
+  mediaMaxMB: 10,
+  attachmentMaxMB: 50,
+});
+
+const mediaLimitLabel = computed(() =>
+  formatFileSize(uploadLimitConfig.mediaMaxMB),
+);
+const attachmentLimitLabel = computed(() =>
+  formatFileSize(uploadLimitConfig.attachmentMaxMB),
+);
+
+const imagePreviews = computed(() =>
+  (form.imageUrls || []).map((url) => resolveMediaUrl(url)),
+);
+const attachmentPreviews = computed(() =>
+  (form.attachments || []).map((file) => ({
+    ...file,
+    url: resolveMediaUrl(file.url),
+  })),
+);
+
+function setUploadLimits({ mediaMaxMB, attachmentMaxMB }) {
+  // Hook: adjust upload size display limits from outside if needed.
+  if (Number.isFinite(mediaMaxMB) && mediaMaxMB > 0) {
+    uploadLimitConfig.mediaMaxMB = mediaMaxMB;
+  }
+  if (Number.isFinite(attachmentMaxMB) && attachmentMaxMB > 0) {
+    uploadLimitConfig.attachmentMaxMB = attachmentMaxMB;
+  }
+}
+
+const attachmentIconMap = {
+  doc: "/assets/icons/doc.svg",
+  docx: "/assets/icons/doc.svg",
+  pdf: "/assets/icons/pdf.svg",
+  xls: "/assets/icons/excel.svg",
+  xlsx: "/assets/icons/excel.svg",
+  ppt: "/assets/icons/ppt.svg",
+  pptx: "/assets/icons/ppt.svg",
+  zip: "/assets/icons/zip.svg",
+  rar: "/assets/icons/zip.svg",
+  "7z": "/assets/icons/zip.svg",
+  mp4: "/assets/icons/video.svg",
+  mov: "/assets/icons/video.svg",
+  jpeg: "/assets/icons/image.svg",
+  jpg: "/assets/icons/image.svg",
+  png: "/assets/icons/image.svg",
+  heif: "/assets/icons/image.svg",
+};
+
+function attachmentIcon(file) {
+  const ext = resolveMediaTypeByExtension(file.name || file.url || "");
+  return attachmentIconMap[ext] || "/assets/icons/doc.svg";
+}
+
+function isAllowedImage(file) {
+  const ext = resolveMediaTypeByExtension(file.name || "");
+  return ["jpeg", "jpg", "png", "heif"].includes(ext);
+}
+
+function isAllowedAttachment(file) {
+  const ext = resolveMediaTypeByExtension(file.name || "");
+  return [
+    "docx",
+    "doc",
+    "pdf",
+    "xls",
+    "xlsx",
+    "zip",
+    "rar",
+    "7z",
+    "pptx",
+    "ppt",
+    "mp4",
+    "mov",
+    "jpeg",
+    "jpg",
+    "png",
+    "heif",
+  ].includes(ext);
+}
+
+function isFileSizeAllowed(file, limitMb) {
+  if (!Number.isFinite(limitMb)) {
+    return true;
+  }
+  return file.size / (1024 * 1024) <= limitMb;
+}
+
+function formatFileSize(value) {
+  return `${value}MB`;
+}
+
+function resolveMediaTypeByExtension(name = "") {
+  const cleanName = name.toLowerCase();
+  const parts = cleanName.split(".");
+  if (parts.length < 2) {
+    return "";
+  }
+  return parts.pop() || "";
+}
+
+function stripMediaUrl(url) {
+  if (!url) {
+    return "";
+  }
+  if (url.startsWith(API_BASE)) {
+    return url.replace(API_BASE, "");
+  }
+  return url;
+}
+
+function resolveImageUrls(item) {
+  const urls = [];
+  if (item?.imageUrl) {
+    urls.push(resolveMediaUrl(item.imageUrl));
+  }
+  const rawField = item?.fields?.[IMAGE_URLS_FIELD];
+  const parsed = parseJsonArray(rawField);
+  parsed.forEach((url) => {
+    const resolved = resolveMediaUrl(url);
+    if (resolved && !urls.includes(resolved)) {
+      urls.push(resolved);
+    }
+  });
+  return urls.slice(0, MAX_IMAGE_COUNT);
+}
+
+function resolveAttachments(fields = {}) {
+  const raw = fields[ATTACHMENTS_FIELD];
+  const parsed = parseJsonArray(raw);
+  return parsed
+    .map((item) => ({
+      url: resolveMediaUrl(item.url),
+      name: item.name || item.originalName || "附件",
+      mediaType: item.mediaType || "",
+    }))
+    .filter((item) => item.url);
+}
+
+function parseJsonArray(value) {
+  if (!value) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    return [];
+  }
+}
+
 onMounted(() => {
   syncCategoryFromRoute();
   fetchAchievements();
+  // Expose sheet switcher globally for v-html content
+  window.__switchSheet = (index) => {
+    switchSheet(index);
+  };
 });
 
 watch(
@@ -1683,4 +2755,24 @@ watch(
     applyFieldDefaults();
   },
 );
+
+// Delegate sheet tab clicks after content renders
+watch(previewContent, () => {
+  if (previewType.value === 'sheet') {
+    nextTick(() => {
+      const container = document.querySelector(".viewer-document");
+      if (container) {
+        container.onclick = (e) => {
+          const tab = e.target.closest(".sheet-tab");
+          if (tab) {
+            const idx = parseInt(tab.dataset.sheet, 10);
+            if (!isNaN(idx)) {
+              switchSheet(idx);
+            }
+          }
+        };
+      }
+    });
+  }
+});
 </script>

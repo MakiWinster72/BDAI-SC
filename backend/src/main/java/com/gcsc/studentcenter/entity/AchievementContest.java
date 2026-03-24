@@ -59,6 +59,12 @@ public class AchievementContest {
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
+    @Column(name = "_image_urls", columnDefinition = "TEXT")
+    private String imageUrls;
+
+    @Column(name = "_attachments", columnDefinition = "TEXT")
+    private String attachments;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -184,6 +190,22 @@ public class AchievementContest {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(String imageUrls) {
+        this.imageUrls = imageUrls;
+    }
+
+    public String getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(String attachments) {
+        this.attachments = attachments;
     }
 
     public LocalDateTime getCreatedAt() {

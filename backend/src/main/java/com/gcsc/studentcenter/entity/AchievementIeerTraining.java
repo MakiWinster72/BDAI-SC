@@ -2,12 +2,11 @@ package com.gcsc.studentcenter.entity;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "achievement_works")
-public class AchievementWorks {
+@Table(name = "achievement_ieer_trainings")
+public class AchievementIeerTraining {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,29 +22,29 @@ public class AchievementWorks {
     @Column(name = "student_name", length = 64)
     private String studentName;
 
-    @Column(name = "work_name", nullable = false, length = 255)
-    private String workName;
+    @Column(name = "college_name", length = 128)
+    private String collegeName;
 
-    @Column(name = "work_category", length = 64)
-    private String workCategory;
+    @Column(name = "project_name", nullable = false, length = 255)
+    private String projectName;
 
-    @Column(name = "work_type", length = 64)
-    private String workType;
+    @Column(name = "project_type", length = 64)
+    private String projectType;
 
-    @Column(name = "publish_date")
-    private LocalDate publishDate;
+    @Column(name = "project_leader", length = 64)
+    private String projectLeader;
 
-    @Column(name = "publish_occasion", length = 255)
-    private String publishOccasion;
+    @Column(name = "instructor_name", length = 128)
+    private String instructorName;
 
-    @Column(name = "organizer", length = 255)
-    private String organizer;
+    @Column(name = "recommended_level", length = 64)
+    private String recommendedLevel;
 
-    @Column(name = "impact_scope", length = 64)
-    private String impactScope;
+    @Column(name = "is_key_area", length = 16)
+    private String isKeyArea;
 
-    @Column(name = "note", columnDefinition = "TEXT")
-    private String note;
+    @Column(name = "final_status", length = 32)
+    private String finalStatus;
 
     @Column(name = "image_url", length = 255)
     private String imageUrl;
@@ -87,68 +86,68 @@ public class AchievementWorks {
         this.studentName = studentName;
     }
 
-    public String getWorkName() {
-        return workName;
+    public String getCollegeName() {
+        return collegeName;
     }
 
-    public void setWorkName(String workName) {
-        this.workName = workName;
+    public void setCollegeName(String collegeName) {
+        this.collegeName = collegeName;
     }
 
-    public String getWorkCategory() {
-        return workCategory;
+    public String getProjectName() {
+        return projectName;
     }
 
-    public void setWorkCategory(String workCategory) {
-        this.workCategory = workCategory;
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
-    public String getWorkType() {
-        return workType;
+    public String getProjectType() {
+        return projectType;
     }
 
-    public void setWorkType(String workType) {
-        this.workType = workType;
+    public void setProjectType(String projectType) {
+        this.projectType = projectType;
     }
 
-    public LocalDate getPublishDate() {
-        return publishDate;
+    public String getProjectLeader() {
+        return projectLeader;
     }
 
-    public void setPublishDate(LocalDate publishDate) {
-        this.publishDate = publishDate;
+    public void setProjectLeader(String projectLeader) {
+        this.projectLeader = projectLeader;
     }
 
-    public String getPublishOccasion() {
-        return publishOccasion;
+    public String getInstructorName() {
+        return instructorName;
     }
 
-    public void setPublishOccasion(String publishOccasion) {
-        this.publishOccasion = publishOccasion;
+    public void setInstructorName(String instructorName) {
+        this.instructorName = instructorName;
     }
 
-    public String getOrganizer() {
-        return organizer;
+    public String getRecommendedLevel() {
+        return recommendedLevel;
     }
 
-    public void setOrganizer(String organizer) {
-        this.organizer = organizer;
+    public void setRecommendedLevel(String recommendedLevel) {
+        this.recommendedLevel = recommendedLevel;
     }
 
-    public String getImpactScope() {
-        return impactScope;
+    public String getIsKeyArea() {
+        return isKeyArea;
     }
 
-    public void setImpactScope(String impactScope) {
-        this.impactScope = impactScope;
+    public void setIsKeyArea(String isKeyArea) {
+        this.isKeyArea = isKeyArea;
     }
 
-    public String getNote() {
-        return note;
+    public String getFinalStatus() {
+        return finalStatus;
     }
 
-    public void setNote(String note) {
-        this.note = note;
+    public void setFinalStatus(String finalStatus) {
+        this.finalStatus = finalStatus;
     }
 
     public String getImageUrl() {

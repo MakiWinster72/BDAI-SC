@@ -25,6 +25,8 @@ public class AchievementService {
     private final AchievementCertificateRepository achievementCertificateRepository;
     private final AchievementResearchRepository achievementResearchRepository;
     private final AchievementWorksRepository achievementWorksRepository;
+    private final AchievementDoubleHundredRepository achievementDoubleHundredRepository;
+    private final AchievementIeerTrainingRepository achievementIeerTrainingRepository;
 
     public AchievementService(
         AppUserRepository appUserRepository,
@@ -34,7 +36,9 @@ public class AchievementService {
         AchievementPatentRepository achievementPatentRepository,
         AchievementCertificateRepository achievementCertificateRepository,
         AchievementResearchRepository achievementResearchRepository,
-        AchievementWorksRepository achievementWorksRepository
+        AchievementWorksRepository achievementWorksRepository,
+        AchievementDoubleHundredRepository achievementDoubleHundredRepository,
+        AchievementIeerTrainingRepository achievementIeerTrainingRepository
     ) {
         this.appUserRepository = appUserRepository;
         this.achievementContestRepository = achievementContestRepository;
@@ -44,6 +48,8 @@ public class AchievementService {
         this.achievementCertificateRepository = achievementCertificateRepository;
         this.achievementResearchRepository = achievementResearchRepository;
         this.achievementWorksRepository = achievementWorksRepository;
+        this.achievementDoubleHundredRepository = achievementDoubleHundredRepository;
+        this.achievementIeerTrainingRepository = achievementIeerTrainingRepository;
     }
 
     public List<AchievementRecordResponse> list(
@@ -103,6 +109,16 @@ public class AchievementService {
                     .stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());
+            case "doubleHundred":
+                return achievementDoubleHundredRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "ieerTraining":
+                return achievementIeerTrainingRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
             default:
                 throw new IllegalArgumentException("无效的成就分类");
         }
@@ -124,6 +140,10 @@ public class AchievementService {
                 return toResponse(loadResearch(username, id));
             case "works":
                 return toResponse(loadWorks(username, id));
+            case "doubleHundred":
+                return toResponse(loadDoubleHundred(username, id));
+            case "ieerTraining":
+                return toResponse(loadIeerTraining(username, id));
             default:
                 throw new IllegalArgumentException("无效的成就分类");
         }
@@ -148,6 +168,10 @@ public class AchievementService {
                 return toResponse(saveResearch(author, fields, request.getImageUrl()));
             case "works":
                 return toResponse(saveWorks(author, fields, request.getImageUrl()));
+            case "doubleHundred":
+                return toResponse(saveDoubleHundred(author, fields, request.getImageUrl()));
+            case "ieerTraining":
+                return toResponse(saveIeerTraining(author, fields, request.getImageUrl()));
             default:
                 throw new IllegalArgumentException("无效的成就分类");
         }
@@ -170,6 +194,10 @@ public class AchievementService {
                 return toResponse(updateResearch(username, id, fields, request.getImageUrl()));
             case "works":
                 return toResponse(updateWorks(username, id, fields, request.getImageUrl()));
+            case "doubleHundred":
+                return toResponse(updateDoubleHundred(username, id, fields, request.getImageUrl()));
+            case "ieerTraining":
+                return toResponse(updateIeerTraining(username, id, fields, request.getImageUrl()));
             default:
                 throw new IllegalArgumentException("无效的成就分类");
         }
@@ -198,6 +226,12 @@ public class AchievementService {
             case "works":
                 achievementWorksRepository.delete(loadWorks(username, id));
                 return;
+            case "doubleHundred":
+                achievementDoubleHundredRepository.delete(loadDoubleHundred(username, id));
+                return;
+            case "ieerTraining":
+                achievementIeerTrainingRepository.delete(loadIeerTraining(username, id));
+                return;
             default:
                 throw new IllegalArgumentException("无效的成就分类");
         }
@@ -218,6 +252,10 @@ public class AchievementService {
         all.addAll(achievementResearchRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
             .stream().map(this::toResponse).collect(Collectors.toList()));
         all.addAll(achievementWorksRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(achievementDoubleHundredRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(achievementIeerTrainingRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
             .stream().map(this::toResponse).collect(Collectors.toList()));
         return all.stream()
             .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
@@ -272,6 +310,16 @@ public class AchievementService {
                     .stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());
+            case "doubleHundred":
+                return fetchDoubleHundredByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            case "ieerTraining":
+                return fetchIeerTrainingByStudent(studentNo, studentName)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
             default:
                 throw new IllegalArgumentException("无效的成就分类");
         }
@@ -292,6 +340,10 @@ public class AchievementService {
         all.addAll(fetchResearchByStudent(studentNo, studentName)
             .stream().map(this::toResponse).collect(Collectors.toList()));
         all.addAll(fetchWorksByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchDoubleHundredByStudent(studentNo, studentName)
+            .stream().map(this::toResponse).collect(Collectors.toList()));
+        all.addAll(fetchIeerTrainingByStudent(studentNo, studentName)
             .stream().map(this::toResponse).collect(Collectors.toList()));
         return all.stream()
             .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
@@ -396,6 +448,34 @@ public class AchievementService {
         return new ArrayList<>();
     }
 
+    private List<AchievementDoubleHundred> fetchDoubleHundredByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementDoubleHundredRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementDoubleHundredRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementDoubleHundredRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AchievementIeerTraining> fetchIeerTrainingByStudent(String studentNo, String studentName) {
+        if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+            return achievementIeerTrainingRepository
+                .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+        }
+        if (!studentNo.isEmpty()) {
+            return achievementIeerTrainingRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+        }
+        if (!studentName.isEmpty()) {
+            return achievementIeerTrainingRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+        }
+        return new ArrayList<>();
+    }
+
     private boolean isPrivileged(AppUser user) {
         if (user == null || user.getRole() == null) {
             return false;
@@ -460,6 +540,20 @@ public class AchievementService {
         return works;
     }
 
+    private AchievementDoubleHundred loadDoubleHundred(String username, Long id) {
+        AchievementDoubleHundred doubleHundred = achievementDoubleHundredRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
+        ensureOwner(username, doubleHundred.getAuthor());
+        return doubleHundred;
+    }
+
+    private AchievementIeerTraining loadIeerTraining(String username, Long id) {
+        AchievementIeerTraining ieerTraining = achievementIeerTrainingRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
+        ensureOwner(username, ieerTraining.getAuthor());
+        return ieerTraining;
+    }
+
     private void ensureOwner(String username, AppUser author) {
         if (!author.getUsername().equals(username)) {
             throw new IllegalArgumentException("无权限操作该成就");
@@ -518,6 +612,8 @@ public class AchievementService {
         contest.setInstructors(valueOf(fields, "instructors"));
         contest.setRemark(valueOf(fields, "remark"));
         contest.setImageUrl(imageUrl);
+        contest.setImageUrls(valueOf(fields, "_imageUrls"));
+        contest.setAttachments(valueOf(fields, "_attachments"));
         contest.setCreatedAt(LocalDateTime.now());
         return achievementContestRepository.save(contest);
     }
@@ -541,6 +637,8 @@ public class AchievementService {
         contest.setInstructors(valueOf(fields, "instructors"));
         contest.setRemark(valueOf(fields, "remark"));
         contest.setImageUrl(imageUrl);
+        contest.setImageUrls(valueOf(fields, "_imageUrls"));
+        contest.setAttachments(valueOf(fields, "_attachments"));
         return achievementContestRepository.save(contest);
     }
 
@@ -559,6 +657,8 @@ public class AchievementService {
         paper.setAuthorOrder(valueOf(fields, "authorOrder"));
         paper.setIndexed(valueOf(fields, "indexed"));
         paper.setImageUrl(imageUrl);
+        paper.setImageUrls(valueOf(fields, "_imageUrls"));
+        paper.setAttachments(valueOf(fields, "_attachments"));
         paper.setCreatedAt(LocalDateTime.now());
         return achievementPaperRepository.save(paper);
     }
@@ -576,6 +676,8 @@ public class AchievementService {
         paper.setAuthorOrder(valueOf(fields, "authorOrder"));
         paper.setIndexed(valueOf(fields, "indexed"));
         paper.setImageUrl(imageUrl);
+        paper.setImageUrls(valueOf(fields, "_imageUrls"));
+        paper.setAttachments(valueOf(fields, "_attachments"));
         return achievementPaperRepository.save(paper);
     }
 
@@ -592,6 +694,8 @@ public class AchievementService {
         journal.setPublicationName(valueOf(fields, "publicationName"));
         journal.setPublishDate(parseDate(valueOf(fields, "publishDate")));
         journal.setImageUrl(imageUrl);
+        journal.setImageUrls(valueOf(fields, "_imageUrls"));
+        journal.setAttachments(valueOf(fields, "_attachments"));
         journal.setCreatedAt(LocalDateTime.now());
         return achievementJournalRepository.save(journal);
     }
@@ -607,6 +711,8 @@ public class AchievementService {
         journal.setPublicationName(valueOf(fields, "publicationName"));
         journal.setPublishDate(parseDate(valueOf(fields, "publishDate")));
         journal.setImageUrl(imageUrl);
+        journal.setImageUrls(valueOf(fields, "_imageUrls"));
+        journal.setAttachments(valueOf(fields, "_attachments"));
         return achievementJournalRepository.save(journal);
     }
 
@@ -625,6 +731,8 @@ public class AchievementService {
         patent.setGrantDate(parseDate(valueOf(fields, "grantDate")));
         patent.setFirstInventor(valueOf(fields, "firstInventor"));
         patent.setImageUrl(imageUrl);
+        patent.setImageUrls(valueOf(fields, "_imageUrls"));
+        patent.setAttachments(valueOf(fields, "_attachments"));
         patent.setCreatedAt(LocalDateTime.now());
         return achievementPatentRepository.save(patent);
     }
@@ -642,6 +750,8 @@ public class AchievementService {
         patent.setGrantDate(parseDate(valueOf(fields, "grantDate")));
         patent.setFirstInventor(valueOf(fields, "firstInventor"));
         patent.setImageUrl(imageUrl);
+        patent.setImageUrls(valueOf(fields, "_imageUrls"));
+        patent.setAttachments(valueOf(fields, "_attachments"));
         return achievementPatentRepository.save(patent);
     }
 
@@ -658,6 +768,8 @@ public class AchievementService {
         certificate.setCertificateName(certificateName);
         certificate.setObtainDate(parseDate(valueOf(fields, "obtainDate")));
         certificate.setImageUrl(imageUrl);
+        certificate.setImageUrls(valueOf(fields, "_imageUrls"));
+        certificate.setAttachments(valueOf(fields, "_attachments"));
         certificate.setCreatedAt(LocalDateTime.now());
         return achievementCertificateRepository.save(certificate);
     }
@@ -673,6 +785,8 @@ public class AchievementService {
         certificate.setCertificateType(valueOf(fields, "certificateType"));
         certificate.setObtainDate(parseDate(valueOf(fields, "obtainDate")));
         certificate.setImageUrl(imageUrl);
+        certificate.setImageUrls(valueOf(fields, "_imageUrls"));
+        certificate.setAttachments(valueOf(fields, "_attachments"));
         return achievementCertificateRepository.save(certificate);
     }
 
@@ -689,6 +803,8 @@ public class AchievementService {
         research.setTeacherNo(valueOf(fields, "teacherNo"));
         research.setProjectLeader(valueOf(fields, "projectLeader"));
         research.setImageUrl(imageUrl);
+        research.setImageUrls(valueOf(fields, "_imageUrls"));
+        research.setAttachments(valueOf(fields, "_attachments"));
         research.setCreatedAt(LocalDateTime.now());
         return achievementResearchRepository.save(research);
     }
@@ -704,6 +820,8 @@ public class AchievementService {
         research.setTeacherNo(valueOf(fields, "teacherNo"));
         research.setProjectLeader(valueOf(fields, "projectLeader"));
         research.setImageUrl(imageUrl);
+        research.setImageUrls(valueOf(fields, "_imageUrls"));
+        research.setAttachments(valueOf(fields, "_attachments"));
         return achievementResearchRepository.save(research);
     }
 
@@ -725,6 +843,8 @@ public class AchievementService {
         works.setImpactScope(valueOf(fields, "impactScope"));
         works.setNote(valueOf(fields, "note"));
         works.setImageUrl(imageUrl);
+        works.setImageUrls(valueOf(fields, "_imageUrls"));
+        works.setAttachments(valueOf(fields, "_attachments"));
         works.setCreatedAt(LocalDateTime.now());
         return achievementWorksRepository.save(works);
     }
@@ -745,7 +865,107 @@ public class AchievementService {
         works.setImpactScope(valueOf(fields, "impactScope"));
         works.setNote(valueOf(fields, "note"));
         works.setImageUrl(imageUrl);
+        works.setImageUrls(valueOf(fields, "_imageUrls"));
+        works.setAttachments(valueOf(fields, "_attachments"));
         return achievementWorksRepository.save(works);
+    }
+
+    private AchievementDoubleHundred saveDoubleHundred(AppUser author, Map<String, String> fields, String imageUrl) {
+        String projectName = valueOf(fields, "projectName");
+        if (projectName.isEmpty()) {
+            throw new IllegalArgumentException("申报作品名不能为空");
+        }
+        AchievementDoubleHundred doubleHundred = new AchievementDoubleHundred();
+        doubleHundred.setAuthor(author);
+        doubleHundred.setStudentNo(valueOf(fields, "studentNo"));
+        doubleHundred.setStudentName(valueOf(fields, "studentName"));
+        doubleHundred.setProjectCategory(valueOf(fields, "projectCategory"));
+        doubleHundred.setProjectDomain(valueOf(fields, "projectDomain"));
+        doubleHundred.setProjectName(projectName);
+        doubleHundred.setProjectLeader(valueOf(fields, "projectLeader"));
+        doubleHundred.setLeaderStudentNo(valueOf(fields, "leaderStudentNo"));
+        doubleHundred.setEducationLevel(valueOf(fields, "educationLevel"));
+        doubleHundred.setTeamMembers(valueOf(fields, "teamMembers"));
+        doubleHundred.setInstructors(valueOf(fields, "instructors"));
+        doubleHundred.setTeamSize(valueOf(fields, "teamSize"));
+        doubleHundred.setPlannedLevel(valueOf(fields, "plannedLevel"));
+        doubleHundred.setCollege(valueOf(fields, "college"));
+        doubleHundred.setFinalLevel(valueOf(fields, "finalLevel"));
+        doubleHundred.setImageUrl(imageUrl);
+        doubleHundred.setImageUrls(valueOf(fields, "_imageUrls"));
+        doubleHundred.setAttachments(valueOf(fields, "_attachments"));
+        doubleHundred.setCreatedAt(LocalDateTime.now());
+        return achievementDoubleHundredRepository.save(doubleHundred);
+    }
+
+    private AchievementDoubleHundred updateDoubleHundred(String username, Long id, Map<String, String> fields, String imageUrl) {
+        AchievementDoubleHundred doubleHundred = loadDoubleHundred(username, id);
+        String projectName = valueOf(fields, "projectName");
+        if (!projectName.isEmpty()) {
+            doubleHundred.setProjectName(projectName);
+        }
+        doubleHundred.setStudentNo(valueOf(fields, "studentNo"));
+        doubleHundred.setStudentName(valueOf(fields, "studentName"));
+        doubleHundred.setProjectCategory(valueOf(fields, "projectCategory"));
+        doubleHundred.setProjectDomain(valueOf(fields, "projectDomain"));
+        doubleHundred.setProjectLeader(valueOf(fields, "projectLeader"));
+        doubleHundred.setLeaderStudentNo(valueOf(fields, "leaderStudentNo"));
+        doubleHundred.setEducationLevel(valueOf(fields, "educationLevel"));
+        doubleHundred.setTeamMembers(valueOf(fields, "teamMembers"));
+        doubleHundred.setInstructors(valueOf(fields, "instructors"));
+        doubleHundred.setTeamSize(valueOf(fields, "teamSize"));
+        doubleHundred.setPlannedLevel(valueOf(fields, "plannedLevel"));
+        doubleHundred.setCollege(valueOf(fields, "college"));
+        doubleHundred.setFinalLevel(valueOf(fields, "finalLevel"));
+        doubleHundred.setImageUrl(imageUrl);
+        doubleHundred.setImageUrls(valueOf(fields, "_imageUrls"));
+        doubleHundred.setAttachments(valueOf(fields, "_attachments"));
+        return achievementDoubleHundredRepository.save(doubleHundred);
+    }
+
+    private AchievementIeerTraining saveIeerTraining(AppUser author, Map<String, String> fields, String imageUrl) {
+        String projectName = valueOf(fields, "projectName");
+        if (projectName.isEmpty()) {
+            throw new IllegalArgumentException("项目名称不能为空");
+        }
+        AchievementIeerTraining ieerTraining = new AchievementIeerTraining();
+        ieerTraining.setAuthor(author);
+        ieerTraining.setStudentNo(valueOf(fields, "studentNo"));
+        ieerTraining.setStudentName(valueOf(fields, "studentName"));
+        ieerTraining.setCollegeName(valueOf(fields, "collegeName"));
+        ieerTraining.setProjectName(projectName);
+        ieerTraining.setProjectType(valueOf(fields, "projectType"));
+        ieerTraining.setProjectLeader(valueOf(fields, "projectLeader"));
+        ieerTraining.setInstructorName(valueOf(fields, "instructorName"));
+        ieerTraining.setRecommendedLevel(valueOf(fields, "recommendedLevel"));
+        ieerTraining.setIsKeyArea(valueOf(fields, "isKeyArea"));
+        ieerTraining.setFinalStatus(valueOf(fields, "finalStatus"));
+        ieerTraining.setImageUrl(imageUrl);
+        ieerTraining.setImageUrls(valueOf(fields, "_imageUrls"));
+        ieerTraining.setAttachments(valueOf(fields, "_attachments"));
+        ieerTraining.setCreatedAt(LocalDateTime.now());
+        return achievementIeerTrainingRepository.save(ieerTraining);
+    }
+
+    private AchievementIeerTraining updateIeerTraining(String username, Long id, Map<String, String> fields, String imageUrl) {
+        AchievementIeerTraining ieerTraining = loadIeerTraining(username, id);
+        String projectName = valueOf(fields, "projectName");
+        if (!projectName.isEmpty()) {
+            ieerTraining.setProjectName(projectName);
+        }
+        ieerTraining.setStudentNo(valueOf(fields, "studentNo"));
+        ieerTraining.setStudentName(valueOf(fields, "studentName"));
+        ieerTraining.setCollegeName(valueOf(fields, "collegeName"));
+        ieerTraining.setProjectType(valueOf(fields, "projectType"));
+        ieerTraining.setProjectLeader(valueOf(fields, "projectLeader"));
+        ieerTraining.setInstructorName(valueOf(fields, "instructorName"));
+        ieerTraining.setRecommendedLevel(valueOf(fields, "recommendedLevel"));
+        ieerTraining.setIsKeyArea(valueOf(fields, "isKeyArea"));
+        ieerTraining.setFinalStatus(valueOf(fields, "finalStatus"));
+        ieerTraining.setImageUrl(imageUrl);
+        ieerTraining.setImageUrls(valueOf(fields, "_imageUrls"));
+        ieerTraining.setAttachments(valueOf(fields, "_attachments"));
+        return achievementIeerTrainingRepository.save(ieerTraining);
     }
 
     private AchievementRecordResponse toResponse(AchievementContest contest) {
@@ -763,6 +983,12 @@ public class AchievementService {
         fields.put("teamMembers", contest.getTeamMembers());
         fields.put("instructors", contest.getInstructors());
         fields.put("remark", contest.getRemark());
+        if (contest.getImageUrls() != null) {
+            fields.put("_imageUrls", contest.getImageUrls());
+        }
+        if (contest.getAttachments() != null) {
+            fields.put("_attachments", contest.getAttachments());
+        }
         return new AchievementRecordResponse(
             contest.getId(),
             "contest",
@@ -781,6 +1007,12 @@ public class AchievementService {
         fields.put("publishDate", formatDate(paper.getPublishDate()));
         fields.put("authorOrder", paper.getAuthorOrder());
         fields.put("indexed", paper.getIndexed());
+        if (paper.getImageUrls() != null) {
+            fields.put("_imageUrls", paper.getImageUrls());
+        }
+        if (paper.getAttachments() != null) {
+            fields.put("_attachments", paper.getAttachments());
+        }
         return new AchievementRecordResponse(
             paper.getId(),
             "paper",
@@ -797,6 +1029,12 @@ public class AchievementService {
         fields.put("workTitle", journal.getWorkTitle());
         fields.put("publicationName", journal.getPublicationName());
         fields.put("publishDate", formatDate(journal.getPublishDate()));
+        if (journal.getImageUrls() != null) {
+            fields.put("_imageUrls", journal.getImageUrls());
+        }
+        if (journal.getAttachments() != null) {
+            fields.put("_attachments", journal.getAttachments());
+        }
         return new AchievementRecordResponse(
             journal.getId(),
             "journal",
@@ -815,6 +1053,12 @@ public class AchievementService {
         fields.put("grantNo", patent.getGrantNo());
         fields.put("grantDate", formatDate(patent.getGrantDate()));
         fields.put("firstInventor", patent.getFirstInventor());
+        if (patent.getImageUrls() != null) {
+            fields.put("_imageUrls", patent.getImageUrls());
+        }
+        if (patent.getAttachments() != null) {
+            fields.put("_attachments", patent.getAttachments());
+        }
         return new AchievementRecordResponse(
             patent.getId(),
             "patent",
@@ -831,6 +1075,12 @@ public class AchievementService {
         fields.put("certificateType", certificate.getCertificateType());
         fields.put("certificateName", certificate.getCertificateName());
         fields.put("obtainDate", formatDate(certificate.getObtainDate()));
+        if (certificate.getImageUrls() != null) {
+            fields.put("_imageUrls", certificate.getImageUrls());
+        }
+        if (certificate.getAttachments() != null) {
+            fields.put("_attachments", certificate.getAttachments());
+        }
         return new AchievementRecordResponse(
             certificate.getId(),
             "certificate",
@@ -847,6 +1097,12 @@ public class AchievementService {
         fields.put("projectName", research.getProjectName());
         fields.put("teacherNo", research.getTeacherNo());
         fields.put("projectLeader", research.getProjectLeader());
+        if (research.getImageUrls() != null) {
+            fields.put("_imageUrls", research.getImageUrls());
+        }
+        if (research.getAttachments() != null) {
+            fields.put("_attachments", research.getAttachments());
+        }
         return new AchievementRecordResponse(
             research.getId(),
             "research",
@@ -868,11 +1124,75 @@ public class AchievementService {
         fields.put("organizer", works.getOrganizer());
         fields.put("impactScope", works.getImpactScope());
         fields.put("note", works.getNote());
+        if (works.getImageUrls() != null) {
+            fields.put("_imageUrls", works.getImageUrls());
+        }
+        if (works.getAttachments() != null) {
+            fields.put("_attachments", works.getAttachments());
+        }
         return new AchievementRecordResponse(
             works.getId(),
             "works",
             works.getImageUrl(),
             works.getCreatedAt(),
+            fields
+        );
+    }
+
+    private AchievementRecordResponse toResponse(AchievementDoubleHundred doubleHundred) {
+        Map<String, String> fields = new HashMap<>();
+        fields.put("studentNo", doubleHundred.getStudentNo());
+        fields.put("studentName", doubleHundred.getStudentName());
+        fields.put("projectCategory", doubleHundred.getProjectCategory());
+        fields.put("projectDomain", doubleHundred.getProjectDomain());
+        fields.put("projectName", doubleHundred.getProjectName());
+        fields.put("projectLeader", doubleHundred.getProjectLeader());
+        fields.put("leaderStudentNo", doubleHundred.getLeaderStudentNo());
+        fields.put("educationLevel", doubleHundred.getEducationLevel());
+        fields.put("teamMembers", doubleHundred.getTeamMembers());
+        fields.put("instructors", doubleHundred.getInstructors());
+        fields.put("teamSize", doubleHundred.getTeamSize());
+        fields.put("plannedLevel", doubleHundred.getPlannedLevel());
+        fields.put("college", doubleHundred.getCollege());
+        fields.put("finalLevel", doubleHundred.getFinalLevel());
+        if (doubleHundred.getImageUrls() != null) {
+            fields.put("_imageUrls", doubleHundred.getImageUrls());
+        }
+        if (doubleHundred.getAttachments() != null) {
+            fields.put("_attachments", doubleHundred.getAttachments());
+        }
+        return new AchievementRecordResponse(
+            doubleHundred.getId(),
+            "doubleHundred",
+            doubleHundred.getImageUrl(),
+            doubleHundred.getCreatedAt(),
+            fields
+        );
+    }
+
+    private AchievementRecordResponse toResponse(AchievementIeerTraining ieerTraining) {
+        Map<String, String> fields = new HashMap<>();
+        fields.put("studentNo", ieerTraining.getStudentNo());
+        fields.put("studentName", ieerTraining.getStudentName());
+        fields.put("collegeName", ieerTraining.getCollegeName());
+        fields.put("projectName", ieerTraining.getProjectName());
+        fields.put("projectType", ieerTraining.getProjectType());
+        fields.put("projectLeader", ieerTraining.getProjectLeader());
+        fields.put("instructorName", ieerTraining.getInstructorName());
+        fields.put("recommendedLevel", ieerTraining.getRecommendedLevel());
+        fields.put("isKeyArea", ieerTraining.getIsKeyArea());
+        fields.put("finalStatus", ieerTraining.getFinalStatus());
+        if (ieerTraining.getImageUrls() != null) {
+            fields.put("_imageUrls", ieerTraining.getImageUrls());
+        }
+        if (ieerTraining.getAttachments() != null) {
+            fields.put("_attachments", ieerTraining.getAttachments());
+        }
+        return new AchievementRecordResponse(
+            ieerTraining.getId(),
+            "ieerTraining",
+            ieerTraining.getImageUrl(),
+            ieerTraining.getCreatedAt(),
             fields
         );
     }
