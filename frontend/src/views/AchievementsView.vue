@@ -302,7 +302,7 @@
       >
         <span aria-hidden="true">+</span>
       </button>
-      <MobileCapsule @open-sidebar="openSidebar">
+      <MobileCapsule :hidden="editorOpen" @open-sidebar="openSidebar">
         <template #right>
           <div
             class="capsule-action capsule-primary"
