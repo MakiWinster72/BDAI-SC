@@ -176,8 +176,6 @@
                     v-model="filters.classNo"
                     class="info-input stepper-input"
                     type="number"
-                    min="1"
-                    max="10"
                     step="1"
                     placeholder="全部"
                     @input="normalizeClassNo"
@@ -1762,7 +1760,7 @@ function decrementClass() {
     return;
   }
   if (current <= 1) {
-    filters.classNo = "10";
+    filters.classNo = "";
     return;
   }
   filters.classNo = String(current - 1);
@@ -1775,7 +1773,7 @@ function incrementClass() {
     return;
   }
   if (current >= 10) {
-    filters.classNo = "1";
+    filters.classNo = "";
     return;
   }
   filters.classNo = String(current + 1);
