@@ -114,14 +114,14 @@
               alt="头像"
             />
             <span v-else>点击设置头像</span>
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              hidden
+              @change="onAvatarChange"
+            />
           </button>
-          <input
-            ref="avatarInput"
-            type="file"
-            accept="image/*"
-            hidden
-            @change="onAvatarChange"
-          />
           <div class="info-hero-text">
             <div class="info-hero-title">基础信息</div>
             <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
