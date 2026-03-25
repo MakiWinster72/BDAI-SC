@@ -272,13 +272,6 @@
               :pagination-page-size="100"
               :suppress-cell-focus="true"
             />
-            <button
-              class="student-grid-fullscreen"
-              type="button"
-              @click="toggleGridFullscreen"
-            >
-              {{ gridFullscreen ? "退出全屏" : "全屏" }}
-            </button>
           </div>
           <div v-else-if="pagedStudents.length" class="student-list">
             <div
@@ -1060,7 +1053,26 @@
         </div>
       </section>
 
-      <MobileCapsule @open-sidebar="openSidebar" />
+      <MobileCapsule @open-sidebar="openSidebar">
+        <template #right>
+          <button
+            class="capsule-action"
+            type="button"
+            @click="toggleGridView"
+          >
+            {{ gridViewOpen ? "列表" : "表格" }}
+          </button>
+          <button
+            v-if="gridViewOpen"
+            class="capsule-action"
+            :class="{ 'capsule-active': gridFullscreen }"
+            type="button"
+            @click="toggleGridFullscreen"
+          >
+            {{ gridFullscreen ? "退出" : "全屏" }}
+          </button>
+        </template>
+      </MobileCapsule>
     </main>
   </div>
 </template>
@@ -1115,6 +1127,7 @@ const gridFieldDialogOpen = ref(false);
 const gridFieldDialogClosing = ref(false);
 const gridActiveSheet = ref("main");
 const gridFullscreen = ref(false);
+const gridWrapRef = ref(null);
 const gridHasFullDetail = ref(false);
 let gridRequestId = 0;
 const previewActiveSheet = ref("main");
@@ -1334,7 +1347,7 @@ function initExportSelections() {
   const selections = {};
   exportGroups.forEach((group) => {
     group.fields.forEach((field) => {
-      selections[field.key] = Boolean(field.defaultSelected);
+      selections[field.key] = true;
     });
   });
   return selections;
@@ -2182,7 +2195,7 @@ const gridSheets = computed(() => {
   if (shouldIncludeMainSheet(keys)) {
     const table = buildStudentTable(gridDetailRows.value, keys);
     if (table) {
-      sheets.push({ id: "main", label: "学生", table });
+      sheets.push({ id: "main", label: "全部", table });
     }
   }
   const educationTable = buildEducationTable(gridDetailRows.value, keys);
@@ -2270,7 +2283,7 @@ const previewSheets = computed(() => {
   if (shouldIncludeMainSheet(keys)) {
     const table = buildStudentTable(previewStudents.value, keys);
     if (table) {
-      sheets.push({ id: "main", label: "学生", table });
+      sheets.push({ id: "main", label: "全部", table });
     }
   }
   const educationTable = buildEducationTable(previewStudents.value, keys);
@@ -2581,7 +2594,7 @@ function buildExportTables(rows, selectedKeys, achievementData) {
   if (shouldIncludeMainSheet(selectedKeys)) {
     const table = buildStudentTable(rows, selectedKeys);
     if (table) {
-      tables.push({ title: "学生", table });
+      tables.push({ title: "全部", table });
     }
   }
   const educationTable = buildEducationTable(rows, selectedKeys);
@@ -3251,6 +3264,7 @@ function loadUser() {
 .student-grid-wrap.fullscreen {
   position: fixed;
   inset: 0;
+  bottom: 100px;
   z-index: 120;
   background: #f7fafb;
   padding: 16px;
@@ -3259,14 +3273,12 @@ function loadUser() {
 }
 
 .student-grid-wrap.fullscreen .student-grid {
-  height: calc(100vh - 32px);
+  flex: 1;
   border-radius: 16px;
+  min-height: 0;
 }
 
 .student-grid-fullscreen {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
   border: none;
   background: rgba(3, 107, 114, 0.12);
   color: #036b72;
@@ -3274,10 +3286,17 @@ function loadUser() {
   border-radius: 999px;
   font-size: 12px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .student-grid-fullscreen:hover {
   background: rgba(3, 107, 114, 0.2);
+}
+
+.student-grid-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
 .student-search {
@@ -3984,7 +4003,10 @@ function loadUser() {
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.8);
     border: 1px solid rgba(3, 107, 114, 0.12);
-    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    transition:
+      background 0.2s ease,
+      transform 0.15s ease,
+      box-shadow 0.2s ease;
     box-shadow: 0 2px 8px rgba(3, 107, 114, 0.06);
   }
 
@@ -4043,15 +4065,11 @@ function loadUser() {
 
   .student-grid-tabs {
     gap: 6px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px;
-    scrollbar-width: none;
+    flex-wrap: wrap;
   }
 
-  .student-grid-tabs::-webkit-scrollbar {
+  /* 隐藏 filter-header 里的切换按钮（已移至胶囊） */
+  .student-filter-header .student-grid-toggle {
     display: none;
   }
 
@@ -4106,9 +4124,6 @@ function loadUser() {
   }
 
   .student-grid-fullscreen {
-    right: 12px;
-    bottom: 12px;
-    left: auto;
     padding: 7px 12px;
     font-size: 11px;
   }
@@ -4116,11 +4131,18 @@ function loadUser() {
   .student-grid-wrap.fullscreen {
     padding: 12px;
     z-index: 200;
+    bottom: 86px;
+  }
+
+  .student-grid-wrap.fullscreen .student-grid-toolbar {
+    margin-top: 0;
+    margin-bottom: 8px;
   }
 
   .student-grid-wrap.fullscreen .student-grid {
-    height: calc(100vh - 80px);
     border-radius: 12px;
+    flex: 1;
+    min-height: 0;
   }
 
   .student-detail-view {

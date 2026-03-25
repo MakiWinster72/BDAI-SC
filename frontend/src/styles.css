@@ -425,6 +425,17 @@ body {
   box-shadow: 0 2px 6px rgba(10, 107, 116, 0.25);
 }
 
+.capsule-action.capsule-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0a8a94 0%, #0d6b73 100%);
+  box-shadow: 0 4px 12px rgba(10, 107, 116, 0.3);
+}
+
+.capsule-action.capsule-active:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(10, 107, 116, 0.25);
+}
+
 .profile-card,
 .menu-card,
 .composer-card,
