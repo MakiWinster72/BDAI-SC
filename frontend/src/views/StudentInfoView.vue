@@ -3978,18 +3978,51 @@ function loadUser() {
   }
 
   .student-row {
-    grid-template-columns: auto 1fr;
-    gap: 8px;
-    padding: 10px;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(3, 107, 114, 0.12);
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(3, 107, 114, 0.06);
   }
 
-  .student-row .ghost-button {
-    grid-column: 1 / -1;
-    justify-self: start;
+  .student-row:active {
+    background: rgba(255, 255, 255, 0.95);
+    transform: scale(0.99);
+    box-shadow: 0 1px 4px rgba(3, 107, 114, 0.08);
+  }
+
+  .student-main {
+    gap: 6px;
+  }
+
+  .student-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #083d45;
+    line-height: 1.3;
   }
 
   .student-meta {
-    font-size: 11px;
+    font-size: 12px;
+    color: #5c7178;
+    line-height: 1.4;
+    word-break: break-all;
+  }
+
+  .student-row .ghost-button {
+    align-self: center;
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 50px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .student-list {
+    gap: 12px;
   }
 
   .student-detail-view {
