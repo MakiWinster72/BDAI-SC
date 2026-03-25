@@ -3930,4 +3930,126 @@ function loadUser() {
     transform: translate(-50%, 120%) scale(0.98);
   }
 }
+
+@media (max-width: 640px) {
+  .student-right-stack {
+    padding-bottom: 88px;
+    gap: 10px;
+  }
+
+  .student-filter-header {
+    gap: 8px;
+  }
+
+  .student-search {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .student-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-results-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-results-actions {
+    width: 100%;
+  }
+
+  .student-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .student-pages {
+    justify-content: center;
+  }
+
+  .page-size {
+    justify-content: center;
+  }
+
+  .student-list {
+    gap: 8px;
+  }
+
+  .student-row {
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .student-row .ghost-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .student-meta {
+    font-size: 11px;
+  }
+
+  .student-detail-view {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 22px 22px 0 0;
+    transform: translateY(100%);
+  }
+
+  .student-detail-view.open {
+    transform: translateY(0);
+  }
+
+  .student-detail-view.closing {
+    transform: translateY(100%);
+  }
+
+  .student-detail-view.split {
+    width: 100%;
+    max-height: 92vh;
+  }
+
+  .student-achievements-view {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 92vh;
+    max-height: 92vh;
+    border-radius: 22px 22px 0 0;
+    transform: translateY(100%);
+  }
+
+  .student-achievements-view.open {
+    transform: translateY(0);
+  }
+
+  .student-achievements-view.closing {
+    transform: translateY(100%);
+  }
+
+  .grid-field-dialog {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 22px 22px 0 0;
+    transform: translateY(100%);
+  }
+
+  .grid-field-dialog.open {
+    transform: translateY(0);
+  }
+
+  .grid-field-dialog.closing {
+    transform: translateY(100%);
+  }
+}
 </style>
