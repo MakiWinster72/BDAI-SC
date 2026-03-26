@@ -1053,6 +1053,10 @@ body {
   align-items: start;
 }
 
+.achievement-grid:not(.has-media) {
+  grid-template-columns: 1fr;
+}
+
 .panel-fade-enter-active {
   transition: opacity 0.5s ease 0.1s, max-height 0.5s ease 0.1s;
   overflow: hidden;
@@ -1527,8 +1531,8 @@ body {
 }
 
 .achievement-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  justify-content: flex-end;
   gap: 10px;
 }
 
