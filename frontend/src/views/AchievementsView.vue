@@ -733,8 +733,9 @@
             关闭
           </button>
         </header>
-        <div class="achievement-grid">
-          <div v-if="form.category" class="achievement-media-panel">
+        <div class="achievement-grid" :class="{ 'has-media': form.category }">
+          <transition name="panel-fade">
+            <div v-show="form.category" class="achievement-media-panel">
             <div class="media-header">
               <div>
                 <div class="media-title">图片(可选)</div>
@@ -812,6 +813,7 @@
               </button>
             </div>
           </div>
+          </transition>
 
           <div class="achievement-fields">
             <div class="field-row">
@@ -860,7 +862,8 @@
                 ></textarea>
               </div>
             </div>
-            <div v-if="form.category" class="achievement-attachments-panel">
+            <transition name="panel-fade">
+            <div v-show="form.category" class="achievement-attachments-panel">
               <div class="media-header">
                 <div>
                   <div class="media-title">附件(可选)</div>
@@ -915,6 +918,7 @@
               </div>
               <div class="media-tip">单个不超过 {{ attachmentLimitLabel }}</div>
             </div>
+            </transition>
 
             <div class="achievement-actions">
               <button class="ghost-button" type="button" @click="closeEditor">
