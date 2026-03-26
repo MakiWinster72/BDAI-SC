@@ -2409,7 +2409,7 @@ body {
 .info-label {
   color: #5b717a;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.3px;
 }
 
@@ -2418,6 +2418,7 @@ body {
   color: #9aa7ad;
   font-style: italic;
   line-height: 1.4;
+  margin-top: 4px;
 }
 
 .info-hero-subtitle {
@@ -2482,7 +2483,7 @@ body {
   font-weight: 700;
   color: #0f4d55;
   letter-spacing: 0.3px;
-  padding: 2px 0;
+  padding: 8px 0 4px;
 }
 
 .field-card {
@@ -2576,6 +2577,11 @@ body {
   --edu-cols: minmax(240px, 1.6fr) minmax(160px, 1.4fr) minmax(140px, 1fr);
 }
 
+.education-table.education-table-cadres {
+  --edu-cols: minmax(240px, 1.6fr) minmax(160px, 1.4fr) minmax(120px, 1fr)
+    minmax(160px, 1.2fr);
+}
+
 .education-table thead {
   display: block;
 }
@@ -2594,7 +2600,7 @@ body {
 
 .education-table thead th {
   text-align: left;
-  font-size: 12px;
+  font-size: 13px;
   color: #5b717a;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -2672,6 +2678,15 @@ body {
 
 .education-table .info-input {
   width: 100%;
+}
+
+.education-table textarea.info-input {
+  height: auto;
+  min-height: 60px;
+  padding: 8px 12px;
+  line-height: 1.4;
+  font-size: 13px;
+  resize: vertical;
 }
 
 .education-controls-wrap {
@@ -3680,11 +3695,11 @@ body {
   }
 
   .info-form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .info-form-grid.three {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .family-grid {
@@ -3695,16 +3710,95 @@ body {
     min-width: 100%;
   }
 
-  .education-controls-wrap {
-    min-width: 100%;
+  .education-table thead {
+    display: none;
+  }
+
+  .education-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .education-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    border: 1px solid rgba(3, 107, 114, 0.12);
+    overflow: hidden;
+  }
+
+  .education-table tbody tr > td {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(3, 107, 114, 0.08);
+  }
+
+  .education-table tbody tr > td:last-child {
+    border-bottom: none;
+  }
+
+  .education-table tbody tr > td::before {
+    content: attr(data-label);
+    font-size: 13px;
+    color: #5b717a;
+    font-weight: 700;
+    letter-spacing: 0.3px;
   }
 
   .education-period {
-    flex-wrap: wrap;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .education-period-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
   }
 
   .education-period .info-input {
-    flex: 1 1 140px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .education-period .education-sep {
+    flex: 0 0 auto;
+    padding: 0 6px;
+    font-size: 12px;
+    color: #6a7d85;
+    white-space: nowrap;
+  }
+
+  .education-period .info-choice {
+    flex: 0 0 auto;
+    align-self: flex-start;
+  }
+
+  .education-table .info-input {
+    height: 42px;
+    flex: none;
+    width: 100%;
+  }
+
+  .education-table textarea.info-input {
+    height: auto;
+    min-height: 80px;
+    flex: none;
+  }
+
+  .education-table .education-period-row .info-input {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .education-controls-wrap {
+    min-width: 100%;
   }
 
   .info-inline-date {

@@ -234,17 +234,6 @@
               </div>
             </label>
             <label class="field-card">
-              <span class="info-label">入学时间</span>
-              <input
-                v-model="info.enrollmentDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
               <span class="info-label">班主任</span>
               <input
                 v-model="info.classTeacher"
@@ -261,6 +250,17 @@
                 class="info-input"
                 type="text"
                 placeholder="请输入辅导员"
+                :disabled="!isEditing"
+              />
+            </label>
+            <label class="field-card field-full">
+              <span class="info-label">入学时间</span>
+              <input
+                v-model="info.enrollmentDate"
+                class="info-input"
+                type="date"
+                lang="zh-CN"
+                :max="today"
                 :disabled="!isEditing"
               />
             </label>
@@ -547,7 +547,7 @@
                 </option>
               </select>
             </label>
-            <label class="field-card" v-if="!info.offCampusLiving">
+            <label class="field-card field-full" v-if="!info.offCampusLiving">
               <span class="info-label">住宿房间</span>
               <div class="class-inline">
                 <input
@@ -600,192 +600,195 @@
                 </label>
               </div>
             </div>
-            <label class="field-card">
-              <span class="info-label">提交入团申请书时间</span>
-              <input
-                v-model="info.leagueApplicationDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="leagueApplicationDisabled"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">入团时间</span>
-              <div class="info-inline info-inline-date">
+            <template v-if="info.leagueJoined">
+              <label class="field-card field-full">
+                <span class="info-label">提交入团申请书时间</span>
                 <input
-                  v-model="info.leagueJoinDate"
+                  v-model="info.leagueApplicationDate"
                   class="info-input"
                   type="date"
                   lang="zh-CN"
                   :max="today"
-                  :disabled="leagueJoinDisabled"
+                  :disabled="leagueApplicationDisabled"
                 />
-                <label class="info-choice info-choice-muted">
+              </label>
+              <label class="field-card field-full">
+                <span class="info-label">入团时间</span>
+                <div class="info-inline">
                   <input
-                    v-model="info.leagueDeveloping"
-                    type="checkbox"
-                    :disabled="leagueApplicationDisabled"
+                    v-model="info.leagueJoinDate"
+                    class="info-input"
+                    type="date"
+                    lang="zh-CN"
+                    :max="today"
+                    :disabled="leagueJoinDisabled"
                   />
-                  正在发展
-                </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">团号</span>
-              <input
-                v-model="info.leagueNo"
-                class="info-input"
-                type="text"
-                placeholder="请输入团号"
-                :disabled="leagueNoDisabled"
-              />
-            </label>
-            <div class="field-card field-full">
-              <span class="info-label">是否申请入党</span>
-              <div class="info-inline">
-                <label class="info-choice">
-                  <input
-                    v-model="info.partyApplied"
-                    type="radio"
-                    :value="true"
-                    :disabled="partyAppliedDisabled"
-                  />
-                  是
-                </label>
-                <label class="info-choice">
-                  <input
-                    v-model="info.partyApplied"
-                    type="radio"
-                    :value="false"
-                    :disabled="partyAppliedDisabled"
-                  />
-                  否
-                </label>
-              </div>
-            </div>
-            <label class="field-card">
-              <span class="info-label">提交入党申请书时间</span>
-              <input
-                v-model="info.applicationDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="applicationDateDisabled"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">确定积极分子时间</span>
-              <div class="info-inline info-inline-date">
+                  <label class="info-choice info-choice-muted">
+                    <input
+                      v-model="info.leagueDeveloping"
+                      type="checkbox"
+                      :disabled="leagueApplicationDisabled"
+                    />
+                    正在发展
+                  </label>
+                </div>
+              </label>
+              <label class="field-card field-full">
+                <span class="info-label">团号</span>
                 <input
-                  v-model="info.activistDate"
+                  v-model="info.leagueNo"
                   class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="activistDateDisabled"
+                  type="text"
+                  placeholder="请输入团号"
+                  :disabled="leagueNoDisabled"
                 />
-                <label class="info-choice info-choice-muted">
+              </label>
+              <div class="field-card field-full">
+                <span class="info-label">是否申请入党</span>
+                <div class="info-inline">
+                  <label class="info-choice">
+                    <input
+                      v-model="info.partyApplied"
+                      type="radio"
+                      :value="true"
+                      :disabled="partyAppliedDisabled"
+                    />
+                    是
+                  </label>
+                  <label class="info-choice">
+                    <input
+                      v-model="info.partyApplied"
+                      type="radio"
+                      :value="false"
+                      :disabled="partyAppliedDisabled"
+                    />
+                    否
+                  </label>
+                </div>
+              </div>
+              <template v-if="info.partyApplied">
+                <label class="field-card field-full">
+                  <span class="info-label">提交入党申请书时间</span>
                   <input
-                    v-model="info.activistDeveloping"
-                    type="checkbox"
+                    v-model="info.applicationDate"
+                    class="info-input"
+                    type="date"
+                    lang="zh-CN"
+                    :max="today"
                     :disabled="applicationDateDisabled"
                   />
-                  正在发展
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">上党课时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.partyTrainingDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="partyTrainingDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.partyTrainingPending"
-                    type="checkbox"
-                    :disabled="activistDateDisabled"
-                  />
-                  暂未报名
+                <label class="field-card field-full">
+                  <span class="info-label">确定积极分子时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.activistDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="activistDateDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.activistDeveloping"
+                        type="checkbox"
+                        :disabled="applicationDateDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">确定发展对象时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.developmentTargetDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="developmentTargetDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.developmentTargetDeveloping"
-                    type="checkbox"
-                    :disabled="partyTrainingDisabled"
-                  />
-                  正在发展
+                <label class="field-card field-full">
+                  <span class="info-label">上党课时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.partyTrainingDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="partyTrainingDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.partyTrainingPending"
+                        type="checkbox"
+                        :disabled="activistDateDisabled"
+                      />
+                      暂未报名
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">接收为预备党员时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.probationaryMemberDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="probationaryDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.probationaryDeveloping"
-                    type="checkbox"
-                    :disabled="developmentTargetDisabled"
-                  />
-                  正在发展
+                <label class="field-card field-full">
+                  <span class="info-label">确定发展对象时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.developmentTargetDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="developmentTargetDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.developmentTargetDeveloping"
+                        type="checkbox"
+                        :disabled="partyTrainingDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">转为正式党员时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.fullMemberDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="fullMemberDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.fullMemberDeveloping"
-                    type="checkbox"
-                    :disabled="probationaryDisabled"
-                  />
-                  正在发展
+                <label class="field-card field-full">
+                  <span class="info-label">接收为预备党员时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.probationaryMemberDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="probationaryDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.probationaryDeveloping"
+                        type="checkbox"
+                        :disabled="developmentTargetDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
+                <label class="field-card field-full">
+                  <span class="info-label">转为正式党员时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.fullMemberDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="fullMemberDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.fullMemberDeveloping"
+                        type="checkbox"
+                        :disabled="probationaryDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
+                </label>
+              </template>
+            </template>
           </div>
         </div>
 
         <div class="info-card">
-          <!-- TODO: 高度设置为两行 -->
           <div class="info-section-title">教育经历</div>
           <div class="info-hint">从小学开始填</div>
           <div ref="educationTableWrap" class="education-table-wrap">
@@ -803,27 +806,29 @@
                   v-for="(item, index) in educationItems"
                   :key="`edu-${index}`"
                 >
-                  <td>
+                  <td data-label="时间段">
                     <div class="education-period">
-                      <input
-                        v-model="item.startDate"
-                        class="info-input"
-                        type="date"
-                        lang="zh-CN"
-                        :max="today"
-                        :disabled="isEducationRowDisabled(index)"
-                      />
-                      <span class="education-sep">至</span>
-                      <input
-                        v-model="item.endDate"
-                        class="info-input"
-                        type="date"
-                        lang="zh-CN"
-                        :max="today"
-                        :disabled="
-                          isEducationRowDisabled(index) || item.isCurrent
-                        "
-                      />
+                      <div class="education-period-row">
+                        <input
+                          v-model="item.startDate"
+                          class="info-input"
+                          type="date"
+                          lang="zh-CN"
+                          :max="today"
+                          :disabled="isEducationRowDisabled(index)"
+                        />
+                        <span class="education-sep">至</span>
+                        <input
+                          v-model="item.endDate"
+                          class="info-input"
+                          type="date"
+                          lang="zh-CN"
+                          :max="today"
+                          :disabled="
+                            isEducationRowDisabled(index) || item.isCurrent
+                          "
+                        />
+                      </div>
                       <label class="info-choice info-choice-muted">
                         <input
                           v-model="item.isCurrent"
@@ -838,7 +843,7 @@
                       </label>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="学校名称">
                     <input
                       v-model="item.schoolName"
                       class="info-input"
@@ -847,7 +852,7 @@
                       :disabled="isEducationRowDisabled(index)"
                     />
                   </td>
-                  <td>
+                  <td data-label="学历">
                     <input
                       v-model="item.educationLevel"
                       class="info-input"
@@ -856,7 +861,7 @@
                       :disabled="isEducationRowDisabled(index)"
                     />
                   </td>
-                  <td>
+                  <td data-label="证明人">
                     <input
                       v-model="item.witness"
                       class="info-input"
@@ -896,22 +901,23 @@
         <div class="info-card">
           <div class="info-section-title">学生干部经历</div>
           <div ref="cadreTableWrap" class="education-table-wrap">
-            <table class="education-table education-table-three">
+            <table class="education-table education-table-cadres">
               <thead>
                 <tr>
                   <th>时间段</th>
                   <th>部门/班级</th>
                   <th>职位</th>
+                  <th>描述</th>
                 </tr>
               </thead>
               <transition-group name="education-row" tag="tbody">
-                <template
+                <tr
                   v-for="(item, index) in cadreItems"
                   :key="`cadre-${index}`"
                 >
-                  <tr>
-                    <td>
-                      <div class="education-period">
+                  <td data-label="时间段">
+                    <div class="education-period">
+                      <div class="education-period-row">
                         <input
                           v-model="item.startDate"
                           class="info-input"
@@ -931,51 +937,49 @@
                             isCadreRowDisabled(index) || item.isCurrent
                           "
                         />
-                        <label class="info-choice info-choice-muted">
-                          <input
-                            v-model="item.isCurrent"
-                            type="checkbox"
-                            :disabled="
-                              isCadreRowDisabled(index) ||
-                              isCadreCurrentDisabled(item)
-                            "
-                            @change="handleCadreCurrentChange(item, index)"
-                          />
-                          至今
-                        </label>
                       </div>
-                    </td>
-                    <td>
-                      <input
-                        v-model="item.department"
-                        class="info-input"
-                        type="text"
-                        placeholder="部门/班级"
-                        :disabled="isCadreRowDisabled(index)"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        v-model="item.position"
-                        class="info-input"
-                        type="text"
-                        placeholder="职位"
-                        :disabled="isCadreRowDisabled(index)"
-                      />
-                    </td>
-                  </tr>
-                  <tr class="education-row-full">
-                    <td class="education-cell-full" colspan="3">
-                      <textarea
-                        v-model="item.description"
-                        class="info-input"
-                        rows="2"
-                        placeholder="简述你在该职位的职责/成就"
-                        :disabled="isCadreRowDisabled(index)"
-                      ></textarea>
-                    </td>
-                  </tr>
-                </template>
+                      <label class="info-choice info-choice-muted">
+                        <input
+                          v-model="item.isCurrent"
+                          type="checkbox"
+                          :disabled="
+                            isCadreRowDisabled(index) ||
+                            isCadreCurrentDisabled(item)
+                          "
+                          @change="handleCadreCurrentChange(item, index)"
+                        />
+                        至今
+                      </label>
+                    </div>
+                  </td>
+                  <td data-label="部门/班级">
+                    <input
+                      v-model="item.department"
+                      class="info-input"
+                      type="text"
+                      placeholder="部门/班级"
+                      :disabled="isCadreRowDisabled(index)"
+                    />
+                  </td>
+                  <td data-label="职位">
+                    <input
+                      v-model="item.position"
+                      class="info-input"
+                      type="text"
+                      placeholder="职位"
+                      :disabled="isCadreRowDisabled(index)"
+                    />
+                  </td>
+                  <td data-label="描述">
+                    <textarea
+                      v-model="item.description"
+                      class="info-input"
+                      rows="2"
+                      placeholder="简述你在该职位的职责/成就"
+                      :disabled="isCadreRowDisabled(index)"
+                    ></textarea>
+                  </td>
+                </tr>
               </transition-group>
             </table>
             <div class="education-controls-wrap">
@@ -1007,7 +1011,7 @@
           <!-- TODO: 单亲/离异等待现场演示求助 -->
           <div class="info-section-title">家庭信息</div>
           <div class="info-form-grid family-grid">
-            <div class="family-section-title">父亲</div>
+            <div class="family-section-title">父亲（监护人）</div>
             <label class="field-card">
               <span class="info-label">姓名</span>
               <input
@@ -1055,7 +1059,7 @@
               />
               <div class="info-hint">无业则填写“务农”</div>
             </label>
-            <div class="family-section-title">母亲</div>
+            <div class="family-section-title">母亲（监护人2）</div>
             <label class="field-card">
               <span class="info-label">姓名</span>
               <input
@@ -1103,7 +1107,7 @@
         </div>
 
         <div class="info-card">
-          <div class="info-section-title">紧急联系人</div>
+          <div class="info-section-title">紧急联系人（除亲戚外）</div>
           <div class="info-form-grid">
             <label class="field-card">
               <span class="info-label">紧急联系人电话</span>
@@ -1987,6 +1991,38 @@ async function confirmEdit() {
   }
   if (fullMemberDisabled.value) {
     payload.fullMemberDate = null;
+  }
+  if (!info.leagueJoined) {
+    payload.leagueJoined = false;
+    payload.leagueApplicationDate = null;
+    payload.leagueJoinDate = null;
+    payload.leagueDeveloping = false;
+    payload.leagueNo = null;
+    payload.partyApplied = false;
+    payload.applicationDate = null;
+    payload.activistDate = null;
+    payload.activistDeveloping = false;
+    payload.partyTrainingDate = null;
+    payload.partyTrainingPending = false;
+    payload.developmentTargetDate = null;
+    payload.developmentTargetDeveloping = false;
+    payload.probationaryMemberDate = null;
+    payload.probationaryDeveloping = false;
+    payload.fullMemberDate = null;
+    payload.fullMemberDeveloping = false;
+  } else if (!info.partyApplied) {
+    payload.partyApplied = false;
+    payload.applicationDate = null;
+    payload.activistDate = null;
+    payload.activistDeveloping = false;
+    payload.partyTrainingDate = null;
+    payload.partyTrainingPending = false;
+    payload.developmentTargetDate = null;
+    payload.developmentTargetDeveloping = false;
+    payload.probationaryMemberDate = null;
+    payload.probationaryDeveloping = false;
+    payload.fullMemberDate = null;
+    payload.fullMemberDeveloping = false;
   }
   try {
     const { data } = await saveStudentProfile(payload);
