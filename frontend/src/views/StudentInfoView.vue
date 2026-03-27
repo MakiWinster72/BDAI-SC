@@ -1909,7 +1909,7 @@ const MAIN_FIELD_META = {
   ethnicity: { label: "民族", getter: (item) => item.ethnicity || "" },
   politicalStatus: {
     label: "政治面貌",
-    getter: (item) => item.politicalStatus || "",
+    getter: (item) => item.politicalStatus || "未填写",
   },
   phone: { label: "手机号码", getter: (item) => item.phone || "" },
   backupContact: {
@@ -1933,10 +1933,10 @@ const MAIN_FIELD_META = {
     getter: (item) => item.dormBuilding || "",
   },
   dormRoom: { label: "住宿房间", getter: (item) => item.dormRoom || "" },
-  hkMoTw: { label: "港澳台", getter: (item) => formatYesNo(item.hkMoTw) },
+  hkMoTw: { label: "港澳台", getter: (item) => item.hkMoTw ? "是" : "否" },
   specialStudent: {
     label: "特殊学生",
-    getter: (item) => formatYesNo(item.specialStudent),
+    getter: (item) => item.specialStudent ? "是" : "否",
   },
   fatherName: { label: "父亲姓名", getter: (item) => item.fatherName || "" },
   fatherPhone: { label: "父亲电话", getter: (item) => item.fatherPhone || "" },
