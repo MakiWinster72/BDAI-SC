@@ -2726,9 +2726,10 @@ function buildAchievementOverview(rows, selectedKeys, achievementData) {
         (studentName && entry.studentName === studentName),
     );
     const records = recordEntry?.records || [];
-    const categoryFlags = activeCategories.map((category) =>
-      records.some((record) => record.category === category.key) ? "1" : "",
-    );
+    const categoryFlags = activeCategories.map((category) => {
+      const count = records.filter((record) => record.category === category.key).length;
+      return count > 0 ? String(count) : "";
+    });
     return [...baseValues, ...categoryFlags];
   });
   return [header, ...body];
