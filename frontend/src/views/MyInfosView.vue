@@ -228,7 +228,7 @@
                   max="10"
                   step="1"
                   placeholder="数字"
-                  :disabled="!isEditing"
+                  :disabled="!isEditing || info.studentCategory === '研究生'"
                 />
                 <span class="class-text">班</span>
               </div>
@@ -1278,8 +1278,13 @@ const majorOptionsByCategory = {
   本科生: [
     "计算机科学与技术",
     "计算机科学与技术（实验区）",
+    "计算机科学与技术(中外联合培养项目班)",
+    "2025计算机科学与技术（中外联合培养项目班未赴国外学习）",
     "软件工程",
+    "人工智能",
     "电子商务",
+    "电子商务（大数据决策分析）",
+    "大数据管理与应用",
     "大数据管理与应用（佛山校区全学段）",
     "大数据管理与应用（数字治理）",
   ],
@@ -2454,6 +2459,9 @@ watch(
     }
     if (!majorOptionsByCategory[category].includes(info.classMajor)) {
       info.classMajor = "";
+    }
+    if (category === "研究生") {
+      info.classNo = 1;
     }
   },
 );
