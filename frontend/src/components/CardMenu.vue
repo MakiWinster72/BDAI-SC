@@ -3,7 +3,7 @@
     <template v-for="item in menuItems" :key="item.key">
       <!-- achievements drawer -->
       <div
-        v-if="item.key === 'achievements' && showAchievementsDrawer"
+        v-if="item.key === 'achievements'"
         class="menu-drawer"
         :class="{ open: achievementsOpen }"
       >
@@ -18,11 +18,11 @@
           @click="handleAchievementsClick"
         >
           <span>{{ item.label }}</span>
-          <span class="menu-drawer-caret" aria-hidden="true"></span>
+          <span v-if="showAchievementsDrawer" class="menu-drawer-caret" aria-hidden="true"></span>
         </button>
         <transition name="menu-drawer-panel">
           <div
-            v-show="drawerVisible"
+            v-show="showAchievementsDrawer && drawerVisible"
             class="menu-drawer-panel"
             :class="drawerAnimClass"
           >
@@ -46,7 +46,7 @@
       </div>
       <!-- simple menu item -->
       <button
-        v-else-if="item.key !== 'achievements'"
+        v-else
         class="menu-item"
         :class="{
           active: activeMenu === item.key,
@@ -81,7 +81,7 @@ const props = defineProps({
   },
   showAchievementsDrawer: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   achievementsOpen: {
     type: Boolean,
