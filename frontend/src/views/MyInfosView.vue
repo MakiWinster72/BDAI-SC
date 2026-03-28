@@ -223,7 +223,7 @@
                   max="10"
                   step="1"
                   placeholder="数字"
-                  :disabled="!isEditing"
+                  :disabled="!isEditing || info.studentCategory === '研究生'"
                 />
                 <span class="class-text">班</span>
               </div>
@@ -2397,6 +2397,9 @@ watch(
     }
     if (!majorOptionsByCategory[category].includes(info.classMajor)) {
       info.classMajor = "";
+    }
+    if (category === "研究生") {
+      info.classNo = 1;
     }
   },
 );
