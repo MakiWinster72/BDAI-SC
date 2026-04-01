@@ -5,6 +5,7 @@ import AchievementsView from '../views/AchievementsView.vue'
 import MyInfosView from '../views/MyInfosView.vue'
 import StudentInfoView from '../views/StudentInfoView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import AdminView from '../views/AdminView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -19,6 +20,7 @@ const router = createRouter({
       component: StudentInfoView,
       meta: { requiresAuth: true, allowedRoles: ['TEACHER', 'ADMIN'] }
     },
+    { path: '/admin', name: 'admin', component: AdminView, meta: { requiresAuth: true, allowedRoles: ['ADMIN'] } },
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } }
   ]
