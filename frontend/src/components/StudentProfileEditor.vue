@@ -1921,18 +1921,19 @@ function applyProfileResponse(data) {
       <div class="info-section-title">教育经历</div>
       <div class="info-hint">从小学开始填</div>
       <div class="education-table-wrap">
-        <table class="education-table">
-          <thead>
-            <tr>
-              <th>时间段</th>
-              <th>学校名称</th>
-              <th>学历</th>
-              <th>证明人</th>
-            </tr>
-          </thead>
-          <transition-group name="education-row" tag="tbody">
-            <tr v-for="(item, index) in educationItems" :key="`edu-${index}`">
-              <td data-label="时间段">
+        <transition-group
+          name="education-row"
+          tag="div"
+          class="record-list"
+        >
+          <section
+            v-for="(item, index) in educationItems"
+            :key="`edu-${index}`"
+            class="record-card"
+          >
+            <div class="record-grid record-grid-education">
+              <label class="record-field record-field-time">
+                <span class="info-label">时间段</span>
                 <div class="education-period">
                   <div class="education-period-row">
                     <input
@@ -1953,7 +1954,7 @@ function applyProfileResponse(data) {
                       :disabled="isEducationRowDisabled(index) || item.isCurrent"
                     />
                   </div>
-                  <label class="info-choice info-choice-muted">
+                  <label class="info-choice info-choice-muted record-current">
                     <input
                       v-model="item.isCurrent"
                       type="checkbox"
@@ -1963,8 +1964,9 @@ function applyProfileResponse(data) {
                     至今
                   </label>
                 </div>
-              </td>
-              <td data-label="学校名称">
+              </label>
+              <label class="record-field record-field-school">
+                <span class="info-label">学校名称</span>
                 <input
                   v-model="item.schoolName"
                   class="info-input"
@@ -1972,8 +1974,9 @@ function applyProfileResponse(data) {
                   placeholder="学校名称"
                   :disabled="isEducationRowDisabled(index)"
                 />
-              </td>
-              <td data-label="学历">
+              </label>
+              <label class="record-field record-field-compact">
+                <span class="info-label">学历</span>
                 <input
                   v-model="item.educationLevel"
                   class="info-input"
@@ -1981,8 +1984,9 @@ function applyProfileResponse(data) {
                   placeholder="学历"
                   :disabled="isEducationRowDisabled(index)"
                 />
-              </td>
-              <td data-label="证明人">
+              </label>
+              <label class="record-field record-field-compact">
+                <span class="info-label">证明人</span>
                 <input
                   v-model="item.witness"
                   class="info-input"
@@ -1990,10 +1994,10 @@ function applyProfileResponse(data) {
                   placeholder="证明人"
                   :disabled="isEducationRowDisabled(index)"
                 />
-              </td>
-            </tr>
-          </transition-group>
-        </table>
+              </label>
+            </div>
+          </section>
+        </transition-group>
         <div class="education-controls-wrap">
           <div class="education-controls">
             <button
@@ -2022,18 +2026,19 @@ function applyProfileResponse(data) {
     <div class="info-card">
       <div class="info-section-title">学生干部经历</div>
       <div class="education-table-wrap">
-        <table class="education-table education-table-cadres">
-          <thead>
-            <tr>
-              <th>时间段</th>
-              <th>社团部门/班级</th>
-              <th>职位</th>
-              <th>描述</th>
-            </tr>
-          </thead>
-          <transition-group name="education-row" tag="tbody">
-            <tr v-for="(item, index) in cadreItems" :key="`cadre-${index}`">
-              <td class="cell-row1" data-label="时间段">
+        <transition-group
+          name="education-row"
+          tag="div"
+          class="record-list"
+        >
+          <section
+            v-for="(item, index) in cadreItems"
+            :key="`cadre-${index}`"
+            class="record-card"
+          >
+            <div class="record-grid record-grid-cadre">
+              <label class="record-field record-field-time">
+                <span class="info-label">时间段</span>
                 <div class="education-period">
                   <div class="education-period-row">
                     <input
@@ -2053,19 +2058,20 @@ function applyProfileResponse(data) {
                       :max="today"
                       :disabled="isCadreRowDisabled(index) || item.isCurrent"
                     />
-                    <label class="info-choice info-choice-muted">
-                      <input
-                        v-model="item.isCurrent"
-                        type="checkbox"
-                        :disabled="isCadreRowDisabled(index) || isCadreCurrentDisabled(item)"
-                        @change="handleCadreCurrentChange(item, index)"
-                      />
-                      至今
-                    </label>
                   </div>
+                  <label class="info-choice info-choice-muted record-current">
+                    <input
+                      v-model="item.isCurrent"
+                      type="checkbox"
+                      :disabled="isCadreRowDisabled(index) || isCadreCurrentDisabled(item)"
+                      @change="handleCadreCurrentChange(item, index)"
+                    />
+                    至今
+                  </label>
                 </div>
-              </td>
-              <td class="cell-row2" data-label="部门/班级">
+              </label>
+              <label class="record-field record-field-department">
+                <span class="info-label">社团部门/班级</span>
                 <input
                   v-model="item.department"
                   class="info-input"
@@ -2073,8 +2079,9 @@ function applyProfileResponse(data) {
                   placeholder="部门/班级"
                   :disabled="isCadreRowDisabled(index)"
                 />
-              </td>
-              <td class="cell-row3" data-label="职位">
+              </label>
+              <label class="record-field record-field-position">
+                <span class="info-label">职位</span>
                 <input
                   v-model="item.position"
                   class="info-input"
@@ -2082,8 +2089,9 @@ function applyProfileResponse(data) {
                   placeholder="职位"
                   :disabled="isCadreRowDisabled(index)"
                 />
-              </td>
-              <td class="cell-desc" data-label="描述">
+              </label>
+              <label class="record-field record-field-full">
+                <span class="info-label">描述</span>
                 <textarea
                   v-model="item.description"
                   class="info-input"
@@ -2091,10 +2099,10 @@ function applyProfileResponse(data) {
                   placeholder="简述你在该职位的职责/成就"
                   :disabled="isCadreRowDisabled(index)"
                 ></textarea>
-              </td>
-            </tr>
-          </transition-group>
-        </table>
+              </label>
+            </div>
+          </section>
+        </transition-group>
         <div class="education-controls-wrap">
           <div class="education-controls">
             <button
