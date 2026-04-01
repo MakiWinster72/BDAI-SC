@@ -37,6 +37,7 @@ const saving = ref(false);
 const avatarInput = ref(null);
 const workUnitHintOpen = ref(false);
 const today = getTodayString();
+const originalProfileData = ref(null);
 
 const classYearOptions = Array.from({ length: 19 }, (_, index) => 2022 + index);
 const majorOptionsByCategory = {
@@ -760,7 +761,17 @@ function enterEdit() {
   if (!props.canEdit) {
     return;
   }
+  originalProfileData.value = buildCurrentProfileState();
   isEditing.value = true;
+}
+
+function cancelEdit() {
+  if (originalProfileData.value) {
+    applyProfileResponse(originalProfileData.value);
+  } else {
+    applyProfileResponse(props.student);
+  }
+  isEditing.value = false;
 }
 
 async function confirmEdit() {
@@ -772,6 +783,7 @@ async function confirmEdit() {
     const payload = buildSavePayload();
     const { data } = await props.saveProfile(payload);
     applyProfileResponse(data);
+    originalProfileData.value = data || null;
     isEditing.value = false;
     emit("saved", data);
   } catch (err) {
@@ -1052,6 +1064,79 @@ function buildPdfStudentSnapshot() {
   };
 }
 
+function buildCurrentProfileState() {
+  return {
+    fullName: info.name,
+    avatarUrl: info.avatarUrl,
+    studentNo: info.studentNo,
+    classYear: info.classYear || null,
+    classMajor: info.classMajor,
+    classNo: info.classNo,
+    className: buildClassName(info.classYear, info.classMajor, info.classNo, info.className),
+    college: info.college,
+    enrollmentDate: info.enrollmentDate || null,
+    studentCategory: info.studentCategory,
+    ethnicity: info.ethnicity,
+    politicalStatus: info.politicalStatus,
+    dormCampus: info.dormCampus,
+    dormBuilding: info.dormBuilding,
+    dormRoom: buildDormRoom(info.dormFloor, info.dormRoomNo, info.dormRoom),
+    offCampusLiving: info.offCampusLiving,
+    offCampusAddress: buildAddress(
+      info.offCampusProvince,
+      info.offCampusCity,
+      info.offCampusCounty,
+      info.offCampusDetail,
+      info.offCampusAddress,
+    ),
+    classTeacher: info.classTeacher,
+    counselor: info.counselor,
+    phone: info.phone,
+    backupContact: info.backupContact,
+    address: buildAddress(
+      info.addressProvince,
+      info.addressCity,
+      info.addressCounty,
+      info.addressDetail,
+      info.address,
+    ),
+    idType: info.idType,
+    idNo: info.idNo,
+    birthDate: info.birthDate || null,
+    nativePlace: info.nativePlace,
+    leagueNo: info.leagueNo,
+    leagueApplicationDate: info.leagueApplicationDate || null,
+    leagueJoinDate: info.leagueJoinDate || null,
+    leagueJoined: info.leagueJoined,
+    leagueDeveloping: info.leagueDeveloping,
+    partyApplied: info.partyApplied,
+    notDeveloped: info.notDeveloped,
+    applicationDate: info.applicationDate || null,
+    activistDate: info.activistDate || null,
+    activistDeveloping: info.activistDeveloping,
+    partyTrainingDate: info.partyTrainingDate || null,
+    partyTrainingPending: info.partyTrainingPending,
+    developmentTargetDate: info.developmentTargetDate || null,
+    developmentTargetDeveloping: info.developmentTargetDeveloping,
+    probationaryMemberDate: info.probationaryMemberDate || null,
+    probationaryDeveloping: info.probationaryDeveloping,
+    fullMemberDate: info.fullMemberDate || null,
+    fullMemberDeveloping: info.fullMemberDeveloping,
+    emergencyPhone: info.emergencyPhone,
+    emergencyRelation: info.emergencyRelation,
+    fatherName: info.fatherName,
+    fatherPhone: info.fatherPhone,
+    fatherWorkUnit: info.fatherWorkUnit,
+    fatherTitle: info.fatherTitle,
+    motherName: info.motherName,
+    motherPhone: info.motherPhone,
+    motherWorkUnit: info.motherWorkUnit,
+    motherTitle: info.motherTitle,
+    educationExperiences: educationItems.map((item) => ({ ...item })),
+    cadreExperiences: cadreItems.map((item) => ({ ...item })),
+  };
+}
+
 function buildClassName(year, major, no, fallback) {
   const hasParts = Boolean(year || major || no);
   if (!hasParts && fallback) {
@@ -1252,7 +1337,10 @@ function applyProfileResponse(data) {
 </script>
 
 <template>
-  <section class="info-shell student-profile-editor">
+  <section
+    class="info-shell student-profile-editor"
+    :class="{ 'info-shell-editing': isEditing }"
+  >
     <div class="info-hero">
       <button
         class="avatar-square"
@@ -1282,7 +1370,7 @@ function applyProfileResponse(data) {
       </div>
       <div class="info-actions">
         <button
-          v-if="showAchievements"
+          v-if="showAchievements && !isEditing"
           class="ghost-button"
           type="button"
           @click="emit('openAchievements')"
@@ -1290,6 +1378,7 @@ function applyProfileResponse(data) {
           个人成就
         </button>
         <ExportPdfButton
+          v-if="!isEditing"
           :get-student="buildPdfStudentSnapshot"
           :resolve-media-url="resolveMediaUrl"
           button-class="ghost-button"
@@ -1301,15 +1390,6 @@ function applyProfileResponse(data) {
           @click="enterEdit"
         >
           编辑信息
-        </button>
-        <button
-          v-if="canEdit && isEditing"
-          class="action-button"
-          type="button"
-          :disabled="saving"
-          @click="confirmEdit"
-        >
-          {{ saving ? "保存中..." : "确认保存" }}
         </button>
       </div>
     </div>
@@ -2298,5 +2378,22 @@ function applyProfileResponse(data) {
         </label>
       </div>
     </div>
+    <transition name="edit-dock">
+      <div v-if="isEditing" class="edit-dock">
+        <div class="edit-dock-inner">
+          <button class="ghost-button" type="button" @click="cancelEdit">
+            取消
+          </button>
+          <button
+            class="action-button"
+            type="button"
+            :disabled="saving"
+            @click="confirmEdit"
+          >
+            {{ saving ? "保存中..." : "保存" }}
+          </button>
+        </div>
+      </div>
+    </transition>
   </section>
 </template>

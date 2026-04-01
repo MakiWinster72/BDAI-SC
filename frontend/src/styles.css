@@ -340,8 +340,9 @@ body {
 
 .capsule-slide-enter-active,
 .capsule-slide-leave-active {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.3s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
 }
 
 .capsule-slide-enter-from,
@@ -384,7 +385,9 @@ body {
   border-radius: 50px;
   padding: 8px 10px;
   background: transparent;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
@@ -418,7 +421,9 @@ body {
   letter-spacing: -0.3px;
   border-radius: 50px;
   box-shadow: 0 4px 12px rgba(10, 107, 116, 0.3);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .capsule-primary:active {
@@ -1059,12 +1064,16 @@ body {
 }
 
 .panel-fade-enter-active {
-  transition: opacity 0.5s ease 0.1s, max-height 0.5s ease 0.1s;
+  transition:
+    opacity 0.5s ease 0.1s,
+    max-height 0.5s ease 0.1s;
   overflow: hidden;
 }
 
 .panel-fade-leave-active {
-  transition: opacity 0.25s ease, max-height 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    max-height 0.25s ease;
   overflow: hidden;
 }
 
@@ -1086,7 +1095,9 @@ body {
 
 .achievement-media-panel,
 .achievement-attachments-panel {
-  transition: opacity 0.35s ease, max-height 0.35s ease;
+  transition:
+    opacity 0.35s ease,
+    max-height 0.35s ease;
   overflow: hidden;
   max-height: 600px;
 }
@@ -1560,9 +1571,7 @@ body {
   box-shadow: 0 12px 28px rgba(3, 107, 114, 0.12);
   cursor: pointer;
   transition:
-   
     box-shadow 220ms ease,
-   
     transform 220ms ease;
 }
 
@@ -2116,7 +2125,11 @@ body {
   gap: 20px;
   margin-bottom: 18px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, rgba(3,107,114,0.06), rgba(165,255,214,0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(3, 107, 114, 0.06),
+    rgba(165, 255, 214, 0.1)
+  );
   border-radius: 10px;
   border: 1px solid rgba(3, 107, 114, 0.08);
   flex-wrap: wrap;
@@ -2874,6 +2887,90 @@ body {
   padding: 0 18px;
 }
 
+.info-shell-editing {
+  padding-bottom: 24px;
+}
+
+.edit-dock {
+  position: sticky;
+  bottom: 18px;
+  z-index: 45;
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 0 12px 6px;
+  overflow: hidden;
+}
+
+.edit-dock-inner {
+  width: min(520px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(3, 107, 114, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(120%);
+}
+
+.edit-dock-inner .ghost-button,
+.edit-dock-inner .action-button {
+  width: 100%;
+  height: 44px;
+  margin-top: 0;
+}
+
+.edit-dock-enter-active,
+.edit-dock-leave-active {
+  transition:
+    opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-height 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding-bottom 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.edit-dock-enter-from,
+.edit-dock-leave-to {
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  padding-bottom: 0;
+}
+
+.edit-dock-enter-to,
+.edit-dock-leave-from {
+  opacity: 1;
+  max-height: 120px;
+  margin-top: 24px;
+  padding-bottom: 6px;
+}
+
+.edit-dock-enter-active .edit-dock-inner,
+.edit-dock-leave-active .edit-dock-inner {
+  transition:
+    opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center bottom;
+}
+
+.edit-dock-enter-from .edit-dock-inner,
+.edit-dock-leave-to .edit-dock-inner {
+  opacity: 0;
+  transform: translateY(18px) scale(0.965);
+  filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(3, 107, 114, 0.04);
+}
+
+.edit-dock-enter-to .edit-dock-inner,
+.edit-dock-leave-from .edit-dock-inner {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
 .simple-list {
   display: grid;
   gap: 10px;
@@ -3422,7 +3519,9 @@ body {
   cursor: pointer;
   margin-left: 6px;
   vertical-align: middle;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
   line-height: 1;
 }
 
@@ -3904,6 +4003,29 @@ body {
   .record-card {
     padding: 12px;
   }
+
+  .info-shell-editing {
+    padding-bottom: 20px;
+  }
+
+  .edit-dock {
+    bottom: 12px;
+    margin-top: 18px;
+    padding: 0 6px 4px;
+  }
+
+  .edit-dock-inner {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+    border-radius: 16px;
+    padding: 8px;
+  }
+
+  .edit-dock-enter-to,
+  .edit-dock-leave-from {
+    margin-top: 18px;
+    padding-bottom: 4px;
+  }
 }
 
 /* ─── Media Viewer ────────────────────────────────────────────────────── */
@@ -4091,7 +4213,9 @@ body {
 }
 
 @keyframes viewer-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .viewer-content {
@@ -4453,11 +4577,15 @@ body {
 
 /* Viewer transitions */
 .viewer-enter-active {
-  transition: opacity 0.4s ease, backdrop-filter 0.4s ease;
+  transition:
+    opacity 0.4s ease,
+    backdrop-filter 0.4s ease;
 }
 
 .viewer-leave-active {
-  transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    backdrop-filter 0.3s ease;
 }
 
 .viewer-enter-from,
@@ -4473,11 +4601,15 @@ body {
 
 /* Directional slide transitions */
 .slide-right-enter-active {
-  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-right-leave-active {
-  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-right-enter-from {
@@ -4491,11 +4623,15 @@ body {
 }
 
 .slide-left-enter-active {
-  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-left-leave-active {
-  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-left-enter-from {

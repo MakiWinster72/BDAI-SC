@@ -100,7 +100,7 @@
         <h1 class="feed-title">我的信息</h1>
       </header>
 
-      <section class="info-shell">
+      <section class="info-shell" :class="{ 'info-shell-editing': isEditing }">
         <div class="info-hero">
           <button
             class="avatar-square"
@@ -128,15 +128,18 @@
           </div>
           <div class="info-actions">
             <ExportPdfButton
+              v-if="!isEditing"
               :get-student="buildPdfStudentSnapshot"
               :resolve-media-url="resolveMediaUrl"
               button-class="ghost-button"
             />
-            <button class="ghost-button" type="button" @click="enterEdit">
+            <button
+              v-if="!isEditing"
+              class="ghost-button"
+              type="button"
+              @click="enterEdit"
+            >
               编辑
-            </button>
-            <button class="action-button" type="button" @click="confirmEdit">
-              确认
             </button>
           </div>
         </div>
@@ -1181,6 +1184,18 @@
           </div>
         </div>
       </section>
+      <transition name="edit-dock">
+        <div v-if="isEditing" class="edit-dock">
+          <div class="edit-dock-inner">
+            <button class="ghost-button" type="button" @click="cancelEdit">
+              取消
+            </button>
+            <button class="action-button" type="button" @click="confirmEdit">
+              保存
+            </button>
+          </div>
+        </div>
+      </transition>
       <MobileCapsule @open-sidebar="openSidebar" />
     </main>
   </div>
@@ -1211,6 +1226,7 @@ const educationTableWrap = ref(null);
 const cadreTableWrap = ref(null);
 const workUnitHintOpen = ref(false);
 const today = getTodayString();
+const originalProfileData = ref(null);
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -1900,7 +1916,15 @@ async function onAvatarChange(event) {
 }
 
 function enterEdit() {
+  originalProfileData.value = buildCurrentProfileState();
   isEditing.value = true;
+}
+
+function cancelEdit() {
+  if (originalProfileData.value) {
+    applyProfileResponse(originalProfileData.value);
+  }
+  isEditing.value = false;
 }
 
 async function confirmEdit() {
@@ -2079,6 +2103,7 @@ async function confirmEdit() {
   try {
     const { data } = await saveStudentProfile(payload);
     applyProfileResponse(data);
+    originalProfileData.value = data || null;
     isEditing.value = false;
   } catch (err) {
     console.error(err);
@@ -2186,6 +2211,84 @@ function buildPdfStudentSnapshot() {
     educationExperiences,
     cadreExperiences,
     avatarUrl: info.avatarUrl,
+  };
+}
+
+function buildCurrentProfileState() {
+  return {
+    fullName: info.name,
+    avatarUrl: info.avatarUrl,
+    studentNo: info.studentNo,
+    classYear: info.classYear || null,
+    classMajor: info.classMajor,
+    classNo: info.classNo,
+    className: buildClassName(
+      info.classYear,
+      info.classMajor,
+      info.classNo,
+      info.className,
+    ),
+    college: info.college,
+    enrollmentDate: info.enrollmentDate || null,
+    studentCategory: info.studentCategory,
+    ethnicity: info.ethnicity,
+    politicalStatus: info.politicalStatus,
+    dormCampus: info.dormCampus,
+    dormBuilding: info.dormBuilding,
+    dormRoom: buildDormRoom(info.dormFloor, info.dormRoomNo, info.dormRoom),
+    offCampusLiving: info.offCampusLiving,
+    offCampusAddress: buildAddress(
+      info.offCampusProvince,
+      info.offCampusCity,
+      info.offCampusCounty,
+      info.offCampusDetail,
+      info.offCampusAddress,
+    ),
+    classTeacher: info.classTeacher,
+    counselor: info.counselor,
+    phone: info.phone,
+    backupContact: info.backupContact,
+    address: buildAddress(
+      info.addressProvince,
+      info.addressCity,
+      info.addressCounty,
+      info.addressDetail,
+      info.address,
+    ),
+    idType: info.idType,
+    idNo: info.idNo,
+    birthDate: info.birthDate || null,
+    nativePlace: info.nativePlace,
+    leagueNo: info.leagueNo,
+    leagueApplicationDate: info.leagueApplicationDate || null,
+    leagueJoinDate: info.leagueJoinDate || null,
+    leagueJoined: info.leagueJoined,
+    leagueDeveloping: info.leagueDeveloping,
+    partyApplied: info.partyApplied,
+    notDeveloped: info.notDeveloped,
+    applicationDate: info.applicationDate || null,
+    activistDate: info.activistDate || null,
+    activistDeveloping: info.activistDeveloping,
+    partyTrainingDate: info.partyTrainingDate || null,
+    partyTrainingPending: info.partyTrainingPending,
+    developmentTargetDate: info.developmentTargetDate || null,
+    developmentTargetDeveloping: info.developmentTargetDeveloping,
+    probationaryMemberDate: info.probationaryMemberDate || null,
+    probationaryDeveloping: info.probationaryDeveloping,
+    fullMemberDate: info.fullMemberDate || null,
+    fullMemberDeveloping: info.fullMemberDeveloping,
+    emergencyPhone: info.emergencyPhone,
+    emergencyRelation: info.emergencyRelation,
+    fatherName: info.fatherName,
+    fatherPhone: info.fatherPhone,
+    fatherWorkUnit: info.fatherWorkUnit,
+    fatherTitle: info.fatherTitle,
+    motherName: info.motherName,
+    motherPhone: info.motherPhone,
+    motherWorkUnit: info.motherWorkUnit,
+    motherTitle: info.motherTitle,
+    educationExperiences: educationItems.map((item) => ({ ...item })),
+    cadreExperiences: cadreItems.map((item) => ({ ...item })),
   };
 }
 
@@ -2377,6 +2480,7 @@ function applyProfileResponse(data) {
   profile.studentNo = data.studentNo || profile.studentNo;
   profile.className = data.className || profile.className;
   profile.college = FIXED_COLLEGE;
+  originalProfileData.value = data;
 
   saveUser(profile);
 }
