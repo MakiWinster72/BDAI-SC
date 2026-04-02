@@ -15,14 +15,24 @@
         </p>
         <p class="profile-role">{{ roleLabel }}</p>
       </div>
-      <button
-        class="profile-settings"
-        type="button"
-        aria-label="设置"
-        @click="$emit('settings-click')"
-      >
-        <img src="/assets/icons/settings.svg" alt="设置" />
-      </button>
+      <div class="profile-actions">
+        <button
+          v-if="profile.role === 'ADMIN'"
+          class="profile-manage"
+          type="button"
+          @click="$emit('menu-click', 'admin')"
+        >
+          管理
+        </button>
+        <button
+          class="profile-settings"
+          type="button"
+          aria-label="设置"
+          @click="$emit('settings-click')"
+        >
+          <img src="/assets/icons/settings.svg" alt="设置" />
+        </button>
+      </div>
     </div>
     <div v-if="compact" class="profile-meta-line">
       <span class="profile-meta-chip">学号：{{ profile.studentNo || "未填写" }}</span>
@@ -56,7 +66,7 @@ const props = defineProps({
   },
 });
 
-defineEmits(["settings-click"]);
+defineEmits(["settings-click", "menu-click"]);
 
 const avatarText = computed(() => {
   const name = props.profile.displayName || props.profile.username || "同学";

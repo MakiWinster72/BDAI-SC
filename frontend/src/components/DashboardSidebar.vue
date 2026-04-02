@@ -1,5 +1,12 @@
 <template>
-  <aside class="dashboard-left" :class="{ open: sidebarOpen }">
+  <aside class="dashboard-left">
+    <ProfileCard
+      :profile="profile"
+      :compact="false"
+      @menu-click="$emit('menu-click', $event)"
+      @settings-click="$emit('settings-click')"
+    />
+
     <CardMenu
       :profile="profile"
       :active-menu="activeMenu"
@@ -13,6 +20,7 @@
 
 <script setup>
 import CardMenu from "./CardMenu.vue";
+import ProfileCard from "./ProfileCard.vue";
 
 defineProps({
   profile: {
@@ -31,14 +39,7 @@ defineProps({
     type: Boolean,
     default: false,
   },
-  sidebarOpen: {
-    type: Boolean,
-    default: false,
-  },
 });
 
-defineEmits([
-  "menu-click",
-  "achievement-entry-click",
-]);
+defineEmits(["menu-click", "achievement-entry-click", "settings-click"]);
 </script>

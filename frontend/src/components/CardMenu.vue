@@ -1,24 +1,25 @@
 <template>
   <section class="menu-card">
-    <div class="menu-card-title">导航</div>
-
-    <div class="menu-list">
+    <div class="menu-card-header">
       <button
-        v-for="item in menuItems"
-        :key="item.key"
-        class="menu-item"
-        :class="{ active: activeMenu === item.key, disabled: !isMenuEnabled(item.key) }"
+        v-if="isAchievementPanelVisible"
+        class="menu-card-back"
         type="button"
-        :disabled="!isMenuEnabled(item.key)"
-        @click="$emit('menu-click', item.key)"
+        @click="closeAchievementPanel"
       >
-        {{ item.label }}
+        &lt;返回
       </button>
+      <div class="menu-card-title">
+        {{ isAchievementPanelVisible ? "个人成就" : "导航" }}
+      </div>
     </div>
 
-    <div v-if="showAchievementsDrawer" class="menu-section">
-      <div class="menu-section-title">个人成就</div>
-      <div class="menu-sublist">
+    <Transition name="menu-panel-fade" mode="out-in">
+      <div
+        v-if="isAchievementPanelVisible"
+        key="achievement-panel"
+        class="menu-panel menu-sublist"
+      >
         <button
           v-for="entry in achievementEntries"
           :key="entry.key"
@@ -30,12 +31,27 @@
           {{ entry.label }}
         </button>
       </div>
-    </div>
+
+      <div v-else key="menu-panel" class="menu-panel menu-list menu-grid">
+        <button
+          v-for="item in menuItems"
+          :key="item.key"
+          class="menu-item"
+          :class="{ active: activeMenu === item.key, disabled: !isMenuEnabled(item.key) }"
+          type="button"
+          :disabled="!isMenuEnabled(item.key)"
+          @click="handleMenuClick(item.key)"
+        >
+          <span class="menu-item-label">{{ item.label }}</span>
+          <span class="menu-item-meta">{{ menuMeta[item.key] }}</span>
+        </button>
+      </div>
+    </Transition>
   </section>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 
 const props = defineProps({
@@ -57,9 +73,19 @@ const props = defineProps({
   },
 });
 
-defineEmits(["menu-click", "achievement-entry-click"]);
+const emit = defineEmits(["menu-click", "achievement-entry-click"]);
 
-const menuItems = computed(() => filterMenuItemsByRole(props.profile.role));
+const menuItems = computed(() =>
+  filterMenuItemsByRole(props.profile.role).filter((item) => item.key !== "admin"),
+);
+
+const menuMeta = {
+  achievements: "查看与维护成果",
+  "my-info": "编辑个人档案",
+  "student-info": "检索学生资料",
+};
+
+const isAchievementPanelVisible = ref(props.activeMenu === "achievements");
 
 const achievementEntries = [
   { key: "all", label: "全部" },
@@ -73,4 +99,22 @@ const achievementEntries = [
   { key: "doubleHundred", label: "双百工程" },
   { key: "ieerTraining", label: "大学生创新创业训练计划项目" },
 ];
+
+watch(
+  () => props.activeMenu,
+  (activeMenu) => {
+    isAchievementPanelVisible.value = activeMenu === "achievements";
+  },
+);
+
+function handleMenuClick(key) {
+  if (key === "achievements" && props.showAchievementsDrawer) {
+    isAchievementPanelVisible.value = true;
+  }
+  emit("menu-click", key);
+}
+
+function closeAchievementPanel() {
+  isAchievementPanelVisible.value = false;
+}
 </script>
