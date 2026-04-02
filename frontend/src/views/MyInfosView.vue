@@ -1,101 +1,5 @@
 <template>
-  <div class="dashboard-layout">
-    <transition name="publisher-backdrop">
-      <div
-        v-if="sidebarOpen"
-        class="mobile-sidebar-backdrop"
-        @click="closeSidebar"
-      ></div>
-    </transition>
-    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
-      <section class="profile-card">
-        <div class="profile-row profile-main">
-          <div class="profile-avatar">
-            <img
-              v-if="info.avatarUrl"
-              :src="resolveMediaUrl(info.avatarUrl)"
-              alt="头像"
-            />
-            <span v-else>{{ avatarText }}</span>
-          </div>
-          <div class="profile-name-wrap">
-            <p class="profile-name">
-              {{ profile.displayName || profile.username || "同学" }}
-            </p>
-            <p class="profile-role">{{ roleLabel }}</p>
-          </div>
-          <button
-            class="profile-settings"
-            type="button"
-            aria-label="设置"
-            @click="goToSettings"
-          >
-            <img src="/assets/icons/settings.svg" alt="设置" />
-          </button>
-        </div>
-        <div class="profile-row">学号：{{ profile.studentNo || "未填写" }}</div>
-        <div class="profile-row">班级：{{ profile.className || "未填写" }}</div>
-        <div class="profile-row">学院：{{ profile.college || "未填写" }}</div>
-      </section>
-
-      <section class="menu-card">
-        <template v-for="item in menuItems" :key="item.key">
-          <div
-            v-if="item.key === 'achievements'"
-            class="menu-drawer"
-            :class="{ open: achievementsOpen }"
-          >
-            <button
-              class="menu-item menu-drawer-trigger"
-              :class="{
-                active: activeMenu === item.key,
-                disabled: !isMenuEnabled(item.key),
-              }"
-              type="button"
-              :disabled="!isMenuEnabled(item.key)"
-              @click="toggleAchievements"
-            >
-              <span>{{ item.label }}</span>
-              <span class="menu-drawer-caret" aria-hidden="true"></span>
-            </button>
-            <transition name="menu-drawer-panel">
-              <div v-show="achievementsOpen" class="menu-drawer-panel">
-                <div
-                  class="menu-drawer-indicator"
-                  :style="drawerIndicatorStyle"
-                  aria-hidden="true"
-                ></div>
-                <button
-                  v-for="entry in achievementEntries"
-                  :key="entry.key"
-                  class="menu-drawer-item"
-                  :class="{ active: activeAchievement === entry.key }"
-                  type="button"
-                  @click="handleAchievementEntry(entry.key)"
-                >
-                  {{ entry.label }}
-                </button>
-              </div>
-            </transition>
-          </div>
-          <button
-            v-else
-            class="menu-item"
-            :class="{
-              active: activeMenu === item.key,
-              disabled: !isMenuEnabled(item.key),
-            }"
-            type="button"
-            :disabled="!isMenuEnabled(item.key)"
-            @click="handleMenuClick(item.key)"
-          >
-            {{ item.label }}
-          </button>
-        </template>
-      </section>
-    </aside>
-
-    <main class="dashboard-right">
+  <main class="dashboard-right">
       <header class="feed-header">
         <h1 class="feed-title">我的信息</h1>
       </header>
@@ -1196,9 +1100,8 @@
           </div>
         </div>
       </transition>
-      <MobileCapsule @open-sidebar="openSidebar" />
-    </main>
-  </div>
+      <MobileCapsule @open-sidebar="openDashboardSidebar" />
+  </main>
 </template>
 
 <script setup>
@@ -1206,13 +1109,19 @@ import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import ExportPdfButton from "../components/ExportPdfButton.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
-import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
+import {
+  getMenuLocation,
+  isMenuEnabled,
+} from "../constants/menu";
 import { regionData, codeToText } from "element-china-area-data";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
+import { navigateWithViewTransition } from "../utils/viewTransition";
+import { useDashboardShell } from "../composables/useDashboardShell";
 
 const router = useRouter();
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const FIXED_COLLEGE = "大数据与人工智能学院";
 
 const profile = reactive(loadUser());
@@ -1494,7 +1403,6 @@ async function animateCadreHeightWithUpdate(updateFn) {
   el.addEventListener("transitionend", cleanup);
 }
 
-const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 const achievementEntries = [
   { key: "all", label: "全部" },
   { key: "contest", label: "学科竞赛、文体艺术" },
@@ -1798,15 +1706,7 @@ function handleMenuClick(key) {
     toggleAchievements();
     return;
   }
-  if (key === "student-info") {
-    router.push("/student-info");
-    return;
-  }
-  if (key === "admin") {
-    router.push("/admin");
-    return;
-  }
-  router.push("/myinfos");
+  navigateWithViewTransition(router, getMenuLocation(key));
 }
 
 function toggleAchievements() {
@@ -1830,7 +1730,10 @@ function handleAchievementEntry(key) {
   activeAchievement.value = safeKey;
   activeMenu.value = "achievements";
   sidebarOpen.value = false;
-  router.push({ path: "/achievements", query: { category: safeKey } });
+  navigateWithViewTransition(router, {
+    path: "/achievements",
+    query: { category: safeKey },
+  });
 }
 
 function openSidebar() {
@@ -1852,7 +1755,7 @@ function resolveMediaUrl(url) {
 }
 
 function goToSettings() {
-  router.push("/settings");
+  navigateWithViewTransition(router, "/settings");
 }
 
 function handleDigitsInput(field, maxLength, event) {

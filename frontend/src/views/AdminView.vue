@@ -1,39 +1,23 @@
 <template>
-  <div class="dashboard-layout">
-    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
-      <ProfileCard
-        :profile="profile"
-        @settings-click="goToSettings"
-      />
-      <CardMenu
-        :profile="profile"
-        :active-menu="activeMenu"
-        :show-achievements-drawer="true"
-        :achievements-open="achievementsOpen"
-        @menu-click="handleMenuClick"
-        @toggle-achievements="achievementsOpen = !achievementsOpen"
-      />
-    </aside>
-
-    <main class="dashboard-right">
+  <main class="dashboard-right">
       <header class="feed-header">
         <h1 class="feed-title">后台管理</h1>
       </header>
       <div class="admin-container">
         <p>管理功能开发中...</p>
       </div>
-    </main>
-  </div>
+  </main>
 </template>
 
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import ProfileCard from "../components/ProfileCard.vue";
-import CardMenu from "../components/CardMenu.vue";
+import { getMenuLocation } from "../constants/menu";
+import { navigateWithViewTransition } from "../utils/viewTransition";
 
 const router = useRouter();
 const activeMenu = ref("admin");
+const activeAchievement = ref("all");
 const sidebarOpen = ref(false);
 const achievementsOpen = ref(false);
 
@@ -67,25 +51,31 @@ function loadUser() {
 function handleMenuClick(key) {
   sidebarOpen.value = false;
   if (key === "achievements") {
-    router.push("/achievements");
+    toggleAchievements();
     return;
   }
-  if (key === "my-info") {
-    router.push("/myinfos");
-    return;
-  }
-  if (key === "student-info") {
-    router.push("/student-info");
-    return;
-  }
-  if (key === "admin") {
-    router.push("/admin");
-    return;
+  navigateWithViewTransition(router, getMenuLocation(key));
+}
+
+function handleAchievementEntry(key) {
+  activeMenu.value = "achievements";
+  activeAchievement.value = key || "all";
+  achievementsOpen.value = true;
+  navigateWithViewTransition(router, {
+    path: "/achievements",
+    query: { category: activeAchievement.value },
+  });
+}
+
+function toggleAchievements() {
+  achievementsOpen.value = !achievementsOpen.value;
+  if (achievementsOpen.value) {
+    handleAchievementEntry("all");
   }
 }
 
 function goToSettings() {
-  router.push("/settings");
+  navigateWithViewTransition(router, "/settings");
 }
 </script>
 

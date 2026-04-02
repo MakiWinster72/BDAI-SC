@@ -20,6 +20,9 @@
 </template>
 
 <script setup>
+import CardMenu from "./CardMenu.vue";
+import ProfileCard from "./ProfileCard.vue";
+
 defineProps({
   profile: {
     type: Object,

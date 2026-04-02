@@ -1,62 +1,5 @@
 <template>
-  <div class="dashboard-layout">
-    <transition name="publisher-backdrop">
-      <div
-        v-if="sidebarOpen"
-        class="mobile-sidebar-backdrop"
-        @click="closeSidebar"
-      ></div>
-    </transition>
-    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
-      <section class="profile-card">
-        <div class="profile-row profile-main">
-          <div class="profile-avatar">
-            <img
-              v-if="profile.avatarUrl"
-              :src="resolveMediaUrl(profile.avatarUrl)"
-              alt="头像"
-            />
-            <span v-else>{{ avatarText }}</span>
-          </div>
-          <div class="profile-name-wrap">
-            <p class="profile-name">
-              {{ profile.displayName || profile.username || "同学" }}
-            </p>
-            <p class="profile-role">{{ roleLabel }}</p>
-          </div>
-          <button
-            class="profile-settings"
-            type="button"
-            aria-label="设置"
-            @click="goToSettings"
-          >
-            <img src="/assets/icons/settings.svg" alt="设置" />
-          </button>
-        </div>
-        <div class="profile-row">学号：{{ profile.studentNo || "未填写" }}</div>
-        <div class="profile-row">班级：{{ profile.className || "未填写" }}</div>
-        <div class="profile-row">学院：{{ profile.college || "未填写" }}</div>
-      </section>
-
-      <section class="menu-card">
-        <button
-          v-for="item in menuItems"
-          :key="item.key"
-          class="menu-item"
-          :class="{
-            active: activeMenu === item.key,
-            disabled: !isMenuEnabled(item.key),
-          }"
-          type="button"
-          :disabled="!isMenuEnabled(item.key)"
-          @click="handleMenuClick(item.key)"
-        >
-          {{ item.label }}
-        </button>
-      </section>
-    </aside>
-
-    <main class="dashboard-right">
+  <main class="dashboard-right">
       <header class="feed-header">
         <h1 class="feed-title">设置</h1>
       </header>
@@ -90,7 +33,7 @@
             class="capsule-action"
             role="button"
             tabindex="0"
-            @click="openSidebar"
+            @click="openDashboardSidebar"
           >
             <span class="capsule-icon" aria-hidden="true">
               <svg
@@ -106,22 +49,25 @@
         </div>
         <div class="capsule-right"></div>
       </div>
-    </main>
-  </div>
+  </main>
 </template>
 
 <script setup>
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
+import {
+  getMenuLocation,
+  isMenuEnabled,
+} from "../constants/menu";
 import { API_BASE } from "../api/request";
+import { navigateWithViewTransition } from "../utils/viewTransition";
+import { useDashboardShell } from "../composables/useDashboardShell";
 
 const router = useRouter();
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
-const activeMenu = ref("");
+const activeMenu = ref("my-info");
 const sidebarOpen = ref(false);
-
-const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 
 const roleLabelMap = {
   STUDENT: "学生",
@@ -175,19 +121,7 @@ function handleMenuClick(key) {
     return;
   }
   sidebarOpen.value = false;
-  if (key === "achievements") {
-    router.push({ path: "/achievements", query: { category: "all" } });
-    return;
-  }
-  if (key === "my-info") {
-    router.push("/myinfos");
-    return;
-  }
-  if (key === "student-info") {
-    router.push("/student-info");
-    return;
-  }
-  router.push("/myinfos");
+  navigateWithViewTransition(router, getMenuLocation(key));
 }
 
 function openSidebar() {
@@ -199,7 +133,7 @@ function closeSidebar() {
 }
 
 function goToSettings() {
-  router.push("/settings");
+  navigateWithViewTransition(router, "/settings");
 }
 
 function handleLogout() {

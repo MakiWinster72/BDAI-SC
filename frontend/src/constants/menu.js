@@ -5,6 +5,13 @@ export const MENU_ITEMS = [
   { key: "admin", label: "后台管理" },
 ];
 
+export const MENU_ROUTE_MAP = {
+  achievements: { path: "/achievements", query: { category: "all" } },
+  "my-info": { path: "/myinfos" },
+  "student-info": { path: "/student-info" },
+  admin: { path: "/admin" },
+};
+
 const ENABLED_MENU_KEYS = new Set([
   "achievements",
   "my-info",
@@ -30,4 +37,22 @@ export function filterMenuItemsByRole(role) {
     }
     return allowedRoles.has(normalizedRole);
   });
+}
+
+export function getMenuLocation(key) {
+  return MENU_ROUTE_MAP[key] || MENU_ROUTE_MAP["my-info"];
+}
+
+export function getActiveMenuFromRoute(route) {
+  const routeName = route?.name;
+  if (routeName === "achievements") {
+    return "achievements";
+  }
+  if (routeName === "student-info") {
+    return "student-info";
+  }
+  if (routeName === "admin") {
+    return "admin";
+  }
+  return "my-info";
 }

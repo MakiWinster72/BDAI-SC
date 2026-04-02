@@ -1,104 +1,5 @@
 <template>
-  <div
-    class="dashboard-layout"
-    :class="{ 'dashboard-layout-embedded': isEmbedded }"
-  >
-    <transition name="publisher-backdrop">
-      <div
-        v-if="sidebarOpen"
-        class="mobile-sidebar-backdrop"
-        @click="closeSidebar"
-      ></div>
-    </transition>
-    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
-      <section class="profile-card">
-        <div class="profile-row profile-main">
-          <div class="profile-avatar">
-            <img
-              v-if="profile.avatarUrl"
-              :src="resolveMediaUrl(profile.avatarUrl)"
-              alt="头像"
-            />
-            <span v-else>{{ avatarText }}</span>
-          </div>
-          <div class="profile-name-wrap">
-            <p class="profile-name">
-              {{ profile.displayName || profile.username || "同学" }}
-            </p>
-            <p class="profile-role">{{ roleLabel }}</p>
-          </div>
-          <button
-            class="profile-settings"
-            type="button"
-            aria-label="设置"
-            @click="goToSettings"
-          >
-            <img src="/assets/icons/settings.svg" alt="设置" />
-          </button>
-        </div>
-        <div class="profile-row">学号：{{ profile.studentNo || "未填写" }}</div>
-        <div class="profile-row">班级：{{ profile.className || "未填写" }}</div>
-        <div class="profile-row">学院：{{ profile.college || "未填写" }}</div>
-      </section>
-
-      <section class="menu-card">
-        <template v-for="item in menuItems" :key="item.key">
-          <div
-            v-if="item.key === 'achievements'"
-            class="menu-drawer"
-            :class="{ open: achievementsOpen }"
-          >
-            <button
-              class="menu-item menu-drawer-trigger"
-              :class="{
-                active: activeMenu === item.key,
-                disabled: !isMenuEnabled(item.key),
-              }"
-              type="button"
-              :disabled="!isMenuEnabled(item.key)"
-              @click="toggleAchievements"
-            >
-              <span>{{ item.label }}</span>
-              <span class="menu-drawer-caret" aria-hidden="true"></span>
-            </button>
-            <transition name="menu-drawer-panel">
-              <div v-show="achievementsOpen" class="menu-drawer-panel">
-                <div
-                  class="menu-drawer-indicator"
-                  :style="drawerIndicatorStyle"
-                  aria-hidden="true"
-                ></div>
-                <button
-                  v-for="entry in achievementEntries"
-                  :key="entry.key"
-                  class="menu-drawer-item"
-                  :class="{ active: activeCategory === entry.key }"
-                  type="button"
-                  @click="handleAchievementEntry(entry.key)"
-                >
-                  {{ entry.label }}
-                </button>
-              </div>
-            </transition>
-          </div>
-          <button
-            v-else
-            class="menu-item"
-            :class="{
-              active: activeMenu === item.key,
-              disabled: !isMenuEnabled(item.key),
-            }"
-            type="button"
-            :disabled="!isMenuEnabled(item.key)"
-            @click="handleMenuClick(item.key)"
-          >
-            {{ item.label }}
-          </button>
-        </template>
-      </section>
-    </aside>
-
-    <main class="dashboard-right">
+  <main class="dashboard-right">
       <header class="feed-header">
         <h1 class="feed-title">个人成就</h1>
       </header>
@@ -302,7 +203,7 @@
       >
         <span aria-hidden="true">+</span>
       </button>
-      <MobileCapsule :hidden="editorOpen" @open-sidebar="openSidebar">
+      <MobileCapsule :hidden="editorOpen" @open-sidebar="openDashboardSidebar">
         <template #right>
           <div
             class="capsule-action capsule-primary"
@@ -1079,14 +980,16 @@
         hidden
         @change="onAttachmentChange"
       />
-    </main>
-  </div>
+  </main>
 </template>
 
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
+import {
+  getMenuLocation,
+  isMenuEnabled,
+} from "../constants/menu";
 import {
   createAchievement,
   deleteAchievement,
@@ -1099,9 +1002,12 @@ import { renderSheet } from "../utils/sheetRenderer";
 import { renderPdf } from "../utils/pdfRenderer";
 import { API_BASE } from "../api/request";
 import MobileCapsule from "../components/MobileCapsule.vue";
+import { navigateWithViewTransition } from "../utils/viewTransition";
+import { useDashboardShell } from "../composables/useDashboardShell";
 
 const router = useRouter();
 const route = useRoute();
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
@@ -1205,7 +1111,6 @@ const form = reactive({
   fields: {},
 });
 
-const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 const categoryOptions = computed(() =>
   achievementEntries.filter((entry) => entry.key !== "all"),
 );
@@ -1864,15 +1769,7 @@ function handleMenuClick(key) {
     handleAchievementEntry("all");
     return;
   }
-  if (key === "my-info") {
-    router.push("/myinfos");
-    return;
-  }
-  if (key === "student-info") {
-    router.push("/student-info");
-    return;
-  }
-  router.push("/myinfos");
+  navigateWithViewTransition(router, getMenuLocation(key));
 }
 
 function toggleAchievements() {
@@ -1908,7 +1805,7 @@ function handleAchievementEntry(key) {
   if (embedValue) {
     query.embed = embedValue;
   }
-  router.push({ path: "/achievements", query });
+  navigateWithViewTransition(router, { path: "/achievements", query });
 }
 
 function openSidebar() {
@@ -1933,7 +1830,7 @@ function closeEditor() {
 }
 
 function goToSettings() {
-  router.push("/settings");
+  navigateWithViewTransition(router, "/settings");
 }
 
 function resetForm() {
