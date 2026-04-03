@@ -17,7 +17,10 @@ public class UploadController {
     }
 
     @PostMapping
-    public ResponseEntity<UploadResponse> upload(@RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(uploadService.upload(file));
+    public ResponseEntity<UploadResponse> upload(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam(value = "context", required = false) String context
+    ) {
+        return ResponseEntity.ok(uploadService.upload(file, context));
     }
 }

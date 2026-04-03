@@ -640,7 +640,9 @@
             <div class="media-header">
               <div>
                 <div class="media-title">图片(可选)</div>
-                <div class="media-subtitle">最多 3 张</div>
+                <div class="media-subtitle">
+                  最多 {{ imageMaxCount }} 张 · 单张不超过 {{ mediaLimitLabel }}
+                </div>
               </div>
             </div>
 
@@ -705,7 +707,7 @@
                 </span>
               </button>
               <button
-                v-if="imagePreviews.length < MAX_IMAGE_COUNT"
+                v-if="imagePreviews.length < imageMaxCount"
                 class="media-thumb media-add"
                 type="button"
                 @click="triggerImage"
@@ -984,7 +986,15 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import { useRouter, useRoute } from "vue-router";
 import {
   getMenuLocation,
@@ -996,6 +1006,7 @@ import {
   getAchievements,
   updateAchievement,
 } from "../api/achievements";
+import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { uploadMedia } from "../api/upload";
 import { renderDocx } from "../utils/docxRenderer";
 import { renderSheet } from "../utils/sheetRenderer";
@@ -1033,6 +1044,10 @@ const previewContent = ref("");
 const previewLoading = ref(false);
 const previewWorkbook = ref(null);
 const slideDirection = ref("right");
+const {
+  settings: achievementUploadSettings,
+  fetchSettings: fetchAchievementUploadSettings,
+} = useAchievementUploadSettings();
 
 function isMediaVideo(url) {
   if (!url) return false;
@@ -1908,9 +1923,9 @@ async function onImageChange(event) {
   if (!files.length) {
     return;
   }
-  const remaining = MAX_IMAGE_COUNT - form.imageUrls.length;
+  const remaining = imageMaxCount.value - form.imageUrls.length;
   if (remaining <= 0) {
-    errorMessage.value = `最多上传${MAX_IMAGE_COUNT}张图片`;
+    errorMessage.value = `最多上传${imageMaxCount.value}张图片`;
     return;
   }
   const uploadList = files.slice(0, remaining);
@@ -1924,7 +1939,9 @@ async function onImageChange(event) {
       continue;
     }
     try {
-      const { data } = await uploadMedia(file);
+      const { data } = await uploadMedia(file, {
+        context: "achievement-image",
+      });
       if (data?.url) {
         form.imageUrls.push(data.url);
       }
@@ -1950,7 +1967,9 @@ async function onAttachmentChange(event) {
       continue;
     }
     try {
-      const { data } = await uploadMedia(file);
+      const { data } = await uploadMedia(file, {
+        context: "achievement-attachment",
+      });
       if (data?.url) {
         form.attachments.push({
           url: data.url,
@@ -2459,13 +2478,15 @@ function applyFieldDefaults() {
   }
 }
 
-const MAX_IMAGE_COUNT = 3;
 const IMAGE_URLS_FIELD = "_imageUrls";
 const ATTACHMENTS_FIELD = "_attachments";
 const uploadLimitConfig = reactive({
-  mediaMaxMB: 10,
-  attachmentMaxMB: 50,
+  imageMaxCount: achievementUploadSettings.imageMaxCount,
+  mediaMaxMB: achievementUploadSettings.imageMaxSizeMb,
+  attachmentMaxMB: achievementUploadSettings.attachmentMaxSizeMb,
 });
+
+const imageMaxCount = computed(() => uploadLimitConfig.imageMaxCount);
 
 const mediaLimitLabel = computed(() =>
   formatFileSize(uploadLimitConfig.mediaMaxMB),
@@ -2484,8 +2505,10 @@ const attachmentPreviews = computed(() =>
   })),
 );
 
-function setUploadLimits({ mediaMaxMB, attachmentMaxMB }) {
-  // Hook: adjust upload size display limits from outside if needed.
+function setUploadLimits({ imageMaxCount, mediaMaxMB, attachmentMaxMB }) {
+  if (Number.isFinite(imageMaxCount) && imageMaxCount > 0) {
+    uploadLimitConfig.imageMaxCount = imageMaxCount;
+  }
   if (Number.isFinite(mediaMaxMB) && mediaMaxMB > 0) {
     uploadLimitConfig.mediaMaxMB = mediaMaxMB;
   }
@@ -2588,7 +2611,7 @@ function resolveImageUrls(item) {
       urls.push(resolved);
     }
   });
-  return urls.slice(0, MAX_IMAGE_COUNT);
+  return urls.slice(0, uploadLimitConfig.imageMaxCount);
 }
 
 function resolveAttachments(fields = {}) {
@@ -2615,13 +2638,43 @@ function parseJsonArray(value) {
   }
 }
 
+function handleUploadSettingsUpdated(event) {
+  const nextSettings = event.detail || {};
+  setUploadLimits({
+    imageMaxCount: nextSettings.imageMaxCount,
+    mediaMaxMB: nextSettings.imageMaxSizeMb,
+    attachmentMaxMB: nextSettings.attachmentMaxSizeMb,
+  });
+}
+
 onMounted(() => {
   syncCategoryFromRoute();
+  fetchAchievementUploadSettings().then(() => {
+    setUploadLimits({
+      imageMaxCount: achievementUploadSettings.imageMaxCount,
+      mediaMaxMB: achievementUploadSettings.imageMaxSizeMb,
+      attachmentMaxMB: achievementUploadSettings.attachmentMaxSizeMb,
+    });
+  });
   fetchAchievements();
+  window.addEventListener(
+    "achievement-upload-settings-updated",
+    handleUploadSettingsUpdated,
+  );
   // Expose sheet switcher globally for v-html content
   window.__switchSheet = (index) => {
     switchSheet(index);
   };
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener(
+    "achievement-upload-settings-updated",
+    handleUploadSettingsUpdated,
+  );
+  if (window.__switchSheet) {
+    delete window.__switchSheet;
+  }
 });
 
 watch(

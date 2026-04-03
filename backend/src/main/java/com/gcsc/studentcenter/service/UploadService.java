@@ -18,20 +18,26 @@ import java.util.UUID;
 public class UploadService {
 
     private final Path uploadRoot;
+    private final AchievementUploadSettingsService achievementUploadSettingsService;
 
     private static final Set<String> ALLOWED_FILE_EXT = Set.of(
         ".doc", ".ppt", ".xls", ".docx", ".pptx", ".xlsx", ".pdf",
         ".zip", ".rar", ".7z", ".tar"
     );
 
-    public UploadService(@Value("${app.upload-dir:./uploads}") String uploadDir) {
+    public UploadService(
+        @Value("${app.upload-dir:./uploads}") String uploadDir,
+        AchievementUploadSettingsService achievementUploadSettingsService
+    ) {
         this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.achievementUploadSettingsService = achievementUploadSettingsService;
     }
 
-    public UploadResponse upload(MultipartFile file) {
+    public UploadResponse upload(MultipartFile file, String context) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件不能为空");
         }
+        achievementUploadSettingsService.validateUploadSize(context, file.getSize());
 
         String contentType = file.getContentType();
         String mediaType = resolveMediaType(contentType);
