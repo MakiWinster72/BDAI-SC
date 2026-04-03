@@ -27,6 +27,7 @@ public class AchievementService {
     private final AchievementWorksRepository achievementWorksRepository;
     private final AchievementDoubleHundredRepository achievementDoubleHundredRepository;
     private final AchievementIeerTrainingRepository achievementIeerTrainingRepository;
+    private final AchievementUploadSettingsService achievementUploadSettingsService;
 
     public AchievementService(
         AppUserRepository appUserRepository,
@@ -38,7 +39,8 @@ public class AchievementService {
         AchievementResearchRepository achievementResearchRepository,
         AchievementWorksRepository achievementWorksRepository,
         AchievementDoubleHundredRepository achievementDoubleHundredRepository,
-        AchievementIeerTrainingRepository achievementIeerTrainingRepository
+        AchievementIeerTrainingRepository achievementIeerTrainingRepository,
+        AchievementUploadSettingsService achievementUploadSettingsService
     ) {
         this.appUserRepository = appUserRepository;
         this.achievementContestRepository = achievementContestRepository;
@@ -50,6 +52,7 @@ public class AchievementService {
         this.achievementWorksRepository = achievementWorksRepository;
         this.achievementDoubleHundredRepository = achievementDoubleHundredRepository;
         this.achievementIeerTrainingRepository = achievementIeerTrainingRepository;
+        this.achievementUploadSettingsService = achievementUploadSettingsService;
     }
 
     public List<AchievementRecordResponse> list(
@@ -153,6 +156,7 @@ public class AchievementService {
         AppUser author = appUserRepository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
         Map<String, String> fields = safeFields(request.getFields());
+        validateAchievementMedia(fields);
         switch (requireCategory(category)) {
             case "contest":
                 return toResponse(saveContest(author, fields, request.getImageUrl()));
@@ -179,6 +183,7 @@ public class AchievementService {
 
     public AchievementRecordResponse update(String username, String category, Long id, AchievementRecordRequest request) {
         Map<String, String> fields = safeFields(request.getFields());
+        validateAchievementMedia(fields);
         switch (requireCategory(category)) {
             case "contest":
                 return toResponse(updateContest(username, id, fields, request.getImageUrl()));
@@ -578,6 +583,13 @@ public class AchievementService {
 
     private Map<String, String> safeFields(Map<String, String> fields) {
         return fields == null ? new HashMap<>() : fields;
+    }
+
+    private void validateAchievementMedia(Map<String, String> fields) {
+        achievementUploadSettingsService.validateAchievementMedia(
+            fields.get("_imageUrls"),
+            fields.get("_attachments")
+        );
     }
 
     private LocalDate parseDate(String value) {

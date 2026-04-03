@@ -640,7 +640,9 @@
             <div class="media-header">
               <div>
                 <div class="media-title">图片(可选)</div>
-                <div class="media-subtitle">最多 3 张</div>
+                <div class="media-subtitle">
+                  最多 {{ imageMaxCount }} 张 · 单张不超过 {{ mediaLimitLabel }}
+                </div>
               </div>
             </div>
 
@@ -705,7 +707,7 @@
                 </span>
               </button>
               <button
-                v-if="imagePreviews.length < MAX_IMAGE_COUNT"
+                v-if="imagePreviews.length < imageMaxCount"
                 class="media-thumb media-add"
                 type="button"
                 @click="triggerImage"
@@ -768,7 +770,7 @@
               <div class="media-header">
                 <div>
                   <div class="media-title">附件(可选)</div>
-                  <div class="media-subtitle">支持多文件</div>
+                  <div class="media-subtitle">最多 {{ attachmentMaxCount }} 个</div>
                 </div>
               </div>
               <div v-if="!attachmentPreviews.length" class="media-empty">
@@ -793,31 +795,31 @@
               </div>
               <div class="attachment-formats" @click="triggerAttachment">
                 <div class="format-row">
-                  <div class="format-item">
-                    <img class="format-icon" src="/assets/icons/doc.svg" alt="" />
-                    <span class="format-label">文档</span>
-                    <span class="format-exts">docx/doc/pdf/xls/xlsx/pptx/ppt</span>
-                  </div>
-                  <div class="format-item">
-                    <img class="format-icon" src="/assets/icons/image.svg" alt="" />
-                    <span class="format-label">图片</span>
-                    <span class="format-exts">jpeg/jpg/png/heif</span>
+                  <div
+                    v-for="item in enabledAttachmentTypes.slice(0, 2)"
+                    :key="item.key"
+                    class="format-item"
+                  >
+                    <img class="format-icon" :src="item.icon" alt="" />
+                    <span class="format-label">{{ item.label }}</span>
+                    <span class="format-exts">{{ item.exts.join("/") }}</span>
                   </div>
                 </div>
                 <div class="format-row">
-                  <div class="format-item">
-                    <img class="format-icon" src="/assets/icons/video.svg" alt="" />
-                    <span class="format-label">视频</span>
-                    <span class="format-exts">mp4/mov</span>
-                  </div>
-                  <div class="format-item">
-                    <img class="format-icon" src="/assets/icons/zip.svg" alt="" />
-                    <span class="format-label">压缩包</span>
-                    <span class="format-exts">zip/rar/7z</span>
+                  <div
+                    v-for="item in enabledAttachmentTypes.slice(2, 4)"
+                    :key="item.key"
+                    class="format-item"
+                  >
+                    <img class="format-icon" :src="item.icon" alt="" />
+                    <span class="format-label">{{ item.label }}</span>
+                    <span class="format-exts">{{ item.exts.join("/") }}</span>
                   </div>
                 </div>
               </div>
-              <div class="media-tip">单个不超过 {{ attachmentLimitLabel }}</div>
+              <div class="media-tip">
+                最多 {{ attachmentMaxCount }} 个 · 单个不超过 {{ attachmentLimitLabel }}
+              </div>
             </div>
             </transition>
 
@@ -984,7 +986,15 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import { useRouter, useRoute } from "vue-router";
 import {
   getMenuLocation,
@@ -996,6 +1006,7 @@ import {
   getAchievements,
   updateAchievement,
 } from "../api/achievements";
+import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { uploadMedia } from "../api/upload";
 import { renderDocx } from "../utils/docxRenderer";
 import { renderSheet } from "../utils/sheetRenderer";
@@ -1033,6 +1044,32 @@ const previewContent = ref("");
 const previewLoading = ref(false);
 const previewWorkbook = ref(null);
 const slideDirection = ref("right");
+const {
+  settings: achievementUploadSettings,
+  fetchSettings: fetchAchievementUploadSettings,
+} = useAchievementUploadSettings();
+const ATTACHMENT_TYPE_META = [
+  {
+    key: "document",
+    label: "文档",
+    icon: "/assets/icons/doc.svg",
+  },
+  {
+    key: "image",
+    label: "图片",
+    icon: "/assets/icons/image.svg",
+  },
+  {
+    key: "video",
+    label: "视频",
+    icon: "/assets/icons/video.svg",
+  },
+  {
+    key: "archive",
+    label: "压缩包",
+    icon: "/assets/icons/zip.svg",
+  },
+];
 
 function isMediaVideo(url) {
   if (!url) return false;
@@ -1908,9 +1945,9 @@ async function onImageChange(event) {
   if (!files.length) {
     return;
   }
-  const remaining = MAX_IMAGE_COUNT - form.imageUrls.length;
+  const remaining = imageMaxCount.value - form.imageUrls.length;
   if (remaining <= 0) {
-    errorMessage.value = `最多上传${MAX_IMAGE_COUNT}张图片`;
+    errorMessage.value = `最多上传${imageMaxCount.value}张图片`;
     return;
   }
   const uploadList = files.slice(0, remaining);
@@ -1924,7 +1961,9 @@ async function onImageChange(event) {
       continue;
     }
     try {
-      const { data } = await uploadMedia(file);
+      const { data } = await uploadMedia(file, {
+        context: "achievement-image",
+      });
       if (data?.url) {
         form.imageUrls.push(data.url);
       }
@@ -1940,9 +1979,17 @@ async function onAttachmentChange(event) {
   if (!files.length) {
     return;
   }
-  for (const file of files) {
+  const remaining = attachmentMaxCount.value - form.attachments.length;
+  if (remaining <= 0) {
+    errorMessage.value = `最多上传${attachmentMaxCount.value}个附件`;
+    return;
+  }
+  const uploadList = files.slice(0, remaining);
+  for (const file of uploadList) {
     if (!isAllowedAttachment(file)) {
-      errorMessage.value = "附件格式不支持";
+      errorMessage.value = allowedAttachmentExtensions.value.length
+        ? `当前仅支持 ${allowedAttachmentExtensions.value.join(" / ")} 格式附件`
+        : "当前未开放附件上传";
       continue;
     }
     if (!isFileSizeAllowed(file, uploadLimitConfig.attachmentMaxMB)) {
@@ -1950,7 +1997,9 @@ async function onAttachmentChange(event) {
       continue;
     }
     try {
-      const { data } = await uploadMedia(file);
+      const { data } = await uploadMedia(file, {
+        context: "achievement-attachment",
+      });
       if (data?.url) {
         form.attachments.push({
           url: data.url,
@@ -2459,13 +2508,30 @@ function applyFieldDefaults() {
   }
 }
 
-const MAX_IMAGE_COUNT = 3;
 const IMAGE_URLS_FIELD = "_imageUrls";
 const ATTACHMENTS_FIELD = "_attachments";
 const uploadLimitConfig = reactive({
-  mediaMaxMB: 10,
-  attachmentMaxMB: 50,
+  imageMaxCount: achievementUploadSettings.imageMaxCount,
+  mediaMaxMB: achievementUploadSettings.imageMaxSizeMb,
+  attachmentMaxCount: achievementUploadSettings.attachmentMaxCount,
+  attachmentMaxMB: achievementUploadSettings.attachmentMaxSizeMb,
+  attachmentDocumentExts: splitExtText(achievementUploadSettings.attachmentDocumentExts),
+  attachmentVideoExts: splitExtText(achievementUploadSettings.attachmentVideoExts),
+  attachmentImageExts: splitExtText(achievementUploadSettings.attachmentImageExts),
+  attachmentArchiveExts: splitExtText(achievementUploadSettings.attachmentArchiveExts),
 });
+
+const imageMaxCount = computed(() => uploadLimitConfig.imageMaxCount);
+const attachmentMaxCount = computed(() => uploadLimitConfig.attachmentMaxCount);
+const enabledAttachmentTypes = computed(() =>
+  ATTACHMENT_TYPE_META.map((item) => ({
+    ...item,
+    exts: attachmentExtsByType(item.key),
+  })).filter((item) => item.exts.length),
+);
+const allowedAttachmentExtensions = computed(() =>
+  enabledAttachmentTypes.value.flatMap((item) => item.exts),
+);
 
 const mediaLimitLabel = computed(() =>
   formatFileSize(uploadLimitConfig.mediaMaxMB),
@@ -2484,14 +2550,46 @@ const attachmentPreviews = computed(() =>
   })),
 );
 
-function setUploadLimits({ mediaMaxMB, attachmentMaxMB }) {
-  // Hook: adjust upload size display limits from outside if needed.
+function setUploadLimits({
+  imageMaxCount,
+  mediaMaxMB,
+  attachmentMaxCount,
+  attachmentMaxMB,
+  attachmentDocumentExts,
+  attachmentVideoExts,
+  attachmentImageExts,
+  attachmentArchiveExts,
+}) {
+  if (Number.isFinite(imageMaxCount) && imageMaxCount > 0) {
+    uploadLimitConfig.imageMaxCount = imageMaxCount;
+  }
   if (Number.isFinite(mediaMaxMB) && mediaMaxMB > 0) {
     uploadLimitConfig.mediaMaxMB = mediaMaxMB;
+  }
+  if (Number.isFinite(attachmentMaxCount) && attachmentMaxCount > 0) {
+    uploadLimitConfig.attachmentMaxCount = attachmentMaxCount;
   }
   if (Number.isFinite(attachmentMaxMB) && attachmentMaxMB > 0) {
     uploadLimitConfig.attachmentMaxMB = attachmentMaxMB;
   }
+  uploadLimitConfig.attachmentDocumentExts = splitExtText(attachmentDocumentExts);
+  uploadLimitConfig.attachmentVideoExts = splitExtText(attachmentVideoExts);
+  uploadLimitConfig.attachmentImageExts = splitExtText(attachmentImageExts);
+  uploadLimitConfig.attachmentArchiveExts = splitExtText(attachmentArchiveExts);
+}
+
+function splitExtText(value = "") {
+  return String(value)
+    .split(",")
+    .map((item) => item.trim().toLowerCase().replace(/^\./, ""))
+    .filter(Boolean);
+}
+
+function attachmentExtsByType(typeKey) {
+  if (typeKey === "document") return uploadLimitConfig.attachmentDocumentExts;
+  if (typeKey === "video") return uploadLimitConfig.attachmentVideoExts;
+  if (typeKey === "image") return uploadLimitConfig.attachmentImageExts;
+  return uploadLimitConfig.attachmentArchiveExts;
 }
 
 const attachmentIconMap = {
@@ -2525,24 +2623,7 @@ function isAllowedImage(file) {
 
 function isAllowedAttachment(file) {
   const ext = resolveMediaTypeByExtension(file.name || "");
-  return [
-    "docx",
-    "doc",
-    "pdf",
-    "xls",
-    "xlsx",
-    "zip",
-    "rar",
-    "7z",
-    "pptx",
-    "ppt",
-    "mp4",
-    "mov",
-    "jpeg",
-    "jpg",
-    "png",
-    "heif",
-  ].includes(ext);
+  return allowedAttachmentExtensions.value.includes(ext);
 }
 
 function isFileSizeAllowed(file, limitMb) {
@@ -2554,6 +2635,14 @@ function isFileSizeAllowed(file, limitMb) {
 
 function formatFileSize(value) {
   return `${value}MB`;
+}
+
+function resolveAttachmentTypeByExtension(ext = "") {
+  if (uploadLimitConfig.attachmentDocumentExts.includes(ext)) return "document";
+  if (uploadLimitConfig.attachmentVideoExts.includes(ext)) return "video";
+  if (uploadLimitConfig.attachmentImageExts.includes(ext)) return "image";
+  if (uploadLimitConfig.attachmentArchiveExts.includes(ext)) return "archive";
+  return "";
 }
 
 function resolveMediaTypeByExtension(name = "") {
@@ -2588,7 +2677,7 @@ function resolveImageUrls(item) {
       urls.push(resolved);
     }
   });
-  return urls.slice(0, MAX_IMAGE_COUNT);
+  return urls.slice(0, uploadLimitConfig.imageMaxCount);
 }
 
 function resolveAttachments(fields = {}) {
@@ -2615,13 +2704,53 @@ function parseJsonArray(value) {
   }
 }
 
+function handleUploadSettingsUpdated(event) {
+  const nextSettings = event.detail || {};
+  setUploadLimits({
+    imageMaxCount: nextSettings.imageMaxCount,
+    mediaMaxMB: nextSettings.imageMaxSizeMb,
+    attachmentMaxCount: nextSettings.attachmentMaxCount,
+    attachmentMaxMB: nextSettings.attachmentMaxSizeMb,
+    attachmentDocumentExts: nextSettings.attachmentDocumentExts,
+    attachmentVideoExts: nextSettings.attachmentVideoExts,
+    attachmentImageExts: nextSettings.attachmentImageExts,
+    attachmentArchiveExts: nextSettings.attachmentArchiveExts,
+  });
+}
+
 onMounted(() => {
   syncCategoryFromRoute();
+  fetchAchievementUploadSettings().then(() => {
+    setUploadLimits({
+      imageMaxCount: achievementUploadSettings.imageMaxCount,
+      mediaMaxMB: achievementUploadSettings.imageMaxSizeMb,
+      attachmentMaxCount: achievementUploadSettings.attachmentMaxCount,
+      attachmentMaxMB: achievementUploadSettings.attachmentMaxSizeMb,
+      attachmentDocumentExts: achievementUploadSettings.attachmentDocumentExts,
+      attachmentVideoExts: achievementUploadSettings.attachmentVideoExts,
+      attachmentImageExts: achievementUploadSettings.attachmentImageExts,
+      attachmentArchiveExts: achievementUploadSettings.attachmentArchiveExts,
+    });
+  });
   fetchAchievements();
+  window.addEventListener(
+    "achievement-upload-settings-updated",
+    handleUploadSettingsUpdated,
+  );
   // Expose sheet switcher globally for v-html content
   window.__switchSheet = (index) => {
     switchSheet(index);
   };
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener(
+    "achievement-upload-settings-updated",
+    handleUploadSettingsUpdated,
+  );
+  if (window.__switchSheet) {
+    delete window.__switchSheet;
+  }
 });
 
 watch(
