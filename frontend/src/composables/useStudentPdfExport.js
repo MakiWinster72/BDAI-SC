@@ -284,14 +284,16 @@ export function useStudentPdfExport() {
         currentY = doc.lastAutoTable.finalY + 14;
       };
 
-      const avatarSize = 88;
+      const maxAvatarSize = 88;
       const avatarUrlRaw = student.avatarUrl || "";
+      let avatarW = maxAvatarSize;
+      let avatarH = maxAvatarSize;
       if (avatarUrlRaw) {
         const avatarUrl = resolveMediaUrl
           ? resolveMediaUrl(avatarUrlRaw)
           : avatarUrlRaw;
         try {
-          const response = await fetch(avatarUrl);
+          const response = await fetch(avatarUrl, { mode: "cors" });
           const blob = await response.blob();
           const dataUrl = await new Promise((resolve) => {
             const reader = new FileReader();
@@ -299,20 +301,26 @@ export function useStudentPdfExport() {
             reader.readAsDataURL(blob);
           });
           const format = blob.type.includes("png") ? "PNG" : "JPEG";
-          doc.addImage(
-            dataUrl,
-            format,
-            marginX,
-            currentY,
-            avatarSize,
-            avatarSize,
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = dataUrl;
+          });
+          const ratio = Math.min(
+            maxAvatarSize / img.width,
+            maxAvatarSize / img.height,
           );
+          avatarW = img.width * ratio;
+          avatarH = img.height * ratio;
+          doc.addImage(dataUrl, format, marginX, currentY, avatarW, avatarH);
         } catch {
-          // ignore avatar failures
+          avatarW = maxAvatarSize;
+          avatarH = maxAvatarSize;
         }
       }
 
-      const infoX = marginX + avatarSize + 20;
+      const infoX = marginX + avatarW + 20;
       const lineHeight = 18;
       doc.setFont(PDF_FONT_BLACK, "normal");
       doc.setFontSize(18);
@@ -327,7 +335,7 @@ export function useStudentPdfExport() {
       infoLines.forEach((line, index) => {
         doc.text(line, infoX, currentY + 40 + index * lineHeight);
       });
-      currentY += Math.max(avatarSize, 40 + infoLines.length * lineHeight) + 20;
+      currentY += Math.max(avatarH, 40 + infoLines.length * lineHeight) + 20;
 
       addSectionTitle("学籍信息");
       addKeyValueTable([
