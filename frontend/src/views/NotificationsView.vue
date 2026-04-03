@@ -6,7 +6,7 @@ import { useNotifications } from "../composables/useNotifications";
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, updateReviewRequestStatus } = useNotifications(profile);
+const { inboxEntries, categoryCounts, updateReviewRequestStatus } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
 const rejectReason = ref("");
@@ -16,9 +16,23 @@ const activeEntryKey = computed(() => {
   const raw = route.query.entry;
   return typeof raw === "string" ? raw : "";
 });
+const activeCategory = computed(() => {
+  const raw = route.query.category;
+  return typeof raw === "string" && raw ? raw : "pending";
+});
+const notificationTabs = computed(() => [
+  { key: "pending", label: "待处理", count: categoryCounts.value.pending || 0 },
+  { key: "delayed", label: "滞后", count: categoryCounts.value.delayed || 0 },
+  { key: "processed", label: "已处理", count: categoryCounts.value.processed || 0 },
+]);
+const filteredEntries = computed(() =>
+  inboxEntries.value.filter(
+    (entry) => entry.categoryKey === activeCategory.value,
+  ),
+);
 const selectedEntry = computed(
   () =>
-    inboxEntries.value.find(
+    filteredEntries.value.find(
       (entry) => buildEntryKey(entry) === activeEntryKey.value,
     ) || null,
 );
@@ -36,23 +50,30 @@ const canProcessSelected = computed(() => {
 });
 
 watch(
-  () => inboxEntries.value,
+  () => [filteredEntries.value, activeCategory.value],
   (entries) => {
-    if (!entries.length) {
+    const list = Array.isArray(entries) ? entries[0] : [];
+    if (!list.length) {
       return;
     }
     if (!activeEntryKey.value) {
       router.replace({
         path: "/notifications",
-        query: { entry: buildEntryKey(entries[0]) },
+        query: {
+          category: activeCategory.value,
+          entry: buildEntryKey(list[0]),
+        },
       });
       return;
     }
-    const exists = entries.some((entry) => buildEntryKey(entry) === activeEntryKey.value);
+    const exists = list.some((entry) => buildEntryKey(entry) === activeEntryKey.value);
     if (!exists) {
       router.replace({
         path: "/notifications",
-        query: { entry: buildEntryKey(entries[0]) },
+        query: {
+          category: activeCategory.value,
+          entry: buildEntryKey(list[0]),
+        },
       });
     }
   },
@@ -70,6 +91,13 @@ watch(
 
 function buildEntryKey(entry) {
   return `${entry.source}:${entry.sourceId || entry.id}`;
+}
+
+function openCategory(category) {
+  router.replace({
+    path: "/notifications",
+    query: { category },
+  });
 }
 
 function loadUser() {
@@ -153,9 +181,23 @@ function rejectSelectedRequest() {
       <h1 class="feed-title">通知详情</h1>
     </header>
 
-    <section v-if="!inboxEntries.length" class="notification-empty-card">
+    <section class="notification-categories">
+      <button
+        v-for="tab in notificationTabs"
+        :key="tab.key"
+        class="notification-category-tab"
+        :class="{ active: activeCategory === tab.key }"
+        type="button"
+        @click="openCategory(tab.key)"
+      >
+        <span>{{ tab.label }}</span>
+        <span class="notification-category-count">{{ tab.count }}</span>
+      </button>
+    </section>
+
+    <section v-if="!filteredEntries.length" class="notification-empty-card">
       <div class="notification-empty-title">暂无通知</div>
-      <div class="notification-empty-text">左侧通知列表里暂时没有可查看的内容。</div>
+      <div class="notification-empty-text">当前分类下暂时没有可查看的通知。</div>
     </section>
 
     <section v-else-if="selectedEntry" class="notification-detail-card">
@@ -292,6 +334,48 @@ function rejectSelectedRequest() {
 .notification-view {
   display: grid;
   gap: 14px;
+}
+
+.notification-categories {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.notification-category-tab {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(3, 107, 114, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: #0f555d;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notification-category-tab.active {
+  background: linear-gradient(135deg, #0a7a82, #075961);
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(3, 107, 114, 0.16);
+}
+
+.notification-category-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 107, 114, 0.1);
+}
+
+.notification-category-tab.active .notification-category-count {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .notification-empty-card,

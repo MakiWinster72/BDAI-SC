@@ -13,10 +13,12 @@
         :active-menu="activeMenu"
         :active-achievement="activeAchievement"
         :active-notification-key="activeNotificationKey"
+        :active-notification-category="activeNotificationCategory"
         :show-achievements-drawer="showAchievementsDrawer"
         @menu-click="$emit('menu-click', $event)"
         @achievement-entry-click="$emit('achievement-entry-click', $event)"
         @notification-entry-click="$emit('notification-entry-click', $event)"
+        @notification-category-click="$emit('notification-category-click', $event)"
       />
     </div>
   </aside>
@@ -43,6 +45,10 @@ defineProps({
     type: String,
     default: "",
   },
+  activeNotificationCategory: {
+    type: String,
+    default: "pending",
+  },
   showAchievementsDrawer: {
     type: Boolean,
     default: false,
@@ -53,6 +59,7 @@ defineEmits([
   "menu-click",
   "achievement-entry-click",
   "notification-entry-click",
+  "notification-category-click",
   "settings-click",
 ]);
 </script>

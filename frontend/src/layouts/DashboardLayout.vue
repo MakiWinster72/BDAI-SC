@@ -7,10 +7,12 @@
         :active-menu="activeMenu"
         :active-achievement="activeAchievement"
         :active-notification-key="activeNotificationKey"
+        :active-notification-category="activeNotificationCategory"
         :show-achievements-drawer="showAchievementsDrawer"
         @menu-click="handleMenuClick"
         @achievement-entry-click="handleAchievementEntry"
         @notification-entry-click="handleNotificationEntry"
+        @notification-category-click="handleNotificationCategory"
         @settings-click="goToSettings"
       />
 
@@ -48,6 +50,13 @@ const activeNotificationKey = computed(() => {
   }
   const raw = route.query.entry;
   return typeof raw === "string" ? raw : "";
+});
+const activeNotificationCategory = computed(() => {
+  if (route.name !== "notifications") {
+    return "pending";
+  }
+  const raw = route.query.category;
+  return typeof raw === "string" && raw ? raw : "pending";
 });
 const showAchievementsDrawer = computed(() => route.name !== "settings");
 const isEmbedded = computed(() => {
@@ -98,7 +107,18 @@ function handleNotificationEntry(entryKey) {
   closeSidebar();
   navigateWithViewTransition(router, {
     path: "/notifications",
-    query: entryKey ? { entry: entryKey } : {},
+    query: {
+      category: activeNotificationCategory.value || "pending",
+      ...(entryKey ? { entry: entryKey } : {}),
+    },
+  });
+}
+
+function handleNotificationCategory(category) {
+  closeSidebar();
+  navigateWithViewTransition(router, {
+    path: "/notifications",
+    query: { category: category || "pending" },
   });
 }
 

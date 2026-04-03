@@ -897,6 +897,48 @@ body {
   gap: 10px;
 }
 
+.menu-notification-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.menu-notification-tab {
+  min-height: 38px;
+  border: 1px solid rgba(3, 107, 114, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.54);
+  color: #0f555d;
+  display: grid;
+  gap: 4px;
+  place-items: center;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.menu-notification-tab.active {
+  background: linear-gradient(135deg, #0a7a82, #075961);
+  color: #fff;
+}
+
+.menu-notification-tab-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 107, 114, 0.1);
+  font-size: 11px;
+}
+
+.menu-notification-tab.active .menu-notification-tab-count {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .menu-notification-empty {
   border-radius: 14px;
   padding: 18px 14px;

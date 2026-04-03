@@ -2,6 +2,7 @@ import { computed, reactive } from "vue";
 
 const STORAGE_KEY = "gcsc_notification_center";
 const REVIEWER_ROLES = ["TEACHER", "ADMIN"];
+const DELAYED_THRESHOLD_MS = 3 * 24 * 60 * 60 * 1000;
 const CATEGORY_LABELS = {
   contest: "学科竞赛、文体艺术",
   paper: "发表学术论文",
@@ -158,12 +159,22 @@ function buildReviewEntry(request, user) {
     action: request.action,
     payloadSnapshot: request.payloadSnapshot || null,
     changes: Array.isArray(request.changes) ? request.changes : [],
+    categoryKey: classifyNotificationCategory({
+      status: request.status,
+      createdAt: request.createdAt,
+      source: "review-request",
+    }),
     timeText: formatRelativeTime(request.updatedAt || request.createdAt),
     createdAt: request.updatedAt || request.createdAt,
   };
 }
 
 function buildNotificationEntry(notification) {
+  const categoryKey = classifyNotificationCategory({
+    status: notification.status || "processed",
+    createdAt: notification.createdAt,
+    source: "notification",
+  });
   return {
     id: notification.id,
     sourceId: notification.id,
@@ -174,9 +185,21 @@ function buildNotificationEntry(notification) {
     badgeText: notification.badgeText || "通知",
     badgeClass: notification.badgeClass || "is-system",
     meta: notification.meta || "系统消息",
+    categoryKey,
     timeText: formatRelativeTime(notification.createdAt),
     createdAt: notification.createdAt,
   };
+}
+
+export function classifyNotificationCategory({ status, createdAt, source }) {
+  if (status === "approved" || status === "rejected" || source === "notification") {
+    return "processed";
+  }
+  const createdTime = new Date(createdAt).getTime();
+  if (!Number.isNaN(createdTime) && Date.now() - createdTime >= DELAYED_THRESHOLD_MS) {
+    return "delayed";
+  }
+  return "pending";
 }
 
 function addNotification({
@@ -355,10 +378,25 @@ export function useNotifications(userSource) {
   const pendingCount = computed(() =>
     visibleReviewRequests.value.filter((item) => item.status === "pending").length,
   );
+  const categoryCounts = computed(() => {
+    const counts = {
+      pending: 0,
+      delayed: 0,
+      processed: 0,
+    };
+    inboxEntries.value.forEach((entry) => {
+      const key = entry.categoryKey || "processed";
+      if (counts[key] !== undefined) {
+        counts[key] += 1;
+      }
+    });
+    return counts;
+  });
 
   return {
     inboxEntries,
     pendingCount,
+    categoryCounts,
     reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
     submitAchievementReviewRequest,

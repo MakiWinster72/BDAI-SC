@@ -50,11 +50,24 @@
           key="notification-panel"
           class="menu-panel menu-notification-list"
         >
-          <div v-if="!inboxEntries.length" class="menu-notification-empty">
+          <div class="menu-notification-tabs">
+            <button
+              v-for="tab in notificationTabs"
+              :key="tab.key"
+              class="menu-notification-tab"
+              :class="{ active: activeNotificationCategory === tab.key }"
+              type="button"
+              @click="openNotificationCategory(tab.key)"
+            >
+              <span>{{ tab.label }}</span>
+              <span class="menu-notification-tab-count">{{ tab.count }}</span>
+            </button>
+          </div>
+          <div v-if="!filteredInboxEntries.length" class="menu-notification-empty">
             暂无通知
           </div>
           <article
-            v-for="entry in inboxEntries"
+            v-for="entry in filteredInboxEntries"
             :key="entry.source + entry.id"
             class="menu-notification-item"
             :class="{ active: activeNotificationKey === buildNotificationKey(entry) }"
@@ -127,6 +140,10 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  activeNotificationCategory: {
+    type: String,
+    default: "pending",
+  },
   showAchievementsDrawer: {
     type: Boolean,
     default: true,
@@ -137,9 +154,10 @@ const emit = defineEmits([
   "menu-click",
   "achievement-entry-click",
   "notification-entry-click",
+  "notification-category-click",
 ]);
 
-const { inboxEntries, pendingCount } = useNotifications(props.profile);
+const { inboxEntries, pendingCount, categoryCounts } = useNotifications(props.profile);
 
 const menuItems = computed(() => filterMenuItemsByRole(props.profile.role));
 
@@ -179,6 +197,16 @@ const panelTitle = computed(() => {
   }
   return "导航";
 });
+const notificationTabs = computed(() => [
+  { key: "pending", label: "待处理", count: categoryCounts.value.pending || 0 },
+  { key: "delayed", label: "滞后", count: categoryCounts.value.delayed || 0 },
+  { key: "processed", label: "已处理", count: categoryCounts.value.processed || 0 },
+]);
+const filteredInboxEntries = computed(() =>
+  inboxEntries.value.filter(
+    (entry) => entry.categoryKey === (props.activeNotificationCategory || "pending"),
+  ),
+);
 
 const achievementEntries = [
   { key: "all", label: "全部" },
@@ -269,6 +297,10 @@ function isItemActive(key) {
 
 function buildNotificationKey(entry) {
   return `${entry.source}:${entry.sourceId || entry.id}`;
+}
+
+function openNotificationCategory(category) {
+  emit("notification-category-click", category);
 }
 
 function updateBodyFadeState() {
