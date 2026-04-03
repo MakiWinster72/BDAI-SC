@@ -9,12 +9,30 @@ const STORAGE_KEY = "gcsc_achievement_upload_settings";
 const DEFAULT_SETTINGS = Object.freeze({
   imageMaxCount: 3,
   imageMaxSizeMb: 10,
+  attachmentMaxCount: 10,
   attachmentMaxSizeMb: 50,
+  attachmentDocumentExts: "docx,doc,pdf,xls,xlsx,pptx,ppt",
+  attachmentVideoExts: "mp4,mov",
+  attachmentImageExts: "jpeg,jpg,png,heif",
+  attachmentArchiveExts: "zip,rar,7z,tar",
 });
+
+function normalizeExtText(value, fallback) {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+  return value
+    .split(",")
+    .map((item) => item.trim().toLowerCase().replace(/^\./, ""))
+    .filter(Boolean)
+    .filter((item, index, list) => list.indexOf(item) === index)
+    .join(",");
+}
 
 function normalizeSettings(raw = {}) {
   const imageMaxCount = Number(raw.imageMaxCount);
   const imageMaxSizeMb = Number(raw.imageMaxSizeMb);
+  const attachmentMaxCount = Number(raw.attachmentMaxCount);
   const attachmentMaxSizeMb = Number(raw.attachmentMaxSizeMb);
 
   return {
@@ -24,10 +42,30 @@ function normalizeSettings(raw = {}) {
     imageMaxSizeMb: Number.isFinite(imageMaxSizeMb) && imageMaxSizeMb > 0
       ? imageMaxSizeMb
       : DEFAULT_SETTINGS.imageMaxSizeMb,
+    attachmentMaxCount:
+      Number.isFinite(attachmentMaxCount) && attachmentMaxCount > 0
+        ? attachmentMaxCount
+        : DEFAULT_SETTINGS.attachmentMaxCount,
     attachmentMaxSizeMb:
       Number.isFinite(attachmentMaxSizeMb) && attachmentMaxSizeMb > 0
         ? attachmentMaxSizeMb
         : DEFAULT_SETTINGS.attachmentMaxSizeMb,
+    attachmentDocumentExts: normalizeExtText(
+      raw.attachmentDocumentExts,
+      DEFAULT_SETTINGS.attachmentDocumentExts,
+    ),
+    attachmentVideoExts: normalizeExtText(
+      raw.attachmentVideoExts,
+      DEFAULT_SETTINGS.attachmentVideoExts,
+    ),
+    attachmentImageExts: normalizeExtText(
+      raw.attachmentImageExts,
+      DEFAULT_SETTINGS.attachmentImageExts,
+    ),
+    attachmentArchiveExts: normalizeExtText(
+      raw.attachmentArchiveExts,
+      DEFAULT_SETTINGS.attachmentArchiveExts,
+    ),
   };
 }
 
@@ -54,6 +92,10 @@ function persistSettings(settings) {
   return normalized;
 }
 
+function splitExtText(value) {
+  return value ? value.split(",").filter(Boolean) : [];
+}
+
 export function useAchievementUploadSettings() {
   const settings = reactive(readCachedSettings());
   const loading = shallowRef(false);
@@ -64,14 +106,41 @@ export function useAchievementUploadSettings() {
     () => `最多 ${settings.imageMaxCount} 张 · 单张不超过 ${settings.imageMaxSizeMb}MB`,
   );
   const attachmentLimitText = computed(
-    () => `单个不超过 ${settings.attachmentMaxSizeMb}MB`,
+    () => `最多 ${settings.attachmentMaxCount} 个 · 单个不超过 ${settings.attachmentMaxSizeMb}MB`,
   );
+  const attachmentGroups = computed(() => [
+    {
+      key: "document",
+      label: "文档",
+      exts: splitExtText(settings.attachmentDocumentExts),
+    },
+    {
+      key: "video",
+      label: "视频",
+      exts: splitExtText(settings.attachmentVideoExts),
+    },
+    {
+      key: "image",
+      label: "图片",
+      exts: splitExtText(settings.attachmentImageExts),
+    },
+    {
+      key: "archive",
+      label: "压缩包",
+      exts: splitExtText(settings.attachmentArchiveExts),
+    },
+  ]);
 
   function applySettings(nextSettings) {
     const normalized = persistSettings(nextSettings);
     settings.imageMaxCount = normalized.imageMaxCount;
     settings.imageMaxSizeMb = normalized.imageMaxSizeMb;
+    settings.attachmentMaxCount = normalized.attachmentMaxCount;
     settings.attachmentMaxSizeMb = normalized.attachmentMaxSizeMb;
+    settings.attachmentDocumentExts = normalized.attachmentDocumentExts;
+    settings.attachmentVideoExts = normalized.attachmentVideoExts;
+    settings.attachmentImageExts = normalized.attachmentImageExts;
+    settings.attachmentArchiveExts = normalized.attachmentArchiveExts;
   }
 
   async function fetchSettings() {
@@ -113,6 +182,7 @@ export function useAchievementUploadSettings() {
     errorMessage,
     imageLimitText,
     attachmentLimitText,
+    attachmentGroups,
     applySettings,
     fetchSettings,
     saveSettings,

@@ -586,7 +586,10 @@ public class AchievementService {
     }
 
     private void validateAchievementMedia(Map<String, String> fields) {
-        achievementUploadSettingsService.validateAchievementImageCount(fields.get("_imageUrls"));
+        achievementUploadSettingsService.validateAchievementMedia(
+            fields.get("_imageUrls"),
+            fields.get("_attachments")
+        );
     }
 
     private LocalDate parseDate(String value) {

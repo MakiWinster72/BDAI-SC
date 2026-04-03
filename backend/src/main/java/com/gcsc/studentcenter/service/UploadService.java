@@ -37,7 +37,7 @@ public class UploadService {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件不能为空");
         }
-        achievementUploadSettingsService.validateUploadSize(context, file.getSize());
+        achievementUploadSettingsService.validateUpload(context, file);
 
         String contentType = file.getContentType();
         String mediaType = resolveMediaType(contentType);

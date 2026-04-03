@@ -2,6 +2,13 @@
 import { computed, onMounted, reactive, shallowRef } from "vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 
+const ATTACHMENT_TYPE_OPTIONS = [
+  { key: "document", label: "文档", icon: "/assets/icons/doc.svg" },
+  { key: "video", label: "视频", icon: "/assets/icons/video.svg" },
+  { key: "image", label: "图片", icon: "/assets/icons/image.svg" },
+  { key: "archive", label: "压缩包", icon: "/assets/icons/zip.svg" },
+];
+
 const profile = reactive(loadUser());
 const saveMessage = shallowRef("");
 const {
@@ -16,24 +23,29 @@ const {
 const form = reactive({
   imageMaxCount: settings.imageMaxCount,
   imageMaxSizeMb: settings.imageMaxSizeMb,
+  attachmentMaxCount: settings.attachmentMaxCount,
   attachmentMaxSizeMb: settings.attachmentMaxSizeMb,
+  attachmentDocumentExts: settings.attachmentDocumentExts,
+  attachmentVideoExts: settings.attachmentVideoExts,
+  attachmentImageExts: settings.attachmentImageExts,
+  attachmentArchiveExts: settings.attachmentArchiveExts,
 });
 
 const statCards = computed(() => [
   {
-    label: "图片上限",
-    value: `${form.imageMaxCount} 张`,
-    note: "成就编辑器图片区",
+    label: "图片",
+    value: `${form.imageMaxCount} 张 / ${form.imageMaxSizeMb}MB`,
+    note: "数量与单张大小",
   },
   {
-    label: "图片大小",
-    value: `${form.imageMaxSizeMb} MB`,
-    note: "单张图片最大体积",
+    label: "附件",
+    value: `${form.attachmentMaxCount} 个 / ${form.attachmentMaxSizeMb}MB`,
+    note: "数量与单个大小",
   },
   {
-    label: "附件大小",
-    value: `${form.attachmentMaxSizeMb} MB`,
-    note: "单个附件最大体积",
+    label: "格式组",
+    value: `${enabledPreviewTypes.value.length} 组`,
+    note: "四类后缀规则",
   },
 ]);
 
@@ -41,8 +53,33 @@ const imageSubtitle = computed(
   () => `最多 ${form.imageMaxCount} 张 · 单张不超过 ${form.imageMaxSizeMb}MB`,
 );
 const attachmentSubtitle = computed(
-  () => `支持多文件 · 单个不超过 ${form.attachmentMaxSizeMb}MB`,
+  () => `最多 ${form.attachmentMaxCount} 个 · 单个不超过 ${form.attachmentMaxSizeMb}MB`,
 );
+const enabledPreviewTypes = computed(() =>
+  ATTACHMENT_TYPE_OPTIONS.map((item) => ({
+    ...item,
+    exts: parseExts(form[extFieldKey(item.key)]),
+  })).filter((item) => item.exts.length),
+);
+const attachmentTypeSummary = computed(() =>
+  enabledPreviewTypes.value.length
+    ? enabledPreviewTypes.value.map((item) => item.label).join(" / ")
+    : "暂无可用附件类型",
+);
+
+function extFieldKey(typeKey) {
+  if (typeKey === "document") return "attachmentDocumentExts";
+  if (typeKey === "video") return "attachmentVideoExts";
+  if (typeKey === "image") return "attachmentImageExts";
+  return "attachmentArchiveExts";
+}
+
+function parseExts(value) {
+  return (value || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase().replace(/^\./, ""))
+    .filter(Boolean);
+}
 
 async function loadPage() {
   await fetchSettings();
@@ -52,7 +89,12 @@ async function loadPage() {
 function syncFormFromSettings() {
   form.imageMaxCount = settings.imageMaxCount;
   form.imageMaxSizeMb = settings.imageMaxSizeMb;
+  form.attachmentMaxCount = settings.attachmentMaxCount;
   form.attachmentMaxSizeMb = settings.attachmentMaxSizeMb;
+  form.attachmentDocumentExts = settings.attachmentDocumentExts;
+  form.attachmentVideoExts = settings.attachmentVideoExts;
+  form.attachmentImageExts = settings.attachmentImageExts;
+  form.attachmentArchiveExts = settings.attachmentArchiveExts;
 }
 
 async function handleSubmit() {
@@ -60,10 +102,15 @@ async function handleSubmit() {
   const result = await saveSettings({
     imageMaxCount: Number(form.imageMaxCount),
     imageMaxSizeMb: Number(form.imageMaxSizeMb),
+    attachmentMaxCount: Number(form.attachmentMaxCount),
     attachmentMaxSizeMb: Number(form.attachmentMaxSizeMb),
+    attachmentDocumentExts: form.attachmentDocumentExts,
+    attachmentVideoExts: form.attachmentVideoExts,
+    attachmentImageExts: form.attachmentImageExts,
+    attachmentArchiveExts: form.attachmentArchiveExts,
   });
   if (result.success) {
-    saveMessage.value = "上传限制已更新，成就页会按新设置实时显示。";
+    saveMessage.value = "上传限制已更新，成就页面会同步显示。";
     syncFormFromSettings();
   }
 }
@@ -131,51 +178,113 @@ onMounted(() => {
           <div v-if="loading" class="admin-panel-status">加载中...</div>
         </div>
 
-        <div class="admin-form-list">
-          <label class="admin-field">
-            <span class="admin-field-label">最多上传图片数</span>
-            <span class="admin-field-hint">控制“图片(可选)”区域最多可添加的张数</span>
-            <div class="admin-input-wrap">
-              <input
-                v-model.number="form.imageMaxCount"
-                class="admin-input"
-                type="number"
-                min="1"
-                max="9"
-              />
-              <span class="admin-input-unit">张</span>
+        <div class="admin-setting-block">
+          <div class="admin-setting-heading">
+            <div class="admin-setting-index">01</div>
+            <div>
+              <div class="admin-setting-title">图片设置</div>
             </div>
-          </label>
+          </div>
+          <div class="admin-form-list two-cols">
+            <label class="admin-field">
+              <span class="admin-field-label">最多上传图片数</span>
+              <span class="admin-field-hint">决定用户一次最多可添加多少张图片</span>
+              <div class="admin-input-wrap">
+                <input
+                  v-model.number="form.imageMaxCount"
+                  class="admin-input"
+                  type="number"
+                  min="1"
+                  max="9"
+                />
+                <span class="admin-input-unit">张</span>
+              </div>
+            </label>
 
-          <label class="admin-field">
-            <span class="admin-field-label">单张图片最大大小</span>
-            <span class="admin-field-hint">超出限制时，用户上传会被拦截并显示提示</span>
-            <div class="admin-input-wrap">
-              <input
-                v-model.number="form.imageMaxSizeMb"
-                class="admin-input"
-                type="number"
-                min="1"
-                max="200"
-              />
-              <span class="admin-input-unit">MB</span>
-            </div>
-          </label>
+            <label class="admin-field">
+              <span class="admin-field-label">单张图片最大大小</span>
+              <span class="admin-field-hint">超出限制时会直接提示并阻止上传</span>
+              <div class="admin-input-wrap">
+                <input
+                  v-model.number="form.imageMaxSizeMb"
+                  class="admin-input"
+                  type="number"
+                  min="1"
+                  max="200"
+                />
+                <span class="admin-input-unit">MB</span>
+              </div>
+            </label>
+          </div>
+        </div>
 
-          <label class="admin-field">
-            <span class="admin-field-label">单个附件最大大小</span>
-            <span class="admin-field-hint">控制附件上传区允许的单文件大小</span>
-            <div class="admin-input-wrap">
-              <input
-                v-model.number="form.attachmentMaxSizeMb"
-                class="admin-input"
-                type="number"
-                min="1"
-                max="200"
-              />
-              <span class="admin-input-unit">MB</span>
+        <div class="admin-setting-block">
+          <div class="admin-setting-heading">
+            <div class="admin-setting-index">02</div>
+            <div>
+              <div class="admin-setting-title">附件设置</div>
             </div>
-          </label>
+          </div>
+          <div class="admin-form-list two-cols">
+            <label class="admin-field">
+              <span class="admin-field-label">最多上传附件数</span>
+              <span class="admin-field-hint">决定附件区一次最多能保留多少个文件</span>
+              <div class="admin-input-wrap">
+                <input
+                  v-model.number="form.attachmentMaxCount"
+                  class="admin-input"
+                  type="number"
+                  min="1"
+                  max="20"
+                />
+                <span class="admin-input-unit">个</span>
+              </div>
+            </label>
+
+            <label class="admin-field">
+              <span class="admin-field-label">单个附件最大大小</span>
+              <span class="admin-field-hint">所有附件共用这一项单文件大小限制</span>
+              <div class="admin-input-wrap">
+                <input
+                  v-model.number="form.attachmentMaxSizeMb"
+                  class="admin-input"
+                  type="number"
+                  min="1"
+                  max="200"
+                />
+                <span class="admin-input-unit">MB</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="admin-field">
+            <span class="admin-field-label">支持的附件后缀</span>
+            <span class="admin-field-hint">按类型填写，多个后缀用英文逗号隔开；留空表示这一类暂不开放</span>
+            <div class="admin-ext-grid">
+              <label
+                v-for="item in ATTACHMENT_TYPE_OPTIONS"
+                :key="item.key"
+                class="admin-ext-card"
+              >
+                <div class="admin-ext-head">
+                  <img class="admin-ext-icon" :src="item.icon" alt="" />
+                  <span class="admin-ext-title">{{ item.label }}</span>
+                </div>
+                <input
+                  v-model="form[extFieldKey(item.key)]"
+                  class="admin-ext-input"
+                  type="text"
+                  :placeholder="item.key === 'document'
+                    ? 'docx,doc,pdf'
+                    : item.key === 'video'
+                      ? 'mp4,mov'
+                      : item.key === 'image'
+                        ? 'jpeg,jpg,png'
+                        : 'zip,rar,7z'"
+                />
+              </label>
+            </div>
+          </div>
         </div>
 
         <div v-if="errorMessage" class="admin-feedback error">
@@ -230,37 +339,37 @@ onMounted(() => {
             <div class="media-header">
               <div>
                 <div class="media-title">附件(可选)</div>
-                <div class="media-subtitle">支持多文件</div>
+                <div class="media-subtitle">{{ attachmentSubtitle }}</div>
               </div>
             </div>
             <div class="media-empty">暂无附件</div>
             <div class="attachment-formats admin-format-mock">
               <div class="format-row">
-                <div class="format-item">
-                  <img class="format-icon" src="/assets/icons/doc.svg" alt="" />
-                  <span class="format-label">文档</span>
-                  <span class="format-exts">docx/doc/pdf/xls/xlsx/pptx/ppt</span>
-                </div>
-                <div class="format-item">
-                  <img class="format-icon" src="/assets/icons/image.svg" alt="" />
-                  <span class="format-label">图片</span>
-                  <span class="format-exts">jpeg/jpg/png/heif</span>
+                <div
+                  v-for="item in enabledPreviewTypes.slice(0, 2)"
+                  :key="item.key"
+                  class="format-item"
+                >
+                  <img class="format-icon" :src="item.icon" alt="" />
+                  <span class="format-label">{{ item.label }}</span>
+                  <span class="format-exts">{{ item.exts.join("/") }}</span>
                 </div>
               </div>
               <div class="format-row">
-                <div class="format-item">
-                  <img class="format-icon" src="/assets/icons/video.svg" alt="" />
-                  <span class="format-label">视频</span>
-                  <span class="format-exts">mp4/mov</span>
-                </div>
-                <div class="format-item">
-                  <img class="format-icon" src="/assets/icons/zip.svg" alt="" />
-                  <span class="format-label">压缩包</span>
-                  <span class="format-exts">zip/rar/7z</span>
+                <div
+                  v-for="item in enabledPreviewTypes.slice(2, 4)"
+                  :key="item.key"
+                  class="format-item"
+                >
+                  <img class="format-icon" :src="item.icon" alt="" />
+                  <span class="format-label">{{ item.label }}</span>
+                  <span class="format-exts">{{ item.exts.join("/") }}</span>
                 </div>
               </div>
             </div>
-            <div class="media-tip">{{ attachmentSubtitle }}</div>
+            <div class="media-tip">
+              {{ attachmentTypeSummary }} · 单个不超过 {{ form.attachmentMaxSizeMb }}MB
+            </div>
           </div>
         </div>
       </article>
@@ -324,11 +433,11 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.9rem;
-  margin-top: 1.4rem;
 }
 
 .admin-stat-card,
-.admin-panel {
+.admin-panel,
+.admin-ext-card {
   border: 1px solid var(--admin-line);
   border-radius: 26px;
   background: var(--admin-panel);
@@ -361,7 +470,7 @@ onMounted(() => {
 
 .admin-panel-grid {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1.15fr 0.85fr;
   gap: 1.25rem;
   margin: 0 1.5rem;
 }
@@ -388,9 +497,45 @@ onMounted(() => {
   font-size: 0.92rem;
 }
 
+.admin-setting-block + .admin-setting-block {
+  margin-top: 1.3rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid rgba(115, 88, 50, 0.12);
+}
+
+.admin-setting-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.admin-setting-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 0.95rem;
+}
+
+.admin-setting-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(141, 95, 47, 0.1);
+  color: var(--admin-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
 .admin-form-list {
   display: grid;
   gap: 1rem;
+}
+
+.admin-form-list.two-cols {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .admin-field {
@@ -433,6 +578,45 @@ onMounted(() => {
   background: rgba(141, 95, 47, 0.1);
   color: var(--admin-accent);
   font-weight: 700;
+}
+
+.admin-ext-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-ext-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem;
+  align-content: start;
+}
+
+.admin-ext-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.admin-ext-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.admin-ext-title {
+  font-weight: 700;
+}
+
+.admin-ext-input {
+  width: 100%;
+  padding: 0.78rem 0.9rem;
+  border: 1px solid rgba(115, 88, 50, 0.16);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--admin-text);
+  outline: none;
+  font-size: 0.95rem;
 }
 
 .admin-feedback {
@@ -500,7 +684,9 @@ onMounted(() => {
 
 @media (max-width: 960px) {
   .admin-stat-grid,
-  .admin-panel-grid {
+  .admin-panel-grid,
+  .admin-form-list.two-cols,
+  .admin-ext-grid {
     grid-template-columns: 1fr;
   }
 }
