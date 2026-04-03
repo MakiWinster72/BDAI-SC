@@ -1095,7 +1095,7 @@
               取消
             </button>
             <button class="action-button" type="button" @click="confirmEdit">
-              保存
+              {{ saveActionLabel }}
             </button>
           </div>
         </div>
@@ -1119,6 +1119,7 @@ import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
+import { useNotifications } from "../composables/useNotifications";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
@@ -1136,6 +1137,8 @@ const cadreTableWrap = ref(null);
 const workUnitHintOpen = ref(false);
 const today = getTodayString();
 const originalProfileData = ref(null);
+const savedProfileData = ref(null);
+const { submitProfileReviewRequest } = useNotifications(profile);
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -1260,6 +1263,10 @@ const idNoMaxLength = computed(() => {
       return 32;
   }
 });
+const hasSavedProfileBefore = computed(() => Boolean(savedProfileData.value?.id));
+const saveActionLabel = computed(() =>
+  hasSavedProfileBefore.value ? "请求审核" : "保存",
+);
 
 const dormBuildingOptions = computed(() => {
   if (info.dormCampus === "佛山校区") {
@@ -1829,12 +1836,13 @@ function enterEdit() {
 
 function cancelEdit() {
   if (originalProfileData.value) {
-    applyProfileResponse(originalProfileData.value);
+    applyProfileResponse(originalProfileData.value, { syncSavedProfile: false });
   }
   isEditing.value = false;
 }
 
 async function confirmEdit() {
+  const requiresReview = hasSavedProfileBefore.value;
   const className = buildClassName(
     info.classYear,
     info.classMajor,
@@ -2010,7 +2018,12 @@ async function confirmEdit() {
   try {
     const { data } = await saveStudentProfile(payload);
     applyProfileResponse(data);
-    originalProfileData.value = data || null;
+    if (requiresReview) {
+      submitProfileReviewRequest({
+        actor: profile,
+        payloadSnapshot: payload,
+      });
+    }
     isEditing.value = false;
   } catch (err) {
     console.error(err);
@@ -2307,10 +2320,11 @@ function parseDormRoom(rawValue) {
   return { floor, roomNo };
 }
 
-function applyProfileResponse(data) {
+function applyProfileResponse(data, options = {}) {
   if (!data) {
     return;
   }
+  const { syncSavedProfile = true } = options;
   info.name = data.fullName || data.displayName || "";
   info.avatarUrl = data.avatarUrl || profile.avatarUrl || "";
   info.studentNo = data.studentNo || "";
@@ -2387,7 +2401,10 @@ function applyProfileResponse(data) {
   profile.studentNo = data.studentNo || profile.studentNo;
   profile.className = data.className || profile.className;
   profile.college = FIXED_COLLEGE;
-  originalProfileData.value = data;
+  if (syncSavedProfile) {
+    savedProfileData.value = data;
+    originalProfileData.value = data;
+  }
 
   saveUser(profile);
 }

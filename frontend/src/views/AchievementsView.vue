@@ -1015,11 +1015,13 @@ import { API_BASE } from "../api/request";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
+import { useNotifications } from "../composables/useNotifications";
 
 const router = useRouter();
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
+const { submitAchievementReviewRequest } = useNotifications(profile);
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
 const imageInput = ref(null);
@@ -1916,12 +1918,32 @@ async function saveAchievement() {
       if (viewItem.value && viewItem.value.id === data.id) {
         viewItem.value = normalizeAchievement(data);
       }
+      if (profile.role === "STUDENT") {
+        submitAchievementReviewRequest({
+          actor: profile,
+          action: "update",
+          category,
+          title: titleValue,
+          payloadSnapshot: payload,
+          recordId: data.id,
+        });
+      }
     } else {
       const { data } = await createAchievement(category, payload);
       achievements.value = dedupeAchievements([
         normalizeAchievement(data),
         ...achievements.value,
       ]);
+      if (profile.role === "STUDENT") {
+        submitAchievementReviewRequest({
+          actor: profile,
+          action: "create",
+          category,
+          title: titleValue,
+          payloadSnapshot: payload,
+          recordId: data.id,
+        });
+      }
     }
     resetForm();
     closeEditor();

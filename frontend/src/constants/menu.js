@@ -1,4 +1,5 @@
 export const MENU_ITEMS = [
+  { key: "notifications", label: "通知" },
   { key: "achievements", label: "个人成就" },
   { key: "my-info", label: "我的信息" },
   { key: "student-info", label: "学生信息" },
@@ -13,6 +14,7 @@ export const MENU_ROUTE_MAP = {
 };
 
 const ENABLED_MENU_KEYS = new Set([
+  "notifications",
   "achievements",
   "my-info",
   "student-info",
