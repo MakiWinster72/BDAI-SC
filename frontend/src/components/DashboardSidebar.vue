@@ -7,14 +7,16 @@
       @settings-click="$emit('settings-click')"
     />
 
-    <CardMenu
-      :profile="profile"
-      :active-menu="activeMenu"
-      :active-achievement="activeAchievement"
-      :show-achievements-drawer="showAchievementsDrawer"
-      @menu-click="$emit('menu-click', $event)"
-      @achievement-entry-click="$emit('achievement-entry-click', $event)"
-    />
+    <div class="dashboard-menu-scroll">
+      <CardMenu
+        :profile="profile"
+        :active-menu="activeMenu"
+        :active-achievement="activeAchievement"
+        :show-achievements-drawer="showAchievementsDrawer"
+        @menu-click="$emit('menu-click', $event)"
+        @achievement-entry-click="$emit('achievement-entry-click', $event)"
+      />
+    </div>
   </aside>
 </template>
 

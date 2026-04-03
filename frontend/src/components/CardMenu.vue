@@ -1,57 +1,71 @@
 <template>
   <section class="menu-card">
     <div class="menu-card-header">
-      <button
-        v-if="isAchievementPanelVisible"
-        class="menu-card-back"
-        type="button"
-        @click="closeAchievementPanel"
-      >
-        &lt;返回
-      </button>
-      <div class="menu-card-title">
-        {{ isAchievementPanelVisible ? "个人成就" : "导航" }}
-      </div>
+      <Transition name="menu-back-fade">
+        <button
+          v-if="isAchievementPanelVisible"
+          class="menu-card-back"
+          type="button"
+          @click="closeAchievementPanel"
+        >
+          &lt;返回
+        </button>
+      </Transition>
+      <Transition :name="titleTransitionName" mode="out-in">
+        <div :key="isAchievementPanelVisible ? 'achievement-title' : 'menu-title'" class="menu-card-title">
+          {{ isAchievementPanelVisible ? "个人成就" : "导航" }}
+        </div>
+      </Transition>
     </div>
 
-    <Transition name="menu-panel-fade" mode="out-in">
-      <div
-        v-if="isAchievementPanelVisible"
-        key="achievement-panel"
-        class="menu-panel menu-sublist"
-      >
-        <button
-          v-for="entry in achievementEntries"
-          :key="entry.key"
-          class="menu-subitem"
-          :class="{ active: activeMenu === 'achievements' && activeAchievement === entry.key }"
-          type="button"
-          @click="$emit('achievement-entry-click', entry.key)"
+    <div
+      ref="menuBodyRef"
+      class="menu-card-body"
+      :class="{
+        'menu-card-body-fade-top': true,
+        'menu-card-body-fade-bottom': showBottomFade,
+      }"
+      @scroll="handleBodyScroll"
+    >
+      <Transition :name="panelTransitionName" mode="out-in">
+        <div
+          v-if="isAchievementPanelVisible"
+          key="achievement-panel"
+          class="menu-panel menu-sublist"
         >
-          {{ entry.label }}
-        </button>
-      </div>
+          <button
+            v-for="entry in achievementEntries"
+            :key="entry.key"
+            class="menu-subitem"
+            :class="{ active: activeMenu === 'achievements' && activeAchievement === entry.key }"
+            type="button"
+            @click="$emit('achievement-entry-click', entry.key)"
+          >
+            {{ entry.label }}
+          </button>
+        </div>
 
-      <div v-else key="menu-panel" class="menu-panel menu-list menu-grid">
-        <button
-          v-for="item in menuItems"
-          :key="item.key"
-          class="menu-item"
-          :class="{ active: activeMenu === item.key, disabled: !isMenuEnabled(item.key) }"
-          type="button"
-          :disabled="!isMenuEnabled(item.key)"
-          @click="handleMenuClick(item.key)"
-        >
-          <span class="menu-item-label">{{ item.label }}</span>
-          <span class="menu-item-meta">{{ menuMeta[item.key] }}</span>
-        </button>
-      </div>
-    </Transition>
+        <div v-else key="menu-panel" class="menu-panel menu-list menu-grid">
+          <button
+            v-for="item in menuItems"
+            :key="item.key"
+            class="menu-item"
+            :class="{ active: activeMenu === item.key, disabled: !isMenuEnabled(item.key) }"
+            type="button"
+            :disabled="!isMenuEnabled(item.key)"
+            @click="handleMenuClick(item.key)"
+          >
+            <span class="menu-item-label">{{ item.label }}</span>
+            <span class="menu-item-meta">{{ menuMeta[item.key] }}</span>
+          </button>
+        </div>
+      </Transition>
+    </div>
   </section>
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUpdated, ref, watch } from "vue";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 
 const props = defineProps({
@@ -86,6 +100,15 @@ const menuMeta = {
 };
 
 const isAchievementPanelVisible = ref(props.activeMenu === "achievements");
+const panelDirection = ref(props.activeMenu === "achievements" ? "forward" : "back");
+const menuBodyRef = ref(null);
+const showBottomFade = ref(false);
+const panelTransitionName = computed(() =>
+  panelDirection.value === "forward" ? "menu-panel-forward" : "menu-panel-back",
+);
+const titleTransitionName = computed(() =>
+  panelDirection.value === "forward" ? "menu-title-forward" : "menu-title-back",
+);
 
 const achievementEntries = [
   { key: "all", label: "全部" },
@@ -102,19 +125,52 @@ const achievementEntries = [
 
 watch(
   () => props.activeMenu,
-  (activeMenu) => {
+  (activeMenu, previousMenu) => {
+    if (activeMenu === "achievements" && previousMenu !== "achievements") {
+      panelDirection.value = "forward";
+    } else if (activeMenu !== "achievements" && previousMenu === "achievements") {
+      panelDirection.value = "back";
+    }
     isAchievementPanelVisible.value = activeMenu === "achievements";
+    nextTick(updateBodyFadeState);
   },
 );
 
+onMounted(() => {
+  updateBodyFadeState();
+});
+
+onUpdated(() => {
+  updateBodyFadeState();
+});
+
 function handleMenuClick(key) {
   if (key === "achievements" && props.showAchievementsDrawer) {
+    panelDirection.value = "forward";
     isAchievementPanelVisible.value = true;
   }
   emit("menu-click", key);
+  nextTick(updateBodyFadeState);
 }
 
 function closeAchievementPanel() {
+  panelDirection.value = "back";
   isAchievementPanelVisible.value = false;
+  nextTick(updateBodyFadeState);
+}
+
+function handleBodyScroll() {
+  updateBodyFadeState();
+}
+
+function updateBodyFadeState() {
+  const el = menuBodyRef.value;
+  if (!el) {
+    showBottomFade.value = false;
+    return;
+  }
+
+  const maxScrollTop = el.scrollHeight - el.clientHeight;
+  showBottomFade.value = maxScrollTop - el.scrollTop > 4;
 }
 </script>
