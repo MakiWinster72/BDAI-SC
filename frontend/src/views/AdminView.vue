@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, shallowRef } from "vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
-import { getUserList } from "../api/admin";
+import { getUserList, updateUser, deleteUser } from "../api/admin";
 
 const ATTACHMENT_TYPE_OPTIONS = [
   { key: "document", label: "文档", icon: "/assets/icons/doc.svg" },
@@ -152,6 +152,83 @@ async function loadUsers() {
     usersError.value = "加载用户列表失败";
   } finally {
     usersLoading.value = false;
+  }
+}
+
+// Edit user modal
+const editModal = reactive({
+  visible: false,
+  user: null,
+  saving: false,
+  error: "",
+  form: {
+    username: "",
+    password: "",
+    role: "",
+  },
+});
+
+const ROLE_OPTIONS = [
+  { value: "STUDENT", label: "学生" },
+  { value: "TEACHER", label: "教师" },
+  { value: "ADMIN", label: "管理员" },
+];
+
+function openEditModal(user) {
+  editModal.user = user;
+  editModal.form.username = user.username;
+  editModal.form.password = "";
+  editModal.form.role = user.role;
+  editModal.error = "";
+  editModal.visible = true;
+}
+
+function closeEditModal() {
+  editModal.visible = false;
+  editModal.user = null;
+}
+
+async function handleUpdateUser() {
+  editModal.saving = true;
+  editModal.error = "";
+  try {
+    const data = {};
+    if (editModal.form.username && editModal.form.username !== editModal.user.username) {
+      data.username = editModal.form.username;
+    }
+    if (editModal.form.password) {
+      data.password = editModal.form.password;
+    }
+    if (editModal.form.role !== editModal.user.role) {
+      data.role = editModal.form.role;
+    }
+    if (Object.keys(data).length === 0) {
+      closeEditModal();
+      return;
+    }
+    const res = await updateUser(editModal.user.id, data);
+    if (res.data.success === false) {
+      editModal.error = res.data.message || "更新失败";
+      return;
+    }
+    await loadUsers();
+    closeEditModal();
+  } catch (e) {
+    editModal.error = e?.response?.data?.message || "更新失败";
+  } finally {
+    editModal.saving = false;
+  }
+}
+
+async function handleDeleteUser(user) {
+  if (!confirm(`确定要删除用户「${user.displayName}」吗？此操作不可恢复。`)) {
+    return;
+  }
+  try {
+    await deleteUser(user.id);
+    await loadUsers();
+  } catch (e) {
+    alert(e?.response?.data?.message || "删除失败");
   }
 }
 
@@ -430,7 +507,7 @@ onMounted(() => {
               <th>角色</th>
               <th>学号</th>
               <th>班级</th>
-              <th>学院</th>
+              <th style="width: 3rem;"></th>
             </tr>
           </thead>
           <tbody>
@@ -438,15 +515,65 @@ onMounted(() => {
               <td class="user-td-username">{{ user.username }}</td>
               <td>{{ user.displayName }}</td>
               <td><span :class="['role-badge', 'role-' + user.role.toLowerCase()]">{{ getRoleLabel(user.role) }}</span></td>
-              <td>{{ user.studentNo || '—' }}</td>
-              <td>{{ user.className || '—' }}</td>
-              <td>{{ user.college || '—' }}</td>
+              <td>{{ user.studentNo || '/' }}</td>
+              <td>{{ user.className || '/' }}</td>
+              <td class="user-td-action">
+                <div class="action-menu-wrap">
+                  <button class="action-menu-btn" @click.stop="openEditModal(user)">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
     </template>
+
+    <!-- Edit User Modal -->
+    <div v-if="editModal.visible" class="modal-overlay" @click.self="closeEditModal">
+      <div class="modal-box">
+        <div class="modal-head">
+          <h3 class="modal-title">编辑用户</h3>
+          <button class="modal-close" @click="closeEditModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-user-info">
+            <span class="modal-user-label">当前编辑：</span>
+            <span class="modal-user-name">{{ editModal.user?.displayName }}</span>
+          </div>
+
+          <label class="modal-field">
+            <span class="modal-field-label">用户名</span>
+            <input v-model="editModal.form.username" class="modal-input" type="text" placeholder="留空则不修改" />
+          </label>
+
+          <label class="modal-field">
+            <span class="modal-field-label">密码</span>
+            <input v-model="editModal.form.password" class="modal-input" type="password" placeholder="留空则不修改" />
+          </label>
+
+          <label class="modal-field">
+            <span class="modal-field-label">角色</span>
+            <select v-model="editModal.form.role" class="modal-select">
+              <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
+          </label>
+
+          <div v-if="editModal.error" class="modal-error">{{ editModal.error }}</div>
+        </div>
+        <div class="modal-foot">
+          <button class="modal-btn danger" @click="handleDeleteUser(editModal.user)">删除用户</button>
+          <div class="modal-foot-right">
+            <button class="modal-btn secondary" @click="closeEditModal">取消</button>
+            <button class="modal-btn primary" :disabled="editModal.saving" @click="handleUpdateUser">
+              {{ editModal.saving ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -817,6 +944,194 @@ onMounted(() => {
 .role-student {
   background: rgba(61, 129, 82, 0.1);
   color: #25613a;
+}
+
+.user-td-action {
+  text-align: center;
+}
+
+.action-menu-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.action-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 8px;
+  background: rgba(141, 95, 47, 0.08);
+  cursor: pointer;
+}
+
+.dot {
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: var(--admin-accent);
+}
+
+.action-menu-btn:hover {
+  background: rgba(141, 95, 47, 0.15);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(52, 37, 22, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  width: 90%;
+  max-width: 28rem;
+  background: var(--admin-panel);
+  border: 1px solid var(--admin-line);
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.4rem;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-close {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--admin-muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: rgba(141, 95, 47, 0.1);
+}
+
+.modal-body {
+  padding: 1.2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-user-info {
+  padding: 0.7rem 1rem;
+  background: rgba(141, 95, 47, 0.06);
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.modal-user-label {
+  color: var(--admin-muted);
+}
+
+.modal-user-name {
+  font-weight: 700;
+  color: var(--admin-accent);
+}
+
+.modal-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.modal-field-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.modal-input,
+.modal-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(115, 88, 50, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--admin-text);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.modal-input:focus,
+.modal-select:focus {
+  border-color: var(--admin-accent);
+}
+
+.modal-error {
+  padding: 0.7rem 1rem;
+  background: rgba(196, 68, 68, 0.1);
+  color: #a33a3a;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.4rem;
+  border-top: 1px solid var(--admin-line);
+  gap: 0.8rem;
+}
+
+.modal-foot-right {
+  display: flex;
+  gap: 0.8rem;
+  margin-left: auto;
+}
+
+.modal-btn {
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-btn.primary {
+  background: linear-gradient(135deg, #8d5f2f, #a97945);
+  color: #fffaf2;
+}
+
+.modal-btn.primary:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.modal-btn.secondary {
+  background: rgba(141, 95, 47, 0.1);
+  color: var(--admin-accent);
+}
+
+.modal-btn.danger {
+  background: rgba(196, 68, 68, 0.1);
+  color: #a33a3a;
+}
+
+.modal-btn.danger:hover {
+  background: rgba(196, 68, 68, 0.2);
 }
 
 @media (max-width: 1300px) {
