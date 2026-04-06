@@ -124,6 +124,35 @@ function buildReviewEntry(request, user) {
   const rejectedContent = isOwner
     ? "你的请求已被驳回。"
     : `${toDisplayName(request.requester)} 的请求已被驳回。`;
+
+  const categoryKey = classifyNotificationCategory({
+    status: request.status,
+    createdAt: request.createdAt,
+    source: "review-request",
+  });
+
+  const createdTime = new Date(request.createdAt).getTime();
+  const delayedDays = !Number.isNaN(createdTime)
+    ? Math.floor((Date.now() - createdTime) / (24 * 60 * 60 * 1000))
+    : 0;
+
+  const badgeText =
+    request.status === "approved"
+      ? "已通过"
+      : request.status === "rejected"
+        ? "已驳回"
+        : categoryKey === "delayed"
+          ? `已滞后${delayedDays}天`
+          : "待处理";
+  const badgeClass =
+    request.status === "approved"
+      ? "is-approved"
+      : request.status === "rejected"
+        ? "is-rejected"
+        : categoryKey === "delayed"
+          ? "is-delayed"
+          : "is-pending";
+
   return {
     id: request.id,
     sourceId: request.id,
@@ -136,18 +165,8 @@ function buildReviewEntry(request, user) {
           ? rejectedContent
           : pendingContent,
     reason: request.rejectionReason || "",
-    badgeText:
-      request.status === "approved"
-        ? "已通过"
-        : request.status === "rejected"
-          ? "已驳回"
-          : "待处理",
-    badgeClass:
-      request.status === "approved"
-        ? "is-approved"
-        : request.status === "rejected"
-          ? "is-rejected"
-          : "is-pending",
+    badgeText,
+    badgeClass,
     meta: isOwner
       ? `${requestTypeLabel}审核`
       : `${requestTypeLabel}请求 · ${toDisplayName(request.requester)}`,
@@ -159,11 +178,7 @@ function buildReviewEntry(request, user) {
     action: request.action,
     payloadSnapshot: request.payloadSnapshot || null,
     changes: Array.isArray(request.changes) ? request.changes : [],
-    categoryKey: classifyNotificationCategory({
-      status: request.status,
-      createdAt: request.createdAt,
-      source: "review-request",
-    }),
+    categoryKey,
     timeText: formatRelativeTime(request.updatedAt || request.createdAt),
     createdAt: request.updatedAt || request.createdAt,
   };
