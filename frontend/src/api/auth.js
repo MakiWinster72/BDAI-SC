@@ -11,3 +11,7 @@ export function login(data) {
 export function getMe() {
   return request.get('/api/auth/me')
 }
+
+export function changePassword(data) {
+  return request.post('/api/auth/change-password', data)
+}

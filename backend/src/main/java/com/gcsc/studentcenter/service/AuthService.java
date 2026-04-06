@@ -1,6 +1,7 @@
 package com.gcsc.studentcenter.service;
 
 import com.gcsc.studentcenter.dto.AuthResponse;
+import com.gcsc.studentcenter.dto.ChangePasswordRequest;
 import com.gcsc.studentcenter.dto.LoginRequest;
 import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
@@ -127,6 +128,18 @@ public class AuthService {
             user.getCollege(),
             avatarUrl
         );
+    }
+
+    public void changePassword(String username, ChangePasswordRequest request) {
+        AppUser user = appUserRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("旧密码错误");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        appUserRepository.save(user);
     }
 
     private String resolveAvatarUrl(AppUser user) {

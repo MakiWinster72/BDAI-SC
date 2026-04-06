@@ -1,6 +1,7 @@
 package com.gcsc.studentcenter.controller;
 
 import com.gcsc.studentcenter.dto.AuthResponse;
+import com.gcsc.studentcenter.dto.ChangePasswordRequest;
 import com.gcsc.studentcenter.dto.LoginRequest;
 import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
@@ -37,5 +38,13 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me(Authentication authentication) {
         return ResponseEntity.ok(authService.getProfile(authentication.getName()));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(authentication.getName(), request);
+        return ResponseEntity.ok().build();
     }
 }

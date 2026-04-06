@@ -63,25 +63,49 @@
 
       <section class="info-shell settings-shell">
         <div class="settings-card">
-          <div class="settings-row">
+          <div class="settings-row clickable" @click="togglePasswordChange">
             <div class="settings-text">
-              <div class="settings-title">外观</div>
-              <div class="settings-subtitle">TODO:明暗模式</div>
+              <div class="settings-title">修改密码</div>
             </div>
-            <label class="ios-switch" aria-label="切换明暗模式">
-              <input type="checkbox" />
-              <span class="ios-slider"></span>
-            </label>
+            <svg class="chevron" :class="{ open: showPasswordForm }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
           </div>
         </div>
+        <transition name="expand">
+          <div v-if="showPasswordForm" class="settings-card pw-fields">
+            <input
+              v-model="passwordForm.oldPassword"
+              type="password"
+              class="info-input pw-input"
+              placeholder="旧密码"
+            />
+            <input
+              v-model="passwordForm.newPassword"
+              type="password"
+              class="info-input pw-input"
+              placeholder="新密码（6-32位）"
+            />
+            <input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              class="info-input pw-input"
+              placeholder="确认新密码"
+            />
+            <p v-if="passwordError" class="form-tip">{{ passwordError }}</p>
+            <p v-if="passwordSuccess" class="feedback success">{{ passwordSuccess }}</p>
+            <div class="pw-actions">
+              <button class="ghost-button pw-btn" type="button" @click="cancelPasswordChange">取消</button>
+              <button class="action-button pw-btn" type="button" :disabled="passwordLoading" @click="handleChangePassword">
+                {{ passwordLoading ? "保存中..." : "保存" }}
+              </button>
+            </div>
+          </div>
+        </transition>
         <div class="settings-actions">
           <button class="settings-action" type="button" @click="handleLogout">
             退出登录
           </button>
-          <button class="settings-action danger" type="button">
-            TODO:注销账号
-          </button>
-          <button class="settings-action" type="button">TODO:修改密码</button>
         </div>
       </section>
 
@@ -107,6 +131,7 @@
         </div>
         <div class="capsule-right"></div>
       </div>
+
     </main>
   </div>
 </template>
@@ -116,11 +141,21 @@ import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { API_BASE } from "../api/request";
+import { changePassword } from "../api/auth";
 
 const router = useRouter();
 const profile = reactive(loadUser());
 const activeMenu = ref("");
 const sidebarOpen = ref(false);
+const showPasswordForm = ref(false);
+const passwordForm = reactive({
+  oldPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+});
+const passwordError = ref("");
+const passwordSuccess = ref("");
+const passwordLoading = ref(false);
 
 const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 
@@ -208,4 +243,146 @@ function handleLogout() {
   localStorage.removeItem("gcsc_user");
   router.push("/login");
 }
+
+function togglePasswordChange() {
+  showPasswordForm.value = !showPasswordForm.value;
+  if (!showPasswordForm.value) {
+    cancelPasswordChange();
+  }
+}
+
+function cancelPasswordChange() {
+  passwordForm.oldPassword = "";
+  passwordForm.newPassword = "";
+  passwordForm.confirmPassword = "";
+  passwordError.value = "";
+  passwordSuccess.value = "";
+}
+
+async function handleChangePassword() {
+  passwordError.value = "";
+  passwordSuccess.value = "";
+
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    passwordError.value = "两次输入的新密码不一致";
+    return;
+  }
+
+  if (passwordForm.newPassword.length < 6) {
+    passwordError.value = "新密码长度不能少于6位";
+    return;
+  }
+
+  passwordLoading.value = true;
+  try {
+    await changePassword({
+      oldPassword: passwordForm.oldPassword,
+      newPassword: passwordForm.newPassword,
+    });
+    passwordSuccess.value = "密码修改成功";
+    setTimeout(() => {
+      cancelPasswordChange();
+      showPasswordForm.value = false;
+    }, 1500);
+  } catch (err) {
+    passwordError.value = err.response?.data?.message || "修改失败，请检查旧密码是否正确";
+  } finally {
+    passwordLoading.value = false;
+  }
+}
 </script>
+
+<style scoped>
+.settings-shell {
+  min-height: unset;
+}
+
+.settings-card:hover {
+  border-color: rgba(3, 107, 114, 0.28);
+}
+
+.settings-row.clickable {
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background 160ms ease;
+}
+
+.settings-row.clickable:hover {
+  background: rgba(3, 107, 114, 0.06);
+}
+
+.chevron {
+  width: 18px;
+  height: 18px;
+  color: #5b7680;
+  transition: transform 280ms ease;
+  flex-shrink: 0;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.pw-fields {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(3, 107, 114, 0.1);
+}
+
+.pw-fields:hover {
+  border-color: rgba(3, 107, 114, 0.28);
+}
+
+.pw-input {
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: none !important;
+}
+
+.pw-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.pw-btn {
+  height: 36px !important;
+  padding: 0 18px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  margin-top: 0 !important;
+  width: auto !important;
+}
+
+.pw-btn.ghost-button {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+.pw-btn.action-button {
+  background: #036b72 !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.expand-enter-active,
+.expand-leave-active {
+  transition: opacity 240ms ease, max-height 280ms ease;
+  max-height: 320px;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 320px;
+}
+</style>
