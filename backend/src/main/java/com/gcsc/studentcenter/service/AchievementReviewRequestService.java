@@ -24,17 +24,20 @@ public class AchievementReviewRequestService {
     private final AchievementReviewRequestRepository achievementReviewRequestRepository;
     private final AppUserRepository appUserRepository;
     private final AchievementService achievementService;
+    private final ReviewSettingsService reviewSettingsService;
     private final ObjectMapper objectMapper;
 
     public AchievementReviewRequestService(
         AchievementReviewRequestRepository achievementReviewRequestRepository,
         AppUserRepository appUserRepository,
         AchievementService achievementService,
+        ReviewSettingsService reviewSettingsService,
         ObjectMapper objectMapper
     ) {
         this.achievementReviewRequestRepository = achievementReviewRequestRepository;
         this.appUserRepository = appUserRepository;
         this.achievementService = achievementService;
+        this.reviewSettingsService = reviewSettingsService;
         this.objectMapper = objectMapper;
     }
 
@@ -52,6 +55,9 @@ public class AchievementReviewRequestService {
         AppUser requester = loadUser(username);
         if (requester.getRole() != UserRole.STUDENT) {
             throw new IllegalArgumentException("仅学生可提交成就审核");
+        }
+        if (!reviewSettingsService.isAchievementReviewEnabled()) {
+            throw new IllegalArgumentException("当前未开启成就审核");
         }
 
         String action = normalizeAction(request.getAction());
@@ -74,7 +80,7 @@ public class AchievementReviewRequestService {
         entity.setReviewer(null);
         entity.setCategory(category);
         entity.setAction(action);
-        entity.setStatus("pending");
+        entity.setStatus(reviewSettingsService.isAchievementReviewAutoApprove() ? "approved" : "pending");
         entity.setRecordId(request.getRecordId());
         entity.setTitle(resolveTitle(action, request.getTitle()));
         entity.setSummary(trimToNull(request.getSummary()));
@@ -84,7 +90,11 @@ public class AchievementReviewRequestService {
         entity.setRejectionReason("");
         entity.setCreatedAt(now);
         entity.setUpdatedAt(now);
-        return toResponse(achievementReviewRequestRepository.save(entity));
+        AchievementReviewRequest saved = achievementReviewRequestRepository.save(entity);
+        if (reviewSettingsService.isAchievementReviewAutoApprove()) {
+            return toResponse(applyApprovedRequest(saved, null));
+        }
+        return toResponse(saved);
     }
 
     @Transactional
@@ -92,23 +102,7 @@ public class AchievementReviewRequestService {
         AppUser reviewer = loadReviewer(reviewerUsername);
         AchievementReviewRequest request = loadRequest(requestId);
         ensurePending(request);
-
-        AchievementRecordRequest payload = readPayload(request.getPayloadJson());
-        AchievementRecordResponse applied = "create".equals(request.getAction())
-            ? achievementService.create(request.getRequester().getUsername(), request.getCategory(), payload)
-            : achievementService.update(
-                request.getRequester().getUsername(),
-                request.getCategory(),
-                request.getRecordId(),
-                payload
-            );
-
-        request.setRecordId(applied.getId());
-        request.setStatus("approved");
-        request.setReviewer(reviewer);
-        request.setRejectionReason("");
-        request.setUpdatedAt(LocalDateTime.now());
-        return toResponse(achievementReviewRequestRepository.save(request));
+        return toResponse(applyApprovedRequest(request, reviewer));
     }
 
     @Transactional
@@ -182,6 +176,25 @@ public class AchievementReviewRequestService {
         if (!"pending".equals(request.getStatus())) {
             throw new IllegalArgumentException("该审核请求已处理");
         }
+    }
+
+    private AchievementReviewRequest applyApprovedRequest(AchievementReviewRequest request, AppUser reviewer) {
+        AchievementRecordRequest payload = readPayload(request.getPayloadJson());
+        AchievementRecordResponse applied = "create".equals(request.getAction())
+            ? achievementService.create(request.getRequester().getUsername(), request.getCategory(), payload)
+            : achievementService.update(
+                request.getRequester().getUsername(),
+                request.getCategory(),
+                request.getRecordId(),
+                payload
+            );
+
+        request.setRecordId(applied.getId());
+        request.setStatus("approved");
+        request.setReviewer(reviewer);
+        request.setRejectionReason("");
+        request.setUpdatedAt(LocalDateTime.now());
+        return achievementReviewRequestRepository.save(request);
     }
 
     private void validatePayload(AchievementRecordRequest payload) {

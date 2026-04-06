@@ -1120,6 +1120,7 @@ import { API_BASE } from "../api/request";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useNotifications } from "../composables/useNotifications";
+import { useReviewSettings } from "../composables/useReviewSettings";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
@@ -1138,7 +1139,8 @@ const workUnitHintOpen = ref(false);
 const today = getTodayString();
 const originalProfileData = ref(null);
 const savedProfileData = ref(null);
-const { submitProfileReviewRequest } = useNotifications(profile);
+const { submitProfileReviewRequest, updateReviewRequestStatus } = useNotifications(profile);
+const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useReviewSettings();
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -1313,7 +1315,7 @@ const idNoMaxLength = computed(() => {
 });
 const hasSavedProfileBefore = computed(() => Boolean(savedProfileData.value?.id));
 const saveActionLabel = computed(() =>
-  hasSavedProfileBefore.value ? "请求审核" : "保存",
+  hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled ? "请求审核" : "保存",
 );
 
 const dormBuildingOptions = computed(() => {
@@ -1890,7 +1892,7 @@ function cancelEdit() {
 }
 
 async function confirmEdit() {
-  const requiresReview = hasSavedProfileBefore.value;
+  const requiresReview = hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled;
   const className = buildClassName(
     info.classYear,
     info.classMajor,
@@ -2068,11 +2070,22 @@ async function confirmEdit() {
     const { data } = await saveStudentProfile(payload);
     applyProfileResponse(data);
     if (requiresReview) {
-      submitProfileReviewRequest({
+      const request = await submitProfileReviewRequest({
         actor: profile,
         payloadSnapshot: payload,
         changes,
       });
+      if (reviewSettings.profileReviewAutoApprove) {
+        await updateReviewRequestStatus({
+          requestId: request.id,
+          status: "approved",
+          reviewer: {
+            username: "system",
+            displayName: "系统自动审核",
+            role: "SYSTEM",
+          },
+        });
+      }
     }
     isEditing.value = false;
   } catch (err) {
@@ -2619,6 +2632,7 @@ function saveUser(data) {
 }
 
 onMounted(async () => {
+  fetchReviewSettings().catch(() => {});
   try {
     const { data } = await getStudentProfile();
     applyProfileResponse(data);

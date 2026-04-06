@@ -1016,12 +1016,14 @@ import MobileCapsule from "../components/MobileCapsule.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useNotifications } from "../composables/useNotifications";
+import { useReviewSettings } from "../composables/useReviewSettings";
 
 const router = useRouter();
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
 const { submitAchievementReviewRequest } = useNotifications(profile);
+const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useReviewSettings();
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
 const imageInput = ref(null);
@@ -1916,8 +1918,8 @@ async function saveAchievement() {
     existingItem,
   });
   try {
-    if (profile.role === "STUDENT") {
-      await submitAchievementReviewRequest({
+    if (profile.role === "STUDENT" && reviewSettings.achievementReviewEnabled) {
+      const reviewRequest = await submitAchievementReviewRequest({
         actor: profile,
         action: editId.value ? "update" : "create",
         category,
@@ -1931,6 +1933,9 @@ async function saveAchievement() {
         recordId: editId.value,
         changes,
       });
+      if (reviewSettings.achievementReviewAutoApprove && reviewRequest?.status === "approved") {
+        await fetchAchievements();
+      }
       resetForm();
       closeEditor();
       errorMessage.value = "";
@@ -2911,6 +2916,7 @@ function handleUploadSettingsUpdated(event) {
 
 onMounted(() => {
   syncCategoryFromRoute();
+  fetchReviewSettings().catch(() => {});
   fetchAchievementUploadSettings().then(() => {
     setUploadLimits({
       imageMaxCount: achievementUploadSettings.imageMaxCount,
