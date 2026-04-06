@@ -208,6 +208,18 @@ public class AchievementService {
         }
     }
 
+    public void validateReviewPayload(AchievementRecordRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("提交内容不能为空");
+        }
+        Map<String, String> fields = safeFields(request.getFields());
+        validateAchievementMedia(fields);
+        String category = valueOf(fields, "category");
+        if (!category.isEmpty()) {
+            requireCategory(category);
+        }
+    }
+
     public void delete(String username, String category, Long id) {
         switch (requireCategory(category)) {
             case "contest":

@@ -1916,6 +1916,27 @@ async function saveAchievement() {
     existingItem,
   });
   try {
+    if (profile.role === "STUDENT") {
+      await submitAchievementReviewRequest({
+        actor: profile,
+        action: editId.value ? "update" : "create",
+        category,
+        title: titleValue,
+        payload,
+        payloadSnapshot: buildAchievementReviewPayloadSnapshot({
+          category,
+          beforeItem: existingItem,
+          afterItem: buildAchievementDraftSourceFromPayload(payload),
+        }),
+        recordId: editId.value,
+        changes,
+      });
+      resetForm();
+      closeEditor();
+      errorMessage.value = "";
+      return;
+    }
+
     if (editId.value) {
       const { data } = await updateAchievement(category, editId.value, payload);
       const normalizedData = normalizeAchievement(data);
@@ -1927,21 +1948,6 @@ async function saveAchievement() {
       if (viewItem.value && viewItem.value.id === data.id) {
         viewItem.value = normalizedData;
       }
-      if (profile.role === "STUDENT") {
-        submitAchievementReviewRequest({
-          actor: profile,
-          action: "update",
-          category,
-          title: titleValue,
-          payloadSnapshot: buildAchievementReviewPayloadSnapshot({
-            category,
-            beforeItem: existingItem,
-            afterItem: normalizedData,
-          }),
-          recordId: data.id,
-          changes,
-        });
-      }
     } else {
       const { data } = await createAchievement(category, payload);
       const normalizedData = normalizeAchievement(data);
@@ -1949,20 +1955,6 @@ async function saveAchievement() {
         normalizedData,
         ...achievements.value,
       ]);
-      if (profile.role === "STUDENT") {
-        submitAchievementReviewRequest({
-          actor: profile,
-          action: "create",
-          category,
-          title: titleValue,
-          payloadSnapshot: buildAchievementReviewPayloadSnapshot({
-            category,
-            afterItem: normalizedData,
-          }),
-          recordId: data.id,
-          changes,
-        });
-      }
     }
     resetForm();
     closeEditor();
@@ -2053,6 +2045,15 @@ function resolveAttachmentsFromPayload(payload) {
       mediaType: item?.mediaType || "",
     }))
     .filter((item) => item.url);
+}
+
+function buildAchievementDraftSourceFromPayload(payload) {
+  return {
+    fields: payload?.fields || {},
+    imageUrl: payload?.imageUrl || "",
+    imageUrls: resolveImageUrlsFromPayload(payload).map((url) => resolveMediaUrl(url)),
+    attachments: resolveAttachmentsFromPayload(payload),
+  };
 }
 
 function buildAchievementReviewPayloadSnapshot({

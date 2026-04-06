@@ -248,13 +248,13 @@ function toggleRejectEditor() {
   }
 }
 
-function approveSelectedRequest() {
+async function approveSelectedRequest() {
   if (!selectedEntry.value) {
     return;
   }
   actionError.value = "";
   try {
-    updateReviewRequestStatus({
+    await updateReviewRequestStatus({
       requestId: selectedEntry.value.id,
       status: "approved",
       reviewer: profile,
@@ -264,13 +264,13 @@ function approveSelectedRequest() {
   }
 }
 
-function rejectSelectedRequest() {
+async function rejectSelectedRequest() {
   if (!selectedEntry.value) {
     return;
   }
   actionError.value = "";
   try {
-    updateReviewRequestStatus({
+    await updateReviewRequestStatus({
       requestId: selectedEntry.value.id,
       status: "rejected",
       reviewer: profile,

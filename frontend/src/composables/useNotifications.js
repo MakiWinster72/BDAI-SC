@@ -1,4 +1,10 @@
 import { computed, reactive } from "vue";
+import {
+  approveAchievementReviewRequest,
+  listAchievementReviewRequests,
+  rejectAchievementReviewRequest,
+  submitAchievementReviewRequestApi,
+} from "../api/achievementReviewRequests";
 
 const STORAGE_KEY = "gcsc_notification_center";
 const REVIEWER_ROLES = ["TEACHER", "ADMIN"];
@@ -19,6 +25,9 @@ const store = reactive({
   loaded: false,
   reviewRequests: [],
   notifications: [],
+  achievementReviewRequests: [],
+  achievementReviewFetched: false,
+  achievementReviewLoading: false,
 });
 
 function ensureLoaded() {
@@ -110,6 +119,21 @@ function isReviewVisibleForUser(request, user) {
     return true;
   }
   return Array.isArray(request.targetRoles) && request.targetRoles.includes(user.role);
+}
+
+function isRemoteAchievementReview(request) {
+  return request?.resourceType === "achievement";
+}
+
+function upsertAchievementReviewRequest(nextRequest) {
+  const index = store.achievementReviewRequests.findIndex(
+    (item) => String(item.id) === String(nextRequest.id),
+  );
+  if (index === -1) {
+    store.achievementReviewRequests.unshift(nextRequest);
+    return;
+  }
+  store.achievementReviewRequests.splice(index, 1, nextRequest);
 }
 
 function buildReviewEntry(request, user) {
@@ -246,6 +270,33 @@ function addNotification({
   persistStore();
 }
 
+async function fetchAchievementReviewRequests(force = false) {
+  if (typeof window === "undefined") {
+    return store.achievementReviewRequests;
+  }
+  const token = localStorage.getItem("gcsc_token");
+  if (!token) {
+    store.achievementReviewRequests = [];
+    store.achievementReviewFetched = true;
+    return store.achievementReviewRequests;
+  }
+  if (store.achievementReviewLoading) {
+    return store.achievementReviewRequests;
+  }
+  if (!force && store.achievementReviewFetched) {
+    return store.achievementReviewRequests;
+  }
+  store.achievementReviewLoading = true;
+  try {
+    const { data } = await listAchievementReviewRequests();
+    store.achievementReviewRequests = Array.isArray(data) ? data : [];
+    store.achievementReviewFetched = true;
+    return store.achievementReviewRequests;
+  } finally {
+    store.achievementReviewLoading = false;
+  }
+}
+
 function createReviewRequest({
   actor,
   resourceType,
@@ -284,30 +335,29 @@ function createReviewRequest({
   return request;
 }
 
-function submitAchievementReviewRequest({
+async function submitAchievementReviewRequest({
   actor,
   action,
   category,
   title,
+  payload = null,
   payloadSnapshot = null,
   recordId = null,
   changes = [],
 }) {
   const categoryLabel = resolveAchievementCategoryLabel(category);
-  return createReviewRequest({
-    actor,
-    resourceType: "achievement",
+  const { data } = await submitAchievementReviewRequestApi({
+    category,
     action,
+    recordId,
     title: action === "update" ? `成就修改待审核` : `成就新增待审核`,
     summary: `${toDisplayName(actor)}${action === "update" ? "修改" : "新增"}了「${title || categoryLabel}」`,
+    payload,
     payloadSnapshot,
     changes,
-    extra: {
-      category,
-      categoryLabel,
-      recordId,
-    },
   });
+  upsertAchievementReviewRequest(data);
+  return data;
 }
 
 function submitProfileReviewRequest({
@@ -326,8 +376,25 @@ function submitProfileReviewRequest({
   });
 }
 
-function updateReviewRequestStatus({ requestId, status, reviewer, reason = "" }) {
+async function updateReviewRequestStatus({ requestId, status, reviewer, reason = "" }) {
   ensureLoaded();
+  const remoteRequest = store.achievementReviewRequests.find(
+    (item) => String(item.id) === String(requestId),
+  );
+  if (remoteRequest && isRemoteAchievementReview(remoteRequest)) {
+    if (status === "rejected" && !String(reason || "").trim()) {
+      throw new Error("驳回时必须填写理由");
+    }
+    const response =
+      status === "approved"
+        ? await approveAchievementReviewRequest(requestId)
+        : await rejectAchievementReviewRequest(requestId, {
+            reason: String(reason || "").trim(),
+          });
+    upsertAchievementReviewRequest(response.data);
+    return response.data;
+  }
+
   const request = store.reviewRequests.find((item) => item.id === requestId);
   if (!request) {
     throw new Error("审核请求不存在");
@@ -370,12 +437,26 @@ function updateReviewRequestStatus({ requestId, status, reviewer, reason = "" })
 
 export function useNotifications(userSource) {
   ensureLoaded();
+  fetchAchievementReviewRequests().catch(() => {
+    store.achievementReviewFetched = true;
+  });
 
   const currentUser = computed(() => userSource || {});
-  const visibleReviewRequests = computed(() =>
-    store.reviewRequests.filter((item) =>
+  const localProfileReviewRequests = computed(() =>
+    store.reviewRequests.filter(
+      (item) => item.resourceType === "profile" && isReviewVisibleForUser(item, currentUser.value),
+    ),
+  );
+  const visibleAchievementReviewRequests = computed(() =>
+    store.achievementReviewRequests.filter((item) =>
       isReviewVisibleForUser(item, currentUser.value),
     ),
+  );
+  const visibleReviewRequests = computed(() =>
+    [
+      ...visibleAchievementReviewRequests.value,
+      ...localProfileReviewRequests.value,
+    ],
   );
   const visibleNotifications = computed(() =>
     store.notifications.filter((item) =>
@@ -417,6 +498,7 @@ export function useNotifications(userSource) {
     categoryCounts,
     reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
+    fetchAchievementReviewRequests,
     submitAchievementReviewRequest,
     submitProfileReviewRequest,
     addNotification,
