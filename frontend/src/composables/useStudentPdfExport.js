@@ -284,14 +284,16 @@ export function useStudentPdfExport() {
         currentY = doc.lastAutoTable.finalY + 14;
       };
 
-      const avatarSize = 88;
+      const maxAvatarSize = 88;
       const avatarUrlRaw = student.avatarUrl || "";
+      let avatarW = maxAvatarSize;
+      let avatarH = maxAvatarSize;
       if (avatarUrlRaw) {
         const avatarUrl = resolveMediaUrl
           ? resolveMediaUrl(avatarUrlRaw)
           : avatarUrlRaw;
         try {
-          const response = await fetch(avatarUrl);
+          const response = await fetch(avatarUrl, { mode: "cors" });
           const blob = await response.blob();
           const dataUrl = await new Promise((resolve) => {
             const reader = new FileReader();
@@ -299,20 +301,26 @@ export function useStudentPdfExport() {
             reader.readAsDataURL(blob);
           });
           const format = blob.type.includes("png") ? "PNG" : "JPEG";
-          doc.addImage(
-            dataUrl,
-            format,
-            marginX,
-            currentY,
-            avatarSize,
-            avatarSize,
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = dataUrl;
+          });
+          const ratio = Math.min(
+            maxAvatarSize / img.width,
+            maxAvatarSize / img.height,
           );
+          avatarW = img.width * ratio;
+          avatarH = img.height * ratio;
+          doc.addImage(dataUrl, format, marginX, currentY, avatarW, avatarH);
         } catch {
-          // ignore avatar failures
+          avatarW = maxAvatarSize;
+          avatarH = maxAvatarSize;
         }
       }
 
-      const infoX = marginX + avatarSize + 20;
+      const infoX = marginX + avatarW + 20;
       const lineHeight = 18;
       doc.setFont(PDF_FONT_BLACK, "normal");
       doc.setFontSize(18);
@@ -327,7 +335,7 @@ export function useStudentPdfExport() {
       infoLines.forEach((line, index) => {
         doc.text(line, infoX, currentY + 40 + index * lineHeight);
       });
-      currentY += Math.max(avatarSize, 40 + infoLines.length * lineHeight) + 20;
+      currentY += Math.max(avatarH, 40 + infoLines.length * lineHeight) + 20;
 
       addSectionTitle("学籍信息");
       addKeyValueTable([
@@ -417,17 +425,16 @@ export function useStudentPdfExport() {
       };
       const nodeHeight = 26;
       const nodeGap = 14;
-      const nodes = [];
+      const leagueNodes = [];
       const leagueJoined = student.leagueJoined === true;
-      const partyApplied = student.partyApplied === true;
       if (!leagueJoined) {
-        nodes.push("入团情况：未申请入团");
+        leagueNodes.push("入团情况：未申请入团");
       } else {
-        nodes.push("已申请入团");
-        nodes.push(
+        leagueNodes.push("已申请入团");
+        leagueNodes.push(
           `提交入团申请书时间：${student.leagueApplicationDate || "—"}`,
         );
-        nodes.push(
+        leagueNodes.push(
           `入团时间：${
             formatDateOrEmpty(
               student.leagueJoinDate,
@@ -436,14 +443,56 @@ export function useStudentPdfExport() {
             ) || "—"
           }`,
         );
-        nodes.push(`团号：${student.leagueNo || "—"}`);
+        leagueNodes.push(`团号：${student.leagueNo || "—"}`);
       }
+      const leaguePendingFlags = leagueNodes.map(
+        (label) => label.includes("正在发展") || label.includes("暂未报名"),
+      );
+      const leaguePendingIndex = leaguePendingFlags.findIndex((flag) => flag);
+      const leagueMaxTextWidth = leagueNodes.reduce((max, label) => {
+        const width = doc.getTextWidth(label);
+        return Math.max(max, width);
+      }, 0);
+      const flowWidth = Math.min(
+        doc.internal.pageSize.getWidth() - marginX * 2,
+        Math.max(240, leagueMaxTextWidth + 28),
+      );
+      const flowX =
+        marginX +
+        (doc.internal.pageSize.getWidth() - marginX * 2 - flowWidth) / 2;
+      const leagueFlowHeight =
+        leagueNodes.length * nodeHeight +
+        Math.max(0, leagueNodes.length - 1) * nodeGap;
+      addSectionTitle("入团情况", {
+        minContentHeight: leagueFlowHeight + 10,
+      });
+      ensureSpace(leagueFlowHeight + 10);
+      let nodeY = currentY + 6;
+      leagueNodes.forEach((label, index) => {
+        const muted = leaguePendingIndex >= 0 && index > leaguePendingIndex;
+        drawNode(label, flowX, nodeY, flowWidth, nodeHeight, muted);
+        if (index < leagueNodes.length - 1) {
+          const markPending = leaguePendingFlags[index + 1];
+          drawArrow(
+            flowX + flowWidth / 2,
+            nodeY + nodeHeight,
+            flowX + flowWidth / 2,
+            nodeY + nodeHeight + nodeGap - 4,
+            markPending,
+          );
+        }
+        nodeY += nodeHeight + nodeGap;
+      });
+      currentY = nodeY + 6;
+
+      const partyNodes = [];
+      const partyApplied = student.partyApplied === true;
       if (!partyApplied) {
-        nodes.push("入党情况：未申请入党");
+        partyNodes.push("入党情况：未申请入党");
       } else {
-        nodes.push("已申请入党");
-        nodes.push(`提交入党申请书时间：${student.applicationDate || "—"}`);
-        nodes.push(
+        partyNodes.push("已申请入党");
+        partyNodes.push(`提交入党申请书时间：${student.applicationDate || "—"}`);
+        partyNodes.push(
           `确定积极分子时间：${
             formatDateOrEmpty(
               student.activistDate,
@@ -452,7 +501,7 @@ export function useStudentPdfExport() {
             ) || "—"
           }`,
         );
-        nodes.push(
+        partyNodes.push(
           `上党课时间：${
             formatDateOrEmpty(
               student.partyTrainingDate,
@@ -461,7 +510,7 @@ export function useStudentPdfExport() {
             ) || "—"
           }`,
         );
-        nodes.push(
+        partyNodes.push(
           `确定发展对象时间：${
             formatDateOrEmpty(
               student.developmentTargetDate,
@@ -470,7 +519,7 @@ export function useStudentPdfExport() {
             ) || "—"
           }`,
         );
-        nodes.push(
+        partyNodes.push(
           `接收为预备党员时间：${
             formatDateOrEmpty(
               student.probationaryMemberDate,
@@ -479,7 +528,7 @@ export function useStudentPdfExport() {
             ) || "—"
           }`,
         );
-        nodes.push(
+        partyNodes.push(
           `转为正式党员时间：${
             formatDateOrEmpty(
               student.fullMemberDate,
@@ -489,37 +538,38 @@ export function useStudentPdfExport() {
           }`,
         );
       }
-      const pendingFlags = nodes.map(
+      const partyPendingFlags = partyNodes.map(
         (label) => label.includes("正在发展") || label.includes("暂未报名"),
       );
-      const pendingIndex = pendingFlags.findIndex((flag) => flag);
-      const maxTextWidth = nodes.reduce((max, label) => {
+      const partyPendingIndex = partyPendingFlags.findIndex((flag) => flag);
+      const partyMaxTextWidth = partyNodes.reduce((max, label) => {
         const width = doc.getTextWidth(label);
         return Math.max(max, width);
       }, 0);
-      const flowWidth = Math.min(
+      const partyFlowWidth = Math.min(
         doc.internal.pageSize.getWidth() - marginX * 2,
-        Math.max(240, maxTextWidth + 28),
+        Math.max(240, partyMaxTextWidth + 28),
       );
-      const flowX =
+      const partyFlowX =
         marginX +
-        (doc.internal.pageSize.getWidth() - marginX * 2 - flowWidth) / 2;
-      const flowHeight =
-        nodes.length * nodeHeight + Math.max(0, nodes.length - 1) * nodeGap;
-      addSectionTitle("团组织与入党信息", {
-        minContentHeight: flowHeight + 10,
+        (doc.internal.pageSize.getWidth() - marginX * 2 - partyFlowWidth) / 2;
+      const partyFlowHeight =
+        partyNodes.length * nodeHeight +
+        Math.max(0, partyNodes.length - 1) * nodeGap;
+      addSectionTitle("入党情况", {
+        minContentHeight: partyFlowHeight + 10,
       });
-      ensureSpace(flowHeight + 10);
-      let nodeY = currentY + 6;
-      nodes.forEach((label, index) => {
-        const muted = pendingIndex >= 0 && index > pendingIndex;
-        drawNode(label, flowX, nodeY, flowWidth, nodeHeight, muted);
-        if (index < nodes.length - 1) {
-          const markPending = pendingFlags[index + 1];
+      ensureSpace(partyFlowHeight + 10);
+      nodeY = currentY + 6;
+      partyNodes.forEach((label, index) => {
+        const muted = partyPendingIndex >= 0 && index > partyPendingIndex;
+        drawNode(label, partyFlowX, nodeY, partyFlowWidth, nodeHeight, muted);
+        if (index < partyNodes.length - 1) {
+          const markPending = partyPendingFlags[index + 1];
           drawArrow(
-            flowX + flowWidth / 2,
+            partyFlowX + partyFlowWidth / 2,
             nodeY + nodeHeight,
-            flowX + flowWidth / 2,
+            partyFlowX + partyFlowWidth / 2,
             nodeY + nodeHeight + nodeGap - 4,
             markPending,
           );

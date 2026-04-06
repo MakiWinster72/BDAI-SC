@@ -1,6 +1,7 @@
 package com.gcsc.studentcenter.service;
 
 import com.gcsc.studentcenter.dto.AuthResponse;
+import com.gcsc.studentcenter.dto.ChangePasswordRequest;
 import com.gcsc.studentcenter.dto.LoginRequest;
 import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
@@ -21,15 +22,18 @@ public class AuthService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginHistoryService loginHistoryService;
 
     public AuthService(
         AppUserRepository appUserRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService
+        JwtService jwtService,
+        LoginHistoryService loginHistoryService
     ) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.loginHistoryService = loginHistoryService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -81,7 +85,7 @@ public class AuthService {
         );
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
         String username = request.getUsername().trim();
         if (username.isEmpty()) {
             throw new IllegalArgumentException("用户名不能为空");
@@ -99,6 +103,9 @@ public class AuthService {
         UserRole role = roleOrDefault(user);
         String token = jwtService.generateToken(user.getUsername(), user.getDisplayName(), role.name());
         String avatarUrl = resolveAvatarUrl(user);
+
+        loginHistoryService.recordLogin(username, ipAddress, userAgent);
+
         return new AuthResponse(
             true,
             "登录成功",
@@ -127,6 +134,18 @@ public class AuthService {
             user.getCollege(),
             avatarUrl
         );
+    }
+
+    public void changePassword(String username, ChangePasswordRequest request) {
+        AppUser user = appUserRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("旧密码错误");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        appUserRepository.save(user);
     }
 
     private String resolveAvatarUrl(AppUser user) {

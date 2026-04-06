@@ -60,5 +60,8 @@ export function getActiveMenuFromRoute(route) {
   if (routeName === "admin") {
     return "admin";
   }
+  if (routeName === "settings") {
+    return "";
+  }
   return "my-info";
 }
