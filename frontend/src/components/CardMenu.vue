@@ -83,11 +83,6 @@
               <span class="menu-notification-time">{{ entry.timeText }}</span>
             </div>
             <div class="menu-notification-title">{{ entry.title }}</div>
-            <div class="menu-notification-content">{{ entry.content }}</div>
-            <div class="menu-notification-meta">{{ entry.meta }}</div>
-            <div v-if="entry.reason" class="menu-notification-reason">
-              驳回理由：{{ entry.reason }}
-            </div>
           </article>
         </div>
 

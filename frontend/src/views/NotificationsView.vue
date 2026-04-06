@@ -6,7 +6,7 @@ import { useNotifications } from "../composables/useNotifications";
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, categoryCounts, updateReviewRequestStatus } = useNotifications(profile);
+const { inboxEntries, updateReviewRequestStatus } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
 const rejectReason = ref("");
@@ -20,11 +20,6 @@ const activeCategory = computed(() => {
   const raw = route.query.category;
   return typeof raw === "string" && raw ? raw : "pending";
 });
-const notificationTabs = computed(() => [
-  { key: "pending", label: "待处理", count: categoryCounts.value.pending || 0 },
-  { key: "delayed", label: "滞后", count: categoryCounts.value.delayed || 0 },
-  { key: "processed", label: "已处理", count: categoryCounts.value.processed || 0 },
-]);
 const filteredEntries = computed(() =>
   inboxEntries.value.filter(
     (entry) => entry.categoryKey === activeCategory.value,
@@ -91,13 +86,6 @@ watch(
 
 function buildEntryKey(entry) {
   return `${entry.source}:${entry.sourceId || entry.id}`;
-}
-
-function openCategory(category) {
-  router.replace({
-    path: "/notifications",
-    query: { category },
-  });
 }
 
 function loadUser() {
@@ -202,20 +190,6 @@ function rejectSelectedRequest() {
       <h1 class="feed-title">通知详情</h1>
     </header>
 
-    <section class="notification-categories">
-      <button
-        v-for="tab in notificationTabs"
-        :key="tab.key"
-        class="notification-category-tab"
-        :class="{ active: activeCategory === tab.key }"
-        type="button"
-        @click="openCategory(tab.key)"
-      >
-        <span>{{ tab.label }}</span>
-        <span class="notification-category-count">{{ tab.count }}</span>
-      </button>
-    </section>
-
     <section v-if="!filteredEntries.length" class="notification-empty-card">
       <div class="notification-empty-title">暂无通知</div>
       <div class="notification-empty-text">当前分类下暂时没有可查看的通知。</div>
@@ -233,34 +207,10 @@ function rejectSelectedRequest() {
       <p class="notification-detail-content">{{ selectedEntry.content }}</p>
 
       <section
-        v-if="selectedEntry.summary"
-        class="notification-section"
-      >
-        <div class="notification-section-label">概要</div>
-        <div class="notification-section-value">{{ selectedEntry.summary }}</div>
-      </section>
-
-      <section
-        v-if="selectedEntry.requester"
-        class="notification-grid"
-      >
-        <div class="notification-section">
-          <div class="notification-section-label">提交人</div>
-          <div class="notification-section-value">
-            {{ selectedEntry.requester.displayName || selectedEntry.requester.username || "-" }}
-          </div>
-        </div>
-        <div class="notification-section">
-          <div class="notification-section-label">类型</div>
-          <div class="notification-section-value">{{ selectedEntry.meta }}</div>
-        </div>
-      </section>
-
-      <section
         v-if="selectedEntry.changes?.length"
-        class="notification-section"
+        class="notification-changes"
       >
-        <div class="notification-section-label">变更内容</div>
+        <div class="notification-changes-label">变更内容</div>
         <div class="notification-change-list">
           <article
             v-for="change in selectedEntry.changes"
@@ -333,20 +283,10 @@ function rejectSelectedRequest() {
 
       <section
         v-if="selectedEntry.reason"
-        class="notification-section is-reason"
+        class="notification-reason"
       >
-        <div class="notification-section-label">驳回理由</div>
-        <div class="notification-section-value">{{ selectedEntry.reason }}</div>
-      </section>
-
-      <section
-        v-if="selectedEntry.reviewer"
-        class="notification-section"
-      >
-        <div class="notification-section-label">处理人</div>
-        <div class="notification-section-value">
-          {{ selectedEntry.reviewer.displayName || selectedEntry.reviewer.username || "-" }}
-        </div>
+        <div class="notification-reason-label">驳回理由</div>
+        <div class="notification-reason-text">{{ selectedEntry.reason }}</div>
       </section>
 
       <section v-if="canProcessSelected" class="notification-actions-card">
@@ -395,48 +335,6 @@ function rejectSelectedRequest() {
 .notification-view {
   display: grid;
   gap: 14px;
-}
-
-.notification-categories {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.notification-category-tab {
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid rgba(3, 107, 114, 0.16);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.68);
-  color: #0f555d;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.notification-category-tab.active {
-  background: linear-gradient(135deg, #0a7a82, #075961);
-  color: #fff;
-  box-shadow: 0 14px 28px rgba(3, 107, 114, 0.16);
-}
-
-.notification-category-count {
-  min-width: 22px;
-  height: 22px;
-  padding: 0 7px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(3, 107, 114, 0.1);
-}
-
-.notification-category-tab.active .notification-category-count {
-  background: rgba(255, 255, 255, 0.18);
 }
 
 .notification-empty-card,
@@ -533,33 +431,37 @@ function rejectSelectedRequest() {
   line-height: 1.8;
 }
 
-.notification-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.notification-section,
+.notification-changes,
 .notification-actions-card {
   border-radius: 18px;
   padding: 16px;
   background: rgba(255, 255, 255, 0.44);
 }
 
-.notification-section.is-reason {
-  background: rgba(216, 69, 54, 0.08);
-}
-
-.notification-section-label {
+.notification-changes-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   color: #154f57;
   font-size: 12px;
   font-weight: 700;
 }
 
-.notification-section-value {
-  color: #4e6d75;
+.notification-reason {
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(216, 69, 54, 0.08);
+}
+
+.notification-reason-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #a43a2e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.notification-reason-text {
+  color: #a43a2e;
   font-size: 14px;
   line-height: 1.7;
 }
@@ -707,7 +609,6 @@ function rejectSelectedRequest() {
 }
 
 @media (max-width: 900px) {
-  .notification-grid,
   .notification-change-values {
     grid-template-columns: 1fr;
   }

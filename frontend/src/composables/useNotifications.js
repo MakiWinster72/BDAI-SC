@@ -128,7 +128,7 @@ function buildReviewEntry(request, user) {
     id: request.id,
     sourceId: request.id,
     source: "review-request",
-    title: request.title,
+    title: `${toDisplayName(request.requester)} ${requestTypeLabel}修改`,
     content:
       request.status === "approved"
         ? approvedContent
