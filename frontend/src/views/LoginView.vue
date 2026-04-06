@@ -6,13 +6,13 @@
 
       <form @submit.prevent="handleLogin">
         <div class="form-row">
-          <label class="form-label" for="username">用户名</label>
+          <label class="form-label" for="username">学号</label>
           <input
             id="username"
             v-model.trim="form.username"
             class="form-input"
             type="text"
-            placeholder="请输入用户名"
+            placeholder="请输入学号"
             autocomplete="username"
             required
           />
@@ -32,7 +32,7 @@
         </div>
 
         <button class="action-button" :disabled="isSubmitting" type="submit">
-          {{ isSubmitting ? '登录中...' : '登录' }}
+          {{ isSubmitting ? "登录中..." : "登录" }}
         </button>
       </form>
 
@@ -47,40 +47,40 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { login } from '../api/auth'
+import { reactive, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { login } from "../api/auth";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 const form = reactive({
-  username: route.query.username ? String(route.query.username) : '',
-  password: ''
-})
+  username: route.query.username ? String(route.query.username) : "",
+  password: "",
+});
 
-const isSubmitting = ref(false)
-const feedback = reactive({ text: '', type: '' })
+const isSubmitting = ref(false);
+const feedback = reactive({ text: "", type: "" });
 
 function parseError(error) {
   if (error?.response?.data?.message) {
-    return error.response.data.message
+    return error.response.data.message;
   }
-  return '请求失败，请检查后端服务是否启动'
+  return "请求失败，请检查后端服务是否启动";
 }
 
 async function handleLogin() {
-  feedback.text = ''
-  feedback.type = ''
+  feedback.text = "";
+  feedback.type = "";
 
-  isSubmitting.value = true
+  isSubmitting.value = true;
   try {
-    const { data } = await login(form)
-    feedback.text = data.message || '登录成功'
-    feedback.type = 'success'
+    const { data } = await login(form);
+    feedback.text = data.message || "登录成功";
+    feedback.type = "success";
 
     localStorage.setItem(
-      'gcsc_user',
+      "gcsc_user",
       JSON.stringify({
         username: data.username,
         displayName: data.displayName,
@@ -88,16 +88,16 @@ async function handleLogin() {
         role: data.role,
         studentNo: data.studentNo,
         className: data.className,
-        college: data.college
-      })
-    )
-    localStorage.setItem('gcsc_token', data.token || '')
-    router.push('/myinfos')
+        college: data.college,
+      }),
+    );
+    localStorage.setItem("gcsc_token", data.token || "");
+    router.push("/myinfos");
   } catch (error) {
-    feedback.text = parseError(error)
-    feedback.type = 'error'
+    feedback.text = parseError(error);
+    feedback.type = "error";
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
 }
 </script>

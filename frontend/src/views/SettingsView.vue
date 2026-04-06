@@ -1,151 +1,115 @@
 <template>
-  <div class="dashboard-layout">
-    <transition name="publisher-backdrop">
-      <div
-        v-if="sidebarOpen"
-        class="mobile-sidebar-backdrop"
-        @click="closeSidebar"
-      ></div>
-    </transition>
-    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
-      <section class="profile-card">
-        <div class="profile-row profile-main">
-          <div class="profile-avatar">
-            <img
-              v-if="profile.avatarUrl"
-              :src="resolveMediaUrl(profile.avatarUrl)"
-              alt="头像"
-            />
-            <span v-else>{{ avatarText }}</span>
+  <main class="dashboard-right">
+    <header class="feed-header">
+      <h1 class="feed-title">设置</h1>
+    </header>
+
+    <section class="info-shell settings-shell">
+      <div class="settings-card">
+        <div class="settings-row clickable" @click="togglePasswordChange">
+          <div class="settings-text">
+            <div class="settings-title">修改密码</div>
           </div>
-          <div class="profile-name-wrap">
-            <p class="profile-name">
-              {{ profile.displayName || profile.username || "同学" }}
-            </p>
-            <p class="profile-role">{{ roleLabel }}</p>
-          </div>
-          <button
-            class="profile-settings"
-            type="button"
-            aria-label="设置"
-            @click="goToSettings"
+          <svg
+            class="chevron"
+            :class="{ open: showPasswordForm }"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
           >
-            <img src="/assets/icons/settings.svg" alt="设置" />
-          </button>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
         </div>
-        <div class="profile-row">学号：{{ profile.studentNo || "未填写" }}</div>
-        <div class="profile-row">班级：{{ profile.className || "未填写" }}</div>
-        <div class="profile-row">学院：{{ profile.college || "未填写" }}</div>
-      </section>
-
-      <section class="menu-card">
-        <button
-          v-for="item in menuItems"
-          :key="item.key"
-          class="menu-item"
-          :class="{
-            active: activeMenu === item.key,
-            disabled: !isMenuEnabled(item.key),
-          }"
-          type="button"
-          :disabled="!isMenuEnabled(item.key)"
-          @click="handleMenuClick(item.key)"
-        >
-          {{ item.label }}
-        </button>
-      </section>
-    </aside>
-
-    <main class="dashboard-right">
-      <header class="feed-header">
-        <h1 class="feed-title">设置</h1>
-      </header>
-
-      <section class="info-shell settings-shell">
-        <div class="settings-card">
-          <div class="settings-row clickable" @click="togglePasswordChange">
-            <div class="settings-text">
-              <div class="settings-title">修改密码</div>
-            </div>
-            <svg class="chevron" :class="{ open: showPasswordForm }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </div>
-        </div>
-        <transition name="expand">
-          <div v-if="showPasswordForm" class="settings-card pw-fields">
-            <input
-              v-model="passwordForm.oldPassword"
-              type="password"
-              class="info-input pw-input"
-              placeholder="旧密码"
-            />
-            <input
-              v-model="passwordForm.newPassword"
-              type="password"
-              class="info-input pw-input"
-              placeholder="新密码（6-32位）"
-            />
-            <input
-              v-model="passwordForm.confirmPassword"
-              type="password"
-              class="info-input pw-input"
-              placeholder="确认新密码"
-            />
-            <p v-if="passwordError" class="form-tip">{{ passwordError }}</p>
-            <p v-if="passwordSuccess" class="feedback success">{{ passwordSuccess }}</p>
-            <div class="pw-actions">
-              <button class="ghost-button pw-btn" type="button" @click="cancelPasswordChange">取消</button>
-              <button class="action-button pw-btn" type="button" :disabled="passwordLoading" @click="handleChangePassword">
-                {{ passwordLoading ? "保存中..." : "保存" }}
-              </button>
-            </div>
-          </div>
-        </transition>
-        <div class="settings-actions">
-          <button class="settings-action" type="button" @click="handleLogout">
-            退出登录
-          </button>
-        </div>
-      </section>
-
-      <div class="mobile-capsule">
-        <div class="capsule-left">
-          <div
-            class="capsule-action"
-            role="button"
-            tabindex="0"
-            @click="openSidebar"
-          >
-            <span class="capsule-icon" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </span>
-          </div>
-        </div>
-        <div class="capsule-right"></div>
       </div>
+      <transition name="expand">
+        <div v-if="showPasswordForm" class="settings-card pw-fields">
+          <input
+            v-model="passwordForm.oldPassword"
+            type="password"
+            class="info-input pw-input"
+            placeholder="旧密码"
+          />
+          <input
+            v-model="passwordForm.newPassword"
+            type="password"
+            class="info-input pw-input"
+            placeholder="新密码（6-32位）"
+          />
+          <input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            class="info-input pw-input"
+            placeholder="确认新密码"
+          />
+          <p v-if="passwordError" class="form-tip">{{ passwordError }}</p>
+          <p v-if="passwordSuccess" class="feedback success">
+            {{ passwordSuccess }}
+          </p>
+          <div class="pw-actions">
+            <button
+              class="ghost-button pw-btn"
+              type="button"
+              @click="cancelPasswordChange"
+            >
+              取消
+            </button>
+            <button
+              class="action-button pw-btn"
+              type="button"
+              :disabled="passwordLoading"
+              @click="handleChangePassword"
+            >
+              {{ passwordLoading ? "保存中..." : "保存" }}
+            </button>
+          </div>
+        </div>
+      </transition>
+      <div class="settings-actions">
+        <button class="settings-action" type="button" @click="handleLogout">
+          退出登录
+        </button>
+      </div>
+    </section>
 
-    </main>
-  </div>
+    <div class="mobile-capsule">
+      <div class="capsule-left">
+        <div
+          class="capsule-action"
+          role="button"
+          tabindex="0"
+          @click="openDashboardSidebar"
+        >
+          <span class="capsule-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div class="capsule-right"></div>
+    </div>
+  </main>
 </template>
 
 <script setup>
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
+import { getMenuLocation, isMenuEnabled } from "../constants/menu";
 import { API_BASE } from "../api/request";
 import { changePassword } from "../api/auth";
+import { navigateWithViewTransition } from "../utils/viewTransition";
+import { useDashboardShell } from "../composables/useDashboardShell";
 
 const router = useRouter();
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
-const activeMenu = ref("");
+const activeMenu = ref("my-info");
 const sidebarOpen = ref(false);
 const showPasswordForm = ref(false);
 const passwordForm = reactive({
@@ -156,8 +120,6 @@ const passwordForm = reactive({
 const passwordError = ref("");
 const passwordSuccess = ref("");
 const passwordLoading = ref(false);
-
-const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 
 const roleLabelMap = {
   STUDENT: "学生",
@@ -211,19 +173,7 @@ function handleMenuClick(key) {
     return;
   }
   sidebarOpen.value = false;
-  if (key === "achievements") {
-    router.push("/achievements");
-    return;
-  }
-  if (key === "my-info") {
-    router.push("/myinfos");
-    return;
-  }
-  if (key === "student-info") {
-    router.push("/student-info");
-    return;
-  }
-  router.push("/myinfos");
+  navigateWithViewTransition(router, getMenuLocation(key));
 }
 
 function openSidebar() {
@@ -235,7 +185,7 @@ function closeSidebar() {
 }
 
 function goToSettings() {
-  router.push("/settings");
+  navigateWithViewTransition(router, "/settings");
 }
 
 function handleLogout() {
@@ -285,7 +235,8 @@ async function handleChangePassword() {
       showPasswordForm.value = false;
     }, 1500);
   } catch (err) {
-    passwordError.value = err.response?.data?.message || "修改失败，请检查旧密码是否正确";
+    passwordError.value =
+      err.response?.data?.message || "修改失败，请检查旧密码是否正确";
   } finally {
     passwordLoading.value = false;
   }
@@ -370,7 +321,9 @@ async function handleChangePassword() {
 
 .expand-enter-active,
 .expand-leave-active {
-  transition: opacity 240ms ease, max-height 280ms ease;
+  transition:
+    opacity 240ms ease,
+    max-height 280ms ease;
   max-height: 320px;
   overflow: hidden;
 }

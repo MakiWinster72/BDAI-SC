@@ -4,8 +4,17 @@
 
 ## Tables
 
-```
-achievements
+```text
+achievement_certificates
+achievement_contests
+achievement_journals
+achievement_papers
+achievement_patents
+achievement_researches
+achievement_works
+cadre_experiences
+contacts
+education_experiences
 post_media
 posts
 student_profiles
@@ -14,20 +23,162 @@ users
 
 ## Table Schemas
 
-### achievements
+### achievement_certificates
 
-| Field       | Type         | Null | Key | Default | Extra          | 备注       |
-| ----------- | ------------ | ---- | --- | ------- | -------------- | ---------- |
-| id          | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键       |
-| award_date  | date         | YES  |     | NULL    |                | 获奖日期   |
-| created_at  | datetime(6)  | NO   |     | NULL    |                | 创建时间   |
-| description | text         | YES  |     | NULL    |                | 描述       |
-| end_date    | date         | YES  |     | NULL    |                | 结束日期   |
-| image_url   | varchar(255) | YES  |     | NULL    |                | 图片地址   |
-| name        | varchar(120) | NO   |     | NULL    |                | 成就名称   |
-| start_date  | date         | YES  |     | NULL    |                | 开始日期   |
-| thoughts    | text         | YES  |     | NULL    |                | 心得感想   |
-| author_id   | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID |
+| Field            | Type         | Null | Key | Default | Extra          | 备注       |
+| ---------------- | ------------ | ---- | --- | ------- | -------------- | ---------- |
+| id               | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键       |
+| certificate_name | varchar(255) | NO   |     | NULL    |                | 证书名称   |
+| certificate_type | varchar(64)  | YES  |     | NULL    |                | 证书类型   |
+| created_at       | datetime(6)  | NO   |     | NULL    |                | 创建时间   |
+| image_url        | varchar(255) | YES  |     | NULL    |                | 图片地址   |
+| obtain_date      | date         | YES  |     | NULL    |                | 获得日期   |
+| student_name     | varchar(64)  | YES  |     | NULL    |                | 学生姓名   |
+| student_no       | varchar(32)  | YES  |     | NULL    |                | 学号       |
+| author_id        | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID |
+
+### achievement_contests
+
+| Field            | Type         | Null | Key | Default | Extra          | 备注         |
+| ---------------- | ------------ | ---- | --- | ------- | -------------- | ------------ |
+| id               | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键         |
+| award_category   | varchar(64)  | YES  |     | NULL    |                | 奖项类别     |
+| award_count      | varchar(32)  | YES  |     | NULL    |                | 获奖人数/数量 |
+| award_date       | date         | YES  |     | NULL    |                | 获奖日期     |
+| award_level      | varchar(64)  | YES  |     | NULL    |                | 奖项等级     |
+| contest_category | varchar(64)  | YES  |     | NULL    |                | 竞赛类别     |
+| contest_name     | varchar(255) | NO   |     | NULL    |                | 竞赛名称     |
+| contest_type     | varchar(64)  | YES  |     | NULL    |                | 竞赛类型     |
+| created_at       | datetime(6)  | NO   |     | NULL    |                | 创建时间     |
+| image_url        | varchar(255) | YES  |     | NULL    |                | 图片地址     |
+| instructors      | text         | YES  |     | NULL    |                | 指导教师     |
+| organizer        | varchar(255) | YES  |     | NULL    |                | 主办方       |
+| remark           | varchar(64)  | YES  |     | NULL    |                | 备注         |
+| student_name     | varchar(64)  | YES  |     | NULL    |                | 学生姓名     |
+| student_no       | varchar(32)  | YES  |     | NULL    |                | 学号         |
+| team_members     | text         | YES  |     | NULL    |                | 团队成员     |
+| author_id        | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID   |
+
+### achievement_journals
+
+| Field            | Type         | Null | Key | Default | Extra          | 备注       |
+| ---------------- | ------------ | ---- | --- | ------- | -------------- | ---------- |
+| id               | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键       |
+| created_at       | datetime(6)  | NO   |     | NULL    |                | 创建时间   |
+| image_url        | varchar(255) | YES  |     | NULL    |                | 图片地址   |
+| publication_name | varchar(255) | YES  |     | NULL    |                | 刊物名称   |
+| publish_date     | date         | YES  |     | NULL    |                | 发表日期   |
+| student_name     | varchar(64)  | YES  |     | NULL    |                | 学生姓名   |
+| student_no       | varchar(32)  | YES  |     | NULL    |                | 学号       |
+| work_title       | varchar(255) | NO   |     | NULL    |                | 作品题目   |
+| author_id        | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID |
+
+### achievement_papers
+
+| Field        | Type         | Null | Key | Default | Extra          | 备注         |
+| ------------ | ------------ | ---- | --- | ------- | -------------- | ------------ |
+| id           | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键         |
+| author_order | varchar(64)  | YES  |     | NULL    |                | 作者排序     |
+| created_at   | datetime(6)  | NO   |     | NULL    |                | 创建时间     |
+| image_url    | varchar(255) | YES  |     | NULL    |                | 图片地址     |
+| indexed      | varchar(128) | YES  |     | NULL    |                | 收录情况     |
+| journal_name | varchar(255) | YES  |     | NULL    |                | 期刊名称     |
+| paper_title  | varchar(255) | NO   |     | NULL    |                | 论文题目     |
+| publish_date | date         | YES  |     | NULL    |                | 发表日期     |
+| student_name | varchar(64)  | YES  |     | NULL    |                | 学生姓名     |
+| student_no   | varchar(32)  | YES  |     | NULL    |                | 学号         |
+| author_id    | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID   |
+
+### achievement_patents
+
+| Field          | Type         | Null | Key | Default | Extra          | 备注       |
+| -------------- | ------------ | ---- | --- | ------- | -------------- | ---------- |
+| id             | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键       |
+| created_at     | datetime(6)  | NO   |     | NULL    |                | 创建时间   |
+| first_inventor | varchar(16)  | YES  |     | NULL    |                | 第一发明人 |
+| grant_date     | date         | YES  |     | NULL    |                | 授权日期   |
+| grant_no       | varchar(64)  | YES  |     | NULL    |                | 授权号     |
+| image_url      | varchar(255) | YES  |     | NULL    |                | 图片地址   |
+| patent_name    | varchar(255) | NO   |     | NULL    |                | 专利名称   |
+| patent_type    | varchar(64)  | YES  |     | NULL    |                | 专利类型   |
+| student_name   | varchar(64)  | YES  |     | NULL    |                | 学生姓名   |
+| student_no     | varchar(32)  | YES  |     | NULL    |                | 学号       |
+| author_id      | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID |
+
+### achievement_researches
+
+| Field          | Type         | Null | Key | Default | Extra          | 备注         |
+| -------------- | ------------ | ---- | --- | ------- | -------------- | ------------ |
+| id             | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键         |
+| created_at     | datetime(6)  | NO   |     | NULL    |                | 创建时间     |
+| image_url      | varchar(255) | YES  |     | NULL    |                | 图片地址     |
+| project_leader | varchar(64)  | YES  |     | NULL    |                | 项目负责人   |
+| project_name   | varchar(255) | NO   |     | NULL    |                | 项目名称     |
+| student_name   | varchar(64)  | YES  |     | NULL    |                | 学生姓名     |
+| student_no     | varchar(32)  | YES  |     | NULL    |                | 学号         |
+| teacher_no     | varchar(64)  | YES  |     | NULL    |                | 教师工号     |
+| author_id      | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID   |
+
+### achievement_works
+
+| Field            | Type         | Null | Key | Default | Extra          | 备注         |
+| ---------------- | ------------ | ---- | --- | ------- | -------------- | ------------ |
+| id               | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键         |
+| created_at       | datetime(6)  | NO   |     | NULL    |                | 创建时间     |
+| image_url        | varchar(255) | YES  |     | NULL    |                | 图片地址     |
+| impact_scope     | varchar(64)  | YES  |     | NULL    |                | 影响范围     |
+| note             | text         | YES  |     | NULL    |                | 备注说明     |
+| organizer        | varchar(255) | YES  |     | NULL    |                | 主办方       |
+| publish_date     | date         | YES  |     | NULL    |                | 发布日期     |
+| publish_occasion | varchar(255) | YES  |     | NULL    |                | 发布场合     |
+| student_name     | varchar(64)  | YES  |     | NULL    |                | 学生姓名     |
+| student_no       | varchar(32)  | YES  |     | NULL    |                | 学号         |
+| work_category    | varchar(64)  | YES  |     | NULL    |                | 作品类别     |
+| work_name        | varchar(255) | NO   |     | NULL    |                | 作品名称     |
+| work_type        | varchar(64)  | YES  |     | NULL    |                | 作品类型     |
+| author_id        | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID   |
+
+### cadre_experiences
+
+| Field       | Type         | Null | Key | Default | Extra          | 备注         |
+| ----------- | ------------ | ---- | --- | ------- | -------------- | ------------ |
+| id          | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键         |
+| start_date  | date         | YES  |     | NULL    |                | 开始日期     |
+| end_date    | date         | YES  |     | NULL    |                | 结束日期     |
+| department  | varchar(128) | YES  |     | NULL    |                | 部门/班级     |
+| position    | varchar(64)  | YES  |     | NULL    |                | 职位         |
+| description | varchar(512) | YES  |     | NULL    |                | 简述         |
+| is_current  | bit(1)       | YES  |     | NULL    |                | 是否当前经历 |
+| profile_id  | bigint(20)   | NO   | MUL | NULL    |                | 关联档案ID   |
+
+### contacts
+
+| Field      | Type                         | Null | Key | Default | Extra          | 备注         |
+| ---------- | ---------------------------- | ---- | --- | ------- | -------------- | ------------ |
+| id         | bigint(20)                   | NO   | PRI | NULL    | auto_increment | 主键         |
+| is_active  | bit(1)                       | NO   |     | NULL    |                | 是否启用     |
+| created_at | datetime(6)                  | NO   |     | NULL    |                | 创建时间     |
+| duty       | varchar(64)                  | YES  |     | NULL    |                | 职务         |
+| entry_type | enum('DEPARTMENT','TEACHER') | NO   |     | NULL    |                | 条目类型     |
+| name       | varchar(64)                  | NO   |     | NULL    |                | 名称         |
+| office     | varchar(64)                  | YES  |     | NULL    |                | 办公室       |
+| phone      | varchar(32)                  | YES  |     | NULL    |                | 电话         |
+| photo_url  | varchar(255)                 | YES  |     | NULL    |                | 照片地址     |
+| sort_order | int(11)                      | NO   |     | NULL    |                | 排序         |
+| updated_at | datetime(6)                  | NO   |     | NULL    |                | 更新时间     |
+
+### education_experiences
+
+| Field           | Type         | Null | Key | Default | Extra          | 备注         |
+| --------------- | ------------ | ---- | --- | ------- | -------------- | ------------ |
+| id              | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键         |
+| education_level | varchar(64)  | YES  |     | NULL    |                | 教育层次     |
+| end_date        | date         | YES  |     | NULL    |                | 结束日期     |
+| is_current      | bit(1)       | YES  |     | NULL    |                | 是否当前经历 |
+| school_name     | varchar(128) | YES  |     | NULL    |                | 学校名称     |
+| start_date      | date         | YES  |     | NULL    |                | 开始日期     |
+| witness         | varchar(64)  | YES  |     | NULL    |                | 证明人       |
+| profile_id      | bigint(20)   | NO   | MUL | NULL    |                | 关联档案ID   |
 
 ### post_media
 
@@ -87,10 +238,12 @@ users
 | dorm_room                     | varchar(64)  | YES  |     | NULL    |                | 宿舍房间                 |
 | enrollment_date               | date         | YES  |     | NULL    |                | 入学日期                 |
 | ethnicity                     | varchar(32)  | YES  |     | NULL    |                | 民族                     |
+| backup_contact                | varchar(128) | YES  |     | NULL    |                | 备用联系方式（QQ/邮箱） |
 | father_name                   | varchar(64)  | YES  |     | NULL    |                | 父亲姓名                 |
 | father_phone                  | varchar(32)  | YES  |     | NULL    |                | 父亲联系电话             |
 | father_title                  | varchar(64)  | YES  |     | NULL    |                | 父亲职务                 |
 | father_work_unit              | varchar(128) | YES  |     | NULL    |                | 父亲工作单位             |
+| birth_date                    | date         | YES  |     | NULL    |                | 出生日期                 |
 | full_member_date              | date         | YES  |     | NULL    |                | 转正日期                 |
 | full_member_developing        | bit(1)       | YES  |     | NULL    |                | 预备党员转正培养中       |
 | league_application_date       | date         | YES  |     | NULL    |                | 入团申请日期             |
@@ -121,6 +274,6 @@ users
 | username      | varchar(32)                       | NO   | UNI | NULL    |                | 登录名   |
 | class_name    | varchar(64)                       | YES  |     | NULL    |                | 班级名称 |
 | college       | varchar(64)                       | YES  |     | NULL    |                | 学院     |
-| avatar_url    | varchar(255)                      | YES  |     | NULL    |                | 头像地址 |
 | role          | enum('ADMIN','STUDENT','TEACHER') | NO   |     | NULL    |                | 角色     |
 | student_no    | varchar(32)                       | YES  |     | NULL    |                | 学号     |
+| avatar_url    | varchar(255)                      | YES  |     | NULL    |                | 头像地址 |

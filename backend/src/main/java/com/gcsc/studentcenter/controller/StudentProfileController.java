@@ -43,11 +43,21 @@ public class StudentProfileController {
         return ResponseEntity.ok(studentProfileService.saveProfile(authentication.getName(), request));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentProfileResponse> saveById(
+        Authentication authentication,
+        @PathVariable Long id,
+        @RequestBody StudentProfileRequest request
+    ) {
+        return ResponseEntity.ok(studentProfileService.saveProfileById(authentication.getName(), id, request));
+    }
+
     @GetMapping("/search")
     public ResponseEntity<StudentSearchResponse> search(
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "5") int size,
         @RequestParam(required = false) Integer classYear,
+        @RequestParam(required = false) String classNo,
         @RequestParam(required = false) String college,
         @RequestParam(required = false) String major,
         @RequestParam(required = false) Boolean hkMoTw,
@@ -57,6 +67,7 @@ public class StudentProfileController {
         return ResponseEntity.ok(
             studentProfileService.searchProfiles(
                 classYear,
+                classNo,
                 college,
                 major,
                 hkMoTw,
