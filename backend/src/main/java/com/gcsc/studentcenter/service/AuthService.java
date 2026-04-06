@@ -22,15 +22,18 @@ public class AuthService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginHistoryService loginHistoryService;
 
     public AuthService(
         AppUserRepository appUserRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService
+        JwtService jwtService,
+        LoginHistoryService loginHistoryService
     ) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.loginHistoryService = loginHistoryService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -82,7 +85,7 @@ public class AuthService {
         );
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
         String username = request.getUsername().trim();
         if (username.isEmpty()) {
             throw new IllegalArgumentException("用户名不能为空");
@@ -100,6 +103,9 @@ public class AuthService {
         UserRole role = roleOrDefault(user);
         String token = jwtService.generateToken(user.getUsername(), user.getDisplayName(), role.name());
         String avatarUrl = resolveAvatarUrl(user);
+
+        loginHistoryService.recordLogin(username, ipAddress, userAgent);
+
         return new AuthResponse(
             true,
             "登录成功",
