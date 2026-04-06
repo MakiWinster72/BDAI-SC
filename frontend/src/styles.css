@@ -958,21 +958,12 @@ body {
     rgba(255, 255, 255, 0.54),
     rgba(255, 255, 255, 0.34)
   );
-  box-shadow: 0 10px 22px rgba(3, 107, 114, 0.06);
   cursor: pointer;
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    background-color 180ms ease;
-}
-
-.menu-notification-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(3, 107, 114, 0.09);
+  transition: background-color 180ms ease;
 }
 
 .menu-notification-item.active {
-  box-shadow: 0 16px 28px rgba(3, 107, 114, 0.12);
+  background: rgba(205, 255, 249, 0.5);
 }
 
 .menu-notification-head {
