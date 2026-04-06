@@ -1139,7 +1139,7 @@ const workUnitHintOpen = ref(false);
 const today = getTodayString();
 const originalProfileData = ref(null);
 const savedProfileData = ref(null);
-const { submitProfileReviewRequest, updateReviewRequestStatus } = useNotifications(profile);
+const { submitProfileReviewRequest, updateReviewRequestStatus, fetchProfileReviewRequests } = useNotifications(profile);
 const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useReviewSettings();
 
 const info = reactive({
@@ -2067,26 +2067,21 @@ async function confirmEdit() {
   }
   const changes = buildProfileChanges(originalProfileData.value, payload);
   try {
-    const { data } = await saveStudentProfile(payload);
-    applyProfileResponse(data);
     if (requiresReview) {
-      const request = await submitProfileReviewRequest({
-        actor: profile,
+      const { data: requestData } = await submitProfileReviewRequest({
         payloadSnapshot: payload,
         changes,
       });
-      if (reviewSettings.profileReviewAutoApprove) {
-        await updateReviewRequestStatus({
-          requestId: request.id,
-          status: "approved",
-          reviewer: {
-            username: "system",
-            displayName: "系统自动审核",
-            role: "SYSTEM",
-          },
-        });
+      if (reviewSettings.profileReviewAutoApprove && requestData?.status === "approved") {
+        await fetchProfileReviewRequests(true);
+        const updatedProfile = await getStudentProfile();
+        applyProfileResponse(updatedProfile.data);
       }
+      isEditing.value = false;
+      return;
     }
+    const { data } = await saveStudentProfile(payload);
+    applyProfileResponse(data);
     isEditing.value = false;
   } catch (err) {
     console.error(err);

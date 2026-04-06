@@ -5,6 +5,12 @@ import {
   rejectAchievementReviewRequest,
   submitAchievementReviewRequestApi,
 } from "../api/achievementReviewRequests";
+import {
+  approveProfileReviewRequest,
+  listProfileReviewRequests,
+  rejectProfileReviewRequest,
+  submitProfileReviewRequestApi,
+} from "../api/profileReviewRequests";
 
 const STORAGE_KEY = "gcsc_notification_center";
 const REVIEWER_ROLES = ["TEACHER", "ADMIN"];
@@ -28,6 +34,9 @@ const store = reactive({
   achievementReviewRequests: [],
   achievementReviewFetched: false,
   achievementReviewLoading: false,
+  profileReviewRequests: [],
+  profileReviewFetched: false,
+  profileReviewLoading: false,
 });
 
 function ensureLoaded() {
@@ -134,6 +143,17 @@ function upsertAchievementReviewRequest(nextRequest) {
     return;
   }
   store.achievementReviewRequests.splice(index, 1, nextRequest);
+}
+
+function upsertProfileReviewRequest(nextRequest) {
+  const index = store.profileReviewRequests.findIndex(
+    (item) => String(item.id) === String(nextRequest.id),
+  );
+  if (index === -1) {
+    store.profileReviewRequests.unshift(nextRequest);
+    return;
+  }
+  store.profileReviewRequests.splice(index, 1, nextRequest);
 }
 
 function buildReviewEntry(request, user) {
@@ -297,6 +317,33 @@ async function fetchAchievementReviewRequests(force = false) {
   }
 }
 
+async function fetchProfileReviewRequests(force = false) {
+  if (typeof window === "undefined") {
+    return store.profileReviewRequests;
+  }
+  const token = localStorage.getItem("gcsc_token");
+  if (!token) {
+    store.profileReviewRequests = [];
+    store.profileReviewFetched = true;
+    return store.profileReviewRequests;
+  }
+  if (store.profileReviewLoading) {
+    return store.profileReviewRequests;
+  }
+  if (!force && store.profileReviewFetched) {
+    return store.profileReviewRequests;
+  }
+  store.profileReviewLoading = true;
+  try {
+    const { data } = await listProfileReviewRequests();
+    store.profileReviewRequests = Array.isArray(data) ? data : [];
+    store.profileReviewFetched = true;
+    return store.profileReviewRequests;
+  } finally {
+    store.profileReviewLoading = false;
+  }
+}
+
 function createReviewRequest({
   actor,
   resourceType,
@@ -360,28 +407,34 @@ async function submitAchievementReviewRequest({
   return data;
 }
 
-function submitProfileReviewRequest({
+async function submitProfileReviewRequest({
   actor,
   payloadSnapshot = null,
   changes = [],
 }) {
-  return createReviewRequest({
-    actor,
-    resourceType: "profile",
-    action: "update",
+  const { data } = await submitProfileReviewRequestApi({
     title: "个人信息修改待审核",
     summary: `${toDisplayName(actor)} 提交了个人信息修改申请`,
     payloadSnapshot,
     changes,
   });
+  upsertProfileReviewRequest(data);
+  return data;
 }
 
 async function updateReviewRequestStatus({ requestId, status, reviewer, reason = "" }) {
   ensureLoaded();
-  const remoteRequest = store.achievementReviewRequests.find(
-    (item) => String(item.id) === String(requestId),
-  );
-  if (remoteRequest && isRemoteAchievementReview(remoteRequest)) {
+
+  // Check by resourceType explicitly to avoid routing to wrong API
+  const requestType = store.achievementReviewRequests.find(
+    (item) => String(item.id) === String(requestId) && item.resourceType === "achievement",
+  ) ? "achievement" : null;
+
+  const profileType = store.profileReviewRequests.find(
+    (item) => String(item.id) === String(requestId) && item.resourceType === "profile",
+  ) ? "profile" : null;
+
+  if (requestType === "achievement") {
     if (status === "rejected" && !String(reason || "").trim()) {
       throw new Error("驳回时必须填写理由");
     }
@@ -392,6 +445,20 @@ async function updateReviewRequestStatus({ requestId, status, reviewer, reason =
             reason: String(reason || "").trim(),
           });
     upsertAchievementReviewRequest(response.data);
+    return response.data;
+  }
+
+  if (profileType === "profile") {
+    if (status === "rejected" && !String(reason || "").trim()) {
+      throw new Error("驳回时必须填写理由");
+    }
+    const response =
+      status === "approved"
+        ? await approveProfileReviewRequest(requestId)
+        : await rejectProfileReviewRequest(requestId, {
+            reason: String(reason || "").trim(),
+          });
+    upsertProfileReviewRequest(response.data);
     return response.data;
   }
 
@@ -440,11 +507,19 @@ export function useNotifications(userSource) {
   fetchAchievementReviewRequests().catch(() => {
     store.achievementReviewFetched = true;
   });
+  fetchProfileReviewRequests().catch(() => {
+    store.profileReviewFetched = true;
+  });
 
   const currentUser = computed(() => userSource || {});
   const localProfileReviewRequests = computed(() =>
     store.reviewRequests.filter(
       (item) => item.resourceType === "profile" && isReviewVisibleForUser(item, currentUser.value),
+    ),
+  );
+  const remoteProfileReviewRequests = computed(() =>
+    store.profileReviewRequests.filter((item) =>
+      isReviewVisibleForUser(item, currentUser.value),
     ),
   );
   const visibleAchievementReviewRequests = computed(() =>
@@ -456,6 +531,7 @@ export function useNotifications(userSource) {
     [
       ...visibleAchievementReviewRequests.value,
       ...localProfileReviewRequests.value,
+      ...remoteProfileReviewRequests.value,
     ],
   );
   const visibleNotifications = computed(() =>
@@ -499,6 +575,7 @@ export function useNotifications(userSource) {
     reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
     fetchAchievementReviewRequests,
+    fetchProfileReviewRequests,
     submitAchievementReviewRequest,
     submitProfileReviewRequest,
     addNotification,
