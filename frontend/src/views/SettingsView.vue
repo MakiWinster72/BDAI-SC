@@ -101,6 +101,43 @@
           </div>
         </transition>
       </div>
+      <div class="settings-card">
+        <div class="settings-row clickable" @click="toggleLoginHistory">
+          <div class="settings-text">
+            <div class="settings-title">登录历史</div>
+            <div class="settings-subtitle">查看账号的登录记录</div>
+          </div>
+          <svg
+            class="chevron"
+            :class="{ open: showLoginHistory }"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+        <transition name="expand">
+          <div v-if="showLoginHistory" class="settings-expand login-history-list">
+            <div v-if="loginHistoryLoading" class="login-history-loading">加载中...</div>
+            <div v-else-if="loginHistory.length === 0" class="login-history-empty">
+              暂无登录记录
+            </div>
+            <div
+              v-for="(item, index) in loginHistory"
+              :key="index"
+              class="login-history-item"
+            >
+              <div class="login-history-device">{{ item.deviceName }}</div>
+              <div class="login-history-meta">
+                <span class="login-history-ip">{{ item.ipAddress }}</span>
+                <span class="login-history-time">{{ formatTime(item.loginTime) }}</span>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
       <div class="settings-actions">
         <button class="settings-action" type="button" @click="handleLogout">
           退出登录
@@ -153,7 +190,7 @@ import { useStudentPdfExport } from "../composables/useStudentPdfExport";
 import { getMenuLocation, isMenuEnabled } from "../constants/menu";
 import { getStudentProfile } from "../api/profile";
 import { API_BASE } from "../api/request";
-import { changePassword } from "../api/auth";
+import { changePassword, getLoginHistory } from "../api/auth";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 
@@ -165,6 +202,9 @@ const activeMenu = ref("my-info");
 const sidebarOpen = ref(false);
 const showPasswordForm = ref(false);
 const showExportOptions = ref(false);
+const showLoginHistory = ref(false);
+const loginHistory = ref([]);
+const loginHistoryLoading = ref(false);
 const exportDialogOpen = ref(false);
 const passwordForm = reactive({
   oldPassword: "",
@@ -297,6 +337,35 @@ function toggleExportOptions() {
     cancelPasswordChange();
   }
   showExportOptions.value = !showExportOptions.value;
+}
+
+function toggleLoginHistory() {
+  if (!showLoginHistory.value) {
+    showPasswordForm.value = false;
+    showExportOptions.value = false;
+    cancelPasswordChange();
+    loadLoginHistory();
+  }
+  showLoginHistory.value = !showLoginHistory.value;
+}
+
+async function loadLoginHistory() {
+  loginHistoryLoading.value = true;
+  try {
+    const { data } = await getLoginHistory(0, 50);
+    loginHistory.value = data.content || [];
+  } catch {
+    loginHistory.value = [];
+  } finally {
+    loginHistoryLoading.value = false;
+  }
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function cancelPasswordChange() {
@@ -432,6 +501,52 @@ async function handleChangePassword() {
 
 .export-option-button:active {
   transform: scale(0.99);
+}
+
+.login-history-list {
+  gap: 8px;
+}
+
+.login-history-loading,
+.login-history-empty {
+  text-align: center;
+  color: #6a8087;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.login-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(3, 107, 114, 0.08);
+}
+
+.login-history-device {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f4d55;
+}
+
+.login-history-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.login-history-ip {
+  font-size: 12px;
+  color: #5b7680;
+  font-family: monospace;
+}
+
+.login-history-time {
+  font-size: 12px;
+  color: #6a8087;
 }
 
 .expand-enter-active,
