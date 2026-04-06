@@ -15,3 +15,7 @@ export function approveProfileReviewRequest(id) {
 export function rejectProfileReviewRequest(id, data) {
   return request.post(`/api/profile-review-requests/${id}/reject`, data);
 }
+
+export function cancelProfileReviewRequest(id) {
+  return request.delete(`/api/profile-review-requests/${id}`);
+}

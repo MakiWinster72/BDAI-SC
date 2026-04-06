@@ -57,4 +57,13 @@ public class AchievementReviewRequestController {
             achievementReviewRequestService.reject(id, authentication.getName(), request.getReason())
         );
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancel(
+        Authentication authentication,
+        @PathVariable("id") Long id
+    ) {
+        achievementReviewRequestService.cancel(id, authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
 }

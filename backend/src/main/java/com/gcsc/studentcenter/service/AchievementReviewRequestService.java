@@ -119,6 +119,18 @@ public class AchievementReviewRequestService {
         return toResponse(achievementReviewRequestRepository.save(request));
     }
 
+    @Transactional
+    public void cancel(Long requestId, String username) {
+        AchievementReviewRequest request = loadRequest(requestId);
+        if (!"pending".equals(request.getStatus())) {
+            throw new IllegalArgumentException("只能取消待审核的申请");
+        }
+        if (!request.getRequester().getUsername().equals(username)) {
+            throw new IllegalArgumentException("只能取消自己的申请");
+        }
+        achievementReviewRequestRepository.delete(request);
+    }
+
     private AchievementReviewRequestResponse toResponse(AchievementReviewRequest request) {
         return new AchievementReviewRequestResponse(
             request.getId(),

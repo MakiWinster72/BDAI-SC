@@ -8,7 +8,7 @@ import { useNotifications } from "../composables/useNotifications";
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, updateReviewRequestStatus } = useNotifications(profile);
+const { inboxEntries, updateReviewRequestStatus, cancelReviewRequest } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
 const rejectReason = ref("");
@@ -45,6 +45,18 @@ const canProcessSelected = computed(() => {
   }
   return selectedEntry.value.requester?.username !== profile.username;
 });
+
+const canCancelSelected = computed(() => {
+  if (!selectedEntry.value || selectedEntry.value.source !== "review-request") {
+    return false;
+  }
+  if (selectedEntry.value.status !== "pending") {
+    return false;
+  }
+  return selectedEntry.value.requester?.username === profile.username;
+});
+
+const cancelConfirmOpen = ref(false);
 const achievementReviewSnapshot = computed(() =>
   resolveAchievementReviewPayload(selectedEntry.value),
 );
@@ -86,6 +98,7 @@ watch(
     rejectEditorOpen.value = false;
     rejectReason.value = "";
     actionError.value = "";
+    cancelConfirmOpen.value = false;
   },
 );
 
@@ -282,6 +295,28 @@ async function rejectSelectedRequest() {
     actionError.value = error?.message || "处理失败，请稍后重试";
   }
 }
+
+function openCancelConfirm() {
+  cancelConfirmOpen.value = true;
+}
+
+function closeCancelConfirm() {
+  cancelConfirmOpen.value = false;
+}
+
+async function confirmCancelRequest() {
+  if (!selectedEntry.value) {
+    return;
+  }
+  try {
+    await cancelReviewRequest({
+      requestId: selectedEntry.value.id,
+    });
+    cancelConfirmOpen.value = false;
+  } catch (error) {
+    actionError.value = error?.message || "取消失败，请稍后重试";
+  }
+}
 </script>
 
 <template>
@@ -297,10 +332,38 @@ async function rejectSelectedRequest() {
 
     <section v-else-if="selectedEntry" class="notification-detail-card">
       <div class="notification-detail-top">
-        <span class="notification-badge" :class="selectedEntry.badgeClass">
-          {{ selectedEntry.badgeText }}
-        </span>
-        <span class="notification-time">{{ selectedEntry.timeText }}</span>
+        <div class="notification-detail-badges">
+          <span class="notification-badge" :class="selectedEntry.badgeClass">
+            {{ selectedEntry.badgeText }}
+          </span>
+          <span class="notification-time">{{ selectedEntry.timeText }}</span>
+        </div>
+        <div class="notification-detail-actions">
+          <button
+            v-if="canCancelSelected"
+            class="notification-action-btn is-cancel"
+            type="button"
+            @click="openCancelConfirm"
+          >
+            取消申请
+          </button>
+          <template v-if="canProcessSelected">
+            <button
+              class="notification-action-btn is-approve"
+              type="button"
+              @click="approveSelectedRequest"
+            >
+              通过
+            </button>
+            <button
+              class="notification-action-btn is-reject"
+              type="button"
+              @click="toggleRejectEditor"
+            >
+              驳回
+            </button>
+          </template>
+        </div>
       </div>
 
       <h2 class="notification-detail-title">{{ selectedEntry.title }}</h2>
@@ -411,45 +474,58 @@ async function rejectSelectedRequest() {
         <div class="notification-reason-text">{{ selectedEntry.reason }}</div>
       </section>
 
-      <section v-if="canProcessSelected" class="notification-actions-card">
-        <div class="notification-actions">
-          <button
-            class="notification-action is-approve"
-            type="button"
-            @click="approveSelectedRequest"
-          >
-            通过审核
-          </button>
-          <button
-            class="notification-action is-reject"
-            type="button"
-            @click="toggleRejectEditor"
-          >
-            {{ rejectEditorOpen ? "取消驳回" : "驳回申请" }}
-          </button>
-        </div>
-        <div v-if="rejectEditorOpen" class="notification-reject-box">
-          <label class="notification-section-label" for="notification-reject-reason">
-            驳回理由
-          </label>
-          <textarea
-            id="notification-reject-reason"
-            v-model="rejectReason"
-            class="notification-textarea"
-            rows="5"
-            placeholder="请输入驳回原因，学生会在通知详情里看到这条理由。"
-          />
-          <div v-if="actionError" class="notification-error">{{ actionError }}</div>
-          <button
-            class="notification-action is-reject is-submit"
-            type="button"
-            @click="rejectSelectedRequest"
-          >
-            确认驳回
-          </button>
-        </div>
-      </section>
+      <div v-if="canProcessSelected && rejectEditorOpen" class="notification-reject-box">
+        <label class="notification-section-label" for="notification-reject-reason">
+          驳回理由
+        </label>
+        <textarea
+          id="notification-reject-reason"
+          v-model="rejectReason"
+          class="notification-textarea"
+          rows="5"
+          placeholder="请输入驳回原因，学生会在通知详情里看到这条理由。"
+        />
+        <div v-if="actionError" class="notification-error">{{ actionError }}</div>
+        <button
+          class="notification-action is-reject is-submit"
+          type="button"
+          @click="rejectSelectedRequest"
+        >
+          确认驳回
+        </button>
+      </div>
     </section>
+
+    <!-- Cancel Confirmation Modal -->
+    <Teleport to="body">
+      <div :class="['sheet-overlay', { open: cancelConfirmOpen }]" @click.self="closeCancelConfirm">
+        <div class="sheet-modal cancel-confirm-modal">
+          <div class="cancel-confirm-icon">!</div>
+          <h3 class="cancel-confirm-title">取消审核申请</h3>
+          <p class="cancel-confirm-text">
+            取消申请后，修改的内容将不会被保存。<br>
+            请在取消前确认已保存好需要保留的信息。
+          </p>
+          <div v-if="actionError" class="cancel-confirm-error">{{ actionError }}</div>
+          <div class="cancel-confirm-actions">
+            <button
+              class="cancel-confirm-btn is-cancel"
+              type="button"
+              @click="closeCancelConfirm"
+            >
+              返回
+            </button>
+            <button
+              class="cancel-confirm-btn is-confirm"
+              type="button"
+              @click="confirmCancelRequest"
+            >
+              确认取消
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>
 
@@ -494,7 +570,20 @@ async function rejectSelectedRequest() {
   gap: 16px;
 }
 
-.notification-detail-top,
+.notification-detail-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notification-detail-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .notification-actions {
   display: flex;
   align-items: center;
@@ -537,6 +626,50 @@ async function rejectSelectedRequest() {
 .notification-time {
   color: #698188;
   font-size: 12px;
+}
+
+.notification-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notification-action-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notification-action-btn.is-cancel {
+  background: rgba(216, 69, 54, 0.1);
+  color: #a43a2e;
+  border: 1px solid rgba(216, 69, 54, 0.2);
+}
+
+.notification-action-btn.is-cancel:hover {
+  background: rgba(216, 69, 54, 0.18);
+}
+
+.notification-action-btn.is-approve {
+  background: rgba(40, 150, 88, 0.12);
+  color: #236248;
+}
+
+.notification-action-btn.is-approve:hover {
+  background: rgba(40, 150, 88, 0.22);
+}
+
+.notification-action-btn.is-reject {
+  background: rgba(216, 69, 54, 0.1);
+  color: #a43a2e;
+}
+
+.notification-action-btn.is-reject:hover {
+  background: rgba(216, 69, 54, 0.18);
 }
 
 .notification-detail-title {
@@ -758,5 +891,75 @@ async function rejectSelectedRequest() {
   .notification-change-values {
     grid-template-columns: 1fr;
   }
+}
+
+.cancel-confirm-modal {
+  max-width: 320px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.cancel-confirm-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(216, 69, 54, 0.12);
+  color: #a43a2e;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.cancel-confirm-title {
+  color: #0d4047;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.cancel-confirm-text {
+  color: #5a747c;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.cancel-confirm-error {
+  color: #a43a2e;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.cancel-confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancel-confirm-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.cancel-confirm-btn:hover {
+  opacity: 0.85;
+}
+
+.cancel-confirm-btn.is-cancel {
+  background: rgba(0, 0, 0, 0.08);
+  color: #5a747c;
+}
+
+.cancel-confirm-btn.is-confirm {
+  background: #d84536;
+  color: #fff;
 }
 </style>

@@ -109,6 +109,18 @@ public class ProfileReviewRequestService {
         return toResponse(profileReviewRequestRepository.save(request));
     }
 
+    @Transactional
+    public void cancel(Long requestId, String username) {
+        ProfileReviewRequest request = loadRequest(requestId);
+        if (!"pending".equals(request.getStatus())) {
+            throw new IllegalArgumentException("只能取消待审核的申请");
+        }
+        if (!request.getRequester().getUsername().equals(username)) {
+            throw new IllegalArgumentException("只能取消自己的申请");
+        }
+        profileReviewRequestRepository.delete(request);
+    }
+
     private ProfileReviewRequestResponse toResponse(ProfileReviewRequest request) {
         return new ProfileReviewRequestResponse(
             request.getId(),

@@ -57,4 +57,13 @@ public class ProfileReviewRequestController {
             profileReviewRequestService.reject(id, authentication.getName(), request)
         );
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancel(
+        Authentication authentication,
+        @PathVariable("id") Long id
+    ) {
+        profileReviewRequestService.cancel(id, authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
 }

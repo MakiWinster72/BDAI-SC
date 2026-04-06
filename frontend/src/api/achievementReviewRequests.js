@@ -15,3 +15,7 @@ export function approveAchievementReviewRequest(id) {
 export function rejectAchievementReviewRequest(id, data) {
   return request.post(`/api/achievement-review-requests/${id}/reject`, data);
 }
+
+export function cancelAchievementReviewRequest(id) {
+  return request.delete(`/api/achievement-review-requests/${id}`);
+}

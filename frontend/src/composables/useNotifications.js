@@ -1,12 +1,14 @@
 import { computed, reactive } from "vue";
 import {
   approveAchievementReviewRequest,
+  cancelAchievementReviewRequest,
   listAchievementReviewRequests,
   rejectAchievementReviewRequest,
   submitAchievementReviewRequestApi,
 } from "../api/achievementReviewRequests";
 import {
   approveProfileReviewRequest,
+  cancelProfileReviewRequest,
   listProfileReviewRequests,
   rejectProfileReviewRequest,
   submitProfileReviewRequestApi,
@@ -502,6 +504,48 @@ async function updateReviewRequestStatus({ requestId, status, reviewer, reason =
   return request;
 }
 
+async function cancelReviewRequest({ requestId }) {
+  ensureLoaded();
+
+  const requestType = store.achievementReviewRequests.find(
+    (item) => String(item.id) === String(requestId) && item.resourceType === "achievement",
+  ) ? "achievement" : null;
+
+  const profileType = store.profileReviewRequests.find(
+    (item) => String(item.id) === String(requestId) && item.resourceType === "profile",
+  ) ? "profile" : null;
+
+  if (requestType === "achievement") {
+    await cancelAchievementReviewRequest(requestId);
+    store.achievementReviewRequests = store.achievementReviewRequests.filter(
+      (item) => String(item.id) !== String(requestId),
+    );
+    return;
+  }
+
+  if (profileType === "profile") {
+    await cancelProfileReviewRequest(requestId);
+    store.profileReviewRequests = store.profileReviewRequests.filter(
+      (item) => String(item.id) !== String(requestId),
+    );
+    return;
+  }
+
+  // Local request (fallback for backwards compatibility)
+  const request = store.reviewRequests.find((item) => item.id === requestId);
+  if (!request) {
+    throw new Error("审核请求不存在");
+  }
+  if (request.requester?.username !== userSource?.username) {
+    throw new Error("只能取消自己的申请");
+  }
+  if (request.status !== "pending") {
+    throw new Error("只能取消待审核的申请");
+  }
+  store.reviewRequests = store.reviewRequests.filter((item) => item.id !== requestId);
+  persistStore();
+}
+
 export function useNotifications(userSource) {
   ensureLoaded();
   fetchAchievementReviewRequests().catch(() => {
@@ -580,5 +624,6 @@ export function useNotifications(userSource) {
     submitProfileReviewRequest,
     addNotification,
     updateReviewRequestStatus,
+    cancelReviewRequest,
   };
 }
