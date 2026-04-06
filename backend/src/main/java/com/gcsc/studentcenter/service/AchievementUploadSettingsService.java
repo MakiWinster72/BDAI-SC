@@ -301,7 +301,7 @@ public class AchievementUploadSettingsService {
         }
     }
 
-    private List<Map<String, Object>> parseAttachmentList(String rawJson) {
+    private List<? extends Map<String, Object>> parseAttachmentList(String rawJson) {
         if (rawJson == null || rawJson.isBlank()) {
             return List.of();
         }
