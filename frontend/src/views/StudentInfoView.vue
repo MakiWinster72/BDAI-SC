@@ -392,163 +392,14 @@
         </div>
       </section>
 
-      <transition name="publisher-backdrop">
-        <div
-          v-if="exportDialogOpen"
-          class="export-dialog-backdrop"
-          @click="closeExportDialog"
-        ></div>
-      </transition>
-      <section
-        class="export-dialog"
-        :class="{
-          open: exportDialogOpen,
-          closing: exportDialogClosing,
-          split: exportPreviewOpen || exportPreviewClosing,
-        }"
-      >
-        <header class="export-dialog-header">
-          <div class="export-dialog-title">
-            导出信息选择
-            <label class="export-all-toggle">
-              <input
-                type="checkbox"
-                :checked="isAllSelected"
-                @change="toggleAllSelections($event.target.checked)"
-              />
-              <span>全选</span>
-            </label>
-          </div>
-          <button class="ghost-button" type="button" @click="closeExportDialog">
-            关闭
-          </button>
-        </header>
-        <div class="export-dialog-body">
-          <div
-            v-for="group in exportGroups"
-            :key="group.id"
-            class="export-group"
-          >
-            <label class="export-group-title">
-              <span>{{ group.label }}</span>
-              <input
-                type="checkbox"
-                :checked="isGroupSelected(group)"
-                @change="toggleGroupSelection(group, $event.target.checked)"
-              />
-            </label>
-            <div class="export-group-options">
-              <template v-if="group.id === 'family'">
-                <div
-                  v-for="(row, index) in familyRows"
-                  :key="`family-row-${index}`"
-                  class="export-option-row"
-                >
-                  <label
-                    v-for="field in row"
-                    :key="field.key"
-                    class="export-option"
-                  >
-                    <input
-                      v-model="exportSelections[field.key]"
-                      type="checkbox"
-                    />
-                    <span>{{ field.label }}</span>
-                  </label>
-                </div>
-              </template>
-              <template v-else>
-                <label
-                  v-for="field in group.fields"
-                  :key="field.key"
-                  class="export-option"
-                >
-                  <input
-                    v-model="exportSelections[field.key]"
-                    type="checkbox"
-                  />
-                  <span>{{ field.label }}</span>
-                </label>
-              </template>
-            </div>
-          </div>
-        </div>
-        <footer class="export-dialog-actions">
-          <button class="ghost-button" type="button" @click="closeExportDialog">
-            取消
-          </button>
-          <button
-            class="ghost-button"
-            type="button"
-            @click="
-              exportPreviewOpen ? closeExportPreview() : openExportPreview()
-            "
-          >
-            {{ exportPreviewOpen ? "关闭预览" : "预览" }}
-          </button>
-          <button
-            class="action-button export-confirm"
-            type="button"
-            :disabled="exporting"
-            @click="confirmExport"
-          >
-            {{ exporting ? "导出中..." : "确认导出" }}
-          </button>
-        </footer>
-      </section>
-
-      <section
-        class="export-preview-view"
-        :class="{ open: exportPreviewOpen, closing: exportPreviewClosing }"
-        :aria-hidden="!exportPreviewOpen"
-      >
-        <header class="export-preview-header">
-          <div class="export-preview-title">导出预览(仅显示前三人)</div>
-          <button
-            class="ghost-button"
-            type="button"
-            @click="closeExportPreview"
-          >
-            关闭
-          </button>
-        </header>
-        <div class="export-preview-body">
-          <div v-if="previewLoading" class="empty-tip">加载预览中...</div>
-          <div v-else-if="!previewSheets.length" class="empty-tip">
-            暂无可预览内容
-          </div>
-          <div v-else class="export-preview-grid">
-            <table class="export-preview-table">
-              <thead>
-                <tr>
-                  <th v-for="(cell, index) in previewHeader" :key="index">
-                    {{ cell }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, rowIndex) in previewRows" :key="rowIndex">
-                  <td v-for="(cell, cellIndex) in row" :key="cellIndex">
-                    {{ cell }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="export-preview-tabs" v-if="previewSheets.length">
-            <button
-              v-for="sheet in previewSheets"
-              :key="sheet.id"
-              class="export-preview-tab"
-              :class="{ active: sheet.id === previewActiveSheet }"
-              type="button"
-              @click="setPreviewSheet(sheet.id)"
-            >
-              {{ sheet.label }}
-            </button>
-          </div>
-        </div>
-      </section>
+      <StudentExportDialog
+        :open="exportDialogOpen"
+        filename-prefix="students_export"
+        preview-title="导出预览(仅显示前三人)"
+        empty-message="没有获取到学生详情，请稍后再试。"
+        :load-rows="loadExportRows"
+        @close="closeExportDialog"
+      />
 
       <MobileCapsule @open-sidebar="openDashboardSidebar">
         <template #right>
@@ -575,14 +426,9 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
-import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
 import { useRouter } from "vue-router";
 import {
   getMenuLocation,
@@ -595,6 +441,7 @@ import {
 } from "../api/profile";
 import { listAchievements } from "../api/achievement";
 import MobileCapsule from "../components/MobileCapsule.vue";
+import StudentExportDialog from "../components/StudentExportDialog.vue";
 import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
@@ -606,7 +453,6 @@ const API_BASE = "http://localhost:8080";
 const profile = reactive(loadUser());
 const activeMenu = ref("student-info");
 const selectedIds = ref([]);
-const exporting = ref(false);
 const currentPage = ref(1);
 const pageInput = ref(null);
 const students = ref([]);
@@ -621,9 +467,6 @@ const viewItem = ref(null);
 const viewLoading = ref(false);
 const selectAllLoading = ref(false);
 const exportDialogOpen = ref(false);
-const exportDialogClosing = ref(false);
-const exportPreviewOpen = ref(false);
-const exportPreviewClosing = ref(false);
 const gridViewOpen = ref(false);
 const gridLoading = ref(false);
 const gridDetailRows = ref([]);
@@ -635,15 +478,6 @@ const gridFullscreen = ref(false);
 const gridWrapRef = ref(null);
 const gridHasFullDetail = ref(false);
 let gridRequestId = 0;
-const previewActiveSheet = ref("main");
-const previewLoading = ref(false);
-const previewDetailRows = ref([]);
-const previewAchievementData = ref([]);
-let previewRequestId = 0;
-const PDF_FONT_NAME = "HarmonyOSSansSC";
-const PDF_FONT_BLACK = "HarmonyOSSansSCBlack";
-let pdfFontBase64 = null;
-let pdfFontBlackBase64 = null;
 const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
 const sidebarOpen = ref(false);
@@ -893,13 +727,7 @@ const hasActiveFilters = computed(() => {
 });
 
 const pagedStudents = computed(() => students.value);
-const selectedStudents = computed(() => {
-  const idSet = new Set(selectedIds.value.map((id) => String(id)));
-  return students.value.filter((item) => idSet.has(String(item.id)));
-});
-const exportDisabled = computed(
-  () => exporting.value || selectedIds.value.length === 0,
-);
+const exportDisabled = computed(() => selectedIds.value.length === 0);
 const exportLabel = computed(() => {
   const count = selectedIds.value.length;
   return count ? `导出(${count})` : "导出";
@@ -1785,137 +1613,6 @@ watch(
   { deep: true },
 );
 
-const previewStudents = computed(() => previewDetailRows.value);
-const previewSelectedKeys = computed(() => getSelectedExportKeys());
-const previewSheets = computed(() => {
-  const keys = previewSelectedKeys.value;
-  const sheets = [];
-  if (shouldIncludeMainSheet(keys)) {
-    const table = buildStudentTable(previewStudents.value, keys);
-    if (table) {
-      sheets.push({ id: "main", label: "全部", table });
-    }
-  }
-  const educationTable = buildEducationTable(previewStudents.value, keys);
-  if (educationTable) {
-    sheets.push({ id: "education", label: "教育经历", table: educationTable });
-  }
-  const partyTable = buildPartyTable(previewStudents.value, keys);
-  if (partyTable) {
-    sheets.push({ id: "party", label: "团组织与入党信息", table: partyTable });
-  }
-  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-    keys.has(item.selectKey),
-  );
-  if (activeAchievementCategories.length) {
-    const overview = buildAchievementOverview(
-      previewStudents.value,
-      keys,
-      previewAchievementData.value,
-    );
-    sheets.push({
-      id: "achievement-overview",
-      label: "成就总览",
-      table: overview,
-    });
-    activeAchievementCategories.forEach((category) => {
-      const detailTable = buildAchievementDetailTable(
-        category.key,
-        previewAchievementData.value,
-      );
-      sheets.push({
-        id: `achievement-${category.key}`,
-        label: category.label,
-        table: detailTable,
-      });
-    });
-  }
-  return sheets;
-});
-
-const activePreviewTable = computed(() => {
-  const sheet = previewSheets.value.find(
-    (item) => item.id === previewActiveSheet.value,
-  );
-  return sheet?.table || [];
-});
-
-const previewHeader = computed(() => activePreviewTable.value[0] || []);
-const previewRows = computed(() => activePreviewTable.value.slice(1, 6));
-
-watch(previewSheets, (sheets) => {
-  if (!sheets.length) {
-    previewActiveSheet.value = "main";
-    return;
-  }
-  if (!sheets.find((sheet) => sheet.id === previewActiveSheet.value)) {
-    previewActiveSheet.value = sheets[0].id;
-  }
-});
-
-async function refreshPreviewData() {
-  if (!exportPreviewOpen.value) {
-    return;
-  }
-  const ids = selectedIds.value.slice(0, 3);
-  if (!ids.length) {
-    previewDetailRows.value = [];
-    previewAchievementData.value = [];
-    return;
-  }
-  previewLoading.value = true;
-  const requestId = (previewRequestId += 1);
-  try {
-    const results = await Promise.all(
-      ids.map((id) =>
-        getStudentProfileById(id)
-          .then(({ data }) => data || null)
-          .catch(() => null),
-      ),
-    );
-    if (requestId !== previewRequestId) {
-      return;
-    }
-    const detailRows = results.filter(Boolean);
-    previewDetailRows.value = detailRows;
-    const selectedKeys = getSelectedExportKeys();
-    const hasAchievement = ACHIEVEMENT_CATEGORIES.some((item) =>
-      selectedKeys.has(item.selectKey),
-    );
-    if (hasAchievement && detailRows.length) {
-      const achievements = await fetchAchievementsForStudents(detailRows);
-      if (requestId !== previewRequestId) {
-        return;
-      }
-      previewAchievementData.value = achievements;
-    } else {
-      previewAchievementData.value = [];
-    }
-  } finally {
-    if (requestId === previewRequestId) {
-      previewLoading.value = false;
-    }
-  }
-}
-
-watch(exportPreviewOpen, (open) => {
-  if (open) {
-    refreshPreviewData();
-  }
-});
-
-watch(selectedIds, () => {
-  refreshPreviewData();
-});
-
-watch(
-  exportSelections,
-  () => {
-    refreshPreviewData();
-  },
-  { deep: true },
-);
-
 function getSelectedExportKeys() {
   return new Set(
     Object.entries(exportSelections)
@@ -1926,17 +1623,10 @@ function getSelectedExportKeys() {
 
 function openExportDialog() {
   exportDialogOpen.value = true;
-  exportDialogClosing.value = false;
 }
 
 function closeExportDialog() {
   exportDialogOpen.value = false;
-  exportDialogClosing.value = true;
-  exportPreviewOpen.value = false;
-  exportPreviewClosing.value = false;
-  setTimeout(() => {
-    exportDialogClosing.value = false;
-  }, 260);
 }
 
 function isGroupSelected(group) {
@@ -1967,239 +1657,22 @@ function toggleAllSelections(checked) {
   });
 }
 
-function setPreviewSheet(id) {
-  previewActiveSheet.value = id;
-}
-
-function openExportPreview() {
-  exportPreviewOpen.value = true;
-  exportPreviewClosing.value = false;
-}
-
-function closeExportPreview() {
-  exportPreviewOpen.value = false;
-  exportPreviewClosing.value = true;
-  setTimeout(() => {
-    exportPreviewClosing.value = false;
-  }, 260);
-}
-
-async function confirmExport() {
-  const success = await handleExport();
-  if (success) {
-    closeExportDialog();
+async function loadExportRows(limit) {
+  const ids =
+    typeof limit === "number"
+      ? selectedIds.value.slice(0, limit)
+      : [...selectedIds.value];
+  if (!ids.length) {
+    return [];
   }
-}
-
-async function handleExport() {
-  if (exporting.value) {
-    return false;
-  }
-  if (!selectedIds.value.length) {
-    window.alert("请先选择学生再导出。");
-    return false;
-  }
-  exporting.value = true;
-  try {
-    const ids = [...selectedIds.value];
-    const results = await Promise.all(
-      ids.map((id) =>
-        getStudentProfileById(id)
-          .then(({ data }) => data || null)
-          .catch(() => null),
-      ),
-    );
-    const rows = results.filter(Boolean);
-    if (!rows.length) {
-      window.alert("没有获取到学生详情，请稍后再试。");
-      return false;
-    }
-    const workbook = XLSX.utils.book_new();
-    const selectedKeys = getSelectedExportKeys();
-    if (!selectedKeys.size) {
-      window.alert("请选择至少一个导出字段。");
-      return false;
-    }
-    if (shouldIncludeMainSheet(selectedKeys)) {
-      const table = buildStudentTable(rows, selectedKeys);
-      if (table) {
-        const worksheet = XLSX.utils.aoa_to_sheet(table);
-        worksheet["!cols"] = computeColumnWidths(table);
-        XLSX.utils.book_append_sheet(workbook, worksheet, "学生");
-      }
-    }
-    const educationTable = buildEducationTable(rows, selectedKeys);
-    if (educationTable) {
-      const educationSheet = XLSX.utils.aoa_to_sheet(educationTable);
-      educationSheet["!cols"] = computeColumnWidths(educationTable);
-      XLSX.utils.book_append_sheet(workbook, educationSheet, "教育经历");
-    }
-    const partyTable = buildPartyTable(rows, selectedKeys);
-    if (partyTable) {
-      const partySheet = XLSX.utils.aoa_to_sheet(partyTable);
-      partySheet["!cols"] = computeColumnWidths(partyTable);
-      XLSX.utils.book_append_sheet(workbook, partySheet, "团组织与入党信息");
-    }
-    const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-      selectedKeys.has(item.selectKey),
-    );
-    if (activeAchievementCategories.length) {
-      const achievementData = await fetchAchievementsForStudents(rows);
-      const overview = buildAchievementOverview(
-        rows,
-        selectedKeys,
-        achievementData,
-      );
-      const overviewSheet = XLSX.utils.aoa_to_sheet(overview);
-      const baseFieldCount = IDENTITY_FIELDS.filter((field) =>
-        selectedKeys.has(field.key),
-      ).length;
-      activeAchievementCategories.forEach((category, index) => {
-        const cell = XLSX.utils.encode_cell({
-          r: 0,
-          c: baseFieldCount + index,
-        });
-        if (!overviewSheet[cell]) {
-          return;
-        }
-        overviewSheet[cell].l = {
-          Target: `#'${category.label}'!A1`,
-        };
-      });
-      overviewSheet["!cols"] = computeColumnWidths(overview);
-      XLSX.utils.book_append_sheet(workbook, overviewSheet, "成就总览");
-      activeAchievementCategories.forEach((category) => {
-        const detailTable = buildAchievementDetailTable(
-          category.key,
-          achievementData,
-        );
-        const detailSheet = XLSX.utils.aoa_to_sheet(detailTable);
-        detailSheet["!cols"] = computeColumnWidths(detailTable);
-        XLSX.utils.book_append_sheet(workbook, detailSheet, category.label);
-      });
-    }
-    XLSX.writeFile(workbook, `students_export_${formatTimestamp()}.xlsx`, {
-      compression: true,
-    });
-  } catch (error) {
-    const fallbackRows = selectedStudents.value;
-    const csvContent = buildStudentCsv(fallbackRows);
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `students_export_${formatTimestamp()}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-  } finally {
-    exporting.value = false;
-  }
-  return true;
-}
-
-function buildExportTables(rows, selectedKeys, achievementData) {
-  const tables = [];
-  if (shouldIncludeMainSheet(selectedKeys)) {
-    const table = buildStudentTable(rows, selectedKeys);
-    if (table) {
-      tables.push({ title: "全部", table });
-    }
-  }
-  const educationTable = buildEducationTable(rows, selectedKeys);
-  if (educationTable) {
-    tables.push({ title: "教育经历", table: educationTable });
-  }
-  const partyTable = buildPartyTable(rows, selectedKeys);
-  if (partyTable) {
-    tables.push({ title: "团组织与入党信息", table: partyTable });
-  }
-  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-    selectedKeys.has(item.selectKey),
+  const results = await Promise.all(
+    ids.map((id) =>
+      getStudentProfileById(id)
+        .then(({ data }) => data || null)
+        .catch(() => null),
+    ),
   );
-  if (activeAchievementCategories.length) {
-    const overview = buildAchievementOverview(
-      rows,
-      selectedKeys,
-      achievementData,
-    );
-    tables.push({ title: "成就总览", table: overview });
-    activeAchievementCategories.forEach((category) => {
-      const detailTable = buildAchievementDetailTable(
-        category.key,
-        achievementData,
-      );
-      tables.push({ title: category.label, table: detailTable });
-    });
-  }
-  return tables;
-}
-
-async function handleExportPdf() {
-  if (exporting.value) {
-    return;
-  }
-  if (!selectedIds.value.length) {
-    window.alert("请先选择学生再导出。");
-    return;
-  }
-  exporting.value = true;
-  try {
-    const ids = [...selectedIds.value];
-    const results = await Promise.all(
-      ids.map((id) =>
-        getStudentProfileById(id)
-          .then(({ data }) => data || null)
-          .catch(() => null),
-      ),
-    );
-    const rows = results.filter(Boolean);
-    if (!rows.length) {
-      window.alert("没有获取到学生详情，请稍后再试。");
-      return;
-    }
-    const selectedKeys = getSelectedExportKeys();
-    if (!selectedKeys.size) {
-      window.alert("请选择至少一个导出字段。");
-      return;
-    }
-    const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-      selectedKeys.has(item.selectKey),
-    );
-    const achievementData = activeAchievementCategories.length
-      ? await fetchAchievementsForStudents(rows)
-      : [];
-    const tables = buildExportTables(rows, selectedKeys, achievementData);
-    if (!tables.length) {
-      window.alert("没有可导出的内容。");
-      return;
-    }
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: "a4",
-    });
-    await ensurePdfFonts(doc);
-    tables.forEach((item, index) => {
-      if (index > 0) {
-        doc.addPage("a4", "landscape");
-        doc.setFont(PDF_FONT_NAME, "normal");
-      }
-      doc.setFontSize(14);
-      doc.text(item.title, 40, 32);
-      autoTable(doc, {
-        head: [item.table[0] || []],
-        body: item.table.slice(1),
-        startY: 48,
-        styles: { fontSize: 9, cellPadding: 4, font: PDF_FONT_NAME },
-        headStyles: { fillColor: [31, 79, 87], textColor: 255 },
-      });
-    });
-    doc.save(`students_export_${formatTimestamp()}.pdf`);
-  } finally {
-    exporting.value = false;
-  }
+  return results.filter(Boolean);
 }
 
 function buildStudentTable(rows, selectedKeys) {
@@ -2352,65 +1825,6 @@ function buildAchievementDetailTable(categoryKey, achievementData) {
   return [header, ...rows];
 }
 
-function buildStudentCsv(rows) {
-  const header = ["姓名", "年级", "学院", "专业", "班级", "学号"];
-  const lines = [header.map(escapeCsvCell).join(",")];
-  rows.forEach((item) => {
-    const values = [
-      item.name || "",
-      item.gradeYear || "",
-      item.college || "",
-      item.major || "",
-      item.classNo || "",
-      item.studentNo || "",
-    ];
-    lines.push(values.map(escapeCsvCell).join(","));
-  });
-  return `\ufeff${lines.join("\n")}`;
-}
-
-function escapeCsvCell(value) {
-  const text = value == null ? "" : String(value);
-  if (/[",\n]/.test(text)) {
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-  return text;
-}
-
-async function loadPdfFontBase64(url, cacheKey) {
-  if (cacheKey === "regular" && pdfFontBase64) {
-    return pdfFontBase64;
-  }
-  if (cacheKey === "black" && pdfFontBlackBase64) {
-    return pdfFontBlackBase64;
-  }
-  const response = await fetch(url);
-  const buffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
-  }
-  const base64 = btoa(binary);
-  if (cacheKey === "regular") {
-    pdfFontBase64 = base64;
-  } else if (cacheKey === "black") {
-    pdfFontBlackBase64 = base64;
-  }
-  return base64;
-}
-
-async function ensurePdfFonts(doc) {
-  const base64 = await loadPdfFontBase64(harmonyFontUrl, "regular");
-  const blackBase64 = await loadPdfFontBase64(harmonyFontBlackUrl, "black");
-  doc.addFileToVFS("HarmonyOS_Sans_SC_Regular.ttf", base64);
-  doc.addFont("HarmonyOS_Sans_SC_Regular.ttf", PDF_FONT_NAME, "normal");
-  doc.addFileToVFS("HarmonyOS_Sans_SC_Black.ttf", blackBase64);
-  doc.addFont("HarmonyOS_Sans_SC_Black.ttf", PDF_FONT_BLACK, "normal");
-  doc.setFont(PDF_FONT_NAME, "normal");
-}
-
 function formatYesNo(value) {
   if (value === true) {
     return "是";
@@ -2441,18 +1855,6 @@ function formatEducationText(items) {
     })
     .filter(Boolean)
     .join(" | ");
-}
-
-function formatTimestamp() {
-  const now = new Date();
-  const pad = (value) => String(value).padStart(2, "0");
-  const yyyy = now.getFullYear();
-  const mm = pad(now.getMonth() + 1);
-  const dd = pad(now.getDate());
-  const hh = pad(now.getHours());
-  const min = pad(now.getMinutes());
-  const ss = pad(now.getSeconds());
-  return `${yyyy}${mm}${dd}_${hh}${min}${ss}`;
 }
 
 const roleLabelMap = {

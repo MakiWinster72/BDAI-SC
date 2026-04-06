@@ -21,56 +21,104 @@
             <path d="M6 9l6 6 6-6" />
           </svg>
         </div>
+        <transition name="expand">
+          <div v-if="showPasswordForm" class="settings-expand pw-fields">
+            <input
+              v-model="passwordForm.oldPassword"
+              type="password"
+              class="info-input pw-input"
+              placeholder="旧密码"
+            />
+            <input
+              v-model="passwordForm.newPassword"
+              type="password"
+              class="info-input pw-input"
+              placeholder="新密码（6-32位）"
+            />
+            <input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              class="info-input pw-input"
+              placeholder="确认新密码"
+            />
+            <p v-if="passwordError" class="form-tip">{{ passwordError }}</p>
+            <p v-if="passwordSuccess" class="feedback success">
+              {{ passwordSuccess }}
+            </p>
+            <div class="pw-actions">
+              <button
+                class="ghost-button pw-btn"
+                type="button"
+                @click="cancelPasswordChange"
+              >
+                取消
+              </button>
+              <button
+                class="action-button pw-btn"
+                type="button"
+                :disabled="passwordLoading"
+                @click="handleChangePassword"
+              >
+                {{ passwordLoading ? "保存中..." : "保存" }}
+              </button>
+            </div>
+          </div>
+        </transition>
       </div>
-      <transition name="expand">
-        <div v-if="showPasswordForm" class="settings-card pw-fields">
-          <input
-            v-model="passwordForm.oldPassword"
-            type="password"
-            class="info-input pw-input"
-            placeholder="旧密码"
-          />
-          <input
-            v-model="passwordForm.newPassword"
-            type="password"
-            class="info-input pw-input"
-            placeholder="新密码（6-32位）"
-          />
-          <input
-            v-model="passwordForm.confirmPassword"
-            type="password"
-            class="info-input pw-input"
-            placeholder="确认新密码"
-          />
-          <p v-if="passwordError" class="form-tip">{{ passwordError }}</p>
-          <p v-if="passwordSuccess" class="feedback success">
-            {{ passwordSuccess }}
-          </p>
-          <div class="pw-actions">
+      <div class="settings-card">
+        <div class="settings-row clickable" @click="toggleExportOptions">
+          <div class="settings-text">
+            <div class="settings-title">导出信息</div>
+            <div class="settings-subtitle">展开后选择个人信息导出格式</div>
+          </div>
+          <svg
+            class="chevron"
+            :class="{ open: showExportOptions }"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+        <transition name="expand">
+          <div v-if="showExportOptions" class="settings-expand export-options">
             <button
-              class="ghost-button pw-btn"
+              class="export-option-button"
               type="button"
-              @click="cancelPasswordChange"
+              @click="openExcelExportDialog"
             >
-              取消
+              个人信息(Excel)
             </button>
             <button
-              class="action-button pw-btn"
+              class="export-option-button"
               type="button"
-              :disabled="passwordLoading"
-              @click="handleChangePassword"
+              @click="handleExportPdfFromSettings"
             >
-              {{ passwordLoading ? "保存中..." : "保存" }}
+              个人信息(PDF)
             </button>
           </div>
-        </div>
-      </transition>
+        </transition>
+      </div>
       <div class="settings-actions">
         <button class="settings-action" type="button" @click="handleLogout">
           退出登录
         </button>
       </div>
     </section>
+
+    <StudentExportDialog
+      :open="exportDialogOpen"
+      filename-prefix="student_profile_export"
+      preview-title="导出预览"
+      empty-message="没有获取到个人信息，请稍后再试。"
+      :preview-limit="1"
+      :enable-pdf="true"
+      :export-pdf="handleExportPdf"
+      :load-rows="loadExportRows"
+      @close="closeExportDialog"
+    />
 
     <div class="mobile-capsule">
       <div class="capsule-left">
@@ -100,7 +148,10 @@
 <script setup>
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
+import StudentExportDialog from "../components/StudentExportDialog.vue";
+import { useStudentPdfExport } from "../composables/useStudentPdfExport";
 import { getMenuLocation, isMenuEnabled } from "../constants/menu";
+import { getStudentProfile } from "../api/profile";
 import { API_BASE } from "../api/request";
 import { changePassword } from "../api/auth";
 import { navigateWithViewTransition } from "../utils/viewTransition";
@@ -108,10 +159,13 @@ import { useDashboardShell } from "../composables/useDashboardShell";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
+const { exportResumePdf } = useStudentPdfExport();
 const profile = reactive(loadUser());
 const activeMenu = ref("my-info");
 const sidebarOpen = ref(false);
 const showPasswordForm = ref(false);
+const showExportOptions = ref(false);
+const exportDialogOpen = ref(false);
 const passwordForm = reactive({
   oldPassword: "",
   newPassword: "",
@@ -188,6 +242,39 @@ function goToSettings() {
   navigateWithViewTransition(router, "/settings");
 }
 
+function openExportDialog() {
+  exportDialogOpen.value = true;
+}
+
+function closeExportDialog() {
+  exportDialogOpen.value = false;
+}
+
+function openExcelExportDialog() {
+  exportDialogOpen.value = true;
+}
+
+async function loadExportRows() {
+  const { data } = await getStudentProfile();
+  return data ? [data] : [];
+}
+
+async function handleExportPdf(rows) {
+  const student = Array.isArray(rows) ? rows[0] : null;
+  if (!student) {
+    throw new Error("没有获取到个人信息，请稍后再试。");
+  }
+  await exportResumePdf({
+    student,
+    resolveMediaUrl,
+  });
+}
+
+async function handleExportPdfFromSettings() {
+  const rows = await loadExportRows();
+  await handleExportPdf(rows);
+}
+
 function handleLogout() {
   localStorage.removeItem("gcsc_token");
   localStorage.removeItem("gcsc_user");
@@ -195,10 +282,21 @@ function handleLogout() {
 }
 
 function togglePasswordChange() {
+  if (!showPasswordForm.value) {
+    showExportOptions.value = false;
+  }
   showPasswordForm.value = !showPasswordForm.value;
   if (!showPasswordForm.value) {
     cancelPasswordChange();
   }
+}
+
+function toggleExportOptions() {
+  if (!showExportOptions.value) {
+    showPasswordForm.value = false;
+    cancelPasswordChange();
+  }
+  showExportOptions.value = !showExportOptions.value;
 }
 
 function cancelPasswordChange() {
@@ -274,7 +372,13 @@ async function handleChangePassword() {
   transform: rotate(180deg);
 }
 
-.pw-fields {
+.settings-subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6a8087;
+}
+
+.settings-expand {
   display: grid;
   gap: 10px;
   padding-top: 14px;
@@ -282,7 +386,7 @@ async function handleChangePassword() {
   border-top: 1px solid rgba(3, 107, 114, 0.1);
 }
 
-.pw-fields:hover {
+.settings-expand:hover {
   border-color: rgba(3, 107, 114, 0.28);
 }
 
@@ -319,6 +423,35 @@ async function handleChangePassword() {
   border: none !important;
 }
 
+.export-options {
+  gap: 12px;
+}
+
+.export-option-button {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(3, 107, 114, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  color: #0f4d55;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.export-option-button:hover {
+  background: rgba(205, 255, 249, 0.72);
+  border-color: rgba(3, 107, 114, 0.3);
+}
+
+.export-option-button:active {
+  transform: scale(0.99);
+}
+
 .expand-enter-active,
 .expand-leave-active {
   transition:
@@ -338,4 +471,5 @@ async function handleChangePassword() {
 .expand-leave-from {
   max-height: 320px;
 }
+
 </style>
