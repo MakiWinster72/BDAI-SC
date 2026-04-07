@@ -2,8 +2,10 @@
 import { computed, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AchievementReviewSnapshotCard from "../components/AchievementReviewSnapshotCard.vue";
+import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import { API_BASE } from "../api/request";
 import { useNotifications } from "../composables/useNotifications";
+import { searchStudentProfiles, getStudentProfileById } from "../api/profile";
 
 const route = useRoute();
 const router = useRouter();
@@ -56,6 +58,20 @@ const canCancelSelected = computed(() => {
   return selectedEntry.value.requester?.username === profile.username;
 });
 
+const canViewStudentInfo = computed(() => {
+  if (!selectedEntry.value) {
+    return false;
+  }
+  if (!["TEACHER", "ADMIN"].includes(profile.role)) {
+    return false;
+  }
+  return selectedEntry.value.requester?.username;
+});
+
+const studentDetailOpen = ref(false);
+const studentDetailLoading = ref(false);
+const studentDetailItem = ref(null);
+
 const cancelConfirmOpen = ref(false);
 const achievementReviewSnapshot = computed(() =>
   resolveAchievementReviewPayload(selectedEntry.value),
@@ -99,6 +115,7 @@ watch(
     rejectReason.value = "";
     actionError.value = "";
     cancelConfirmOpen.value = false;
+    closeStudentDetail();
   },
 );
 
@@ -317,6 +334,41 @@ async function confirmCancelRequest() {
     actionError.value = error?.message || "取消失败，请稍后重试";
   }
 }
+
+function viewStudentInfo() {
+  const requester = selectedEntry.value?.requester;
+  if (!requester?.username) {
+    return;
+  }
+  studentDetailOpen.value = true;
+  studentDetailLoading.value = true;
+  studentDetailItem.value = null;
+  const keyword = requester.studentNo || requester.username;
+  searchStudentProfiles({ keyword, size: 1 })
+    .then(({ data }) => {
+      const item = data?.items?.[0];
+      if (item?.id) {
+        return getStudentProfileById(item.id);
+      }
+      return Promise.reject(new Error("未找到该学生"));
+    })
+    .then(({ data }) => {
+      studentDetailItem.value = data || null;
+    })
+    .catch(() => {
+      studentDetailItem.value = null;
+    })
+    .finally(() => {
+      studentDetailLoading.value = false;
+    });
+}
+
+function closeStudentDetail() {
+  studentDetailOpen.value = false;
+  setTimeout(() => {
+    studentDetailItem.value = null;
+  }, 450);
+}
 </script>
 
 <template>
@@ -346,6 +398,14 @@ async function confirmCancelRequest() {
             @click="openCancelConfirm"
           >
             取消申请
+          </button>
+          <button
+            v-if="canViewStudentInfo"
+            class="notification-action-btn is-info"
+            type="button"
+            @click="viewStudentInfo"
+          >
+            学生信息
           </button>
           <template v-if="canProcessSelected">
             <button
@@ -526,6 +586,35 @@ async function confirmCancelRequest() {
         </div>
       </div>
     </Teleport>
+
+    <!-- Student Detail Modal -->
+    <Teleport to="body">
+      <div
+        :class="['sheet-overlay', { open: studentDetailOpen }]"
+        @click.self="closeStudentDetail"
+      >
+        <div
+          class="sheet-modal student-detail-modal"
+        >
+          <header class="sheet-modal-header">
+            <div class="sheet-modal-title">学生详情</div>
+            <button class="sheet-modal-close" type="button" @click="closeStudentDetail">
+              关闭
+            </button>
+          </header>
+          <div v-if="studentDetailLoading" class="sheet-modal-loading">加载中...</div>
+          <StudentProfileEditor
+            v-else-if="studentDetailItem"
+            :student="studentDetailItem"
+            :resolve-media-url="resolveMediaUrl"
+            :save-profile="() => Promise.resolve()"
+            :can-edit="false"
+            :show-achievements="false"
+          />
+          <div v-else class="sheet-modal-empty">未找到该学生信息</div>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>
 
@@ -670,6 +759,15 @@ async function confirmCancelRequest() {
 
 .notification-action-btn.is-reject:hover {
   background: rgba(216, 69, 54, 0.18);
+}
+
+.notification-action-btn.is-info {
+  background: rgba(3, 107, 114, 0.1);
+  color: #0f555d;
+}
+
+.notification-action-btn.is-info:hover {
+  background: rgba(3, 107, 114, 0.18);
 }
 
 .notification-detail-title {
@@ -961,5 +1059,57 @@ async function confirmCancelRequest() {
 .cancel-confirm-btn.is-confirm {
   background: #d84536;
   color: #fff;
+}
+
+.student-detail-modal {
+  width: 90%;
+  max-width: 720px;
+  max-height: 85vh;
+  border-radius: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sheet-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(3, 107, 114, 0.1);
+}
+
+.sheet-modal-title {
+  color: #0d4047;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.sheet-modal-close {
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(3, 107, 114, 0.1);
+  color: #0f555d;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sheet-modal-close:hover {
+  background: rgba(3, 107, 114, 0.18);
+}
+
+.sheet-modal-loading,
+.sheet-modal-empty {
+  padding: 40px;
+  text-align: center;
+  color: #5a747c;
+  font-size: 14px;
+}
+
+.sheet-modal :deep(.student-profile-editor) {
+  overflow-y: auto;
+  flex: 1;
 }
 </style>

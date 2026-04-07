@@ -583,7 +583,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
 import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import {
   getMenuLocation,
   isMenuEnabled,
@@ -600,6 +600,7 @@ import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 
 const router = useRouter();
+const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const API_BASE = "http://localhost:8080";
 
@@ -1212,7 +1213,16 @@ function handleViewProfileSaved(data) {
   });
 }
 
-onMounted(() => {
+onMounted(async () => {
+  const keywordParam = route.query.keyword;
+  if (keywordParam && typeof keywordParam === "string") {
+    filters.keyword = keywordParam;
+    await fetchStudents();
+    if (students.value.length === 1) {
+      openDetail(students.value[0]);
+    }
+    return;
+  }
   fetchStudents();
 });
 
