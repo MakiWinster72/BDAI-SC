@@ -825,23 +825,12 @@ async function handleLogin() {
   background: linear-gradient(135deg, #640c72, #3d0770);
   box-shadow: 0 4px 16px rgba(100, 12, 114, 0.38);
   transition: transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
-  overflow: hidden;
-  position: relative;
-}
-.action-button::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(212, 156, 59, 0.28), transparent);
-  transform: translateX(-100%);
-  transition: transform 500ms ease;
 }
 .action-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(100, 12, 114, 0.48);
   filter: brightness(1.05);
 }
-.action-button:hover:not(:disabled)::before { transform: translateX(100%); }
 .action-button:active:not(:disabled) { transform: translateY(0); }
 .action-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
