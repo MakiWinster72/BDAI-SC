@@ -1,16 +1,42 @@
 :root {
-  --bg-deep: #036b72;
-  --bg-mid: #a5ffd6;
-  --bg-soft: #cdfff9;
-  --card: rgba(3, 107, 114, 0.78);
-  --line: rgba(3, 107, 114, 0.18);
-  --text-main: #036b72;
-  --text-sub: #5b6b73;
-  --accent: #036b72;
-  --accent-strong: #036b72;
-  --danger: #b35b6a;
-  --success: #2f8f75;
-  --shadow: 0 22px 50px rgba(3, 107, 114, 0.18);
+  /* ── Purple Primary Theme ── */
+  --primary: #640c72;
+  --primary-light: #9b59b6;
+  --primary-dark: #3d0770;
+  --primary-glow: rgba(100, 12, 114, 0.35);
+  --primary-surface: rgba(100, 12, 114, 0.08);
+
+  /* ── Semantic Aliases (for backward compat) ── */
+  --accent: var(--primary);
+  --accent-strong: var(--primary-dark);
+
+  /* ── Background Tints ── */
+  --bg-deep: #3d0770;
+  --bg-mid: #c77dff;
+  --bg-soft: #f3d5ff;
+
+  /* ── Surface & Glass ── */
+  --card: rgba(255, 255, 255, 0.68);
+  --card-hover: rgba(255, 255, 255, 0.82);
+  --line: rgba(100, 12, 114, 0.14);
+  --line-strong: rgba(100, 12, 114, 0.28);
+
+  /* ── Text ── */
+  --text-main: #3d0770;
+  --text-sub: #7b5094;
+  --text-inverse: #ffffff;
+
+  /* ── Status ── */
+  --danger: #c0392b;
+  --success: #27ae60;
+
+  /* ── Shadows ── */
+  --shadow: 0 22px 60px rgba(100, 12, 114, 0.22);
+  --shadow-sm: 0 8px 24px rgba(100, 12, 114, 0.14);
+  --shadow-glow: 0 0 40px rgba(100, 12, 114, 0.25);
+
+  /* ── Animation ── */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 * {
@@ -26,20 +52,25 @@ body,
 }
 
 body {
-  font-family: "Avenir Next", "SF Pro Display", "Segoe UI", sans-serif;
+  font-family: "DM Sans", "SF Pro Display", "Segoe UI", -apple-system, sans-serif;
   background:
-    radial-gradient(circle at 8% 18%, rgba(3, 107, 114, 0.18), transparent 34%),
+    radial-gradient(circle at 15% 20%, rgba(100, 12, 114, 0.28), transparent 40%),
     radial-gradient(
-      circle at 82% 22%,
-      rgba(165, 255, 214, 0.22),
+      circle at 85% 15%,
+      rgba(199, 125, 255, 0.32),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(100, 12, 114, 0.18),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(155, 89, 182, 0.15),
       transparent 30%
     ),
-    radial-gradient(
-      circle at 45% 75%,
-      rgba(197, 217, 226, 0.35),
-      transparent 28%
-    ),
-    linear-gradient(150deg, var(--bg-soft), var(--bg-mid) 44%, #c5d9e2);
+    linear-gradient(145deg, #f7eeff 0%, #e8d5f7 40%, #dcc8f0 70%, #c9a0dc 100%);
   color: var(--text-main);
 }
 
@@ -56,57 +87,61 @@ body {
 .auth-layout::after {
   content: "";
   position: absolute;
-  width: 34rem;
-  height: 34rem;
+  width: 36rem;
+  height: 36rem;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(90px);
   z-index: 0;
   pointer-events: none;
-  animation: floatOrb 14s ease-in-out infinite;
+  animation: floatOrb 16s ease-in-out infinite;
 }
 
 .auth-layout::before {
-  top: -12rem;
-  left: -8rem;
-  background: rgba(27, 188, 250, 0.36);
+  top: -14rem;
+  left: -9rem;
+  background: rgba(100, 12, 114, 0.38);
 }
 
 .auth-layout::after {
-  bottom: -14rem;
-  right: -7rem;
-  background: rgba(139, 105, 255, 0.28);
-  animation-delay: -5s;
+  bottom: -16rem;
+  right: -8rem;
+  background: rgba(155, 89, 182, 0.32);
+  animation-delay: -7s;
 }
 
 .auth-card {
   position: relative;
   z-index: 1;
   width: min(440px, calc(100vw - 40px));
-  padding: 32px;
-  background: linear-gradient(
-    140deg,
-    rgba(205, 255, 249, 0.72),
-    rgba(197, 217, 226, 0.5)
-  );
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(12px);
-  transform: translateY(12px);
+  padding: 40px 36px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px rgba(100, 12, 114, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transform: translateY(14px);
   opacity: 0;
-  animation: cardEnter 680ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: cardEnter 720ms var(--ease-out) forwards;
 }
 
 .auth-title {
   margin: 0;
-  font-size: 30px;
-  letter-spacing: 0.5px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--primary-dark);
 }
 
 .auth-subtitle {
-  margin: 8px 0 26px;
+  margin: 6px 0 30px;
   color: var(--text-sub);
   font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.1px;
 }
 
 .form-row {
@@ -118,7 +153,9 @@ body {
 .form-label {
   font-size: 13px;
   margin-bottom: 8px;
-  color: #036b72;
+  font-weight: 600;
+  color: var(--primary-dark);
+  letter-spacing: 0.2px;
 }
 
 .form-label small {
@@ -128,57 +165,93 @@ body {
 
 .form-input {
   width: 100%;
-  border: 1px solid rgba(3, 107, 114, 0.24);
-  background: rgba(205, 255, 249, 0.7);
-  color: #036b72;
-  border-radius: 12px;
-  height: 46px;
-  padding: 0 14px;
+  border: 1.5px solid rgba(100, 12, 114, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-main);
+  border-radius: 14px;
+  height: 48px;
+  padding: 0 16px;
   outline: none;
-  font-size: 16px;
+  font-size: 15px;
   -webkit-appearance: none;
   appearance: none;
   transition:
-    border-color 220ms ease,
-    background-color 220ms ease;
+    border-color 240ms ease,
+    background-color 240ms ease,
+    box-shadow 240ms ease;
 }
 
 .form-input:focus {
-  border-color: rgba(3, 107, 114, 0.9);
-  background: rgba(205, 255, 249, 0.95);
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
 }
 
 .form-input::placeholder {
-  color: rgba(3, 107, 114, 0.45);
+  color: rgba(100, 12, 114, 0.38);
 }
 
 .action-button {
-  margin-top: 6px;
+  margin-top: 8px;
   position: relative;
   border: 0;
   width: 100%;
-  height: 48px;
-  border-radius: 12px;
+  height: 50px;
+  border-radius: 14px;
   color: #ffffff;
   font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  background: #036b72;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  box-shadow:
+    0 4px 16px rgba(100, 12, 114, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition:
     transform 220ms ease,
     box-shadow 220ms ease,
-    background-color 220ms ease;
+    filter 220ms ease;
+  overflow: hidden;
+}
+
+.action-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+  transition: left 500ms ease;
 }
 
 .action-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(3, 107, 114, 0.35);
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 28px rgba(100, 12, 114, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  filter: brightness(1.05);
+}
+
+.action-button:hover::before {
+  left: 100%;
+}
+
+.action-button:active {
+  transform: translateY(0px);
+  box-shadow: 0 2px 10px rgba(100, 12, 114, 0.3);
 }
 
 .action-button:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
   box-shadow: none;
+  filter: none;
 }
 
 .feedback {
@@ -188,30 +261,34 @@ body {
 }
 
 .feedback.error {
-  color: #b35b6a;
+  color: var(--danger);
 }
 
 .feedback.success {
-  color: #2f8f75;
+  color: var(--success);
 }
 
 .switch-line {
-  margin-top: 20px;
+  margin-top: 22px;
   text-align: center;
-  font-size: 13px;
-  color: #6d7b82;
+  font-size: 13.5px;
+  color: var(--text-sub);
 }
 
 .switch-link {
-  color: #036b72;
+  color: var(--primary);
   margin-left: 4px;
+  font-weight: 600;
   text-decoration: none;
   border-bottom: 1px solid transparent;
-  transition: border-color 220ms ease;
+  transition:
+    border-color 220ms ease,
+    color 220ms ease;
 }
 
 .switch-link:hover {
-  border-color: #036b72;
+  color: var(--primary-dark);
+  border-color: var(--primary);
 }
 
 @keyframes cardEnter {
@@ -256,12 +333,12 @@ body {
   }
 
   .auth-card {
-    padding: 24px 20px;
-    border-radius: 20px;
+    padding: 28px 22px;
+    border-radius: 22px;
   }
 
   .auth-title {
-    font-size: 26px;
+    font-size: 24px;
   }
 }
 
@@ -272,11 +349,11 @@ body {
 
   .auth-card {
     width: 100%;
-    padding: 20px 16px;
+    padding: 24px 18px;
   }
 
   .auth-subtitle {
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 }
 
