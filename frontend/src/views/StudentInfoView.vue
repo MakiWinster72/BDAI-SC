@@ -6,35 +6,54 @@
 
     <section class="info-shell student-right-stack">
       <section v-show="!gridFullscreen" class="info-card student-filter-card">
-        <div class="student-filter-header">
-          <div class="info-section-title">搜索</div>
-          <input
-            v-model="filters.keyword"
-            class="info-input student-search"
-            type="text"
-            placeholder="搜索姓名 / 班别 / 学院 / 学号"
-          />
-          <button
-            class="student-grid-toggle"
-            type="button"
-            @click="toggleGridView"
-            :title="gridViewOpen ? '切换列表视图' : '切换表格视图'"
-          >
-            <span class="grid-toggle-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path
-                  d="M7 7h10v3h2V5H5v5h2V7zm10 10H7v-3H5v5h14v-5h-2v3zM9 10l-3 2 3 2v-4zm6 4 3-2-3-2v4z"
-                  fill="currentColor"
-                />
-              </svg>
-            </span>
-            {{ gridViewOpen ? "切换列表" : "切换表格" }}
-          </button>
+        <div class="student-filter-toolbar">
+          <div class="student-filter-intro">
+            <div class="info-section-title">搜索与筛选</div>
+            <div class="student-filter-caption">
+              {{ hasActiveFilters ? "已应用筛选条件" : "按姓名、学号、班级快速定位学生" }}
+            </div>
+          </div>
+          <div class="student-filter-search-wrap">
+            <input
+              v-model="filters.keyword"
+              class="info-input student-search"
+              type="text"
+              placeholder="搜索姓名 / 班别 / 学院 / 学号"
+            />
+          </div>
+          <div class="student-filter-toolbar-actions">
+            <button
+              v-if="hasActiveFilters"
+              class="student-filter-reset"
+              type="button"
+              @click="resetFilters"
+            >
+              清空筛选
+            </button>
+            <button
+              class="student-grid-toggle"
+              type="button"
+              @click="toggleGridView"
+              :title="gridViewOpen ? '切换列表视图' : '切换表格视图'"
+            >
+              <span class="grid-toggle-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path
+                    d="M7 7h10v3h2V5H5v5h2V7zm10 10H7v-3H5v5h14v-5h-2v3zM9 10l-3 2 3 2v-4zm6 4 3-2-3-2v4z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              {{ gridViewOpen ? "切换列表" : "切换表格" }}
+            </button>
+          </div>
         </div>
-        <div v-if="!gridViewOpen" class="student-filter-grid">
-          <div class="student-filter-row">
-            <div class="student-filter-field">
-              <span class="info-label">年级</span>
+        <div v-if="!gridViewOpen" class="student-filter-body">
+          <div class="student-filter-grid">
+            <div class="student-filter-panel student-filter-field-year">
+              <div class="student-filter-panel-head">
+                <span class="info-label">年级</span>
+              </div>
               <select v-model="filters.classYear" class="info-input">
                 <option value="">全部</option>
                 <option
@@ -46,11 +65,11 @@
                 </option>
               </select>
             </div>
-          </div>
 
-          <div class="student-filter-row">
-            <div class="student-filter-field">
-              <span class="info-label">专业</span>
+            <div class="student-filter-panel student-filter-field-major">
+              <div class="student-filter-panel-head">
+                <span class="info-label">专业</span>
+              </div>
               <select v-model="filters.major" class="info-input">
                 <option value="">全部</option>
                 <option
@@ -62,11 +81,11 @@
                 </option>
               </select>
             </div>
-          </div>
 
-          <div class="student-filter-row">
-            <div class="student-filter-field">
-              <span class="info-label">班级</span>
+            <div class="student-filter-panel student-filter-field-class">
+              <div class="student-filter-panel-head">
+                <span class="info-label">班级</span>
+              </div>
               <div class="student-stepper">
                 <button
                   class="stepper-button"
@@ -96,15 +115,20 @@
             </div>
           </div>
 
-          <div class="student-filter-row student-filter-inline">
-            <label class="info-choice">
-              <input v-model="filters.isHkMoTw" type="checkbox" />
-              港澳台
-            </label>
-            <label class="info-choice">
-              <input v-model="filters.isSpecial" type="checkbox" />
-              特殊学生
-            </label>
+          <div class="student-filter-meta">
+            <div class="student-filter-flags">
+              <label class="info-choice">
+                <input v-model="filters.isHkMoTw" type="checkbox" />
+                港澳台
+              </label>
+              <label class="info-choice">
+                <input v-model="filters.isSpecial" type="checkbox" />
+                特殊学生
+              </label>
+            </div>
+            <div class="student-filter-status">
+              {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
+            </div>
           </div>
         </div>
         <div v-if="gridViewOpen" class="student-grid-tabs">
@@ -172,6 +196,9 @@
             :pagination-page-size="100"
             :suppress-cell-focus="true"
           />
+        </div>
+        <div v-else-if="loading" class="empty-tip student-results-loading">
+          加载学生信息中...
         </div>
         <div v-else-if="pagedStudents.length" class="student-list">
           <div v-for="item in pagedStudents" :key="item.id" class="student-row">
@@ -1108,6 +1135,15 @@ function incrementClass() {
   filters.classNo = String(current + 1);
 }
 
+function resetFilters() {
+  filters.classYear = "";
+  filters.major = "";
+  filters.classNo = "";
+  filters.isHkMoTw = false;
+  filters.isSpecial = false;
+  filters.keyword = "";
+}
+
 function buildSearchParams(page, size) {
   const params = {
     page,
@@ -1960,9 +1996,12 @@ function loadUser() {
 
 <style scoped>
 .student-filter-card {
-  gap: 18px;
+  gap: 16px;
   position: relative;
   z-index: 40;
+  padding: 0 0 18px;
+  border-bottom: none;
+  min-height: 0;
 }
 
 .student-right-stack {
@@ -1970,33 +2009,98 @@ function loadUser() {
   gap: 14px;
 }
 
-.student-filter-header {
-  display: flex;
+.student-filter-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 1.15fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(3, 107, 114, 0.12);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(226, 244, 241, 0.82)
+    );
+  box-shadow: 0 12px 26px rgba(3, 107, 114, 0.08);
+}
+
+.student-filter-intro {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.student-filter-caption {
+  font-size: 13px;
+  color: #5c727b;
+  line-height: 1.45;
+}
+
+.student-filter-search-wrap {
+  min-width: 0;
+}
+
+.student-filter-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
   flex-wrap: wrap;
+}
+
+.student-filter-reset {
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(3, 107, 114, 0.16);
+  background: rgba(255, 255, 255, 0.86);
+  color: #325d65;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.student-filter-reset:hover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(3, 107, 114, 0.28);
+  color: #0f4d55;
+}
+
+.student-filter-body {
+  display: grid;
+  gap: 14px;
+  padding: 0 18px;
 }
 
 .student-grid-toggle {
   border: none;
-  background: rgba(3, 107, 114, 0.08);
-  color: #036b72;
-  padding: 0 12px;
-  height: 36px;
+  background: linear-gradient(135deg, #0a8a94 0%, #0d6b73 100%);
+  color: #fff;
+  padding: 0 16px;
+  height: 40px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 8px 18px rgba(10, 107, 116, 0.22);
   transition:
-    background 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
     transform 0.2s ease;
 }
 
 .student-grid-toggle:hover {
-  background: rgba(3, 107, 114, 0.16);
+  box-shadow: 0 10px 20px rgba(10, 107, 116, 0.28);
+  filter: saturate(1.04);
 }
 
 .student-grid-toggle:active {
@@ -2199,28 +2303,50 @@ function loadUser() {
 }
 
 .student-search {
-  min-width: 220px;
+  min-width: 0;
+  width: 100%;
+  height: 42px;
+}
+
+.student-filter-panel {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  min-width: 0;
+  border-radius: 18px;
+  border: 1px solid rgba(3, 107, 114, 0.1);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.student-filter-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 20px;
 }
 
 .student-filter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
-
-.student-filter-row {
-  display: grid;
-  gap: 10px;
-}
-
-.student-filter-two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px 16px;
+  align-items: end;
 }
 
 .student-filter-field {
-  display: grid;
-  gap: 8px;
+  min-width: 0;
+}
+
+.student-filter-field-year {
+  grid-column: span 3;
+}
+
+.student-filter-field-major {
+  grid-column: span 5;
+}
+
+.student-filter-field-class {
+  grid-column: span 4;
 }
 
 .student-stepper {
@@ -2257,17 +2383,49 @@ function loadUser() {
   margin: 0;
 }
 
-.student-filter-inline {
+.student-filter-flags {
   display: flex;
-  gap: 18px;
+  gap: 10px 18px;
   align-items: center;
-  grid-column: 1 / -1;
+  flex-wrap: wrap;
+}
+
+.student-filter-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 2px 4px 0;
+}
+
+.student-filter-status {
+  color: #607881;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 980px) {
+  .student-filter-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .student-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-filter-field-year,
+  .student-filter-field-major,
+  .student-filter-field-class {
+    grid-column: auto;
+  }
 }
 
 .student-results-card {
   gap: 16px;
   position: relative;
   z-index: 1;
+  min-height: 420px;
 }
 
 .student-results-header {
@@ -2288,6 +2446,12 @@ function loadUser() {
 .student-list {
   display: grid;
   gap: 10px;
+}
+
+.student-results-loading {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
 }
 
 .student-row {
@@ -2862,17 +3026,32 @@ function loadUser() {
     gap: 10px;
   }
 
-  .student-filter-header {
+  .student-filter-card {
+    padding-bottom: 14px;
+  }
+
+  .student-filter-toolbar {
+    grid-template-columns: 1fr;
     gap: 8px;
+    padding: 14px;
   }
 
   .student-search {
-    min-width: 0;
     width: 100%;
+  }
+
+  .student-filter-body {
+    padding: 0 14px;
   }
 
   .student-filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .student-filter-field-year,
+  .student-filter-field-major,
+  .student-filter-field-class {
+    grid-column: auto;
   }
 
   .student-results-header {
@@ -2959,10 +3138,6 @@ function loadUser() {
     padding: 14px;
   }
 
-  .student-filter-header {
-    gap: 8px;
-  }
-
   .student-grid-toggle {
     height: 34px;
     padding: 0 10px;
@@ -2974,8 +3149,17 @@ function loadUser() {
     flex-wrap: wrap;
   }
 
-  /* 隐藏 filter-header 里的切换按钮（已移至胶囊） */
-  .student-filter-header .student-grid-toggle {
+  .student-filter-toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .student-filter-reset {
+    height: 34px;
+    font-size: 12px;
+  }
+
+  /* 隐藏 toolbar 里的切换按钮（已移至胶囊） */
+  .student-filter-toolbar .student-grid-toggle {
     display: none;
   }
 
