@@ -57,10 +57,7 @@
           aria-label="设置"
           @click="$emit('settings-click')"
         >
-          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
-            <path d="M10 2v1.5M10 16.5V18M18 10h-1.5M3.5 10H2M16.24 3.76l-1.06 1.06M4.82 15.18l-1.06 1.06M16.24 16.24l-1.06-1.06M4.82 4.82L3.76 3.76" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
+          <img src="/assets/icons/settings.svg" alt="设置" class="settings-icon" />
         </button>
       </div>
     </div>
@@ -303,9 +300,10 @@ function resolveMediaUrl(url) {
   color: rgba(255, 255, 255, 0.9);
 }
 
-.chip-btn--ghost svg {
+.settings-icon {
   width: 15px;
   height: 15px;
   flex-shrink: 0;
+  filter: brightness(0) invert(1);
 }
 </style>
