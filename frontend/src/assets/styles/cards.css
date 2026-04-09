@@ -43,6 +43,7 @@
   grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
   height: 100%;
+  box-shadow: none;
 }
 
 .menu-card-header {
