@@ -14,16 +14,22 @@
 }
 
 /* ── Global Elements ──────────────────────────────────── */
-html,
-body,
-#app {
+html {
   margin: 0;
   width: 100%;
-  min-height: 100%;
+  min-height: 100%; /* 内容不满一屏时填满，内容溢出时自然延伸 */
+  /* 禁止 Safari 过度滚动橡胶带 */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%; /* 继承 html 的 100%，不满一屏时也填满；内容超出时随内容撑高 */
   font-family: "DM Sans", "SF Pro Display", "Segoe UI", -apple-system, sans-serif;
+  color: var(--text-main);
+  /* 渐变写在 body 上，内容超出一屏时背景跟着向下延伸 */
   background:
     radial-gradient(circle at 15% 20%, rgba(100, 12, 114, 0.28), transparent 40%),
     radial-gradient(
@@ -42,7 +48,12 @@ body {
       transparent 30%
     ),
     linear-gradient(145deg, #f7eeff 0%, #e8d5f7 40%, #dcc8f0 70%, #c9a0dc 100%);
-  color: var(--text-main);
+}
+
+#app {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
 }
 
 /* ── Keyframe Animations ───────────────────────────────── */
