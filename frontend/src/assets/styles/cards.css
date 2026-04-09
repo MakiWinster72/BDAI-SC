@@ -205,13 +205,13 @@
 }
 
 .menu-item {
-  border: 0;
+  border: 1.5px solid transparent;
   border-radius: 16px;
   min-height: 68px;
   background: rgba(255, 255, 255, 0.55);
   color: var(--text-main);
   text-align: left;
-  padding: 14px 16px;
+  padding: 13px 15px;
   cursor: pointer;
   display: grid;
   gap: 4px;
@@ -219,7 +219,7 @@
   transition:
     background-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
     color 180ms ease,
-    box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms ease,
     transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -237,15 +237,12 @@
 
 .menu-item:hover:not(.disabled):not(.active) {
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: var(--shadow-sm);
+  border-color: var(--primary);
 }
 
 .menu-item.active {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: #fff;
-  box-shadow:
-    0 8px 20px rgba(100, 12, 114, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .menu-item-label {
