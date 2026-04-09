@@ -26,19 +26,20 @@
   --accent-strong: var(--primary-dark);
 
   /* ── Background Tints ── */
+  --bg-base: #f7f4fa; /* 全局中性底色（login 以外的所有页面） */
   --bg-deep: #3d0770;
   --bg-mid: #c77dff;
   --bg-soft: #f3d5ff;
 
   /* ── Surface & Glass ── */
-  --card: rgba(255, 255, 255, 0.68);
-  --card-hover: rgba(255, 255, 255, 0.82);
-  --line: rgba(100, 12, 114, 0.14);
-  --line-strong: rgba(100, 12, 114, 0.28);
+  --card: rgba(255, 255, 255, 0.78);
+  --card-hover: rgba(255, 255, 255, 0.92);
+  --line: rgba(100, 12, 114, 0.12);
+  --line-strong: rgba(100, 12, 114, 0.22);
 
   /* ── Text ── */
-  --text-main: #3d0770;
-  --text-sub: #7b5094;
+  --text-main: #2d1a3e;
+  --text-sub: #7b5a94;
   --text-inverse: #ffffff;
 
   /* ── Status ── */
@@ -46,8 +47,8 @@
   --success: #27ae60;
 
   /* ── Shadows ── */
-  --shadow: 0 22px 60px rgba(100, 12, 114, 0.22);
-  --shadow-sm: 0 8px 24px rgba(100, 12, 114, 0.14);
+  --shadow: 0 8px 32px rgba(100, 12, 114, 0.10);
+  --shadow-sm: 0 4px 16px rgba(100, 12, 114, 0.08);
   --shadow-glow: 0 0 40px rgba(100, 12, 114, 0.25);
 
   /* ── Animation ── */

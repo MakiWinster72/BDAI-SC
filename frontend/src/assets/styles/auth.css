@@ -18,6 +18,25 @@
   display: grid;
   place-items: center;
   overflow: hidden;
+  /* 登录/注册专用紫色渐变，承载光晕装饰球 */
+  background:
+    radial-gradient(circle at 15% 20%, rgba(100, 12, 114, 0.28), transparent 40%),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(199, 125, 255, 0.32),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(100, 12, 114, 0.18),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(155, 89, 182, 0.15),
+      transparent 30%
+    ),
+    linear-gradient(145deg, #f7eeff 0%, #e8d5f7 40%, #dcc8f0 70%, #c9a0dc 100%);
 }
 
 .auth-layout::before,

@@ -4,8 +4,9 @@
  * 包含内容:
  * - CSS Reset: box-sizing 重置
  * - Global Elements: html, body, #app 基础样式
- * - Body Background: 渐变背景
  * - Keyframe Animations: cardEnter, floatOrb, glowMove
+ *
+ * 注意: 全局底色为中性 #f7f4fa；登录/注册页的紫色渐变定义在 auth.css
  */
 
 /* ── CSS Reset ─────────────────────────────────────────── */
@@ -18,29 +19,11 @@ html {
   margin: 0;
   width: 100%;
   min-height: 100%;
-  /* 阻止 Safari 弹性过度滚动露出白色背景 */
+  /* 阻止 Safari 弹性过度滚动露出 */
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  /* 背景随内容滚动，内容超出一屏时渐变跟着向下延伸 */
-  background-attachment: scroll;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(100, 12, 114, 0.28), transparent 40%),
-    radial-gradient(
-      circle at 85% 15%,
-      rgba(199, 125, 255, 0.32),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at 50% 80%,
-      rgba(100, 12, 114, 0.18),
-      transparent 40%
-    ),
-    radial-gradient(
-      circle at 80% 80%,
-      rgba(155, 89, 182, 0.15),
-      transparent 30%
-    ),
-    linear-gradient(145deg, #f7eeff 0%, #e8d5f7 40%, #dcc8f0 70%, #c9a0dc 100%);
+  /* 纯色中性底色；登录/注册页的紫色光晕由 auth-layout 自己承载 */
+  background-color: #f7f4fa;
 }
 
 body {
