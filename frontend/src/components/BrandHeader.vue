@@ -1,5 +1,5 @@
 <template>
-  <header class="brand-header">
+  <header class="brand-header" ref="headerRef">
     <!-- Left: Logo + Wordmark -->
     <div class="brand-logo-group">
       <img
@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { API_BASE } from "../api/request";
 
 const props = defineProps({
@@ -76,6 +76,48 @@ const props = defineProps({
 });
 
 defineEmits(["settings-click", "menu-click"]);
+
+const headerRef = ref(null);
+const isHidden = ref(false);
+
+// Scroll-out threshold: 20% of viewport height
+const SCROLL_THRESHOLD = 0.2; // 20vh
+
+function onScroll() {
+  const scrollY = window.scrollY;
+  const vh = window.innerHeight;
+
+  // Phase 1: scrolling 0 → THRESHOLD — header stays visible (sticky)
+  // Phase 2: scrolling THRESHOLD → 100vh — header slides out proportionally
+  const progress = Math.min(1, scrollY / vh - SCROLL_THRESHOLD) / (1 - SCROLL_THRESHOLD);
+
+  if (!headerRef.value) return;
+
+  if (progress >= 1) {
+    // Fully scrolled past — snap to hidden
+    headerRef.value.style.transform = "translateY(-100%)";
+    headerRef.value.style.opacity = "0";
+    isHidden.value = true;
+  } else if (progress > 0) {
+    // Scroll-linked slide-out
+    headerRef.value.style.transform = `translateY(-${progress * 100}%)`;
+    headerRef.value.style.opacity = `${1 - progress}`;
+    isHidden.value = false;
+  } else {
+    // Initial sticky zone
+    headerRef.value.style.transform = "";
+    headerRef.value.style.opacity = "";
+    isHidden.value = false;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("scroll", onScroll, { passive: true });
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", onScroll);
+});
 
 const avatarText = computed(() => {
   const name = props.profile.displayName || props.profile.username || "同学";
@@ -104,9 +146,15 @@ function resolveMediaUrl(url) {
   padding: 0 28px;
   height: 72px;
   background: linear-gradient(135deg, #1a0a2e 0%, #2d1050 50%, #5c0f7a 100%);
-  border-bottom: 1px solid rgba(212, 156, 59, 0.15);
+  border: 1px solid rgba(212, 156, 59, 0.15);
+  border-radius: 20px;
   position: relative;
   overflow: hidden;
+  z-index: 10;
+  /* GPU 加速，避免重排 */
+  will-change: transform, opacity;
+  /* 隐出末段的微淡 */
+  transition: opacity 60ms ease;
 }
 
 /* Subtle top highlight line */
