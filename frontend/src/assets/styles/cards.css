@@ -235,7 +235,7 @@
   gap: 12px;
 }
 
-.menu-item:hover:not(.disabled) {
+.menu-item:hover:not(.disabled):not(.active) {
   background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow-sm);
 }
@@ -309,7 +309,7 @@
   transform: scale(0.97);
 }
 
-.menu-subitem:hover {
+.menu-subitem:hover:not(.active) {
   background: rgba(255, 255, 255, 0.75);
   box-shadow: var(--shadow-sm);
   color: var(--text-main);
@@ -354,6 +354,12 @@
 
 .menu-notification-tab:active {
   transform: scale(0.96);
+}
+
+.menu-notification-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: var(--line-strong);
+  color: var(--primary-dark);
 }
 
 .menu-notification-tab.active {
@@ -408,7 +414,7 @@
   transform: scale(0.98);
 }
 
-.menu-notification-item:hover {
+.menu-notification-item:hover:not(.active) {
   background: rgba(255, 255, 255, 0.78);
   box-shadow: var(--shadow-sm);
 }
