@@ -8,7 +8,7 @@
       @settings-click="goToSettings"
     />
 
-    <div class="dashboard-layout">
+    <div class="dashboard-layout" :class="{ 'dashboard-layout-embedded': isEmbedded }">
       <DashboardSidebar
         v-if="!isEmbedded"
         :profile="profile"

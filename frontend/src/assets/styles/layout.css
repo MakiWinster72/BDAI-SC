@@ -67,6 +67,12 @@
 
 .dashboard-right {
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.dashboard-layout-embedded {
+  grid-template-columns: 1fr !important;
 }
 
 /* ── Mobile Sidebar Backdrop ────────────────────────────── */
