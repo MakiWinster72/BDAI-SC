@@ -22,6 +22,10 @@
 
       <RouterView />
     </div>
+
+    <div style="margin-top: auto">
+      <AppFooter />
+    </div>
   </div>
 </template>
 
@@ -30,6 +34,7 @@ import { computed, provide, reactive, ref, watch } from "vue";
 import { RouterView, useRoute, useRouter } from "vue-router";
 import BrandHeader from "../components/BrandHeader.vue";
 import DashboardSidebar from "../components/DashboardSidebar.vue";
+import AppFooter from "../components/AppFooter.vue";
 import {
   getActiveMenuFromRoute,
   getMenuLocation,
