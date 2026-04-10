@@ -750,6 +750,7 @@
 .achievement-fields > .achievement-hint,
 .achievement-fields > .empty-tip,
 .achievement-fields > .achievement-dynamic-fields,
+.achievement-fields > .achievement-attachments-panel,
 .achievement-fields > .achievement-actions {
   grid-column: 1 / -1;
 }
