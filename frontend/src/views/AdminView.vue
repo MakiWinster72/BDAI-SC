@@ -184,189 +184,205 @@ onMounted(() => {
       <h1 class="feed-title">后台管理</h1>
     </header>
 
-    <section class="admin-nav">
+    <!-- Category Tabs -->
+    <nav class="admin-tabs" role="tablist">
       <button
-        class="admin-nav-item"
+        class="admin-tab"
         :class="{ active: activeSection === 'upload' }"
+        role="tab"
+        :aria-selected="activeSection === 'upload'"
         type="button"
         @click="switchSection('upload')"
       >
-        <div class="admin-nav-title">上传限制</div>
-        <div class="admin-nav-note">
-          {{ activeSection === "upload" ? "当前栏目" : "切换查看" }}
-        </div>
+        <svg class="admin-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        上传限制
       </button>
       <button
-        class="admin-nav-item"
+        class="admin-tab"
         :class="{ active: activeSection === 'review' }"
+        role="tab"
+        :aria-selected="activeSection === 'review'"
         type="button"
         @click="switchSection('review')"
       >
-        <div class="admin-nav-title">审核</div>
-        <div class="admin-nav-note">
-          {{ activeSection === "review" ? "当前栏目" : "切换查看" }}
-        </div>
+        <svg class="admin-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        审核策略
       </button>
-    </section>
+    </nav>
 
-    <section v-if="activeSection === 'upload'" class="admin-panel-grid">
-      <article class="admin-panel admin-form-panel">
-        <div class="admin-panel-head">
-          <div>
-            <div class="admin-panel-kicker">系统设置</div>
-            <h3 class="admin-panel-title">成就页面上传限制</h3>
-          </div>
-          <div v-if="activeLoading" class="admin-panel-status">加载中...</div>
+    <!-- Upload Section -->
+    <div v-if="activeSection === 'upload'" class="admin-panel-grid">
+      <!-- Form Card -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-kicker">系统设置</div>
+          <h2 class="admin-card-title">成就页面上传限制</h2>
         </div>
+        <div class="admin-card-body">
 
-        <div class="admin-setting-block">
-          <div class="admin-setting-heading">
-            <div class="admin-setting-index">01</div>
-            <div>
-              <div class="admin-setting-title">图片设置</div>
+          <!-- Image Block -->
+          <div class="admin-block">
+            <div class="admin-block-heading">
+              <span class="admin-block-index">01</span>
+              <span class="admin-block-title">图片设置</span>
             </div>
-          </div>
-          <div class="admin-form-list two-cols">
-            <label class="admin-field">
-              <span class="admin-field-label">最多上传图片数</span>
-              <span class="admin-field-hint">决定用户一次最多可添加多少张图片</span>
-              <div class="admin-input-wrap">
-                <input
-                  v-model.number="form.imageMaxCount"
-                  class="admin-input"
-                  type="number"
-                  min="1"
-                  max="9"
-                />
-                <span class="admin-input-unit">张</span>
-              </div>
-            </label>
-
-            <label class="admin-field">
-              <span class="admin-field-label">单张图片最大大小</span>
-              <span class="admin-field-hint">超出限制时会直接提示并阻止上传</span>
-              <div class="admin-input-wrap">
-                <input
-                  v-model.number="form.imageMaxSizeMb"
-                  class="admin-input"
-                  type="number"
-                  min="1"
-                  max="200"
-                />
-                <span class="admin-input-unit">MB</span>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <div class="admin-setting-block">
-          <div class="admin-setting-heading">
-            <div class="admin-setting-index">02</div>
-            <div>
-              <div class="admin-setting-title">附件设置</div>
-            </div>
-          </div>
-          <div class="admin-form-list two-cols">
-            <label class="admin-field">
-              <span class="admin-field-label">最多上传附件数</span>
-              <span class="admin-field-hint">决定附件区一次最多能保留多少个文件</span>
-              <div class="admin-input-wrap">
-                <input
-                  v-model.number="form.attachmentMaxCount"
-                  class="admin-input"
-                  type="number"
-                  min="1"
-                  max="20"
-                />
-                <span class="admin-input-unit">个</span>
-              </div>
-            </label>
-
-            <label class="admin-field">
-              <span class="admin-field-label">单个附件最大大小</span>
-              <span class="admin-field-hint">所有附件共用这一项单文件大小限制</span>
-              <div class="admin-input-wrap">
-                <input
-                  v-model.number="form.attachmentMaxSizeMb"
-                  class="admin-input"
-                  type="number"
-                  min="1"
-                  max="200"
-                />
-                <span class="admin-input-unit">MB</span>
-              </div>
-            </label>
-          </div>
-
-          <div class="admin-field">
-            <span class="admin-field-label">支持的附件后缀</span>
-            <span class="admin-field-hint">按类型填写，多个后缀用英文逗号隔开；留空表示这一类暂不开放</span>
-            <div class="admin-ext-grid">
-              <label
-                v-for="item in ATTACHMENT_TYPE_OPTIONS"
-                :key="item.key"
-                class="admin-ext-card"
-              >
-                <div class="admin-ext-head">
-                  <img class="admin-ext-icon" :src="item.icon" alt="" />
-                  <span class="admin-ext-title">{{ item.label }}</span>
+            <div class="admin-form-row">
+              <label class="admin-field">
+                <span class="admin-field-label">最多上传图片数</span>
+                <span class="admin-field-hint">决定单次最多可添加多少张图片</span>
+                <div class="admin-input-wrap">
+                  <input
+                    v-model.number="form.imageMaxCount"
+                    class="admin-input"
+                    type="number"
+                    min="1"
+                    max="9"
+                    aria-label="最多上传图片数"
+                  />
+                  <span class="admin-input-unit">张</span>
                 </div>
-                <input
-                  v-model="form[extFieldKey(item.key)]"
-                  class="admin-ext-input"
-                  type="text"
-                  :placeholder="item.key === 'document'
-                    ? 'docx,doc,pdf'
-                    : item.key === 'video'
-                      ? 'mp4,mov'
-                      : item.key === 'image'
-                        ? 'jpeg,jpg,png'
-                        : 'zip,rar,7z'"
-                />
+              </label>
+              <label class="admin-field">
+                <span class="admin-field-label">单张图片最大大小</span>
+                <span class="admin-field-hint">超出限制时直接提示并阻止上传</span>
+                <div class="admin-input-wrap">
+                  <input
+                    v-model.number="form.imageMaxSizeMb"
+                    class="admin-input"
+                    type="number"
+                    min="1"
+                    max="200"
+                    aria-label="单张图片最大大小 MB"
+                  />
+                  <span class="admin-input-unit">MB</span>
+                </div>
               </label>
             </div>
           </div>
-        </div>
 
-        <div v-if="activeErrorMessage" class="admin-feedback error">
-          {{ activeErrorMessage }}
-        </div>
-        <div v-if="saveMessage" class="admin-feedback success">
-          {{ saveMessage }}
-        </div>
+          <!-- Attachment Block -->
+          <div class="admin-block">
+            <div class="admin-block-heading">
+              <span class="admin-block-index">02</span>
+              <span class="admin-block-title">附件设置</span>
+            </div>
+            <div class="admin-form-row">
+              <label class="admin-field">
+                <span class="admin-field-label">最多上传附件数</span>
+                <span class="admin-field-hint">附件区一次最多能保留的文件数</span>
+                <div class="admin-input-wrap">
+                  <input
+                    v-model.number="form.attachmentMaxCount"
+                    class="admin-input"
+                    type="number"
+                    min="1"
+                    max="20"
+                    aria-label="最多上传附件数"
+                  />
+                  <span class="admin-input-unit">个</span>
+                </div>
+              </label>
+              <label class="admin-field">
+                <span class="admin-field-label">单个附件最大大小</span>
+                <span class="admin-field-hint">所有附件共用这一单文件大小限制</span>
+                <div class="admin-input-wrap">
+                  <input
+                    v-model.number="form.attachmentMaxSizeMb"
+                    class="admin-input"
+                    type="number"
+                    min="1"
+                    max="200"
+                    aria-label="单个附件最大大小 MB"
+                  />
+                  <span class="admin-input-unit">MB</span>
+                </div>
+              </label>
+            </div>
 
-        <div class="admin-actions">
-          <button
-            class="admin-secondary-btn"
-            type="button"
-            @click="syncFormFromSettings"
-          >
-            重置
-          </button>
-          <button
-            class="admin-primary-btn"
-            type="button"
-            :disabled="activeSaving"
-            @click="handleSubmit"
-          >
-            {{ activeSaving ? "保存中..." : "保存设置" }}
-          </button>
-        </div>
-      </article>
+            <div class="admin-field" style="margin-top: 12px;">
+              <span class="admin-field-label">支持的附件后缀</span>
+              <span class="admin-field-hint">按类型填写，多个后缀用英文逗号隔开；留空表示该类型暂不开放</span>
+              <div class="admin-ext-grid" style="margin-top: 8px;">
+                <label
+                  v-for="item in ATTACHMENT_TYPE_OPTIONS"
+                  :key="item.key"
+                  class="admin-ext-card"
+                >
+                  <div class="admin-ext-head">
+                    <img class="admin-ext-icon" :src="item.icon" alt="" aria-hidden="true" />
+                    <span class="admin-ext-title">{{ item.label }}</span>
+                  </div>
+                  <input
+                    v-model="form[extFieldKey(item.key)]"
+                    class="admin-ext-input"
+                    type="text"
+                    :aria-label="`${item.label}后缀`"
+                    :placeholder="item.key === 'document'
+                      ? 'docx, doc, pdf'
+                      : item.key === 'video'
+                        ? 'mp4, mov'
+                        : item.key === 'image'
+                          ? 'jpeg, jpg, png'
+                          : 'zip, rar, 7z'"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
 
-      <article class="admin-panel admin-preview-panel">
-        <div class="admin-panel-head">
-          <div>
-            <div class="admin-panel-kicker">用户侧预览</div>
-            <h3 class="admin-panel-title">成就页面展示效果</h3>
+          <!-- Feedback -->
+          <Transition name="feedback-slide">
+            <div v-if="activeErrorMessage" class="admin-feedback error" role="alert">
+              <svg class="admin-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              {{ activeErrorMessage }}
+            </div>
+            <div v-else-if="saveMessage" class="admin-feedback success" role="status">
+              <svg class="admin-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ saveMessage }}
+            </div>
+          </Transition>
+
+          <!-- Actions -->
+          <div class="admin-actions">
+            <button
+              class="admin-btn secondary"
+              type="button"
+              @click="syncFormFromSettings"
+            >
+              重置
+            </button>
+            <button
+              class="admin-btn primary"
+              type="button"
+              :disabled="activeSaving"
+              @click="handleSubmit"
+            >
+              {{ activeSaving ? "保存中..." : "保存设置" }}
+            </button>
           </div>
         </div>
+      </div>
 
+      <!-- Preview Card -->
+      <div class="admin-preview-card">
+        <div class="admin-card-header">
+          <div class="admin-card-kicker">用户侧预览</div>
+          <h2 class="admin-card-title">成就页面展示效果</h2>
+        </div>
         <div class="preview-shell">
-          <div class="achievement-media-panel admin-preview-box">
+          <!-- Image Preview -->
+          <div class="admin-preview-box" aria-hidden="true">
             <div class="media-header">
               <div>
-                <div class="media-title">图片(可选)</div>
+                <div class="media-title">图片（可选）</div>
                 <div class="media-subtitle">{{ imageSubtitle }}</div>
               </div>
             </div>
@@ -375,23 +391,22 @@ onMounted(() => {
               <div class="media-empty-text">点击添加图片</div>
             </div>
           </div>
-
-          <div class="achievement-attachments-panel admin-preview-box">
+          <!-- Attachment Preview -->
+          <div class="admin-preview-box" aria-hidden="true">
             <div class="media-header">
               <div>
-                <div class="media-title">附件(可选)</div>
+                <div class="media-title">附件（可选）</div>
                 <div class="media-subtitle">{{ attachmentSubtitle }}</div>
               </div>
             </div>
-            <div class="media-empty">暂无附件</div>
-            <div class="attachment-formats admin-format-mock">
+            <div class="attachment-formats">
               <div class="format-row">
                 <div
                   v-for="item in enabledPreviewTypes.slice(0, 2)"
                   :key="item.key"
                   class="format-item"
                 >
-                  <img class="format-icon" :src="item.icon" alt="" />
+                  <img class="format-icon" :src="item.icon" alt="" aria-hidden="true" />
                   <span class="format-label">{{ item.label }}</span>
                   <span class="format-exts">{{ item.exts.join("/") }}</span>
                 </div>
@@ -402,490 +417,784 @@ onMounted(() => {
                   :key="item.key"
                   class="format-item"
                 >
-                  <img class="format-icon" :src="item.icon" alt="" />
+                  <img class="format-icon" :src="item.icon" alt="" aria-hidden="true" />
                   <span class="format-label">{{ item.label }}</span>
                   <span class="format-exts">{{ item.exts.join("/") }}</span>
                 </div>
               </div>
             </div>
             <div class="media-tip">
-              {{ attachmentTypeSummary }} · 单个不超过 {{ form.attachmentMaxSizeMb }}MB
+              {{ attachmentTypeSummary || "暂无可用附件类型" }} · 单个不超过 {{ form.attachmentMaxSizeMb }}MB
             </div>
           </div>
         </div>
-      </article>
-    </section>
+      </div>
+    </div>
 
-    <section v-else class="admin-panel-grid">
-      <article class="admin-panel admin-form-panel">
-        <div class="admin-panel-head">
-          <div>
-            <div class="admin-panel-kicker">审核入口</div>
-            <h3 class="admin-panel-title">审核策略设置</h3>
-          </div>
-          <div v-if="activeLoading" class="admin-panel-status">加载中...</div>
+    <!-- Review Section -->
+    <div v-else class="admin-panel-grid">
+      <div class="admin-card" style="grid-column: 1 / -1;">
+        <div class="admin-card-header">
+          <div class="admin-card-kicker">审核入口</div>
+          <h2 class="admin-card-title">审核策略设置</h2>
         </div>
+        <div class="admin-card-body" style="display: grid; gap: 0;">
 
-        <div class="admin-setting-block">
-          <div class="admin-setting-heading">
-            <div class="admin-setting-index">01</div>
-            <div>
-              <div class="admin-setting-title">个人信息</div>
+          <!-- Profile Review -->
+          <div class="admin-block">
+            <div class="admin-block-heading">
+              <span class="admin-block-index">01</span>
+              <span class="admin-block-title">个人信息</span>
             </div>
-          </div>
-          <div class="admin-toggle-list">
-            <label class="admin-toggle-card">
-              <div class="admin-toggle-copy">
-                <span class="admin-toggle-title">开启个人信息审核</span>
-                <span class="admin-toggle-hint">
-                  关闭后，学生提交个人信息会直接更新。
-                </span>
+            <div class="admin-toggle-list">
+              <div class="admin-toggle-card">
+                <div class="admin-toggle-copy">
+                  <span class="admin-toggle-title">开启个人信息审核</span>
+                  <span class="admin-toggle-hint">关闭后，学生提交个人信息会直接更新</span>
+                </div>
+                <label class="ios-switch" :aria-label="`开启个人信息审核: ${reviewForm.profileReviewEnabled ? '已开启' : '已关闭'}`">
+                  <input
+                    v-model="reviewForm.profileReviewEnabled"
+                    type="checkbox"
+                    role="switch"
+                    :aria-checked="reviewForm.profileReviewEnabled"
+                  />
+                  <span class="ios-slider"></span>
+                </label>
               </div>
-              <input
-                v-model="reviewForm.profileReviewEnabled"
-                class="admin-toggle-input"
-                type="checkbox"
-              />
-            </label>
+              <div class="admin-toggle-card" :class="{ muted: !reviewForm.profileReviewEnabled }">
+                <div class="admin-toggle-copy">
+                  <span class="admin-toggle-title">默认通过</span>
+                  <span class="admin-toggle-hint">开启审核但自动通过，保留审核流程入口与记录</span>
+                </div>
+                <label class="ios-switch" :aria-label="`默认通过: ${reviewForm.profileReviewAutoApprove ? '已开启' : '已关闭'}`">
+                  <input
+                    v-model="reviewForm.profileReviewAutoApprove"
+                    type="checkbox"
+                    role="switch"
+                    :aria-checked="reviewForm.profileReviewAutoApprove"
+                    :disabled="!reviewForm.profileReviewEnabled"
+                  />
+                  <span class="ios-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
 
-            <label
-              class="admin-toggle-card"
-              :class="{ muted: !reviewForm.profileReviewEnabled }"
+          <!-- Achievement Review -->
+          <div class="admin-block">
+            <div class="admin-block-heading">
+              <span class="admin-block-index">02</span>
+              <span class="admin-block-title">成就</span>
+            </div>
+            <div class="admin-toggle-list">
+              <div class="admin-toggle-card">
+                <div class="admin-toggle-copy">
+                  <span class="admin-toggle-title">开启成就审核</span>
+                  <span class="admin-toggle-hint">关闭后，新增和修改成就都会直接生效</span>
+                </div>
+                <label class="ios-switch" :aria-label="`开启成就审核: ${reviewForm.achievementReviewEnabled ? '已开启' : '已关闭'}`">
+                  <input
+                    v-model="reviewForm.achievementReviewEnabled"
+                    type="checkbox"
+                    role="switch"
+                    :aria-checked="reviewForm.achievementReviewEnabled"
+                  />
+                  <span class="ios-slider"></span>
+                </label>
+              </div>
+              <div class="admin-toggle-card" :class="{ muted: !reviewForm.achievementReviewEnabled }">
+                <div class="admin-toggle-copy">
+                  <span class="admin-toggle-title">默认通过</span>
+                  <span class="admin-toggle-hint">开启审核但自动通过，适合先保留入口再平滑切换</span>
+                </div>
+                <label class="ios-switch" :aria-label="`成就默认通过: ${reviewForm.achievementReviewAutoApprove ? '已开启' : '已关闭'}`">
+                  <input
+                    v-model="reviewForm.achievementReviewAutoApprove"
+                    type="checkbox"
+                    role="switch"
+                    :aria-checked="reviewForm.achievementReviewAutoApprove"
+                    :disabled="!reviewForm.achievementReviewEnabled"
+                  />
+                  <span class="ios-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feedback -->
+          <Transition name="feedback-slide">
+            <div v-if="activeErrorMessage" class="admin-feedback error" role="alert">
+              <svg class="admin-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              {{ activeErrorMessage }}
+            </div>
+            <div v-else-if="saveMessage" class="admin-feedback success" role="status">
+              <svg class="admin-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ saveMessage }}
+            </div>
+          </Transition>
+
+          <!-- Actions -->
+          <div class="admin-actions">
+            <button
+              class="admin-btn secondary"
+              type="button"
+              @click="syncReviewFormFromSettings"
             >
-              <div class="admin-toggle-copy">
-                <span class="admin-toggle-title">默认通过</span>
-                <span class="admin-toggle-hint">
-                  开启审核但自动通过，保留审核流程入口与记录。
-                </span>
-              </div>
-              <input
-                v-model="reviewForm.profileReviewAutoApprove"
-                class="admin-toggle-input"
-                type="checkbox"
-                :disabled="!reviewForm.profileReviewEnabled"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="admin-setting-block">
-          <div class="admin-setting-heading">
-            <div class="admin-setting-index">02</div>
-            <div>
-              <div class="admin-setting-title">成就</div>
-            </div>
-          </div>
-          <div class="admin-toggle-list">
-            <label class="admin-toggle-card">
-              <div class="admin-toggle-copy">
-                <span class="admin-toggle-title">开启成就审核</span>
-                <span class="admin-toggle-hint">
-                  关闭后，新增和修改成就都会直接生效。
-                </span>
-              </div>
-              <input
-                v-model="reviewForm.achievementReviewEnabled"
-                class="admin-toggle-input"
-                type="checkbox"
-              />
-            </label>
-
-            <label
-              class="admin-toggle-card"
-              :class="{ muted: !reviewForm.achievementReviewEnabled }"
+              重置
+            </button>
+            <button
+              class="admin-btn primary"
+              type="button"
+              :disabled="activeSaving"
+              @click="handleReviewSubmit"
             >
-              <div class="admin-toggle-copy">
-                <span class="admin-toggle-title">默认通过</span>
-                <span class="admin-toggle-hint">
-                  开启审核但自动通过，适合先保留入口再平滑切换。
-                </span>
-              </div>
-              <input
-                v-model="reviewForm.achievementReviewAutoApprove"
-                class="admin-toggle-input"
-                type="checkbox"
-                :disabled="!reviewForm.achievementReviewEnabled"
-              />
-            </label>
+              {{ activeSaving ? "保存中..." : "保存设置" }}
+            </button>
           </div>
         </div>
-
-        <div v-if="activeErrorMessage" class="admin-feedback error">
-          {{ activeErrorMessage }}
-        </div>
-        <div v-if="saveMessage" class="admin-feedback success">
-          {{ saveMessage }}
-        </div>
-
-        <div class="admin-actions">
-          <button
-            class="admin-secondary-btn"
-            type="button"
-            @click="syncReviewFormFromSettings"
-          >
-            重置
-          </button>
-          <button
-            class="admin-primary-btn"
-            type="button"
-            :disabled="activeSaving"
-            @click="handleReviewSubmit"
-          >
-            {{ activeSaving ? "保存中..." : "保存设置" }}
-          </button>
-        </div>
-      </article>
-    </section>
+      </div>
+    </div>
   </main>
 </template>
 
 <style scoped>
+/* ── View Shell ──────────────────────────────────────────── */
 .admin-shell {
-  --admin-bg: linear-gradient(135deg, #fffdf4 0%, #f4efe3 42%, #ece3d1 100%);
-  --admin-panel: rgba(255, 251, 242, 0.9);
-  --admin-line: rgba(115, 88, 50, 0.12);
-  --admin-text: #342516;
-  --admin-muted: #7e6547;
-  --admin-accent: #8d5f2f;
+  display: grid;
+  gap: 14px;
   padding: 0 0 3rem;
-  color: var(--admin-text);
 }
 
-.admin-nav {
+/* ── Section Tabs ──────────────────────────────────────── */
+.admin-tabs {
   display: flex;
-  gap: 0.8rem;
-  margin: 0 1.5rem 1rem;
+  gap: 6px;
+  padding: 4px;
+  margin: 0 18px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  width: fit-content;
 }
 
-.admin-nav-item {
-  appearance: none;
-  min-width: 9.5rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--admin-line);
-  border-radius: 18px;
-  background: rgba(255, 251, 242, 0.72);
-  color: inherit;
-  text-align: left;
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
 }
 
-.admin-nav-item.active {
-  border-color: rgba(141, 95, 47, 0.24);
-  background: rgba(255, 253, 249, 0.96);
-  box-shadow: 0 14px 28px rgba(74, 51, 23, 0.08);
+.admin-tab:hover:not(.active) {
+  background: rgba(100, 12, 114, 0.06);
+  color: var(--primary);
 }
 
-.admin-nav-title {
-  font-weight: 700;
+.admin-tab.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(100, 12, 114, 0.3);
 }
 
-.admin-nav-note {
-  margin-top: 0.22rem;
-  color: var(--admin-muted);
-  font-size: 0.88rem;
+.admin-tab:active {
+  transform: scale(0.97);
 }
 
-.admin-panel,
-.admin-ext-card {
-  border: 1px solid var(--admin-line);
-  border-radius: 26px;
-  background: var(--admin-panel);
-  backdrop-filter: blur(18px);
+.admin-tab-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.85;
 }
 
-.admin-panel-kicker {
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--admin-muted);
-}
-
+/* ── Two-Column Grid ────────────────────────────────────── */
 .admin-panel-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 1.25rem;
-  margin: 0 1.5rem;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 14px;
+  margin: 0 18px;
+  align-items: start;
 }
 
-.admin-panel {
-  padding: 1.4rem;
+/* ── Cards ──────────────────────────────────────────────── */
+.admin-card {
+  border-radius: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: cardEnter 400ms var(--ease-out) both;
 }
 
-.admin-panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
+.admin-card-header {
+  padding: 20px 22px 0;
 }
 
-.admin-panel-title {
-  margin: 0.25rem 0 0;
-  font-size: 1.35rem;
-}
-
-.admin-panel-status {
-  color: var(--admin-muted);
-  font-size: 0.92rem;
-}
-
-.admin-setting-block + .admin-setting-block {
-  margin-top: 1.3rem;
-  padding-top: 1.3rem;
-  border-top: 1px solid rgba(115, 88, 50, 0.12);
-}
-
-.admin-setting-title {
-  font-size: 1rem;
+.admin-card-kicker {
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+  opacity: 0.7;
+  margin-bottom: 4px;
 }
 
-.admin-setting-heading {
+.admin-card-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.2px;
+}
+
+.admin-card-body {
+  padding: 18px 22px 22px;
+  display: grid;
+  gap: 14px;
+}
+
+/* ── Setting Blocks ─────────────────────────────────────── */
+.admin-block + .admin-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-block-heading {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  margin-bottom: 0.95rem;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.admin-setting-index {
+.admin-block-index {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
-  background: rgba(141, 95, 47, 0.1);
-  color: var(--admin-accent);
-  font-size: 0.8rem;
+  background: var(--primary-surface);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.admin-block-title {
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  color: var(--text-main);
 }
 
-.admin-form-list {
+/* ── Number Inputs ───────────────────────────────────────── */
+.admin-form-row {
   display: grid;
-  gap: 1rem;
-}
-
-.admin-form-list.two-cols {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .admin-field {
   display: grid;
-  gap: 0.4rem;
+  gap: 5px;
 }
 
 .admin-field-label {
+  font-size: 12.5px;
   font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 0.1px;
+}
+
+.admin-field-hint {
+  font-size: 11.5px;
+  color: var(--text-sub);
+  opacity: 0.75;
+  line-height: 1.4;
 }
 
 .admin-input-wrap {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.25rem 0.25rem 0.25rem 1rem;
-  border: 1px solid rgba(115, 88, 50, 0.18);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.82);
+  gap: 8px;
+  padding: 4px 6px 4px 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.admin-input-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-surface);
 }
 
 .admin-input {
   width: 100%;
+  min-width: 0;
   border: none;
   background: transparent;
-  color: var(--admin-text);
-  font-size: 1rem;
+  color: var(--text-main);
+  font-size: 15px;
+  font-weight: 600;
   outline: none;
+  -moz-appearance: textfield;
+}
+
+.admin-input::-webkit-outer-spin-button,
+.admin-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .admin-input-unit {
   flex-shrink: 0;
-  padding: 0.65rem 0.9rem;
-  border-radius: 14px;
-  background: rgba(141, 95, 47, 0.1);
-  color: var(--admin-accent);
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--primary-surface);
+  color: var(--primary);
+  font-size: 12px;
   font-weight: 700;
 }
 
+/* ── Extension Grid ─────────────────────────────────────── */
 .admin-ext-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 10px;
 }
 
 .admin-ext-card {
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 12px;
   display: grid;
-  gap: 0.7rem;
-  padding: 1rem;
-  align-content: start;
+  gap: 8px;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.admin-ext-card:focus-within {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .admin-ext-head {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 8px;
 }
 
 .admin-ext-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .admin-ext-title {
+  font-size: 13px;
   font-weight: 700;
+  color: var(--text-main);
 }
 
 .admin-ext-input {
   width: 100%;
-  padding: 0.78rem 0.9rem;
-  border: 1px solid rgba(115, 88, 50, 0.16);
-  border-radius: 14px;
-  background: #fff;
-  color: var(--admin-text);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-main);
+  font-size: 13px;
   outline: none;
-  font-size: 0.95rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
+.admin-ext-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-surface);
+}
+
+.admin-ext-input::placeholder {
+  color: var(--text-sub);
+  opacity: 0.5;
+}
+
+/* ── iOS Toggles ───────────────────────────────────────── */
 .admin-toggle-list {
   display: grid;
-  gap: 0.9rem;
+  gap: 10px;
 }
 
 .admin-toggle-card {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.05rem;
-  border: 1px solid rgba(115, 88, 50, 0.14);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.74);
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.75);
+  transition: background 180ms ease, border-color 180ms ease;
 }
 
 .admin-toggle-card.muted {
-  opacity: 0.7;
+  opacity: 0.55;
+}
+
+.admin-toggle-card:not(.muted):hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--line-strong);
 }
 
 .admin-toggle-copy {
   display: grid;
-  gap: 0.3rem;
+  gap: 4px;
+  min-width: 0;
 }
 
 .admin-toggle-title {
+  font-size: 14px;
   font-weight: 700;
+  color: var(--text-main);
 }
 
 .admin-toggle-hint {
-  color: var(--admin-muted);
-  font-size: 0.92rem;
+  color: var(--text-sub);
+  font-size: 12.5px;
   line-height: 1.55;
 }
 
-.admin-toggle-input {
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-top: 0.2rem;
-  accent-color: var(--admin-accent);
-}
-
+/* ── Feedback Banners ───────────────────────────────────── */
 .admin-feedback {
-  margin-top: 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 16px;
-  font-size: 0.94rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  animation: slideDown 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .admin-feedback.error {
-  background: rgba(196, 68, 68, 0.1);
-  color: #a33a3a;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--danger);
 }
 
 .admin-feedback.success {
-  background: rgba(61, 129, 82, 0.1);
-  color: #25613a;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #166534;
 }
 
+.admin-feedback-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Actions ────────────────────────────────────────────── */
 .admin-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.8rem;
-  margin-top: 1.2rem;
+  gap: 10px;
+  margin-top: 4px;
 }
 
-.admin-primary-btn,
-.admin-secondary-btn {
-  min-width: 8.5rem;
-  padding: 0.85rem 1.2rem;
-  border-radius: 999px;
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 12px;
   border: none;
-  cursor: pointer;
+  font-size: 14px;
   font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease,
+    background 180ms ease;
 }
 
-.admin-primary-btn {
-  background: linear-gradient(135deg, #8d5f2f, #a97945);
-  color: #fffaf2;
-  box-shadow: 0 16px 28px rgba(141, 95, 47, 0.22);
+.admin-btn:active {
+  transform: scale(0.97);
 }
 
-.admin-primary-btn:disabled {
-  opacity: 0.7;
-  cursor: wait;
+.admin-btn.primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(100, 12, 114, 0.3);
 }
 
-.admin-secondary-btn {
-  background: rgba(141, 95, 47, 0.1);
-  color: var(--admin-accent);
+.admin-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(100, 12, 114, 0.38);
+  filter: brightness(1.04);
+}
+
+.admin-btn.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.admin-btn.secondary {
+  background: var(--primary-surface);
+  color: var(--primary);
+  border: 1px solid rgba(100, 12, 114, 0.2);
+}
+
+.admin-btn.secondary:hover {
+  background: rgba(100, 12, 114, 0.14);
+  border-color: var(--primary);
+}
+
+/* ── Preview Panel ──────────────────────────────────────── */
+.admin-preview-card {
+  border-radius: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: cardEnter 500ms var(--ease-out) 80ms both;
+}
+
+.admin-preview-header {
+  padding: 20px 22px 0;
 }
 
 .preview-shell {
   display: grid;
-  gap: 1rem;
+  gap: 12px;
+  padding: 0 22px 22px;
 }
 
 .admin-preview-box {
-  pointer-events: none;
+  border-radius: 18px;
+  border: 1.5px dashed var(--line-strong);
+  background: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  transition: background 180ms ease;
 }
 
-.admin-format-mock {
-  cursor: default;
+.media-header {
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--line);
 }
 
-@media (max-width: 1300px) {
-  .admin-panel-grid {
-    grid-template-columns: 1fr;
+.media-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.media-subtitle {
+  font-size: 11.5px;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.media-empty-state {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  gap: 6px;
+}
+
+.media-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--primary-surface);
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 300;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.media-empty-text {
+  font-size: 12.5px;
+  color: var(--text-sub);
+}
+
+.media-empty {
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--text-sub);
+  text-align: center;
+}
+
+.attachment-formats {
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.format-row {
+  display: flex;
+  gap: 8px;
+}
+
+.format-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.format-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.format-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.format-exts {
+  font-size: 10px;
+  color: var(--text-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-tip {
+  padding: 8px 14px;
+  font-size: 11.5px;
+  color: var(--text-sub);
+  border-top: 1px solid var(--line);
+}
+
+/* ── Animations ─────────────────────────────────────────── */
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 960px) {
-  .admin-form-list.two-cols,
-  .admin-ext-grid {
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .admin-panel-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .admin-nav,
+  .admin-tabs {
+    width: 100%;
+    margin: 0 12px;
+  }
+
   .admin-panel-grid {
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin: 0 12px;
   }
 
-  .admin-nav {
-    overflow-x: auto;
+  .admin-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 13px;
   }
 
-  .admin-panel {
-    padding: 1rem;
+  .admin-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-ext-grid {
+    grid-template-columns: 1fr;
   }
 
   .admin-actions {
     flex-direction: column;
   }
 
-  .admin-primary-btn,
-  .admin-secondary-btn {
+  .admin-btn {
     width: 100%;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-card,
+  .admin-preview-card,
+  .admin-feedback,
+  .admin-tab,
+  .admin-btn,
+  .admin-toggle-card,
+  .admin-ext-card {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Feedback Transition ────────────────────────────────── */
+.feedback-slide-enter-active {
+  transition: opacity 240ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.feedback-slide-leave-active {
+  transition: opacity 160ms ease;
+}
+
+.feedback-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.feedback-slide-leave-to {
+  opacity: 0;
 }
 </style>
