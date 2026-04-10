@@ -422,24 +422,37 @@ function closeStudentDetail() {
               <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
             </div>
 
-            <!-- Reject Editor -->
-            <div v-if="canProcessSelected && rejectEditorOpen" class="notif-reject-box">
-              <label class="notif-section-label" for="reject-reason">驳回理由</label>
-              <textarea
-                id="reject-reason"
-                v-model="rejectReason"
-                class="notif-textarea"
-                rows="4"
-                placeholder="请输入驳回原因，学生会在通知详情里看到这条理由。"
-              />
-              <div v-if="actionError" class="notif-action-error">{{ actionError }}</div>
-              <button class="notif-btn is-reject is-submit" type="button" @click="rejectSelectedRequest">确认驳回</button>
-            </div>
-
           </div>
         </Transition>
       </section>
     </div>
+
+    <!-- Reject Editor Modal -->
+    <Teleport to="body">
+      <div :class="['sheet-overlay', { open: rejectEditorOpen }]" @click.self="toggleRejectEditor">
+        <div class="sheet-modal reject-modal" role="dialog" aria-modal="true" aria-label="驳回申请" @click.stop>
+          <header class="sheet-modal-header">
+            <div class="sheet-modal-title">驳回申请</div>
+            <button class="sheet-modal-close" type="button" @click="toggleRejectEditor">关闭</button>
+          </header>
+          <div class="reject-modal-body">
+            <label class="notif-section-label" for="reject-reason">驳回理由</label>
+            <textarea
+              id="reject-reason"
+              v-model="rejectReason"
+              class="notif-textarea"
+              rows="4"
+              placeholder="请输入驳回原因，学生会在通知详情里看到这条理由。"
+            />
+            <div v-if="actionError" class="notif-action-error">{{ actionError }}</div>
+          </div>
+          <div class="reject-modal-actions">
+            <button class="ghost-button reject-btn-cancel" type="button" @click="toggleRejectEditor">取消</button>
+            <button class="action-button reject-btn-confirm" type="button" @click="rejectSelectedRequest">确认驳回</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Cancel Confirm Modal -->
     <Teleport to="body">
@@ -986,14 +999,6 @@ function closeStudentDetail() {
   line-height: 1.7;
 }
 
-/* ── Reject Box ──────────────────────────────────────────── */
-.notif-reject-box {
-  border-radius: 14px;
-  padding: 14px;
-  background: rgba(239, 68, 68, 0.05);
-  border: 1px solid rgba(239, 68, 68, 0.15);
-}
-
 .notif-textarea {
   width: 100%;
   min-height: 110px;
@@ -1064,6 +1069,50 @@ function closeStudentDetail() {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* ── Reject Editor Modal ──────────────────────────────── */
+.reject-modal {
+  max-width: 400px;
+  padding: 24px;
+}
+
+.reject-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reject-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.reject-btn-cancel,
+.reject-btn-confirm {
+  height: 42px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+.reject-btn-cancel {
+  background: rgba(100, 12, 114, 0.08);
+  color: var(--primary);
+}
+
+.reject-btn-cancel:hover {
+  background: rgba(100, 12, 114, 0.14);
+}
+
+.reject-btn-confirm {
+  background: var(--danger);
+  color: #fff;
+}
+
+.reject-btn-confirm:hover {
+  filter: brightness(1.08);
 }
 
 /* ── Cancel Confirm Modal ───────────────────────────────── */
