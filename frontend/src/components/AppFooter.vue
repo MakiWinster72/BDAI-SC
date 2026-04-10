@@ -12,20 +12,34 @@
               target="_blank"
               rel="noopener noreferrer"
               class="footer-link"
-            >{{ link.label }}</a>
+              >{{ link.label }}</a
+            >
           </div>
         </div>
         <div class="footer-contact">
           <div class="footer-contact-item">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M2 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z" stroke="currentColor" stroke-width="1.4"/>
-              <path d="M2 7l8 5 8-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <path
+                d="M2 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M2 7l8 5 8-5"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
             </svg>
             <span>广东省广州市海珠区仑头路21号</span>
           </div>
           <div class="footer-contact-item">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M3 5a2 2 0 0 1 2-2h1.5A1.5 1.5 0 0 1 8 4.5v0A1.5 1.5 0 0 1 6.5 6v0A2.5 2.5 0 0 0 9 8.5h1A2.5 2.5 0 0 0 12.5 6v0A1.5 1.5 0 0 1 14 4.5v0A1.5 1.5 0 0 1 12.5 3H11A2 2 0 0 1 9 1a7 7 0 0 0-6 7v1a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="1.4"/>
+              <path
+                d="M3 5a2 2 0 0 1 2-2h1.5A1.5 1.5 0 0 1 8 4.5v0A1.5 1.5 0 0 1 6.5 6v0A2.5 2.5 0 0 0 9 8.5h1A2.5 2.5 0 0 0 12.5 6v0A1.5 1.5 0 0 1 14 4.5v0A1.5 1.5 0 0 1 12.5 3H11A2 2 0 0 1 9 1a7 7 0 0 0-6 7v1a2 2 0 0 0 2 2z"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
             </svg>
             <span>020-84096458</span>
           </div>
@@ -41,12 +55,12 @@
           />
           <div class="footer-brand-text">
             <span class="footer-brand-name">大数据与人工智能学院</span>
-            <span class="footer-brand-sub">学生成就管理中心</span>
+            <span class="footer-brand-sub">学生信息管理中心</span>
           </div>
         </div>
         <div class="footer-copy">
           <p class="footer-copyright">
-            版权所有&copy;广东财经大学大数据与人工智能学院　备案号：粤ICP备05000001号
+            版权所有&copy;广东财经大学-大数据与人工智能学院　备案号：粤ICP备05000001号
           </p>
         </div>
       </div>
@@ -61,7 +75,10 @@ const friendLinks = [
   { label: "科研处", href: "https://kyc.gdufe.edu.cn/" },
   { label: "研究生处", href: "https://yjsc.gdufe.edu.cn/" },
   { label: "图书馆", href: "https://lib.gdufe.edu.cn/" },
-  { label: "信息门户", href: "https://authserver.gdufe.edu.cn/authserver/login?service=https://imy.gdufe.edu.cn/shiro-cas" },
+  {
+    label: "信息门户",
+    href: "https://authserver.gdufe.edu.cn/authserver/login?service=https://imy.gdufe.edu.cn/shiro-cas",
+  },
 ];
 </script>
 
