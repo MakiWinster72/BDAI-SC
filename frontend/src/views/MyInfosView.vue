@@ -3010,12 +3010,6 @@ function loadUser() {
   opacity: 0;
 }
 
-/* ── Field Focus Enhancement ─────────────────────── */
-.field-card:focus-within .info-label {
-  color: var(--primary);
-  transition: color 180ms ease;
-}
-
 /* ── Hint Button ───────────────────────────────────── */
 .hint-button {
   transition:
