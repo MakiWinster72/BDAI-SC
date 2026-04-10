@@ -66,11 +66,27 @@
               </select>
             </div>
 
+            <div class="student-filter-panel student-filter-field-category">
+              <div class="student-filter-panel-head">
+                <span class="info-label">学生类型</span>
+              </div>
+              <select v-model="filters.studentCategory" class="info-input">
+                <option value="">全部</option>
+                <option
+                  v-for="cat in studentCategoryOptions"
+                  :key="cat"
+                  :value="cat"
+                >
+                  {{ cat }}
+                </option>
+              </select>
+            </div>
+
             <div class="student-filter-panel student-filter-field-major">
               <div class="student-filter-panel-head">
                 <span class="info-label">专业</span>
               </div>
-              <select v-model="filters.major" class="info-input">
+              <select v-model="filters.major" class="info-input" :disabled="!filters.studentCategory">
                 <option value="">全部</option>
                 <option
                   v-for="major in availableMajors"
@@ -617,12 +633,38 @@ const gridLocaleTextFunc = (key, defaultValue) => {
 
 const filters = reactive({
   classYear: "",
+  studentCategory: "",
   major: "",
   classNo: "",
   isHkMoTw: false,
   isSpecial: false,
   keyword: "",
 });
+
+const studentCategoryOptions = ["本科生", "研究生"];
+
+const majorOptionsByCategory = {
+  本科生: [
+    "计算机科学与技术",
+    "计算机科学与技术（实验区）",
+    "计算机科学与技术(中外联合培养项目班)",
+    "2025计算机科学与技术（中外联合培养项目班未赴国外学习）",
+    "软件工程",
+    "人工智能",
+    "电子商务",
+    "电子商务（大数据决策分析）",
+    "大数据管理与应用",
+    "大数据管理与应用（佛山校区全学段）",
+    "大数据管理与应用（数字治理）",
+  ],
+  研究生: [
+    "管理科学与工程",
+    "技术经济及管理",
+    "智能科学与技术",
+    "计算机技术",
+    "图书情报",
+  ],
+};
 
 const exportGroups = [
   {
@@ -766,12 +808,16 @@ const familyRows = computed(() => {
 });
 
 const availableMajors = computed(() => {
-  return majorOptions;
+  if (!filters.studentCategory) {
+    return [];
+  }
+  return majorOptionsByCategory[filters.studentCategory] || [];
 });
 
 const hasActiveFilters = computed(() => {
   return Boolean(
     filters.classYear ||
+    filters.studentCategory ||
     filters.major ||
     filters.classNo ||
     filters.isHkMoTw ||
@@ -832,6 +878,7 @@ const achievementUrl = computed(() => {
 watch(
   () => ({
     classYear: filters.classYear,
+    studentCategory: filters.studentCategory,
     major: filters.major,
     classNo: filters.classNo,
     isHkMoTw: filters.isHkMoTw,
@@ -850,6 +897,11 @@ watch(
   },
   { deep: true },
 );
+
+// Clear major when student category changes (since major options depend on it)
+watch(() => filters.studentCategory, () => {
+  filters.major = "";
+});
 
 watch(currentPage, () => {
   if (!gridViewOpen.value) {
@@ -1212,6 +1264,7 @@ function incrementClass() {
 
 function resetFilters() {
   filters.classYear = "";
+  filters.studentCategory = "";
   filters.major = "";
   filters.classNo = "";
   filters.isHkMoTw = false;
@@ -1226,6 +1279,9 @@ function buildSearchParams(page, size) {
   };
   if (filters.classYear) {
     params.classYear = filters.classYear;
+  }
+  if (filters.studentCategory) {
+    params.studentCategory = filters.studentCategory;
   }
   if (filters.major) {
     params.major = filters.major;
@@ -2447,12 +2503,16 @@ function loadUser() {
   grid-column: span 3;
 }
 
+.student-filter-field-category {
+  grid-column: span 3;
+}
+
 .student-filter-field-major {
-  grid-column: span 5;
+  grid-column: span 4;
 }
 
 .student-filter-field-class {
-  grid-column: span 4;
+  grid-column: span 2;
 }
 
 .student-stepper {
@@ -2538,6 +2598,7 @@ function loadUser() {
   }
 
   .student-filter-field-year,
+  .student-filter-field-category,
   .student-filter-field-major,
   .student-filter-field-class {
     grid-column: auto;
@@ -3222,6 +3283,7 @@ function loadUser() {
   }
 
   .student-filter-field-year,
+  .student-filter-field-category,
   .student-filter-field-major,
   .student-filter-field-class {
     grid-column: auto;

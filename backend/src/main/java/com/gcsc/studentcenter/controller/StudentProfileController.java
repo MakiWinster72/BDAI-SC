@@ -62,6 +62,7 @@ public class StudentProfileController {
         @RequestParam(required = false) String major,
         @RequestParam(required = false) Boolean hkMoTw,
         @RequestParam(required = false) Boolean specialStudent,
+        @RequestParam(required = false) String studentCategory,
         @RequestParam(required = false) String keyword
     ) {
         return ResponseEntity.ok(
@@ -72,6 +73,7 @@ public class StudentProfileController {
                 major,
                 hkMoTw,
                 specialStudent,
+                studentCategory,
                 keyword,
                 page,
                 size

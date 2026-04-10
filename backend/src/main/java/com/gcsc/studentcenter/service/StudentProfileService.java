@@ -162,6 +162,7 @@ public class StudentProfileService {
         String major,
         Boolean hkMoTw,
         Boolean specialStudent,
+        String studentCategory,
         String keyword,
         int page,
         int size
@@ -175,6 +176,7 @@ public class StudentProfileService {
             normalize(major),
             hkMoTw,
             specialStudent,
+            normalize(studentCategory),
             normalize(keyword),
             PageRequest.of(pageIndex, pageSize)
         );

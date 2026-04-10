@@ -36,6 +36,7 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
             and (:major is null or sp.classMajor = :major)
             and (:hkMoTw is null or sp.hkMoTw = :hkMoTw)
             and (:specialStudent is null or sp.specialStudent = :specialStudent)
+            and (:studentCategory is null or sp.studentCategory = :studentCategory)
             and (
                 :keyword is null
                 or lower(sp.fullName) like lower(concat('%', :keyword, '%'))
@@ -54,6 +55,7 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
         @Param("major") String major,
         @Param("hkMoTw") Boolean hkMoTw,
         @Param("specialStudent") Boolean specialStudent,
+        @Param("studentCategory") String studentCategory,
         @Param("keyword") String keyword,
         Pageable pageable
     );
