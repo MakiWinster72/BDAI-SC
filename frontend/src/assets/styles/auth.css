@@ -149,6 +149,45 @@
   color: rgba(100, 12, 114, 0.38);
 }
 
+/* ── Ghost Button ──────────────────────────────────────── */
+.ghost-button {
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--primary);
+  border-radius: 12px;
+  height: 50px;
+  padding: 0 24px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 120ms ease,
+    box-shadow 180ms ease;
+}
+
+.ghost-button:hover {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.1);
+}
+
+.ghost-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.ghost-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* ── Action Button ──────────────────────────────────────── */
 .action-button {
   margin-top: 8px;

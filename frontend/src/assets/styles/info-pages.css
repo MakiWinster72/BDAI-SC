@@ -607,6 +607,64 @@
   padding: 0 18px;
 }
 
+/* ── Student Stepper ────────────────────────────────────── */
+.student-stepper {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 10px;
+  align-items: center;
+}
+
+.stepper-button {
+  height: 44px;
+  width: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--primary-dark);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.stepper-button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.stepper-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.stepper-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stepper-input {
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* ── Info Responsive ────────────────────────────────────── */
 @media (max-width: 840px) {
   .info-hero {

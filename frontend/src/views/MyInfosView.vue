@@ -73,20 +73,33 @@
             </label>
             <label class="field-card">
               <span class="info-label">年级</span>
-              <select
-                v-model="info.classYear"
-                class="info-input"
-                :disabled="!isEditing"
-              >
-                <option disabled value="">选择年级</option>
-                <option
-                  v-for="year in classYearOptions"
-                  :key="year"
-                  :value="year"
+              <div class="student-stepper">
+                <button
+                  class="stepper-button"
+                  type="button"
+                  :disabled="!isEditing || !canDecrementYear"
+                  @click="decrementYear"
                 >
-                  {{ year }}
-                </option>
-              </select>
+                  −
+                </button>
+                <input
+                  v-model.number="info.classYear"
+                  class="info-input stepper-input"
+                  type="number"
+                  step="1"
+                  placeholder="今年"
+                  :disabled="!isEditing"
+                  readonly
+                />
+                <button
+                  class="stepper-button"
+                  type="button"
+                  :disabled="!isEditing"
+                  @click="incrementYear"
+                >
+                  +
+                </button>
+              </div>
             </label>
             <label class="field-card">
               <span class="info-label">学生类别</span>
@@ -1146,7 +1159,7 @@ const info = reactive({
   name: profile.displayName || profile.username || "",
   avatarUrl: profile.avatarUrl || "",
   studentNo: profile.studentNo || "",
-  classYear: "",
+  classYear: new Date().getFullYear(),
   classMajor: "",
   classNo: 1,
   className: profile.className || "",
@@ -1209,7 +1222,6 @@ const info = reactive({
   motherTitle: "",
 });
 
-const classYearOptions = Array.from({ length: 19 }, (_, index) => 2022 + index);
 const majorOptionsByCategory = {
   本科生: [
     "计算机科学与技术",
@@ -1317,6 +1329,21 @@ const hasSavedProfileBefore = computed(() => Boolean(savedProfileData.value?.id)
 const saveActionLabel = computed(() =>
   hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled ? "请求审核" : "保存",
 );
+
+const MIN_YEAR = 2000;
+
+const canDecrementYear = computed(() =>
+  info.classYear > MIN_YEAR,
+);
+
+function decrementYear() {
+  if (!canDecrementYear.value) return;
+  info.classYear = Math.max(MIN_YEAR, info.classYear - 1);
+}
+
+function incrementYear() {
+  info.classYear = info.classYear + 1;
+}
 
 const dormBuildingOptions = computed(() => {
   if (info.dormCampus === "佛山校区") {
@@ -2498,7 +2525,7 @@ function applyProfileResponse(data, options = {}) {
   info.name = data.fullName || data.displayName || "";
   info.avatarUrl = data.avatarUrl || profile.avatarUrl || "";
   info.studentNo = data.studentNo || "";
-  info.classYear = data.classYear || "";
+  info.classYear = data.classYear || new Date().getFullYear();
   info.classMajor = data.classMajor || "";
   info.classNo = data.classNo ?? 1;
   info.className = data.className || "";
@@ -3036,7 +3063,8 @@ function loadUser() {
   .dialog-pop-enter-active,
   .dialog-pop-leave-active,
   .dialog-fade-enter-active,
-  .dialog-fade-leave-active {
+  .dialog-fade-leave-active,
+  .stepper-button {
     animation: none !important;
     transition: none !important;
   }
