@@ -578,7 +578,7 @@
 /* ── Info Actions ──────────────────────────────────────── */
 .info-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
   width: 100%;
   min-width: 0;
@@ -586,12 +586,6 @@
 
 .info-actions > * {
   min-width: 0;
-}
-
-@media (min-width: 980px) {
-  .info-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 .info-actions .action-button {
@@ -687,7 +681,6 @@
 
   .info-actions {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .info-form-grid {
