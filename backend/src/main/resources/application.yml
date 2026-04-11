@@ -26,6 +26,8 @@ app:
   upload-dir: ./uploads
 
 security:
+  cors:
+    allowed-origins: "*"
   jwt:
     secret: gcsc-student-center-jwt-secret-key-change-in-production-2026
     expires-minutes: 120

@@ -1,5 +1,6 @@
 package com.gcsc.studentcenter.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -54,9 +55,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${security.cors.allowed-origins:*}") String allowedOrigins) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of(allowedOrigins));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(false);
