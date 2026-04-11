@@ -2181,10 +2181,11 @@ function loadUser() {
 
 .student-filter-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 1.15fr) auto;
+  /* [title+caption] [search] [buttons] — intro/actions fixed, search flexes */
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 16px;
-  padding: 18px 18px 16px;
+  gap: 20px;
+  padding: 16px 18px 14px;
   border-radius: 18px;
   border: 1px solid var(--line);
   background: var(--card);
@@ -2193,14 +2194,18 @@ function loadUser() {
 
 .student-filter-intro {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
+  max-width: 240px; /* prevent caption from expanding */
 }
 
 .student-filter-caption {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text-sub);
-  line-height: 1.45;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .student-filter-search-wrap {
@@ -2211,8 +2216,8 @@ function loadUser() {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .student-filter-reset {
@@ -2529,8 +2534,9 @@ function loadUser() {
 
 .student-filter-grid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 14px 16px;
+  /* Large: [year][category][    major    ][class] */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 14px;
   align-items: end;
 }
 
@@ -2539,19 +2545,19 @@ function loadUser() {
 }
 
 .student-filter-field-year {
-  grid-column: span 3;
+  grid-column: span 1;
 }
 
 .student-filter-field-category {
-  grid-column: span 3;
+  grid-column: span 1;
 }
 
 .student-filter-field-major {
-  grid-column: span 4;
+  grid-column: span 1;
 }
 
 .student-filter-field-class {
-  grid-column: span 2;
+  grid-column: span 1;
 }
 
 .student-stepper {
@@ -2627,9 +2633,35 @@ function loadUser() {
   font-weight: 600;
 }
 
+@media (max-width: 1200px) {
+  .student-filter-toolbar {
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+  }
+
+  .student-filter-intro {
+    max-width: 200px;
+  }
+
+  .student-filter-grid {
+    /* [year][category][major+class combined] */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .student-filter-field-major {
+    grid-column: span 1;
+  }
+}
+
 @media (max-width: 980px) {
   .student-filter-toolbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .student-filter-intro {
+    grid-column: 1 / -1;
+    max-width: none;
   }
 
   .student-filter-grid {
@@ -3307,6 +3339,15 @@ function loadUser() {
     grid-template-columns: 1fr;
     gap: 8px;
     padding: 14px;
+  }
+
+  .student-filter-intro {
+    max-width: none;
+  }
+
+  .student-filter-caption {
+    white-space: normal;
+    text-overflow: clip;
   }
 
   .student-search {
