@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, shallowRef, watch } from "vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
-import { getUserList, updateUser, deleteUser } from "../api/admin";
+import { getUserList, updateUser, deleteUser, downloadBackupDb, restoreBackupDb } from "../api/admin";
 
 const ATTACHMENT_TYPE_OPTIONS = [
   { key: "document", label: "文档", icon: "/assets/icons/doc.svg" },
@@ -28,45 +28,70 @@ const backupMessage = shallowRef({ type: "", text: "" });
 const restoreLoading = shallowRef(false);
 const restoreMessage = shallowRef({ type: "", text: "" });
 
-function handleBackupDownload() {
-  if (!backupForm.backupDb && !backupForm.backupAttachments) {
-    backupMessage.value = { type: "error", text: "请至少选择一项进行备份" };
-    return;
-  }
+async function handleBackupDownload() {
   backupLoading.value = true;
   backupMessage.value = { type: "", text: "" };
-  setTimeout(() => {
+  try {
+    const res = await downloadBackupDb();
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      backupMessage.value = { type: "error", text: errData.message || "备份失败" };
+      return;
+    }
+    const blob = await res.blob();
+    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "gcsc_backup.sql";
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    backupMessage.value = { type: "success", text: "SQL 文件已下载" };
+  } catch (e) {
+    backupMessage.value = { type: "error", text: "备份失败，请检查服务端 mysqldump 是否可用" };
+  } finally {
     backupLoading.value = false;
-    backupMessage.value = { type: "info", text: "备份接口尚未接入后端，请先完成服务端实现。" };
-  }, 800);
+  }
 }
 
-function handleRestore() {
-  // DB card — always implicit restoreDb=true, check sqlFile
+async function handleRestore() {
   if (!backupForm.sqlFile) {
     restoreMessage.value = { type: "error", text: "请先选择 SQL 备份文件" };
     return;
   }
   restoreLoading.value = true;
   restoreMessage.value = { type: "", text: "" };
-  setTimeout(() => {
+  try {
+    const res = await restoreBackupDb(backupForm.sqlFile);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      restoreMessage.value = { type: "error", text: data.message || "恢复失败" };
+      return;
+    }
+    restoreMessage.value = { type: "success", text: "数据库恢复成功" };
+    backupForm.sqlFile = null;
+    // reset file input
+    const input = document.getElementById("sql-file");
+    if (input) input.value = "";
+  } catch (e) {
+    restoreMessage.value = { type: "error", text: "恢复失败，请检查服务端 mysql 是否可用" };
+  } finally {
     restoreLoading.value = false;
-    restoreMessage.value = { type: "info", text: "恢复接口尚未接入后端，请先完成服务端实现。" };
-  }, 800);
+  }
 }
 
-function handleRestoreAttachments() {
-  // Attachments card — check zipFile
+async function handleRestoreAttachments() {
   if (!backupForm.zipFile) {
     restoreMessage.value = { type: "error", text: "请先选择附件压缩包" };
     return;
   }
   restoreLoading.value = true;
   restoreMessage.value = { type: "", text: "" };
-  setTimeout(() => {
+  try {
+    restoreMessage.value = { type: "info", text: "附件恢复功能待后端实现" };
+  } finally {
     restoreLoading.value = false;
-    restoreMessage.value = { type: "info", text: "恢复接口尚未接入后端，请先完成服务端实现。" };
-  }, 800);
+  }
 }
 
 function onSqlFileChange(e) {
