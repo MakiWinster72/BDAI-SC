@@ -206,7 +206,7 @@
 
 /* ── Info Card ──────────────────────────────────────────── */
 .info-card {
-  padding: 12px 6px 18px;
+  padding: 18px 18px 18px;
   display: grid;
   gap: 12px;
   border-bottom: 1px solid var(--line);
