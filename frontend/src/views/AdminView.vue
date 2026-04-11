@@ -373,19 +373,6 @@ onMounted(() => {
 
     <!-- Upload Section -->
     <div v-if="activeSection === 'upload'" class="admin-panel-grid">
-      <!-- Stat Cards -->
-      <div class="admin-stat-grid">
-        <div
-          v-for="card in statCards"
-          :key="card.label"
-          class="admin-stat-card"
-        >
-          <div class="admin-stat-label">{{ card.label }}</div>
-          <div class="admin-stat-value">{{ card.value }}</div>
-          <div class="admin-stat-note">{{ card.note }}</div>
-        </div>
-      </div>
-      <!-- Form Card -->
       <div class="admin-card">
         <div class="admin-card-header">
           <div class="admin-card-kicker">系统设置</div>
@@ -402,7 +389,6 @@ onMounted(() => {
             <div class="admin-form-row">
               <label class="admin-field">
                 <span class="admin-field-label">最多上传图片数</span>
-                <span class="admin-field-hint">决定单次最多可添加多少张图片</span>
                 <div class="admin-input-wrap">
                   <input
                     v-model.number="form.imageMaxCount"
@@ -417,7 +403,6 @@ onMounted(() => {
               </label>
               <label class="admin-field">
                 <span class="admin-field-label">单张图片最大大小</span>
-                <span class="admin-field-hint">超出限制时直接提示并阻止上传</span>
                 <div class="admin-input-wrap">
                   <input
                     v-model.number="form.imageMaxSizeMb"
@@ -442,7 +427,6 @@ onMounted(() => {
             <div class="admin-form-row">
               <label class="admin-field">
                 <span class="admin-field-label">最多上传附件数</span>
-                <span class="admin-field-hint">附件区一次最多能保留的文件数</span>
                 <div class="admin-input-wrap">
                   <input
                     v-model.number="form.attachmentMaxCount"
@@ -457,7 +441,6 @@ onMounted(() => {
               </label>
               <label class="admin-field">
                 <span class="admin-field-label">单个附件最大大小</span>
-                <span class="admin-field-hint">所有附件共用这一单文件大小限制</span>
                 <div class="admin-input-wrap">
                   <input
                     v-model.number="form.attachmentMaxSizeMb"
@@ -1477,43 +1460,6 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* ── Stat Cards ─────────────────────────────────────────── */
-.admin-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.admin-stat-card {
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-sm);
-}
-
-.admin-stat-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text-sub);
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.admin-stat-value {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--primary-dark);
-  line-height: 1.2;
-  letter-spacing: -0.3px;
-}
-
-.admin-stat-note {
-  font-size: 11.5px;
-  color: var(--text-sub);
-  margin-top: 4px;
-}
 
 /* ── User Management ─────────────────────────────────────── */
 .admin-user-section {
