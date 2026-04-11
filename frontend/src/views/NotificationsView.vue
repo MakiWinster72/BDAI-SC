@@ -433,24 +433,42 @@ function closeStudentDetail() {
     <Teleport to="body">
       <div :class="['sheet-overlay', { open: rejectEditorOpen }]" @click.self="toggleRejectEditor">
         <div class="sheet-modal reject-modal" role="dialog" aria-modal="true" aria-label="驳回申请" @click.stop>
-          <header class="sheet-modal-header">
-            <div class="sheet-modal-title">驳回申请</div>
-            <button class="sheet-modal-close" type="button" @click="toggleRejectEditor">关闭</button>
+          <header class="reject-modal-header">
+            <div class="reject-modal-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+            </div>
+            <div class="reject-modal-title-group">
+              <h2 class="reject-modal-title">驳回申请</h2>
+              <p class="reject-modal-subtitle">请填写驳回理由，学生将收到通知</p>
+            </div>
+            <button class="reject-modal-close" type="button" aria-label="关闭" @click="toggleRejectEditor">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
           </header>
+
           <div class="reject-modal-body">
-            <label class="notif-section-label" for="reject-reason">驳回理由</label>
+            <label class="reject-label" for="reject-reason">驳回理由</label>
             <textarea
               id="reject-reason"
               v-model="rejectReason"
-              class="notif-textarea"
-              rows="4"
+              class="reject-textarea"
+              rows="5"
               placeholder="请输入驳回原因，学生会在通知详情里看到这条理由。"
+              maxlength="500"
             />
-            <div v-if="actionError" class="notif-action-error">{{ actionError }}</div>
+            <div class="reject-footer">
+              <span v-if="actionError" class="reject-error">{{ actionError }}</span>
+              <span class="reject-char-count">{{ rejectReason.length }} / 500</span>
+            </div>
           </div>
+
           <div class="reject-modal-actions">
-            <button class="ghost-button reject-btn-cancel" type="button" @click="toggleRejectEditor">取消</button>
-            <button class="action-button reject-btn-confirm" type="button" @click="rejectSelectedRequest">确认驳回</button>
+            <button class="reject-btn-cancel" type="button" @click="toggleRejectEditor">返回</button>
+            <button class="reject-btn-confirm" type="button" @click="rejectSelectedRequest">确认驳回</button>
           </div>
         </div>
       </div>
@@ -1001,37 +1019,6 @@ function closeStudentDetail() {
   line-height: 1.7;
 }
 
-.notif-textarea {
-  width: 100%;
-  min-height: 110px;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 10px 14px;
-  resize: vertical;
-  color: var(--text-main);
-  font-size: 14px;
-  line-height: 1.6;
-  outline: none;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.notif-textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-surface);
-}
-
-.notif-textarea::placeholder {
-  color: var(--text-sub);
-  opacity: 0.6;
-}
-
-.notif-action-error {
-  margin-top: 8px;
-  color: var(--danger);
-  font-size: 12.5px;
-}
-
 /* ── Transitions ─────────────────────────────────────────── */
 .detail-fade-enter-active {
   transition: opacity 280ms ease, transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -1076,27 +1063,154 @@ function closeStudentDetail() {
 /* ── Reject Editor Modal ──────────────────────────────── */
 .reject-modal {
   max-width: 400px;
-  padding: 24px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.reject-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 20px 0;
+}
+
+.reject-modal-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(192, 57, 43, 0.1);
+  color: var(--danger);
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+
+.reject-modal-title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.reject-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  line-height: 1.3;
+}
+
+.reject-modal-subtitle {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-sub);
+  line-height: 1.4;
+}
+
+.reject-modal-close {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-sub);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+  margin-top: 2px;
+}
+
+.reject-modal-close:hover {
+  background: rgba(100, 12, 114, 0.08);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.reject-modal-close:active {
+  transform: scale(0.95);
+}
+
+.reject-modal-close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .reject-modal-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  padding: 16px 20px 0;
+}
+
+.reject-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.reject-textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 14px;
+  resize: vertical;
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.65;
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.reject-textarea:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+.reject-textarea::placeholder {
+  color: var(--text-sub);
+  opacity: 0.7;
+}
+
+.reject-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.reject-error {
+  color: var(--danger);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.reject-char-count {
+  color: var(--text-sub);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
 
 .reject-modal-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 16px;
+  padding: 16px 20px 20px;
 }
 
 .reject-btn-cancel,
 .reject-btn-confirm {
   height: 42px;
   font-size: 14px;
+  font-weight: 700;
   border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background 160ms ease, filter 160ms ease, transform 120ms ease;
 }
 
 .reject-btn-cancel {
@@ -1108,6 +1222,15 @@ function closeStudentDetail() {
   background: rgba(100, 12, 114, 0.14);
 }
 
+.reject-btn-cancel:active {
+  transform: scale(0.97);
+}
+
+.reject-btn-cancel:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .reject-btn-confirm {
   background: var(--danger);
   color: #fff;
@@ -1115,6 +1238,15 @@ function closeStudentDetail() {
 
 .reject-btn-confirm:hover {
   filter: brightness(1.08);
+}
+
+.reject-btn-confirm:active {
+  transform: scale(0.97);
+}
+
+.reject-btn-confirm:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
 }
 
 /* ── Cancel Confirm Modal ───────────────────────────────── */
