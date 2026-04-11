@@ -20,7 +20,6 @@ const usersLoading = shallowRef(false);
 const usersError = shallowRef("");
 const userSearch = shallowRef("");
 const userRoleFilter = shallowRef("");
-const userClassFilter = shallowRef("");
 const userCurrentPage = shallowRef(1);
 const userPageSize = shallowRef(20);
 const userTotal = shallowRef(0);
@@ -210,7 +209,6 @@ async function loadUsers(page = userCurrentPage.value) {
       size: userPageSize.value,
       search: userSearch.value.trim() || undefined,
       role: userRoleFilter.value || undefined,
-      className: userClassFilter.value || undefined,
     });
     const payload = res.data;
     users.value = payload.data || [];
@@ -221,16 +219,6 @@ async function loadUsers(page = userCurrentPage.value) {
   } finally {
     usersLoading.value = false;
   }
-}
-
-const classOptions = shallowRef([]);
-
-async function loadClassOptions() {
-  try {
-    const res = await getUserList({ page: 1, size: 1000 });
-    const set = new Set((res.data?.data || []).map(u => u.className).filter(Boolean));
-    classOptions.value = Array.from(set).sort();
-  } catch {}
 }
 
 const editModal = reactive({
@@ -306,11 +294,10 @@ async function handleDeleteUser(user) {
 onMounted(() => {
   loadPage();
   loadUsers();
-  loadClassOptions();
 });
 
 // Reload from page 1 when filters change
-watch([userSearch, userRoleFilter, userClassFilter], () => {
+watch([userSearch, userRoleFilter], () => {
   if (activeSection.value === "users") {
     userCurrentPage.value = 1;
     loadUsers(1);
@@ -750,17 +737,13 @@ watch([userSearch, userRoleFilter, userClassFilter], () => {
                   v-model="userSearch"
                   class="search-input"
                   type="text"
-                  placeholder="搜索用户名、姓名、学号、班级…"
+                  placeholder="搜索用户名、姓名、学号…"
                   aria-label="搜索用户"
                 />
               </div>
               <select v-model="userRoleFilter" class="filter-select" aria-label="按角色筛选">
                 <option value="">全部角色</option>
                 <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-              <select v-model="userClassFilter" class="filter-select" aria-label="按班级筛选">
-                <option value="">全部班级</option>
-                <option v-for="cls in classOptions" :key="cls" :value="cls">{{ cls }}</option>
               </select>
             </div>
 
