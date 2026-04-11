@@ -27,9 +27,10 @@ public class BackupService {
 
     /**
      * Execute mysqldump and return the SQL file content as a byte array.
+     * Saves a copy to the backups/ directory under the project root.
      * Redirects stderr to /dev/null to prevent deprecation warnings from polluting stdout.
      */
-    public byte[] dumpDatabase() throws IOException, InterruptedException {
+    public DumpResult dumpDatabase() throws IOException, InterruptedException {
         String[] dbInfo = parseJdbcUrl(jdbcUrl);
         String host = dbInfo[0];
         int port = Integer.parseInt(dbInfo[1]);
@@ -60,7 +61,16 @@ public class BackupService {
             throw new RuntimeException("mysqldump failed with exit code " + exitCode);
         }
 
-        return baos.toByteArray();
+        byte[] sqlContent = baos.toByteArray();
+
+        // Save to backups/ directory under project root
+        String filename = generateBackupFilename();
+        Path backupsDir = Paths.get(System.getProperty("user.dir"), "backups");
+        Files.createDirectories(backupsDir);
+        Path filePath = backupsDir.resolve(filename);
+        Files.write(filePath, sqlContent);
+
+        return new DumpResult(sqlContent, filePath.toAbsolutePath().toString());
     }
 
     /**
@@ -112,6 +122,8 @@ public class BackupService {
     public String generateBackupFilename() {
         return "gcsc_backup_" + LocalDateTime.now().format(FILE_DATE_FMT) + ".sql";
     }
+
+    public record DumpResult(byte[] content, String absolutePath) {}
 
     private String[] parseJdbcUrl(String jdbcUrl) {
         // jdbc:mysql://localhost:3306/gcsc?...

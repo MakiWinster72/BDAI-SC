@@ -40,13 +40,19 @@ async function handleBackupDownload() {
     }
     const blob = await res.blob();
     const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "gcsc_backup.sql";
+    const serverPath = res.headers.get("X-Backup-Path") || "";
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    backupMessage.value = { type: "success", text: "SQL 文件已下载" };
+    backupMessage.value = {
+      type: "success",
+      text: serverPath
+        ? "SQL 文件已下载，已保存至：" + serverPath
+        : "SQL 文件已下载",
+    };
   } catch (e) {
     backupMessage.value = { type: "error", text: "备份失败，请检查服务端 mysqldump 是否可用" };
   } finally {

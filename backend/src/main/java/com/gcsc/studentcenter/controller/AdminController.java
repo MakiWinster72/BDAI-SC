@@ -101,13 +101,13 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
-            byte[] sqlContent = backupService.dumpDatabase();
-            String filename = backupService.generateBackupFilename();
-            ByteArrayResource resource = new ByteArrayResource(sqlContent);
+            BackupService.DumpResult result = backupService.dumpDatabase();
+            ByteArrayResource resource = new ByteArrayResource(result.content());
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(sqlContent.length))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + backupService.generateBackupFilename() + "\"")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(result.content().length))
+                    .header("X-Backup-Path", result.absolutePath())
                     .body(resource);
         } catch (RuntimeException e) {
             return ResponseEntity.internalServerError()
