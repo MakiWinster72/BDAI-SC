@@ -644,13 +644,16 @@
         <div class="achievement-grid" :class="{ 'has-media': form.category }">
           <transition name="panel-fade">
             <div v-show="form.category" class="achievement-media-panel">
-            <div class="media-header">
-              <div>
-                <div class="media-title">图片(可选)</div>
-                <div class="media-subtitle">
-                  最多 {{ imageMaxCount }} 张 · 单张不超过 {{ mediaLimitLabel }}
-                </div>
-              </div>
+            <div class="achievement-section-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              图片（可选）
+            </div>
+            <div class="media-subtitle">
+              最多 {{ imageMaxCount }} 张 · 单张不超过 {{ mediaLimitLabel }}
             </div>
 
             <div
@@ -726,9 +729,9 @@
           </transition>
 
           <div class="achievement-fields">
-            <div class="field-row">
+            <div class="achievement-category-row">
               <label class="field-label">成就分类</label>
-              <select v-model="form.category" class="form-input">
+              <select v-model="form.category">
                 <option disabled value="">请选择分类</option>
                 <option
                   v-for="entry in categoryOptions"
@@ -740,11 +743,37 @@
               </select>
             </div>
             <div v-if="activeCategoryHint" class="achievement-hint">
-              <ol class="achievement-hint-list">
-                <li v-for="item in activeCategoryHint.notes" :key="item">
-                  {{ item }}
-                </li>
-              </ol>
+              <button
+                class="achievement-hint-toggle"
+                type="button"
+                :aria-expanded="!hintCollapsed"
+                @click="hintCollapsed = !hintCollapsed"
+              >
+                <span class="achievement-hint-toggle-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  填写说明
+                </span>
+                <svg
+                  class="achievement-hint-chevron"
+                  :class="{ collapsed: hintCollapsed }"
+                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"
+                >
+                  <polyline points="18 15 12 9 6 15"/>
+                </svg>
+              </button>
+              <Transition name="hint-expand">
+                <div v-show="!hintCollapsed" class="achievement-hint-body">
+                  <ol class="achievement-hint-list">
+                    <li v-for="item in activeCategoryHint.notes" :key="item">
+                      {{ item }}
+                    </li>
+                  </ol>
+                </div>
+              </Transition>
             </div>
             <div v-if="!activeFormConfig" class="empty-tip">
               请选择成就分类后填写对应信息。
@@ -774,12 +803,13 @@
             </div>
             <transition name="panel-fade">
             <div v-show="form.category" class="achievement-attachments-panel">
-              <div class="media-header">
-                <div>
-                  <div class="media-title">附件(可选)</div>
-                  <div class="media-subtitle">最多 {{ attachmentMaxCount }} 个</div>
-                </div>
+              <div class="achievement-section-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                </svg>
+                附件（可选）
               </div>
+              <div class="media-subtitle">最多 {{ attachmentMaxCount }} 个 · 单个不超过 {{ attachmentLimitLabel }}</div>
               <div v-if="!attachmentPreviews.length" class="media-empty">
                 暂无附件
               </div>
@@ -823,9 +853,6 @@
                     <span class="format-exts">{{ item.exts.join("/") }}</span>
                   </div>
                 </div>
-              </div>
-              <div class="media-tip">
-                最多 {{ attachmentMaxCount }} 个 · 单个不超过 {{ attachmentLimitLabel }}
               </div>
             </div>
             </transition>
@@ -1034,6 +1061,7 @@ const { submitAchievementReviewRequest } = useNotifications(profile);
 const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useReviewSettings();
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
+const hintCollapsed = ref(false);
 const imageInput = ref(null);
 const attachmentInput = ref(null);
 const errorMessage = ref("");
