@@ -75,33 +75,13 @@
             </label>
             <label class="field-card">
               <span class="info-label">年级</span>
-              <div class="student-stepper">
-                <button
-                  class="stepper-button"
-                  type="button"
-                  :disabled="!isEditing || !canDecrementYear"
-                  @click="decrementYear"
-                >
-                  −
-                </button>
-                <input
-                  v-model.number="info.classYear"
-                  class="info-input stepper-input"
-                  type="number"
-                  step="1"
-                  placeholder="今年"
-                  :disabled="!isEditing"
-                  readonly
-                />
-                <button
-                  class="stepper-button"
-                  type="button"
-                  :disabled="!isEditing"
-                  @click="incrementYear"
-                >
-                  +
-                </button>
-              </div>
+              <StepperInput
+                v-model="info.classYear"
+                :min="2000"
+                :disabled="!isEditing"
+                readonly
+                placeholder="今年"
+              />
             </label>
             <label class="field-card">
               <span class="info-label">学生类别</span>
@@ -1124,6 +1104,7 @@ import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import ExportPdfButton from "../components/ExportPdfButton.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
+import StepperInput from "../components/StepperInput.vue";
 import {
   getMenuLocation,
   isMenuEnabled,
@@ -1337,21 +1318,6 @@ const saveActionLabel = computed(() => {
   if (isReviewer.value) return "保存";
   return hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled ? "请求审核" : "保存";
 });
-
-const MIN_YEAR = 2000;
-
-const canDecrementYear = computed(() =>
-  info.classYear > MIN_YEAR,
-);
-
-function decrementYear() {
-  if (!canDecrementYear.value) return;
-  info.classYear = Math.max(MIN_YEAR, info.classYear - 1);
-}
-
-function incrementYear() {
-  info.classYear = info.classYear + 1;
-}
 
 const dormBuildingOptions = computed(() => {
   if (info.dormCampus === "佛山校区") {

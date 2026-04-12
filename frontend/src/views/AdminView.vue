@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, shallowRef, watch } from "vue";
+import PaginationBar from "../components/PaginationBar.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
 import { getUserList, updateUser, deleteUser, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments } from "../api/admin";
@@ -938,34 +939,13 @@ watch([userSearch, userRoleFilter], () => {
               </div>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="userPages > 1" class="users-pagination">
-              <button
-                class="page-btn"
-                :disabled="userCurrentPage <= 1"
-                @click="loadUsers(userCurrentPage - 1)"
-                aria-label="上一页"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <div class="page-info">
-                <span class="page-current">{{ userCurrentPage }}</span>
-                <span class="page-sep">/</span>
-                <span class="page-total">{{ userPages }}</span>
-              </div>
-              <button
-                class="page-btn"
-                :disabled="userCurrentPage >= userPages"
-                @click="loadUsers(userCurrentPage + 1)"
-                aria-label="下一页"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
+            <PaginationBar
+              v-if="userPages > 1"
+              v-model:current-page="userCurrentPage"
+              :total-pages="userPages"
+              mode="simple"
+              @update:current-page="loadUsers"
+            />
           </div>
         </div>
 

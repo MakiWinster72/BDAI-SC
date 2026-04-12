@@ -86,32 +86,13 @@
               <div class="student-filter-panel-head">
                 <span class="info-label">班级</span>
               </div>
-              <div class="student-stepper">
-                <button
-                  class="stepper-button"
-                  type="button"
-                  :disabled="!canDecrementClass"
-                  @click="decrementClass"
-                >
-                  −
-                </button>
-                <input
-                  v-model="filters.classNo"
-                  class="info-input stepper-input"
-                  type="number"
-                  step="1"
-                  placeholder="全部"
-                  @input="normalizeClassNo"
-                />
-                <button
-                  class="stepper-button"
-                  type="button"
-                  :disabled="!canIncrementClass"
-                  @click="incrementClass"
-                >
-                  +
-                </button>
-              </div>
+              <StepperInput
+                v-model="filters.classNo"
+                :min="1"
+                :max="10"
+                wrap
+                placeholder="全部"
+              />
             </div>
           </div>
 
@@ -221,86 +202,14 @@
         </div>
         <div v-else class="empty-tip">没有匹配的学生。</div>
 
-        <div v-if="!gridViewOpen" class="student-pagination">
-          <div class="student-pages">
-            <!-- 首页 -->
-            <button
-              class="page-button page-nav"
-              type="button"
-              :disabled="currentPage === 1"
-              @click="setPage(1)"
-              aria-label="首页"
-            >
-              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M15 4L8 10l7 6V4z" fill="currentColor"/>
-                <rect x="4" y="4" width="2" height="12" fill="currentColor"/>
-              </svg>
-            </button>
-            <!-- 上一页 -->
-            <button
-              class="page-button page-nav"
-              type="button"
-              :disabled="currentPage === 1"
-              @click="setPage(currentPage - 1)"
-              aria-label="上一页"
-            >
-              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M11 4L4 10l7 6V4z" fill="currentColor"/>
-              </svg>
-            </button>
-
-            <!-- 页码 -->
-            <template v-for="item in visiblePages" :key="item.value">
-              <button
-                v-if="item.type === 'num'"
-                class="page-button"
-                :class="{ active: item.value === currentPage }"
-                type="button"
-                @click="setPage(item.value)"
-              >
-                {{ item.value }}
-              </button>
-              <span v-else class="page-ellipsis" aria-hidden="true">···</span>
-            </template>
-
-            <!-- 下一页 -->
-            <button
-              class="page-button page-nav"
-              type="button"
-              :disabled="currentPage === totalPages"
-              @click="setPage(currentPage + 1)"
-              aria-label="下一页"
-            >
-              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M9 4l7 6-7 6V4z" fill="currentColor"/>
-              </svg>
-            </button>
-            <!-- 末页 -->
-            <button
-              class="page-button page-nav"
-              type="button"
-              :disabled="currentPage === totalPages"
-              @click="setPage(totalPages)"
-              aria-label="末页"
-            >
-              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M5 4l7 6-7 6V4z" fill="currentColor"/>
-                <rect x="14" y="4" width="2" height="12" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="page-size">
-            <span class="info-label">每页</span>
-            <select
-              v-model.number="pageSize"
-              class="info-input page-size-input"
-            >
-              <option v-for="size in pageSizeOptions" :key="size" :value="size">
-                {{ size }}
-              </option>
-            </select>
-          </div>
+        <div v-if="!gridViewOpen">
+          <PaginationBar
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total-pages="totalPages"
+            :page-size-options="pageSizeOptions"
+            mode="full"
+          />
         </div>
       </section>
     </section>
@@ -551,6 +460,8 @@ import { listAchievements } from "../api/achievement";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import StudentExportDialog from "../components/StudentExportDialog.vue";
 import StudentProfileEditor from "../components/StudentProfileEditor.vue";
+import PaginationBar from "../components/PaginationBar.vue";
+import StepperInput from "../components/StepperInput.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useToast } from "../composables/useToast";
@@ -880,32 +791,6 @@ function cancelSelection() {
   selectedIds.value = [];
 }
 
-/**
- * Sliding window pagination: always shows current page ± 2,
- * plus first/last and ellipsis when needed.
- * e.g. [1] [...] [3 4] 5 [6 7] [...] [20]
- */
-const WINDOW = 2;
-const visiblePages = computed(() => {
-  const total = totalPages.value;
-  const cur = currentPage.value;
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => ({ type: "num", value: i + 1 }));
-  }
-  const pages = [];
-  const addNum = (n) => pages.push({ type: "num", value: n });
-  const addEllipsis = (key) => pages.push({ type: "ellipsis", value: key });
-
-  addNum(1);
-  if (cur - WINDOW > 2) addEllipsis("left");
-  for (let i = Math.max(2, cur - WINDOW); i <= Math.min(total - 1, cur + WINDOW); i++) {
-    addNum(i);
-  }
-  if (cur + WINDOW < total - 1) addEllipsis("right");
-  addNum(total);
-
-  return pages;
-});
 const achievementUrl = computed(() => {
   if (!viewItem.value) {
     return "/achievements?category=all";
@@ -1279,48 +1164,6 @@ function buildClassName(item) {
   const safeMajor = item.classMajor || "";
   const safeNo = item.classNo ? `${item.classNo}班` : "";
   return `${safeYear}${safeMajor}${safeNo}`.trim();
-}
-
-function normalizeClassNo() {
-  if (filters.classNo === "") {
-    return;
-  }
-  const next = Number(filters.classNo);
-  if (Number.isNaN(next)) {
-    filters.classNo = "";
-    return;
-  }
-  const clamped = Math.min(Math.max(1, next), 10);
-  filters.classNo = String(clamped);
-}
-
-const canDecrementClass = computed(() => true);
-const canIncrementClass = computed(() => true);
-
-function decrementClass() {
-  const current = Number(filters.classNo);
-  if (!filters.classNo || Number.isNaN(current)) {
-    filters.classNo = "10";
-    return;
-  }
-  if (current <= 1) {
-    filters.classNo = "";
-    return;
-  }
-  filters.classNo = String(current - 1);
-}
-
-function incrementClass() {
-  const current = Number(filters.classNo);
-  if (!filters.classNo || Number.isNaN(current)) {
-    filters.classNo = "1";
-    return;
-  }
-  if (current >= 10) {
-    filters.classNo = "";
-    return;
-  }
-  filters.classNo = String(current + 1);
 }
 
 function resetFilters() {
