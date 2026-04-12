@@ -920,12 +920,15 @@ import {
   attachmentIcon,
 } from "../utils/achievement";
 import {
+  categoryFieldMap,
+  categoryHints,
   achievementEntries,
   ATTACHMENT_TYPE_META,
   attachmentIconMap,
   IMAGE_URLS_FIELD,
   ATTACHMENTS_FIELD,
 } from "../constants/achievementConstants";
+import { useAchievementUpload } from "../composables/useAchievementUpload";
 
 const router = useRouter();
 const route = useRoute();
@@ -936,8 +939,6 @@ const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useRevi
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
 const hintCollapsed = ref(false);
-const imageInput = ref(null);
-const attachmentInput = ref(null);
 const errorMessage = ref("");
 const viewOpen = ref(false);
 const viewLoading = ref(false);
@@ -962,6 +963,24 @@ const {
   settings: achievementUploadSettings,
   fetchSettings: fetchAchievementUploadSettings,
 } = useAchievementUploadSettings();
+
+const {
+  uploadLimitConfig,
+  setUploadLimits,
+  isAllowedImage,
+  isAllowedAttachment,
+  isFileSizeAllowed,
+  attachmentExtsByType,
+  resolveAttachmentTypeByExtension,
+  imageMaxCount,
+  attachmentMaxCount,
+  mediaLimitLabel,
+  attachmentLimitLabel,
+  allowedAttachmentExtensions,
+  imageInput,
+  attachmentInput,
+  enabledAttachmentTypes,
+} = useAchievementUpload();
 
 const achievements = ref([]);
 
@@ -1003,530 +1022,19 @@ const form = reactive({
   fields: {},
 });
 
+const imagePreviews = computed(() =>
+  (form.imageUrls || []).map((url) => resolveMediaUrl(url)),
+);
+const attachmentPreviews = computed(() =>
+  (form.attachments || []).map((file) => ({
+    ...file,
+    url: resolveMediaUrl(file.url),
+  })),
+);
+
 const categoryOptions = computed(() =>
   achievementEntries.filter((entry) => entry.key !== "all"),
 );
-const categoryFieldMap = {
-  contest: {
-    titleKey: "contestName",
-    dateKey: "awardDate",
-    noteKey: "remark",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "contestName",
-        label: "竞赛名称",
-        kind: "input",
-        placeholder: "请输入竞赛名称",
-      },
-      {
-        key: "organizer",
-        label: "主办单位",
-        kind: "input",
-        placeholder: "请输入主办单位",
-      },
-      {
-        key: "contestCategory",
-        label: "竞赛类别",
-        kind: "input",
-        placeholder: "国家级/省部级/校级",
-      },
-      {
-        key: "awardCategory",
-        label: "获奖类别",
-        kind: "input",
-        placeholder: "国家级/省部级/校级",
-      },
-      {
-        key: "awardLevel",
-        label: "获奖等级",
-        kind: "input",
-        placeholder: "特等奖/一等奖/二等奖/三等奖",
-      },
-      {
-        key: "contestType",
-        label: "竞赛类型",
-        kind: "input",
-        placeholder: "互联网+/挑战杯/创青春/其他",
-      },
-      { key: "awardDate", label: "获奖时间", kind: "input", type: "date" },
-      {
-        key: "awardCount",
-        label: "获奖人数",
-        kind: "input",
-        placeholder: "请输入获奖人数",
-      },
-      {
-        key: "teamMembers",
-        label: "团队其他成员",
-        kind: "input",
-        placeholder: "按证书顺序填写",
-      },
-      {
-        key: "instructors",
-        label: "指导老师",
-        kind: "input",
-        placeholder: "可填写多名老师",
-      },
-      { key: "remark", label: "备注", kind: "input", placeholder: "团体/个人" },
-    ],
-  },
-  paper: {
-    titleKey: "paperTitle",
-    dateKey: "publishDate",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "paperTitle",
-        label: "论文名称",
-        kind: "input",
-        placeholder: "请输入论文名称",
-      },
-      {
-        key: "journalName",
-        label: "发表期刊",
-        kind: "input",
-        placeholder: "请输入期刊名称",
-      },
-      { key: "publishDate", label: "发表时间", kind: "input", type: "date" },
-      {
-        key: "authorOrder",
-        label: "作者排序",
-        kind: "input",
-        placeholder: "如：第一作者",
-      },
-      {
-        key: "indexed",
-        label: "收录情况",
-        kind: "input",
-        placeholder: "如：EI/SCI/北大核心",
-      },
-    ],
-  },
-  journal: {
-    titleKey: "workTitle",
-    dateKey: "publishDate",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "workTitle",
-        label: "作品名称",
-        kind: "input",
-        placeholder: "请输入作品名称",
-      },
-      {
-        key: "publicationName",
-        label: "发表刊物名称",
-        kind: "input",
-        placeholder: "请输入刊物名称",
-      },
-      { key: "publishDate", label: "发表时间", kind: "input", type: "date" },
-    ],
-  },
-  patent: {
-    titleKey: "patentName",
-    dateKey: "grantDate",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "patentName",
-        label: "名称",
-        kind: "input",
-        placeholder: "请输入专利/著作权名称",
-      },
-      {
-        key: "patentType",
-        label: "类别",
-        kind: "input",
-        placeholder: "发明/实用新型/外观设计/软件著作权",
-      },
-      {
-        key: "grantNo",
-        label: "授权号",
-        kind: "input",
-        placeholder: "请输入授权号",
-      },
-      { key: "grantDate", label: "获批时间", kind: "input", type: "date" },
-      {
-        key: "firstInventor",
-        label: "是否第一发明人",
-        kind: "input",
-        placeholder: "是/否",
-      },
-    ],
-  },
-  certificate: {
-    titleKey: "certificateName",
-    dateKey: "obtainDate",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "certificateType",
-        label: "证书类别",
-        kind: "input",
-        placeholder: "专业技术人员/技能人员",
-      },
-      {
-        key: "certificateName",
-        label: "证书名称",
-        kind: "input",
-        placeholder: "请输入证书名称",
-      },
-      { key: "obtainDate", label: "获得时间", kind: "input", type: "date" },
-    ],
-  },
-  research: {
-    titleKey: "projectName",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "projectName",
-        label: "参与科研项目名称",
-        kind: "input",
-        placeholder: "请输入项目名称",
-      },
-      {
-        key: "teacherNo",
-        label: "教师工号",
-        kind: "input",
-        placeholder: "请输入教师工号",
-      },
-      {
-        key: "projectLeader",
-        label: "项目负责人",
-        kind: "input",
-        placeholder: "请输入负责人姓名",
-      },
-    ],
-  },
-  works: {
-    titleKey: "workName",
-    dateKey: "publishDate",
-    noteKey: "note",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "workName",
-        label: "作品名称",
-        kind: "input",
-        placeholder: "请输入作品名称",
-      },
-      {
-        key: "workCategory",
-        label: "类别",
-        kind: "input",
-        placeholder: "理论类/创作类/表演类",
-      },
-      {
-        key: "workType",
-        label: "类型",
-        kind: "input",
-        placeholder: "大型/中型/小型作品",
-      },
-      { key: "publishDate", label: "发布时间", kind: "input", type: "date" },
-      {
-        key: "publishOccasion",
-        label: "发布场合",
-        kind: "input",
-        placeholder: "请输入发布场合",
-      },
-      {
-        key: "organizer",
-        label: "主办单位",
-        kind: "input",
-        placeholder: "请输入主办单位",
-      },
-      {
-        key: "impactScope",
-        label: "影响范围",
-        kind: "input",
-        placeholder: "全国/区域/省内",
-      },
-      {
-        key: "note",
-        label: "说明",
-        kind: "textarea",
-        rows: 2,
-        placeholder: "补充说明",
-      },
-    ],
-  },
-  doubleHundred: {
-    titleKey: "projectName",
-    dateKey: "projectDate",
-    fields: [
-      {
-        key: "projectCategory",
-        label: "项目类别",
-        kind: "input",
-        placeholder: "请输入项目类别",
-      },
-      {
-        key: "projectDomain",
-        label: "项目所属领域",
-        kind: "input",
-        placeholder: "请输入项目所属领域",
-      },
-      {
-        key: "projectName",
-        label: "申报作品名",
-        kind: "input",
-        placeholder: "请输入申报作品名",
-      },
-      {
-        key: "projectLeader",
-        label: "项目负责人",
-        kind: "input",
-        placeholder: "请输入项目负责人",
-      },
-      {
-        key: "leaderStudentNo",
-        label: "负责人学号",
-        kind: "input",
-        placeholder: "请输入负责人学号",
-      },
-      {
-        key: "educationLevel",
-        label: "本科/研究生",
-        kind: "input",
-        placeholder: "请输入本科或研究生",
-      },
-      {
-        key: "teamMembers",
-        label: "项目其他成员",
-        kind: "input",
-        placeholder: "请输入项目其他成员",
-      },
-      {
-        key: "instructors",
-        label: "指导老师（全体）",
-        kind: "input",
-        placeholder: "请输入指导老师",
-      },
-      {
-        key: "teamSize",
-        label: "项目人数",
-        kind: "input",
-        placeholder: "请输入项目人数",
-      },
-      {
-        key: "plannedLevel",
-        label: "拟立项等级",
-        kind: "input",
-        placeholder: "请输入拟立项等级",
-      },
-      {
-        key: "college",
-        label: "学院",
-        kind: "input",
-        placeholder: "请输入学院",
-      },
-      {
-        key: "finalLevel",
-        label: "结项等级",
-        kind: "input",
-        placeholder: "优秀/良好/合格/不合格",
-      },
-    ],
-  },
-  ieerTraining: {
-    titleKey: "projectName",
-    dateKey: "projectDate",
-    fields: [
-      {
-        key: "collegeName",
-        label: "学院名称",
-        kind: "input",
-        placeholder: "请输入学院名称",
-      },
-      {
-        key: "projectName",
-        label: "项目名称",
-        kind: "input",
-        placeholder: "请输入项目名称",
-      },
-      {
-        key: "projectType",
-        label: "项目类型",
-        kind: "input",
-        placeholder: "请输入项目类型",
-      },
-      {
-        key: "projectLeader",
-        label: "项目负责人姓名",
-        kind: "input",
-        placeholder: "请输入项目负责人姓名",
-      },
-      {
-        key: "instructorName",
-        label: "指导教师姓名",
-        kind: "input",
-        placeholder: "请输入指导教师姓名",
-      },
-      {
-        key: "recommendedLevel",
-        label: "推荐项目级别",
-        kind: "input",
-        placeholder: "请输入推荐项目级别",
-      },
-      {
-        key: "isKeyArea",
-        label: "是否推荐为重点领域支持项目",
-        kind: "input",
-        placeholder: "是/否",
-      },
-      {
-        key: "finalStatus",
-        label: "结项情况",
-        kind: "input",
-        placeholder: "优秀/通过/延期结项/终止项目",
-      },
-    ],
-  },
-};
-const categoryHints = {
-  contest: {
-    notes: [
-      "学科竞赛获奖指本科生校级及以上竞赛类活动获奖。其中省级以上统计范围为：全国大学生电子设计竞赛、全国大学生电子设计竞赛嵌入式专题竞赛、全国大学生数学建模竞赛、全国大学生广告艺术设计大赛、全国大学生英语竞赛、全国大学生英语演讲竞赛、全国大学生化学实验竞赛、全国大学生电子商务竞赛、全国大学生机械创新设计大赛、全国周培源大学生力学竞赛、全国大学生结构设计竞赛、“挑战杯”全国大学生科技作品竞赛、“挑战杯”全国大学生创业计划大赛、美国数学模型竞赛（MCM）、美国大学生程序设计竞赛（ACM）、国际大学生机械设计竞赛、全国临床技能大赛及其他具有全球影响和全国影响的比赛等。",
-      "文体艺术获奖指本科生在国内外及省、部级等文艺、体育竞赛中获得的奖项数。切勿与前项学科竞赛获奖重复。",
-      "“竞赛名称”填写须完整、规范，如：第十三届“挑战杯”中国大学生创业计划竞赛，第十五届大学生科技学术季活动之广东大学生社会治理调研大赛。",
-      "主办单位：以活动通知和荣誉证书上的记载为准。填写单位规范全称，多个单位联合主办的，填写“第一主办单位名称+等”，如“共青团广东省委员会等”。",
-      "获奖时间具体到月，如“2024年10月”。",
-      "获奖类别：限选国家级、省部级、校级。国际级竞赛等同于国家级，全国性行业协会主办赛事等同省部级。",
-      "获奖等级：指特等奖、一等奖、二等奖、三等奖；冠军、亚军、季军；金奖、银奖、铜奖。",
-      "竞赛类型：“互联网+”创新创业大赛、挑战杯、创青春中国青年创新创业大赛、其他。",
-      "指导老师：以正式获奖通知文件或荣誉证书记载为准，指导老师多人的，全部填写。比赛未设指导老师或无指导老师的，可不填。",
-      "备注：团体、个人。",
-    ],
-    fields:
-      "学号 学生姓名 竞赛名称 主办单位 竞赛类别 获奖类别 获奖等级 竞赛类型 获奖时间 获奖人数 团队其他成员（请按证书顺序撰写） 指导老师 备注",
-  },
-  paper: {
-    notes: [
-      "发表时间具体到月，如“2024年10月”。",
-      "发表期刊如是论文集，需在刊物名称中括号备注。",
-      "佐证材料需提供：(1)期刊封面、目录、论文全文或见刊证明、论文全文；(2)已被权威数据库收录的需提供检索证明。",
-    ],
-    fields: "学号 学生姓名 论文名称 发表期刊 发表时间 作者排序 收录情况",
-  },
-  journal: {
-    notes: [
-      "发表时间具体到月，如“2024年10月”。",
-      "作品指在校本科生在国内外正式出版刊物或重大活动上以第一作者发表作品的数量（例如：诗歌、散文、小说等）。",
-    ],
-    fields: "学号 学生姓名 作品名称 发表刊物名称 发表时间",
-  },
-  patent: {
-    notes: [
-      "发表时间具体到月，如“2024年10月”。",
-      "专利类别指发明专利、实用新型专利、外观设计专利、软件著作权。",
-    ],
-    fields: "学号 学生姓名 名称 类别 授权号 获批时间 是否第一发明人",
-  },
-  certificate: {
-    notes: [
-      "发表时间具体到月，如“2024年10月”。",
-      "证书类别指包括专业技术人员职业资格、技能人员职业资格。",
-      "证书指在人力资源社会保障部公布的《国家职业资格目录（2021年版）》内的职业资格证。",
-    ],
-    fields: "学号 学生姓名 证书类别 证书名称 获得时间",
-  },
-  research: {
-    notes: [
-      "发表时间具体到月，如“2024年10月”。",
-      "参与科研项目指本科生参加的各类教师主持的国家、省部纵向项目，以及学校科技管理部门科研考核统计的横向项目（自然年内在研项目）。",
-    ],
-    fields: "学号 学生姓名 参与科研项目名称 教师工号 项目负责人",
-  },
-  works: {
-    notes: [
-      "发表时间具体到月，如“2024年10月”。",
-      "类别：理论类、创作类、表演类。",
-      "类型:指大型作品、中型作品、小型作品。其中大型作品、中型作品、小型作品的划分，依据音乐、戏剧、影视类作品的规模（包括作品时长、技术含量、参与程度等）。",
-      "影响范围：指全国（含国际）、区域、省内。",
-    ],
-    fields:
-      "学号 学生姓名 作品名称 类别 类型 发布时间 发布场合 主办单位 影响范围 说明",
-  },
-};
-
 const roleLabelMap = {
   STUDENT: "学生",
   TEACHER: "教师",
@@ -2345,117 +1853,6 @@ function applyFieldDefaults() {
   if (hasStudentName && !form.fields.studentName) {
     form.fields.studentName = getCurrentStudentName();
   }
-}
-
-const uploadLimitConfig = reactive({
-  imageMaxCount: achievementUploadSettings.imageMaxCount,
-  mediaMaxMB: achievementUploadSettings.imageMaxSizeMb,
-  attachmentMaxCount: achievementUploadSettings.attachmentMaxCount,
-  attachmentMaxMB: achievementUploadSettings.attachmentMaxSizeMb,
-  attachmentDocumentExts: splitExtText(achievementUploadSettings.attachmentDocumentExts),
-  attachmentVideoExts: splitExtText(achievementUploadSettings.attachmentVideoExts),
-  attachmentImageExts: splitExtText(achievementUploadSettings.attachmentImageExts),
-  attachmentArchiveExts: splitExtText(achievementUploadSettings.attachmentArchiveExts),
-});
-
-const imageMaxCount = computed(() => uploadLimitConfig.imageMaxCount);
-const attachmentMaxCount = computed(() => uploadLimitConfig.attachmentMaxCount);
-const enabledAttachmentTypes = computed(() =>
-  ATTACHMENT_TYPE_META.map((item) => ({
-    ...item,
-    exts: attachmentExtsByType(item.key),
-  })).filter((item) => item.exts.length),
-);
-const allowedAttachmentExtensions = computed(() =>
-  enabledAttachmentTypes.value.flatMap((item) => item.exts),
-);
-
-const mediaLimitLabel = computed(() =>
-  formatFileSize(uploadLimitConfig.mediaMaxMB),
-);
-const attachmentLimitLabel = computed(() =>
-  formatFileSize(uploadLimitConfig.attachmentMaxMB),
-);
-
-const imagePreviews = computed(() =>
-  (form.imageUrls || []).map((url) => resolveMediaUrl(url)),
-);
-const attachmentPreviews = computed(() =>
-  (form.attachments || []).map((file) => ({
-    ...file,
-    url: resolveMediaUrl(file.url),
-  })),
-);
-
-function setUploadLimits({
-  imageMaxCount,
-  mediaMaxMB,
-  attachmentMaxCount,
-  attachmentMaxMB,
-  attachmentDocumentExts,
-  attachmentVideoExts,
-  attachmentImageExts,
-  attachmentArchiveExts,
-}) {
-  if (Number.isFinite(imageMaxCount) && imageMaxCount > 0) {
-    uploadLimitConfig.imageMaxCount = imageMaxCount;
-  }
-  if (Number.isFinite(mediaMaxMB) && mediaMaxMB > 0) {
-    uploadLimitConfig.mediaMaxMB = mediaMaxMB;
-  }
-  if (Number.isFinite(attachmentMaxCount) && attachmentMaxCount > 0) {
-    uploadLimitConfig.attachmentMaxCount = attachmentMaxCount;
-  }
-  if (Number.isFinite(attachmentMaxMB) && attachmentMaxMB > 0) {
-    uploadLimitConfig.attachmentMaxMB = attachmentMaxMB;
-  }
-  uploadLimitConfig.attachmentDocumentExts = splitExtText(attachmentDocumentExts);
-  uploadLimitConfig.attachmentVideoExts = splitExtText(attachmentVideoExts);
-  uploadLimitConfig.attachmentImageExts = splitExtText(attachmentImageExts);
-  uploadLimitConfig.attachmentArchiveExts = splitExtText(attachmentArchiveExts);
-}
-
-function splitExtText(value = "") {
-  return String(value)
-    .split(",")
-    .map((item) => item.trim().toLowerCase().replace(/^\./, ""))
-    .filter(Boolean);
-}
-
-function attachmentExtsByType(typeKey) {
-  if (typeKey === "document") return uploadLimitConfig.attachmentDocumentExts;
-  if (typeKey === "video") return uploadLimitConfig.attachmentVideoExts;
-  if (typeKey === "image") return uploadLimitConfig.attachmentImageExts;
-  return uploadLimitConfig.attachmentArchiveExts;
-}
-
-function isAllowedImage(file) {
-  const ext = resolveMediaTypeByExtension(file.name || "");
-  return ["jpeg", "jpg", "png", "heif"].includes(ext);
-}
-
-function isAllowedAttachment(file) {
-  const ext = resolveMediaTypeByExtension(file.name || "");
-  return allowedAttachmentExtensions.value.includes(ext);
-}
-
-function isFileSizeAllowed(file, limitMb) {
-  if (!Number.isFinite(limitMb)) {
-    return true;
-  }
-  return file.size / (1024 * 1024) <= limitMb;
-}
-
-function formatFileSize(value) {
-  return `${value}MB`;
-}
-
-function resolveAttachmentTypeByExtension(ext = "") {
-  if (uploadLimitConfig.attachmentDocumentExts.includes(ext)) return "document";
-  if (uploadLimitConfig.attachmentVideoExts.includes(ext)) return "video";
-  if (uploadLimitConfig.attachmentImageExts.includes(ext)) return "image";
-  if (uploadLimitConfig.attachmentArchiveExts.includes(ext)) return "archive";
-  return "";
 }
 
 function resolveImageUrls(item) {

@@ -4,6 +4,13 @@ import { regionData, codeToText } from "element-china-area-data";
 import ExportPdfButton from "./ExportPdfButton.vue";
 import { uploadMedia } from "../api/upload";
 import { useToast } from "../composables/useToast";
+import {
+  buildClassName,
+  buildDormRoom,
+  buildAddress,
+  parseAddressToRegion,
+  parseDormRoom,
+} from "../utils/profile";
 
 const props = defineProps({
   student: {
@@ -1137,97 +1144,6 @@ function buildCurrentProfileState() {
     educationExperiences: educationItems.map((item) => ({ ...item })),
     cadreExperiences: cadreItems.map((item) => ({ ...item })),
   };
-}
-
-function buildClassName(year, major, no, fallback) {
-  const hasParts = Boolean(year || major || no);
-  if (!hasParts && fallback) {
-    return fallback;
-  }
-  const safeYear = year ? `${year}级` : "";
-  const safeMajor = major || "";
-  const safeNo = no ? `${no}班` : "";
-  return `${safeYear}${safeMajor}${safeNo}`.trim();
-}
-
-function buildDormRoom(floor, roomNo, fallback) {
-  const safeFloor = String(floor || "").trim();
-  const safeRoomNo = String(roomNo || "").trim();
-  if (safeFloor || safeRoomNo) {
-    return `${safeFloor}层${safeRoomNo}号`.trim();
-  }
-  return fallback || "";
-}
-
-function buildAddress(province, city, county, detail, fallback) {
-  const parts = [codeToText[province], codeToText[city], codeToText[county]].filter(Boolean);
-  const safeDetail = String(detail || "").trim();
-  const combined = [...parts, safeDetail].filter(Boolean).join("");
-  if (combined) {
-    return combined;
-  }
-  return String(fallback || "").trim();
-}
-
-function parseAddressToRegion(rawAddress) {
-  const address = String(rawAddress || "").trim();
-  if (!address) {
-    return { province: "", city: "", county: "", detail: "" };
-  }
-  const province = regionData.find((item) => address.startsWith(item.label));
-  if (!province) {
-    return { province: "", city: "", county: "", detail: address };
-  }
-  let remaining = address.slice(province.label.length);
-  let city = province.children?.find((item) => remaining.startsWith(item.label));
-  let county = null;
-
-  if (city) {
-    remaining = remaining.slice(city.label.length);
-    county = city.children?.find((item) => remaining.startsWith(item.label));
-    if (county) {
-      remaining = remaining.slice(county.label.length);
-    }
-  } else {
-    for (const candidate of province.children || []) {
-      for (const item of candidate.children || []) {
-        const prefix = `${candidate.label}${item.label}`;
-        if (remaining.startsWith(prefix)) {
-          city = candidate;
-          county = item;
-          remaining = remaining.slice(prefix.length);
-          break;
-        }
-      }
-      if (city) {
-        break;
-      }
-    }
-  }
-
-  return {
-    province: province.value,
-    city: city?.value || "",
-    county: county?.value || "",
-    detail: remaining.trim(),
-  };
-}
-
-function parseDormRoom(rawValue) {
-  const raw = String(rawValue || "").trim();
-  if (!raw) {
-    return { floor: "", roomNo: "" };
-  }
-  const digits = raw.replace(/\D/g, "");
-  if (!digits) {
-    return { floor: "", roomNo: "" };
-  }
-  if (digits.length <= 2) {
-    return { floor: "", roomNo: digits };
-  }
-  const floor = digits.slice(0, digits.length - 2);
-  const roomNo = digits.slice(-2);
-  return { floor, roomNo };
 }
 
 function applyEducationExperiences(rawItems) {
