@@ -99,6 +99,7 @@
 .notif-empty {
   display: grid;
   place-items: center;
+  margin: 0 20px;
   padding: 56px 24px;
   border-radius: 24px;
   background: var(--card);
