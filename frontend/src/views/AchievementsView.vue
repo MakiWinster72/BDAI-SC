@@ -574,7 +574,7 @@
           </transition>
 
           <div class="achievement-fields">
-            <div class="achievement-category-row">
+            <div v-if="!editId" class="achievement-category-row">
               <label class="field-label">成就分类</label>
               <select v-model="form.category">
                 <option disabled value="">请选择分类</option>
@@ -587,7 +587,7 @@
                 </option>
               </select>
             </div>
-            <div v-if="activeCategoryHint" class="achievement-hint">
+            <div v-if="!editId && activeCategoryHint" class="achievement-hint">
               <button
                 class="achievement-hint-toggle"
                 type="button"
@@ -613,7 +613,7 @@
               <Transition name="hint-expand">
                 <div v-show="!hintCollapsed" class="achievement-hint-body">
                   <ol class="achievement-hint-list">
-                    <li v-for="item in activeCategoryHint.notes" :key="item">
+                    <li v-for="item in activeCategoryHint" :key="item">
                       {{ item }}
                     </li>
                   </ol>
