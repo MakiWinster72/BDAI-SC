@@ -2675,8 +2675,8 @@ function loadUser() {
 }
 
 .student-results-card {
-  --card-padding: 16px;
-  gap: 16px;
+  --card-padding: 20px;
+  gap: 18px;
   position: relative;
   z-index: 1;
   min-height: 420px;
@@ -2686,36 +2686,40 @@ function loadUser() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
 }
 
 .student-results-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .student-list {
   display: grid;
-  gap: 10px;
+  gap: 14px;
 }
 
 .student-results-loading {
   display: grid;
   place-items: center;
-  min-height: 240px;
+  min-height: 280px;
+  color: var(--text-sub);
+  font-size: 14px;
 }
 
 .student-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.6);
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
   border: 1.5px solid transparent;
   transition:
     background 0.15s ease,
@@ -2734,25 +2738,30 @@ function loadUser() {
 
 .student-main {
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .student-name {
   font-weight: 700;
+  font-size: 15px;
   color: var(--primary-dark);
 }
 
 .student-meta {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-sub);
+  line-height: 1.4;
 }
 
 .student-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
 }
 
 .student-pages {
@@ -3371,16 +3380,21 @@ function loadUser() {
   .student-results-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 12px;
   }
 
   .student-results-actions {
     width: 100%;
+    gap: 8px;
   }
 
   .student-pagination {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 12px;
+    padding-top: 12px;
+    margin-top: 4px;
   }
 
   .student-pages {
@@ -3392,15 +3406,15 @@ function loadUser() {
   }
 
   .student-list {
-    gap: 8px;
+    gap: 12px;
   }
 
   .student-row {
     grid-template-columns: auto 1fr auto;
-    gap: 10px;
+    gap: 12px;
     padding: 14px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.85);
     border: 1.5px solid transparent;
     transition:
       background 0.15s ease,
@@ -3409,17 +3423,17 @@ function loadUser() {
   }
 
   .student-row:active {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     transform: scale(0.99);
   }
 
   .student-main {
-    gap: 6px;
+    gap: 5px;
   }
 
   .student-name {
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--primary-dark);
     line-height: 1.3;
   }
@@ -3433,15 +3447,11 @@ function loadUser() {
 
   .student-row .ghost-button {
     align-self: center;
-    padding: 6px 14px;
+    padding: 8px 16px;
     font-size: 12px;
     border-radius: 50px;
     white-space: nowrap;
     flex-shrink: 0;
-  }
-
-  .student-list {
-    gap: 12px;
   }
 
   /* ── 表格视图（切换表格后）────────────── */
