@@ -2252,6 +2252,8 @@ function loadUser() {
   padding: 0 18px;
 }
 
+/* ── 表格切换按钮 ─────────────────────────── */
+
 .student-grid-toggle {
   border: none;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -2296,65 +2298,14 @@ function loadUser() {
   height: 100%;
 }
 
-.student-grid-wrap {
-  margin-top: 14px;
-}
-
-.student-grid-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  color: var(--text-sub);
-  font-size: 13px;
-}
-
-.student-grid-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.student-grid-title {
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.student-grid-status {
-  color: var(--text-sub);
-}
-
-.student-grid-field-group {
-  display: grid;
-  gap: 6px;
-}
-
-.student-grid-field-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.student-grid-field-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-sub);
-  font-size: 13px;
-}
+/* ── 表格视图 ─────────────────────────────── */
 
 .student-grid-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 10px;
-  align-items: center;
-}
-
-.student-filter-card .student-grid-tabs {
   margin-top: 12px;
+  align-items: center;
 }
 
 .student-grid-tab {
@@ -2393,6 +2344,57 @@ function loadUser() {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+.student-grid-tab-add {
+  padding: 6px 12px;
+}
+
+.student-grid-status {
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.student-grid-wrap {
+  position: relative;
+  margin-top: 14px;
+}
+
+.student-grid {
+  width: 100%;
+  height: 520px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.student-grid-wrap.fullscreen {
+  position: fixed;
+  inset: 0;
+  bottom: 100px;
+  z-index: 80;
+  background: var(--bg-base);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-grid-wrap.fullscreen .student-grid {
+  flex: 1;
+  border-radius: 16px;
+  min-height: 0;
+}
+
+.student-grid-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.student-grid-wrap.fullscreen .student-grid-toolbar {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+/* ── 字段选择对话框 ──────────────────────── */
 
 .grid-field-dialog-backdrop {
   position: fixed;
@@ -2444,66 +2446,6 @@ function loadUser() {
 .grid-field-dialog::-webkit-scrollbar {
   width: 0;
   height: 0;
-}
-
-.student-grid {
-  width: 100%;
-  height: 520px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.student-grid-wrap {
-  position: relative;
-}
-
-.student-grid-wrap.fullscreen {
-  position: fixed;
-  inset: 0;
-  bottom: 100px;
-  z-index: 80;
-  background: var(--bg-base);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-}
-
-.student-grid-wrap.fullscreen .student-grid {
-  flex: 1;
-  border-radius: 16px;
-  min-height: 0;
-}
-
-.student-grid-fullscreen {
-  border: 1px solid var(--line-strong);
-  background: var(--card);
-  color: var(--primary-dark);
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-  min-height: 44px;
-  min-width: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.student-grid-fullscreen:hover {
-  background: var(--card-hover);
-  border-color: var(--primary);
-}
-
-.student-grid-fullscreen:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-.student-grid-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
 }
 
 .student-search {
@@ -3536,11 +3478,6 @@ function loadUser() {
     border-radius: 0;
   }
 
-  .student-grid-fullscreen {
-    padding: 7px 12px;
-    font-size: 11px;
-  }
-
   .student-grid-wrap.fullscreen {
     padding: 12px;
     z-index: 200;
@@ -3621,13 +3558,11 @@ function loadUser() {
 
 @media (prefers-reduced-motion: reduce) {
   .student-row,
-  .student-grid-toggle,
   .student-grid-tab,
   .stepper-button,
   .page-button,
   .export-preview-tab,
   .student-filter-reset,
-  .student-grid-fullscreen,
   .grid-field-dialog,
   .export-dialog,
   .student-detail-view,
