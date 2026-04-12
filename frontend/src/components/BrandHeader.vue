@@ -66,7 +66,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { API_BASE } from "../api/request";
+import { resolveMediaUrl } from "../utils/media";
 
 const props = defineProps({
   profile: {
@@ -130,11 +130,6 @@ const roleLabel = computed(() => {
   return "学生";
 });
 
-function resolveMediaUrl(url) {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return `${API_BASE}${url}`;
-}
 </script>
 
 <style scoped>

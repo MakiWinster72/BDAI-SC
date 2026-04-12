@@ -244,60 +244,6 @@
   margin-bottom: 8px;
 }
 
-/* ── 字段选择对话框 ──────────────────────── */
-
-.grid-field-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(45, 26, 62, 0.35);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 60;
-}
-
-.grid-field-dialog {
-  position: fixed;
-  left: 50%;
-  bottom: 16px;
-  width: min(860px, calc(100vw - 32px));
-  max-height: 84vh;
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-  pointer-events: none;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  background: var(--card);
-  box-shadow: var(--shadow-glow);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 70;
-  transition:
-    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 250ms ease;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: auto;
-  scrollbar-width: none;
-  padding: 12px 14px 16px;
-}
-
-.grid-field-dialog.open {
-  transform: translate(-50%, 0) scale(1);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.grid-field-dialog.closing {
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-}
-
-.grid-field-dialog::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
 .student-search {
   min-width: 0;
   width: 100%;
@@ -1310,24 +1256,6 @@
     transform: translateY(100%);
   }
 
-  .grid-field-dialog {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 92vh;
-    border-radius: 22px 22px 0 0;
-    transform: translateY(100%);
-  }
-
-  .grid-field-dialog.open {
-    transform: translateY(0);
-  }
-
-  .grid-field-dialog.closing {
-    transform: translateY(100%);
-  }
-
   /* Floating action buttons */
   .floating-actions {
     bottom: 80px;
@@ -1363,22 +1291,16 @@
   .page-button,
   .export-preview-tab,
   .student-filter-reset,
-  .grid-field-dialog,
-  .export-dialog,
   .student-detail-view,
   .student-achievements-view,
-  .export-preview-view,
   .floating-actions,
   .floating-btn {
     transition: none !important;
     animation: none !important;
   }
 
-  .grid-field-dialog,
-  .export-dialog,
   .student-detail-view,
-  .student-achievements-view,
-  .export-preview-view {
+  .student-achievements-view {
     transform: translate(-50%, 0) scale(1);
     opacity: 1;
     pointer-events: auto;

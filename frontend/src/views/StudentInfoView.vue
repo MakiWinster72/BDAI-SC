@@ -456,12 +456,13 @@ import OverlayPanel from "../components/OverlayPanel.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useToast } from "../composables/useToast";
+import { resolveMediaUrl } from "../utils/media";
+import { loadUser } from "../utils/userStorage";
 
 const router = useRouter();
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const { success: toastSuccess } = useToast();
-const API_BASE = "http://localhost:8080";
 
 const profile = reactive(loadUser());
 const activeMenu = ref("student-info");
@@ -1980,43 +1981,8 @@ function closeSidebar() {
   sidebarOpen.value = false;
 }
 
-function resolveMediaUrl(url) {
-  if (!url) {
-    return "";
-  }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-  return `${API_BASE}${url}`;
-}
-
 function goToSettings() {
   navigateWithViewTransition(router, "/settings");
-}
-
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      avatarUrl: raw.avatarUrl || "",
-      role: raw.role || "STUDENT",
-      studentNo: raw.studentNo || "",
-      className: raw.className || "",
-      college: raw.college || "",
-    };
-  } catch {
-    return {
-      username: "",
-      displayName: "",
-      avatarUrl: "",
-      role: "STUDENT",
-      studentNo: "",
-      className: "",
-      college: "",
-    };
-  }
 }
 </script>
 

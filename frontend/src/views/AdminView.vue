@@ -5,6 +5,7 @@ import { useAchievementUploadSettings } from "../composables/useAchievementUploa
 import { useReviewSettings } from "../composables/useReviewSettings";
 import { getUserList, updateUser, deleteUser, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments } from "../api/admin";
 import { useToast } from "../composables/useToast";
+import { loadUser } from "../utils/userStorage";
 
 const ATTACHMENT_TYPE_OPTIONS = [
   { key: "document", label: "文档", icon: "/assets/icons/doc.svg" },
@@ -298,23 +299,6 @@ async function handleReviewSubmit() {
 function switchSection(sectionKey_) {
   activeSection.value = sectionKey_;
   saveMessage.value = "";
-}
-
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      role: raw.role || "STUDENT",
-    };
-  } catch {
-    return {
-      username: "",
-      displayName: "",
-      role: "STUDENT",
-    };
-  }
 }
 
 // User management

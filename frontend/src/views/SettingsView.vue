@@ -194,6 +194,8 @@ import { changePassword, getLoginHistory } from "../api/auth";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useToast } from "../composables/useToast";
+import { resolveMediaUrl } from "../utils/media";
+import { loadUser } from "../utils/userStorage";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
@@ -228,41 +230,6 @@ const avatarText = computed(() => {
   const name = profile.displayName || profile.username || "同学";
   return name.slice(0, 1).toUpperCase();
 });
-
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      avatarUrl: raw.avatarUrl || "",
-      role: raw.role || "STUDENT",
-      studentNo: raw.studentNo || "",
-      className: raw.className || "",
-      college: raw.college || "",
-    };
-  } catch {
-    return {
-      username: "",
-      displayName: "",
-      avatarUrl: "",
-      role: "STUDENT",
-      studentNo: "",
-      className: "",
-      college: "",
-    };
-  }
-}
-
-function resolveMediaUrl(url) {
-  if (!url) {
-    return "";
-  }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-  return `${API_BASE}${url}`;
-}
 
 function handleMenuClick(key) {
   if (!isMenuEnabled(key)) {

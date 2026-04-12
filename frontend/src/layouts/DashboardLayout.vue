@@ -43,6 +43,7 @@ import {
 } from "../constants/menu";
 import { dashboardShellKey } from "../composables/useDashboardShell";
 import { navigateWithViewTransition } from "../utils/viewTransition";
+import { loadUser } from "../utils/userStorage";
 
 const router = useRouter();
 const route = useRoute();
@@ -104,32 +105,5 @@ function handleAchievementEntry(key) {
 function goToSettings() {
   closeSidebar();
   navigateWithViewTransition(router, "/settings");
-}
-
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      avatarUrl: raw.avatarUrl || "",
-      role: raw.role || "STUDENT",
-      studentNo: raw.studentNo || "",
-      className: raw.className || "",
-      college: raw.college || "",
-      studentCategory: raw.studentCategory || "",
-    };
-  } catch {
-    return {
-      username: "",
-      displayName: "",
-      avatarUrl: "",
-      role: "STUDENT",
-      studentNo: "",
-      className: "",
-      college: "",
-      studentCategory: "",
-    };
-  }
 }
 </script>

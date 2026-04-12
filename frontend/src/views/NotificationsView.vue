@@ -6,6 +6,8 @@ import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import { API_BASE } from "../api/request";
 import { useNotifications } from "../composables/useNotifications";
 import { searchStudentProfiles, getStudentProfileById } from "../api/profile";
+import { resolveMediaUrl } from "../utils/media";
+import { loadUser } from "../utils/userStorage";
 
 const route = useRoute();
 const router = useRouter();
@@ -86,21 +88,6 @@ watch(selectedId, () => {
   closeStudentDetail();
 });
 
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      avatarUrl: raw.avatarUrl || "",
-      role: raw.role || "STUDENT",
-      studentNo: raw.studentNo || "",
-    };
-  } catch {
-    return { username: "", displayName: "", avatarUrl: "", role: "STUDENT", studentNo: "" };
-  }
-}
-
 function formatChangeValue(value) {
   if (value === null || value === undefined || value === "") return "-";
   if (Array.isArray(value)) return value.length ? value.join("、") : "-";
@@ -132,12 +119,6 @@ function parseJsonArray(value) {
     const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed : [];
   } catch { return []; }
-}
-
-function resolveMediaUrl(url) {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return `${API_BASE}${url}`;
 }
 
 function resolveAchievementReviewPayload(entry) {

@@ -898,6 +898,34 @@ import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useNotifications } from "../composables/useNotifications";
 import { useReviewSettings } from "../composables/useReviewSettings";
+import {
+  resolveMediaUrl,
+  stripMediaUrl,
+  resolveMediaTypeByExtension,
+  isMediaVideo,
+  isMediaDocument,
+  isMediaSheet,
+  isMediaPdf,
+  isVideoUrl,
+  isVideoFile,
+  isDocumentFile,
+  isSheetFile,
+  isPdfFile,
+  isPptxFile,
+  parseJsonArray,
+} from "../utils/media";
+import { loadUser } from "../utils/userStorage";
+import {
+  dedupeAchievements,
+  attachmentIcon,
+} from "../utils/achievement";
+import {
+  achievementEntries,
+  ATTACHMENT_TYPE_META,
+  attachmentIconMap,
+  IMAGE_URLS_FIELD,
+  ATTACHMENTS_FIELD,
+} from "../constants/achievementConstants";
 
 const router = useRouter();
 const route = useRoute();
@@ -934,52 +962,6 @@ const {
   settings: achievementUploadSettings,
   fetchSettings: fetchAchievementUploadSettings,
 } = useAchievementUploadSettings();
-const ATTACHMENT_TYPE_META = [
-  {
-    key: "document",
-    label: "文档",
-    icon: "/assets/icons/doc.svg",
-  },
-  {
-    key: "image",
-    label: "图片",
-    icon: "/assets/icons/image.svg",
-  },
-  {
-    key: "video",
-    label: "视频",
-    icon: "/assets/icons/video.svg",
-  },
-  {
-    key: "archive",
-    label: "压缩包",
-    icon: "/assets/icons/zip.svg",
-  },
-];
-
-function isMediaVideo(url) {
-  if (!url) return false;
-  const ext = resolveMediaTypeByExtension(url);
-  return ["mp4", "mov", "webm"].includes(ext);
-}
-
-function isMediaDocument(url) {
-  if (!url) return false;
-  const ext = resolveMediaTypeByExtension(url);
-  return ["doc", "docx"].includes(ext);
-}
-
-function isMediaSheet(url) {
-  if (!url) return false;
-  const ext = resolveMediaTypeByExtension(url);
-  return ["xls", "xlsx"].includes(ext);
-}
-
-function isMediaPdf(url) {
-  if (!url) return false;
-  const ext = resolveMediaTypeByExtension(url);
-  return ["pdf"].includes(ext);
-}
 
 const achievements = ref([]);
 
@@ -1001,19 +983,6 @@ const isEmbedded = computed(() => {
   const value = activeStudentQuery.value.embedValue;
   return value === "1" || value.toLowerCase() === "true";
 });
-
-const achievementEntries = [
-  { key: "all", label: "全部" },
-  { key: "contest", label: "学科竞赛、文体艺术" },
-  { key: "paper", label: "发表学术论文" },
-  { key: "journal", label: "发表期刊作品" },
-  { key: "patent", label: "专利(著作权)授权数(项)" },
-  { key: "certificate", label: "职业资格证书" },
-  { key: "research", label: "学生参与教师科研项目情况" },
-  { key: "works", label: "创作、表演的代表性作品" },
-  { key: "doubleHundred", label: "双百工程" },
-  { key: "ieerTraining", label: "大学生创新创业训练计划项目" },
-];
 
 const activeCategoryIndex = computed(() => {
   const index = achievementEntries.findIndex(
@@ -1637,31 +1606,6 @@ const addButtonLabel = computed(() => {
   return `添加${activeCategoryLabel.value}`;
 });
 
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      avatarUrl: raw.avatarUrl || "",
-      role: raw.role || "STUDENT",
-      studentNo: raw.studentNo || "",
-      className: raw.className || "",
-      college: raw.college || "",
-    };
-  } catch {
-    return {
-      username: "",
-      displayName: "",
-      avatarUrl: "",
-      role: "STUDENT",
-      studentNo: "",
-      className: "",
-      college: "",
-    };
-  }
-}
-
 function getCurrentStudentNo() {
   const { studentNo } = activeStudentQuery.value;
   if (studentNo) {
@@ -2091,31 +2035,6 @@ async function onAttachmentChange(event) {
   }
 }
 
-function resolveMediaUrl(url) {
-  if (!url) {
-    return "";
-  }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-  return `${API_BASE}${url}`;
-}
-
-function dedupeAchievements(list) {
-  const seen = new Set();
-  return list.filter((item) => {
-    if (!item || item.id == null) {
-      return true;
-    }
-    const key = `${item.category || ""}:${item.id}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
-}
-
 function normalizeAchievement(item) {
   const config = categoryFieldMap[item.category] || null;
   const fields = item.fields || {};
@@ -2191,42 +2110,6 @@ function openDelete() {
     return;
   }
   deleteDialogOpen.value = true;
-}
-
-function isVideoUrl(url) {
-  if (!url) return false;
-  const ext = resolveMediaTypeByExtension(url);
-  return ["mp4", "mov"].includes(ext);
-}
-
-function isVideoFile(file) {
-  if (!file || !file.name) return false;
-  const ext = resolveMediaTypeByExtension(file.name);
-  return ["mp4", "mov"].includes(ext);
-}
-
-function isDocumentFile(file) {
-  if (!file || !file.name) return false;
-  const ext = resolveMediaTypeByExtension(file.name);
-  return ["doc", "docx"].includes(ext);
-}
-
-function isSheetFile(file) {
-  if (!file || !file.name) return false;
-  const ext = resolveMediaTypeByExtension(file.name);
-  return ["xls", "xlsx"].includes(ext);
-}
-
-function isPdfFile(file) {
-  if (!file || !file.name) return false;
-  const ext = resolveMediaTypeByExtension(file.name);
-  return ["pdf"].includes(ext);
-}
-
-function isPptxFile(file) {
-  if (!file || !file.name) return false;
-  const ext = resolveMediaTypeByExtension(file.name);
-  return ["ppt", "pptx"].includes(ext);
 }
 
 function showPreview(urls, index = 0) {
@@ -2464,8 +2347,6 @@ function applyFieldDefaults() {
   }
 }
 
-const IMAGE_URLS_FIELD = "_imageUrls";
-const ATTACHMENTS_FIELD = "_attachments";
 const uploadLimitConfig = reactive({
   imageMaxCount: achievementUploadSettings.imageMaxCount,
   mediaMaxMB: achievementUploadSettings.imageMaxSizeMb,
@@ -2548,30 +2429,6 @@ function attachmentExtsByType(typeKey) {
   return uploadLimitConfig.attachmentArchiveExts;
 }
 
-const attachmentIconMap = {
-  doc: "/assets/icons/doc.svg",
-  docx: "/assets/icons/doc.svg",
-  pdf: "/assets/icons/pdf.svg",
-  xls: "/assets/icons/excel.svg",
-  xlsx: "/assets/icons/excel.svg",
-  ppt: "/assets/icons/ppt.svg",
-  pptx: "/assets/icons/ppt.svg",
-  zip: "/assets/icons/zip.svg",
-  rar: "/assets/icons/zip.svg",
-  "7z": "/assets/icons/zip.svg",
-  mp4: "/assets/icons/video.svg",
-  mov: "/assets/icons/video.svg",
-  jpeg: "/assets/icons/image.svg",
-  jpg: "/assets/icons/image.svg",
-  png: "/assets/icons/image.svg",
-  heif: "/assets/icons/image.svg",
-};
-
-function attachmentIcon(file) {
-  const ext = resolveMediaTypeByExtension(file.name || file.url || "");
-  return attachmentIconMap[ext] || "/assets/icons/doc.svg";
-}
-
 function isAllowedImage(file) {
   const ext = resolveMediaTypeByExtension(file.name || "");
   return ["jpeg", "jpg", "png", "heif"].includes(ext);
@@ -2601,25 +2458,6 @@ function resolveAttachmentTypeByExtension(ext = "") {
   return "";
 }
 
-function resolveMediaTypeByExtension(name = "") {
-  const cleanName = name.toLowerCase();
-  const parts = cleanName.split(".");
-  if (parts.length < 2) {
-    return "";
-  }
-  return parts.pop() || "";
-}
-
-function stripMediaUrl(url) {
-  if (!url) {
-    return "";
-  }
-  if (url.startsWith(API_BASE)) {
-    return url.replace(API_BASE, "");
-  }
-  return url;
-}
-
 function resolveImageUrls(item) {
   const urls = [];
   if (item?.imageUrl) {
@@ -2646,18 +2484,6 @@ function resolveAttachments(fields = {}) {
       mediaType: item.mediaType || "",
     }))
     .filter((item) => item.url);
-}
-
-function parseJsonArray(value) {
-  if (!value) {
-    return [];
-  }
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    return [];
-  }
 }
 
 function handleUploadSettingsUpdated(event) {

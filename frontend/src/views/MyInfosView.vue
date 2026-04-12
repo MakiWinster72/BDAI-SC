@@ -699,82 +699,17 @@
               tag="div"
               class="record-list"
             >
-              <section
+              <RecordRow
                 v-for="(item, index) in educationItems"
                 :key="`edu-${index}`"
-                class="record-card"
-              >
-                <div class="record-grid record-grid-education">
-                  <label class="record-field record-field-time">
-                    <span class="info-label">时间段</span>
-                    <div class="education-period">
-                      <div class="education-period-row">
-                        <input
-                          v-model="item.startDate"
-                          class="info-input"
-                          type="date"
-                          lang="zh-CN"
-                          :max="today"
-                          :disabled="isEducationRowDisabled(index)"
-                        />
-                        <span class="education-sep">至</span>
-                        <input
-                          v-model="item.endDate"
-                          class="info-input"
-                          type="date"
-                          lang="zh-CN"
-                          :max="today"
-                          :disabled="
-                            isEducationRowDisabled(index) || item.isCurrent
-                          "
-                        />
-                      </div>
-                      <label class="info-choice info-choice-muted record-current">
-                        <input
-                          v-model="item.isCurrent"
-                          type="checkbox"
-                          :disabled="
-                            isEducationRowDisabled(index) ||
-                            isEducationCurrentDisabled(item)
-                          "
-                          @change="handleEducationCurrentChange(item, index)"
-                        />
-                        至今
-                      </label>
-                    </div>
-                  </label>
-                  <label class="record-field record-field-school">
-                    <span class="info-label">学校名称</span>
-                    <input
-                      v-model="item.schoolName"
-                      class="info-input"
-                      type="text"
-                      placeholder="学校名称"
-                      :disabled="isEducationRowDisabled(index)"
-                    />
-                  </label>
-                  <label class="record-field record-field-compact">
-                    <span class="info-label">学历</span>
-                    <input
-                      v-model="item.educationLevel"
-                      class="info-input"
-                      type="text"
-                      placeholder="学历"
-                      :disabled="isEducationRowDisabled(index)"
-                    />
-                  </label>
-                  <label class="record-field record-field-compact">
-                    <span class="info-label">证明人</span>
-                    <input
-                      v-model="item.witness"
-                      class="info-input"
-                      type="text"
-                      placeholder="证明人"
-                      :disabled="isEducationRowDisabled(index)"
-                    />
-                  </label>
-                </div>
-              </section>
+                type="education"
+                :item="item"
+                :index="index"
+                :disabled="isEducationRowDisabled(index)"
+                :today="today"
+                @update:item="educationItems[index] = $event"
+                @current-change="handleEducationCurrentChange"
+              />
             </transition-group>
             <div class="education-controls-wrap">
               <div class="education-controls">
@@ -809,82 +744,17 @@
               tag="div"
               class="record-list"
             >
-              <section
+              <RecordRow
                 v-for="(item, index) in cadreItems"
                 :key="`cadre-${index}`"
-                class="record-card"
-              >
-                <div class="record-grid record-grid-cadre">
-                  <label class="record-field record-field-time">
-                    <span class="info-label">时间段</span>
-                    <div class="education-period">
-                      <div class="education-period-row">
-                        <input
-                          v-model="item.startDate"
-                          class="info-input"
-                          type="date"
-                          lang="zh-CN"
-                          :max="today"
-                          :disabled="isCadreRowDisabled(index)"
-                        />
-                        <span class="education-sep">至</span>
-                        <input
-                          v-model="item.endDate"
-                          class="info-input"
-                          type="date"
-                          lang="zh-CN"
-                          :max="today"
-                          :disabled="
-                            isCadreRowDisabled(index) || item.isCurrent
-                          "
-                        />
-                      </div>
-                      <label class="info-choice info-choice-muted record-current">
-                        <input
-                          v-model="item.isCurrent"
-                          type="checkbox"
-                          :disabled="
-                            isCadreRowDisabled(index) ||
-                            isCadreCurrentDisabled(item)
-                          "
-                          @change="handleCadreCurrentChange(item, index)"
-                        />
-                        至今
-                      </label>
-                    </div>
-                  </label>
-                  <label class="record-field record-field-department">
-                    <span class="info-label">社团部门/班级</span>
-                    <input
-                      v-model="item.department"
-                      class="info-input"
-                      type="text"
-                      placeholder="部门/班级"
-                      :disabled="isCadreRowDisabled(index)"
-                    />
-                  </label>
-                  <label class="record-field record-field-position">
-                    <span class="info-label">职位</span>
-                    <input
-                      v-model="item.position"
-                      class="info-input"
-                      type="text"
-                      placeholder="职位"
-                      :disabled="isCadreRowDisabled(index)"
-                    />
-                  </label>
-                  <label class="record-field record-field-full">
-                    <span class="info-label">描述</span>
-                    <textarea
-                      v-model="item.description"
-                      class="info-input"
-                      rows="2"
-                      placeholder="简述你在该职位的职责/成就"
-                      :disabled="isCadreRowDisabled(index)"
-                    ></textarea>
-                  </label>
-                </div>
-              </section>
+                type="cadre"
+                :item="item"
+                :index="index"
+                :disabled="isCadreRowDisabled(index)"
+                :today="today"
+                @update:item="cadreItems[index] = $event"
+                @current-change="handleCadreCurrentChange"
+              />
             </transition-group>
             <div class="education-controls-wrap">
               <div class="education-controls">
@@ -1105,6 +975,7 @@ import { useRouter } from "vue-router";
 import ExportPdfButton from "../components/ExportPdfButton.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import StepperInput from "../components/StepperInput.vue";
+import RecordRow from "../components/RecordRow.vue";
 import {
   getMenuLocation,
   isMenuEnabled,
@@ -1114,6 +985,7 @@ import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
 import { navigateWithViewTransition } from "../utils/viewTransition";
+import { resolveMediaUrl } from "../utils/media";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useNotifications } from "../composables/useNotifications";
 import { useReviewSettings } from "../composables/useReviewSettings";
@@ -1548,8 +1420,8 @@ const currentCadreIndex = computed(() =>
   cadreItems.findIndex((entry) => entry.isCurrent),
 );
 
-async function handleEducationCurrentChange(item, index) {
-  if (item.isCurrent) {
+async function handleEducationCurrentChange({ item, checked, index }) {
+  if (checked) {
     item.endDate = "";
     await animateEducationHeightWithUpdate(() => {
       clearEducationRowsAfter(index);
@@ -1558,8 +1430,8 @@ async function handleEducationCurrentChange(item, index) {
   }
 }
 
-async function handleCadreCurrentChange(item, index) {
-  if (item.isCurrent) {
+async function handleCadreCurrentChange({ item, checked, index }) {
+  if (checked) {
     item.endDate = "";
     await animateCadreHeightWithUpdate(() => {
       clearCadreRowsAfter(index);
@@ -1800,16 +1672,6 @@ function openSidebar() {
 
 function closeSidebar() {
   sidebarOpen.value = false;
-}
-
-function resolveMediaUrl(url) {
-  if (!url) {
-    return "";
-  }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-  return `${API_BASE}${url}`;
 }
 
 function goToSettings() {
