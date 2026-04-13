@@ -30,7 +30,7 @@ body {
   margin: 0;
   width: 100%;
   min-height: 100%;
-  font-family: "DM Sans", "SF Pro Display", "Segoe UI", -apple-system, sans-serif;
+  font-family: "SF Pro Display", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text-main);
 }
 
