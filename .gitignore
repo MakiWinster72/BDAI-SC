@@ -1,25 +1,99 @@
-# backend
+# ===================
+# Backend
+# ===================
 backend/target/
-backend/.classpath
-backend/.project
-backend/.settings/
+backend/*.log
 backend/uploads/
 
-# frontend
-frontend/node_modules/
-frontend/dist/
-
-# ide
+# IDE
 .idea/
 .vscode/
 *.iml
-AGENTS.md
+*.iws
+*.ipr
+*.eclipse
+*.classpath
+*.project
+*.settings/
 
-# os
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven
+target/
+
+# Gradle
+.gradle/
+build/
+
+# ===================
+# Frontend
+# ===================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/.nuxt/
+frontend/.output/
+
+# Environment
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===================
+# Docs (VitePress)
+# ===================
+docs/node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# ===================
+# Common
+# ===================
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.tmp
+*.bak
+*.orig
+*.pid
+*.seed
+*.pid.lock
 
-# python
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-# jmeter
+# JMeter
 jmeter/
+
+# Project specific
+AGENTS.md
+CLAUDE.md
+
+# Uploads directory (file storage)
+backend/uploads/
