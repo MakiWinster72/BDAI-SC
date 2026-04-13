@@ -70,7 +70,7 @@
                 class="info-input"
                 type="text"
                 placeholder="请输入学号"
-                :disabled="!isEditing"
+                disabled
               />
             </label>
             <label class="field-card">
@@ -2260,7 +2260,7 @@ function applyProfileResponse(data, options = {}) {
   const { syncSavedProfile = true } = options;
   info.name = data.fullName || data.displayName || "";
   info.avatarUrl = data.avatarUrl || profile.avatarUrl || "";
-  info.studentNo = data.studentNo || "";
+  info.studentNo = data.studentNo || profile.studentNo || "";
   info.classYear = data.classYear || new Date().getFullYear();
   info.classMajor = data.classMajor || "";
   info.classNo = data.classNo ?? 1;

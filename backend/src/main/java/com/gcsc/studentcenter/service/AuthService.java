@@ -61,7 +61,7 @@ public class AuthService {
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
-        user.setStudentNo(normalizeOptional(request.getStudentNo()));
+        user.setStudentNo(username);
         user.setClassName(normalizeOptional(request.getClassName()));
         user.setCollege(FIXED_COLLEGE);
         user.setCreatedAt(LocalDateTime.now());
