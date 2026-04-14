@@ -17,3 +17,9 @@ AGENTS.md
 
 # os
 .DS_Store
+
+# python
+__pycache__/
+
+# jmeter
+jmeter/

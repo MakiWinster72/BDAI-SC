@@ -1,0 +1,862 @@
+/**
+ * Card Styles - 卡片组件样式
+ *
+ * 包含内容:
+ * - Card Base: canonical .card base + menu-card, composer-card, panel-card
+ * - Menu Card: 菜单卡片、导航列表
+ * - Notification Menu: 通知菜单相关样式
+ * - Menu Transitions: 菜单面板过渡动画
+ *
+ * ═══════════════════════════════════════════════════════════
+ * CANONICAL CARD SYSTEM
+ * ═══════════════════════════════════════════════════════════
+ *
+ * All card components share a common visual foundation:
+ *   border-radius: 20px
+ *   border: 1px solid var(--line)
+ *   background: var(--card)  (glass, rgba with backdrop-filter)
+ *   backdrop-filter: blur(12px) saturate(115%)
+ *   box-shadow: var(--shadow)
+ *
+ * This is defined in the .card {} base below.
+ *
+ * Card types use this base and add specific overrides:
+ *   .menu-card      — sidebar navigation (padding, grid layout, shadow: none)
+ *   .composer-card  — content composer (padding override)
+ *   .panel-card     — content panel (padding override)
+ *   .achievement-card — achievement feed (grid layout, padding)
+ *
+ * Solid-background cards (info-shell, settings-card) intentionally
+ * deviate: they use rgba() backgrounds without backdrop-filter
+ * for a cleaner, flatter aesthetic appropriate for form UIs.
+ */
+
+/* ── Card Base ─────────────────────────────────────────── */
+/**
+ * Canonical card base — all card types extend this.
+ * Shared properties: glass morphism, border, shadow, border-radius.
+ * Override --card-padding and --card-radius for variant-specific values.
+ */
+.card {
+  /* Customizable via --card-* vars */
+  --card-padding: 16px;
+  --card-radius: 20px;
+  --card-shadow: var(--shadow);
+
+  border-radius: var(--card-radius);
+  border: 1px solid var(--line);
+  background: var(--card);
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+  padding: var(--card-padding);
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Glass card variants — extend .card base */
+.menu-card,
+.composer-card,
+.panel-card {
+  align-self: start;
+  /* Rest inherits from .card base above (::after inner highlight, etc.) */
+}
+
+/* ── Menu Card ──────────────────────────────────────────── */
+.menu-card {
+  padding: 6px 14px 12px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  height: 100%;
+  box-shadow: none;
+}
+
+.menu-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 26px;
+  margin-bottom: 0;
+  margin-top: 5px;
+  overflow: hidden;
+  position: relative;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.menu-card-header.has-notif-tabs {
+  gap: 0;
+}
+
+.menu-card-header-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  min-height: 26px;
+  position: relative;
+}
+
+.menu-card-back {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.menu-card-back:hover {
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--line-strong);
+}
+
+.menu-card-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.08);
+  border: 1px solid rgba(100, 12, 114, 0.14);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform-origin: left center;
+}
+
+.menu-card-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 6px 46px 0;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 12, 114, 0.22) transparent;
+  transition:
+    -webkit-mask-image 180ms ease,
+    mask-image 180ms ease;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 100%);
+}
+
+.menu-card-body.menu-card-body-fade-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 44px),
+    rgba(0, 0, 0, 0.32) calc(100% - 22px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 44px),
+    rgba(0, 0, 0, 0.32) calc(100% - 22px),
+    transparent 100%
+  );
+}
+
+.menu-card-body.menu-card-body-fade-top {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.32) 11px,
+    #000 22px,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.32) 11px,
+    #000 22px,
+    #000 100%
+  );
+}
+
+.menu-card-body.menu-card-body-fade-top.menu-card-body-fade-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.32) 11px,
+    #000 22px,
+    #000 calc(100% - 44px),
+    rgba(0, 0, 0, 0.32) calc(100% - 22px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.32) 11px,
+    #000 22px,
+    #000 calc(100% - 44px),
+    rgba(0, 0, 0, 0.32) calc(100% - 22px),
+    transparent 100%
+  );
+}
+
+.menu-card-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.menu-card-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-card-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.15);
+}
+
+/* ── Menu Panel & Items ─────────────────────────────────── */
+.menu-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.menu-list,
+.menu-sublist {
+  display: grid;
+  gap: 8px;
+}
+
+.menu-grid {
+  grid-template-columns: 1fr;
+}
+
+.menu-item {
+  border: 1.5px solid transparent;
+  border-radius: 16px;
+  min-height: 68px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text-main);
+  text-align: left;
+  padding: 13px 15px;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  transition:
+    background-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 180ms ease,
+    border-color 160ms ease,
+    transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+
+.menu-item:active:not(.disabled):not(.active) {
+  transform: scale(0.97);
+}
+
+.menu-item:active:not(.disabled).active {
+  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes itemActivePop {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+.menu-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.menu-item:hover:not(.disabled):not(.active) {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: var(--primary);
+}
+
+.menu-item.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  border-color: transparent;
+  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.menu-item-label {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.menu-item-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(192, 57, 43, 0.3);
+}
+
+.menu-item-meta {
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--text-sub);
+}
+
+.menu-item.active .menu-item-meta {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.menu-item.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.menu-subitem {
+  min-height: 38px;
+  padding: 0 12px;
+  text-align: left;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: normal;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.48);
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+
+.menu-subitem:active:not(.active) {
+  transform: scale(0.97);
+}
+
+.menu-subitem:active.active {
+  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.menu-subitem:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.menu-subitem.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-color: transparent;
+  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Notification Menu ──────────────────────────────────── */
+.menu-notification-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-notification-list {
+  gap: 10px;
+}
+
+.menu-notification-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.menu-notification-tab {
+  min-height: 38px;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--text-sub);
+  display: grid;
+  gap: 4px;
+  place-items: center;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+
+.menu-notification-tab:active:not(.active) {
+  transform: scale(0.96);
+}
+
+.menu-notification-tab:active.active {
+  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.menu-notification-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.menu-notification-tab.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.menu-notification-tab-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 12, 114, 0.1);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.menu-notification-tab.active .menu-notification-tab-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.menu-notification-empty {
+  border-radius: 14px;
+  padding: 18px 14px;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  font-size: 13px;
+}
+
+.menu-notification-item {
+  display: grid;
+  gap: 3px;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color 180ms ease,
+    border-color 160ms ease,
+    transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+
+.menu-notification-item:active:not(.active) {
+  transform: scale(0.98);
+}
+
+.menu-notification-item:active.active {
+  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.menu-notification-item:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: var(--primary);
+}
+
+.menu-notification-item.active {
+  background: rgba(100, 12, 114, 0.07);
+  border-color: var(--primary);
+}
+
+.menu-notification-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.menu-notification-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e53e3e;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+}
+
+.menu-notification-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.menu-notification-badge.is-pending {
+  background: rgba(250, 172, 44, 0.15);
+  color: #925000;
+}
+
+.menu-notification-badge.is-approved {
+  background: rgba(39, 174, 96, 0.15);
+  color: #1a6b3c;
+}
+
+.menu-notification-badge.is-rejected,
+.menu-notification-badge.is-delayed {
+  background: rgba(192, 57, 43, 0.12);
+  color: #a43a2e;
+}
+
+.menu-notification-badge.is-system {
+  background: rgba(100, 12, 114, 0.1);
+  color: var(--primary-dark);
+}
+
+.menu-notification-time {
+  font-size: 11px;
+  color: var(--text-sub);
+}
+
+.menu-notification-title {
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.menu-notification-content,
+.menu-notification-meta,
+.menu-notification-reason {
+  color: #4f6d76;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.menu-notification-detail {
+  gap: 12px;
+}
+
+.menu-notification-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.menu-notification-detail-title {
+  color: var(--text-main);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.menu-notification-detail-content,
+.menu-notification-detail-summary,
+.menu-notification-detail-meta,
+.menu-notification-detail-value {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.menu-notification-detail-summary,
+.menu-notification-detail-block,
+.menu-notification-reject-panel {
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.menu-notification-detail-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.menu-notification-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.menu-notification-action {
+  min-height: 40px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menu-notification-action.is-approve {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+}
+
+.menu-notification-action.is-reject {
+  background: rgba(192, 57, 43, 0.1);
+  color: var(--danger);
+}
+
+.menu-notification-action.is-submit {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.menu-notification-textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 10px 12px;
+  resize: vertical;
+  color: var(--text-main);
+  min-height: 104px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.menu-notification-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
+}
+
+.menu-notification-action-error {
+  margin-top: 8px;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.menu-notification-reason {
+  margin-top: 2px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(192, 57, 43, 0.08);
+  color: #9d3f34;
+}
+
+/* ── Menu Transitions ───────────────────────────────────── */
+.menu-panel-forward-enter-active,
+.menu-panel-forward-leave-active,
+.menu-panel-back-enter-active,
+.menu-panel-back-leave-active,
+.menu-title-forward-enter-active,
+.menu-title-forward-leave-active,
+.menu-title-back-enter-active,
+.menu-title-back-leave-active {
+  transition:
+    opacity 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menu-panel-forward-enter-from,
+.menu-panel-back-leave-to {
+  opacity: 0;
+  transform: translateX(12px) scale(0.98);
+}
+
+.menu-panel-forward-leave-to,
+.menu-panel-back-enter-from {
+  opacity: 0;
+  transform: translateX(-10px) scale(0.98);
+}
+
+.menu-title-forward-enter-from,
+.menu-title-back-leave-to {
+  opacity: 0;
+  transform: translateX(8px);
+}
+
+.menu-title-forward-leave-to,
+.menu-title-back-enter-from {
+  opacity: 0;
+}
+
+.menu-title-forward-leave-to {
+  transform: none;
+}
+
+.menu-title-back-enter-from {
+  transform: translateX(-8px);
+}
+
+.menu-back-fade-enter-active,
+.menu-back-fade-leave-active {
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menu-back-fade-enter-from,
+.menu-back-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+/* itemActivePop 已在首次定义处统一（line 274），此处不再重复 */
+
+/* ── Admin Tabs (reused in CardMenu notifications panel) ── */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 18px;
+  background: rgba(100, 12, 114, 0.05);
+  border: 1px solid var(--line);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.menu-card-header.has-notif-tabs .admin-tabs {
+  margin-top: 8px;
+}
+
+.admin-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 6px;
+  border-radius: 13px;
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  justify-content: center;
+  transition:
+    background 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 120ms ease;
+  white-space: nowrap;
+}
+
+.tab-icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.75;
+  transition: opacity 200ms ease;
+}
+
+.admin-tab:hover:not(.active) {
+  background: rgba(100, 12, 114, 0.08);
+  color: var(--primary);
+}
+
+.admin-tab:hover:not(.active) .tab-icon {
+  opacity: 1;
+}
+
+.admin-tab.active {
+  background: var(--card);
+  color: var(--primary-dark);
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(100, 12, 114, 0.15), 0 1px 3px rgba(100, 12, 114, 0.1);
+}
+
+.admin-tab.active .tab-icon {
+  opacity: 1;
+  color: var(--primary);
+}
+
+.admin-tab:active {
+  transform: scale(0.97);
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.1);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.admin-tab.active .tab-count {
+  background: rgba(100, 12, 114, 0.2);
+  color: var(--primary-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-item,
+  .menu-subitem,
+  .menu-notification-tab,
+  .menu-notification-item,
+  .admin-tab,
+  .menu-panel-forward-enter-active,
+  .menu-panel-forward-leave-active,
+  .menu-panel-back-enter-active,
+  .menu-panel-back-leave-active,
+  .menu-title-forward-enter-active,
+  .menu-title-forward-leave-active,
+  .menu-title-back-enter-active,
+  .menu-title-back-leave-active,
+  .menu-back-fade-enter-active,
+  .menu-back-fade-leave-active {
+    transition: none !important;
+    animation: none !important;
+  }
+}

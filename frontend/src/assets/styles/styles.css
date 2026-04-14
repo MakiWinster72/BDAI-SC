@@ -1,0 +1,100 @@
+/**
+ * GCSC Student Center - Main Stylesheet
+ *
+ * 本文件是全局样式的主入口文件,导入所有样式模块.
+ * 每个 @import 语句上方的注释说明了该模块包含的内容.
+ */
+
+/* ── 01. CSS Variables ─────────────────────────────────────────────────────── */
+/**
+ * _variables.css - CSS 自定义属性 (CSS Variables)
+ * 包含: 主色调变量、语义化别名、背景渐变、卡片玻璃效果、文本颜色、状态颜色、阴影、动画缓动
+ */
+@import './_variables.css';
+
+/* ── 02. Base Styles ───────────────────────────────────────────────────────── */
+/**
+ * _base.css - 全局基础样式
+ * 包含: CSS Reset (box-sizing)、html/body/#app 基础样式、body 背景渐变、关键帧动画 (cardEnter, floatOrb, glowMove)
+ */
+@import './_base.css';
+
+/* ── 03. Buttons Styles (base definitions) ──────────────────────────────────── */
+/**
+ * buttons.css - 统一按钮样式
+ * 必须在 auth.css 之前加载，让 auth.css 中的 auth 上下文覆盖规则能够覆盖它
+ * 定义: ghost-button, action-button, btn/btn-primary/btn-ghost, icon-btn, page-btn,
+ * notif-btn, reject-btn, cancel-confirm-btn, modal-close-btn, chip-btn,
+ * export-option-button, settings-action 及相关容器
+ */
+@import './buttons.css';
+
+/* ── 04. Auth Styles ───────────────────────────────────────────────────────── */
+/**
+ * auth.css - 登录/注册页面样式
+ * 包含: 认证布局容器、背景装饰球、玻璃态卡片、表单元素(行/标签/输入框)、主要操作按钮、成功/错误提示、登录注册切换链接、响应式断点
+ */
+@import './auth.css';
+
+/* ── 05. Layout Styles ─────────────────────────────────────────────────────── */
+/**
+ * layout.css - 页面布局样式
+ * 包含: Dashboard Shell 主容器、Dashboard Grid 左右分栏布局、Dashboard Left 侧边栏、移动端侧边栏遮罩、移动端底部导航胶囊、胶囊导航过渡动画、响应式布局断点
+ */
+@import './layout.css';
+
+/* ── 06. Card Styles ───────────────────────────────────────────────────────── */
+/**
+ * cards.css - 卡片组件样式
+ * 包含: 卡片基础样式 (menu-card, composer-card, panel-card)、Menu Card 菜单卡片、导航菜单项、通知菜单相关样式、菜单面板过渡动画
+ */
+@import './cards.css';
+
+/* ── 07. Achievement Styles ────────────────────────────────────────────────── */
+/**
+ * achievements.css - 成果/成就相关样式
+ * 包含: Feed Header 列表头部、Feed Waterfall 瀑布流列表、Post Card 帖子卡片、Tag 标签(普通/优秀/成就/私有)、Post Header/Author 作者信息、Achievement Sheet 底部弹出面板、Achievement View 全屏查看详情、Achievement Detail Body 详情内容区、Achievement Attachments 附件展示、Achievement Fields 动态表单字段、Achievement Card 成果卡片(含论文/专利/证书/科研/作品类型变体)、面板过渡动画
+ */
+@import './achievements.css';
+
+/* ── 08. Publisher Styles ─────────────────────────────────────────────────── */
+/**
+ * publisher.css - 内容发布/编辑相关样式
+ * 包含: Publisher Backdrop & Sheet 发布器遮罩和面板、Publisher Header 标题栏和关闭按钮、Editor Toolbar 富文本编辑器工具栏、Publisher Input & Preview 输入和预览、Publisher Media & Footer 媒体选择和底部栏、Composer 内容创作组件(卡片/药丸按钮)、Post Content 发布内容输出样式
+ */
+@import './publisher.css';
+
+/* ── 09. Dialog Styles ─────────────────────────────────────────────────────── */
+/**
+ * dialogs.css - 对话框/弹窗相关样式
+ * 包含: Media Dialog 媒体上传对话框、Dialog Card 通用对话框卡片、Dialog Transitions fade/pop 过渡动画、Hint Components 提示按钮和提示项、Upload Queue 上传队列进度条、Toast 轻量级提示消息、Sheet Overlay/Modal 底部弹出模态框
+ */
+@import './dialogs.css';
+
+/* ── 10. Media Viewer Styles ──────────────────────────────────────────────── */
+/**
+ * media-viewer.css - 全屏媒体查看器样式
+ * 包含: Viewer Backdrop 全屏查看器背景、Viewer Header 顶部导航栏(计数器/关闭按钮)、Viewer Stage 中间舞台和箭头导航、Viewer Media 图片/视频展示、Viewer Transitions 进入/退出过渡动画、Directional Slide Transitions 左右滑动过渡、Document Viewer PPTX/PDF/DOCX/XLSX 文档查看器样式、Viewer Dots 幻灯片指示点
+ */
+@import './media-viewer.css';
+
+/* ── 11. Markdown Styles ───────────────────────────────────────────────────── */
+/**
+ * markdown.css - Markdown 内容渲染样式
+ * 包含: Tables 表格样式 (th, td, borders)、Images 图片样式 (full, half width)、Videos 视频样式、Links 链接样式、Blockquotes 引用块样式
+ */
+@import './markdown.css';
+
+/* ── 12. Utils Styles ─────────────────────────────────────────────────────── */
+/**
+ * utils.css - 通用工具类样式
+ * 包含: Achievement Utils 成果工具类 (intro card, category pills/tags)、Footer Action 固定底部操作按钮、Achievement Add 添加成果浮动按钮、Edit Dock 编辑时固定底部操作栏、Education Row Transitions 教育经历行过渡动画、iOS Switch iOS 风格开关、Simple List 简单列表、Empty Tip 空状态提示
+ */
+@import './utils.css';
+
+/* ── 13. Info Pages Styles ─────────────────────────────────────────────────── */
+/**
+ * info-pages.css - 信息页面样式 (设置页/个人信息页)
+ * 包含: Info Shell 信息页面容器、Settings Card 设置项卡片、Settings Actions 设置操作按钮、Info Hero 信息页头部区域、Avatar Square 方形头像上传区、Info Form Grid 信息表单网格布局、Education Record/Cadre Record 教育/干部经历记录、Education Period/Cadres 时间段、Education Controls 教育记录控制按钮、Info Choice 单选/多选选项、Info Actions 信息页操作按钮
+ */
+@import './info-pages.css';

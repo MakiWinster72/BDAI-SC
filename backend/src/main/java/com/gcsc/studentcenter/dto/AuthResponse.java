@@ -12,6 +12,7 @@ public class AuthResponse {
     private final String avatarUrl;
     private final String token;
     private final String tokenType;
+    private final LastLoginInfo lastLoginInfo;
 
     public AuthResponse(
         boolean success,
@@ -23,7 +24,8 @@ public class AuthResponse {
         String className,
         String college,
         String avatarUrl,
-        String token
+        String token,
+        LastLoginInfo lastLoginInfo
     ) {
         this.success = success;
         this.message = message;
@@ -36,6 +38,7 @@ public class AuthResponse {
         this.avatarUrl = avatarUrl;
         this.token = token;
         this.tokenType = "Bearer";
+        this.lastLoginInfo = lastLoginInfo;
     }
 
     public boolean isSuccess() {
@@ -80,5 +83,9 @@ public class AuthResponse {
 
     public String getTokenType() {
         return tokenType;
+    }
+
+    public LastLoginInfo getLastLoginInfo() {
+        return lastLoginInfo;
     }
 }

@@ -1,154 +1,103 @@
 <template>
-  <div class="dashboard-layout">
-    <aside class="dashboard-left">
-      <section class="profile-card">
-        <div class="profile-row profile-main">
-          <div class="profile-avatar">
-            <img
-              v-if="profile.avatarUrl"
-              :src="resolveMediaUrl(profile.avatarUrl)"
-              alt="头像"
-            />
-            <span v-else>{{ avatarText }}</span>
+  <main class="dashboard-right">
+    <header class="feed-header">
+      <h1 class="feed-title">学生信息</h1>
+    </header>
+
+    <section class="info-shell student-right-stack">
+      <section v-show="!gridFullscreen" class="card student-filter-card">
+        <div class="student-filter-toolbar">
+          <div class="student-filter-intro">
+            <div class="info-section-title">搜索与筛选</div>
+            <div class="student-filter-caption">
+              {{ hasActiveFilters ? "已应用筛选条件" : "按姓名、学号、班级快速定位学生" }}
+            </div>
           </div>
-          <div class="profile-name-wrap">
-            <p class="profile-name">
-              {{ profile.displayName || profile.username || "同学" }}
-            </p>
-            <p class="profile-role">{{ roleLabel }}</p>
-          </div>
-          <button
-            class="profile-settings"
-            type="button"
-            aria-label="设置"
-            @click="goToSettings"
-          >
-            <img src="/assets/icons/settings.svg" alt="设置" />
-          </button>
-        </div>
-        <div class="profile-row">学号：{{ profile.studentNo || "未填写" }}</div>
-        <div class="profile-row">班级：{{ profile.className || "未填写" }}</div>
-        <div class="profile-row">学院：{{ profile.college || "未填写" }}</div>
-      </section>
-
-      <section class="menu-card">
-        <button
-          v-for="item in menuItems"
-          :key="item.key"
-          class="menu-item"
-          :class="{
-            active: activeMenu === item.key,
-            disabled: !isMenuEnabled(item.key),
-          }"
-          type="button"
-          :disabled="!isMenuEnabled(item.key)"
-          @click="handleMenuClick(item.key)"
-        >
-          {{ item.label }}
-        </button>
-      </section>
-    </aside>
-
-    <main class="dashboard-right">
-      <header class="feed-header">
-        <h1 class="feed-title">学生信息</h1>
-      </header>
-
-      <section class="info-shell student-right-stack">
-        <section v-show="!gridFullscreen" class="info-card student-filter-card">
-          <div class="student-filter-header">
-            <div class="info-section-title">搜索</div>
+          <div class="student-filter-search-wrap">
             <input
               v-model="filters.keyword"
               class="info-input student-search"
               type="text"
               placeholder="搜索姓名 / 班别 / 学院 / 学号"
             />
+          </div>
+          <div class="student-filter-toolbar-actions">
             <button
-              class="student-grid-toggle"
+              v-if="hasActiveFilters"
+              class="student-filter-reset"
               type="button"
-              @click="toggleGridView"
-              :title="gridViewOpen ? '切换列表视图' : '切换表格视图'"
+              @click="resetFilters"
             >
-              <span class="grid-toggle-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path
-                    d="M7 7h10v3h2V5H5v5h2V7zm10 10H7v-3H5v5h14v-5h-2v3zM9 10l-3 2 3 2v-4zm6 4 3-2-3-2v4z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              {{ gridViewOpen ? "切换列表" : "切换表格" }}
+              清空筛选
             </button>
           </div>
-          <div v-if="!gridViewOpen" class="student-filter-grid">
-            <div class="student-filter-row">
-              <div class="student-filter-field">
+        </div>
+        <div v-if="!gridViewOpen" class="student-filter-body">
+          <div class="student-filter-grid">
+            <div class="student-filter-panel student-filter-field-year">
+              <div class="student-filter-panel-head">
                 <span class="info-label">年级</span>
-                <select v-model="filters.classYear" class="info-input">
-                  <option value="">全部</option>
-                  <option
-                    v-for="year in classYearOptions"
-                    :key="year"
-                    :value="String(year)"
-                  >
-                    {{ year }}
-                  </option>
-                </select>
               </div>
+              <select v-model="filters.classYear" class="info-input">
+                <option value="">全部</option>
+                <option
+                  v-for="year in classYearOptions"
+                  :key="year"
+                  :value="String(year)"
+                >
+                  {{ year }}
+                </option>
+              </select>
             </div>
 
-            <div class="student-filter-row">
-              <div class="student-filter-field">
+            <div class="student-filter-panel student-filter-field-category">
+              <div class="student-filter-panel-head">
+                <span class="info-label">学生类型</span>
+              </div>
+              <select v-model="filters.studentCategory" class="info-input">
+                <option value="">全部</option>
+                <option
+                  v-for="cat in studentCategoryOptions"
+                  :key="cat"
+                  :value="cat"
+                >
+                  {{ cat }}
+                </option>
+              </select>
+            </div>
+
+            <div class="student-filter-panel student-filter-field-major">
+              <div class="student-filter-panel-head">
                 <span class="info-label">专业</span>
-                <select v-model="filters.major" class="info-input">
-                  <option value="">全部</option>
-                  <option
-                    v-for="major in availableMajors"
-                    :key="major"
-                    :value="major"
-                  >
-                    {{ major }}
-                  </option>
-                </select>
               </div>
+              <select v-model="filters.major" class="info-input" :disabled="!filters.studentCategory">
+                <option value="">全部</option>
+                <option
+                  v-for="major in availableMajors"
+                  :key="major"
+                  :value="major"
+                >
+                  {{ major }}
+                </option>
+              </select>
             </div>
 
-            <div class="student-filter-row">
-              <div class="student-filter-field">
+            <div class="student-filter-panel student-filter-field-class">
+              <div class="student-filter-panel-head">
                 <span class="info-label">班级</span>
-                <div class="student-stepper">
-                  <button
-                    class="stepper-button"
-                    type="button"
-                    :disabled="!canDecrementClass"
-                    @click="decrementClass"
-                  >
-                    −
-                  </button>
-                  <input
-                    v-model="filters.classNo"
-                    class="info-input stepper-input"
-                    type="number"
-                    min="1"
-                    max="10"
-                    step="1"
-                    placeholder="全部"
-                    @input="normalizeClassNo"
-                  />
-                  <button
-                    class="stepper-button"
-                    type="button"
-                    :disabled="!canIncrementClass"
-                    @click="incrementClass"
-                  >
-                    +
-                  </button>
-                </div>
               </div>
+              <StepperInput
+                v-model="filters.classNo"
+                :min="1"
+                :max="10"
+                wrap
+                placeholder="全部"
+              />
             </div>
+          </div>
 
-            <div class="student-filter-row student-filter-inline">
+          <div class="student-filter-meta">
+            <div class="student-filter-flags">
               <label class="info-choice">
                 <input v-model="filters.isHkMoTw" type="checkbox" />
                 港澳台
@@ -158,754 +107,191 @@
                 特殊学生
               </label>
             </div>
-          </div>
-          <div v-if="gridViewOpen" class="student-grid-tabs">
-            <button
-              class="student-grid-tab student-grid-tab-add"
-              type="button"
-              @click="openGridFieldDialog"
-              title="选择字段"
-            >
-              +
-            </button>
-            <button
-              v-for="sheet in gridSheets"
-              :key="sheet.id"
-              class="student-grid-tab"
-              :class="{ active: sheet.id === gridActiveSheet }"
-              type="button"
-              @click="gridActiveSheet = sheet.id"
-            >
-              {{ sheet.label }}
-            </button>
-            <span v-if="gridLoading" class="student-grid-status">加载中...</span>
-            <span v-else class="student-grid-status"
-              >共 {{ gridActiveSheetData.rowData.length }} 条</span
-            >
-          </div>
-        </section>
-
-      <section class="info-card student-results-card">
-          <div v-if="!gridViewOpen" class="student-results-header">
-            <div class="info-section-title">筛选结果</div>
-            <div class="student-results-actions">
-              <button
-                class="ghost-button"
-                type="button"
-                @click="selectCurrentPage"
-              >
-                选择本页
-              </button>
-              <button
-                class="ghost-button"
-                type="button"
-                :disabled="selectAllLoading"
-                @click="selectAllFiltered"
-              >
-                {{ selectAllLoading ? "选择中..." : "选择全部" }}
-              </button>
-            </div>
-          </div>
-          <div
-            v-if="gridViewOpen"
-            ref="gridWrapRef"
-            class="student-grid-wrap"
-            :class="{ fullscreen: gridFullscreen }"
-          >
-            <AgGridVue
-              class="ag-theme-quartz student-grid"
-              :row-data="gridActiveSheetData.rowData"
-              :column-defs="gridActiveSheetData.colDefs"
-              :default-col-def="gridDefaultColDef"
-              :locale-text="gridLocaleText"
-              :locale-text-func="gridLocaleTextFunc"
-              :animate-rows="true"
-              :pagination="true"
-              :pagination-page-size="100"
-              :suppress-cell-focus="true"
-            />
-            <button
-              class="student-grid-fullscreen"
-              type="button"
-              @click="toggleGridFullscreen"
-            >
-              {{ gridFullscreen ? "退出全屏" : "全屏" }}
-            </button>
-          </div>
-          <div v-else-if="pagedStudents.length" class="student-list">
-            <div
-              v-for="item in pagedStudents"
-              :key="item.id"
-              class="student-row"
-            >
-              <input v-model="selectedIds" type="checkbox" :value="item.id" />
-              <div class="student-main">
-                <div class="student-name">{{ item.name }}</div>
-                <div class="student-meta">
-                  {{ item.gradeYear }}级 {{ item.major }}{{ item.classNo }}班
-                  {{ item.studentNo }}
-                </div>
-              </div>
-              <button
-                class="ghost-button"
-                type="button"
-                @click="openDetail(item)"
-              >
-                详情
-              </button>
-            </div>
-          </div>
-          <div v-else class="empty-tip">没有匹配的学生。</div>
-
-          <div v-if="!gridViewOpen" class="student-pagination">
-            <div class="student-pages">
-              <button
-                v-for="page in totalPages"
-                :key="page"
-                class="page-button"
-                :class="{ active: page === currentPage }"
-                type="button"
-                @click="setPage(page)"
-              >
-                {{ page }}
-              </button>
-              <input
-                v-model.number="pageInput"
-                class="info-input page-input"
-                type="number"
-                :min="1"
-                :max="totalPages"
-                placeholder="页码"
-                @change="applyPageInput"
-              />
-            </div>
-            <div class="page-size">
-              <span class="info-label">每页</span>
-              <select
-                v-model.number="pageSize"
-                class="info-input page-size-input"
-              >
-                <option
-                  v-for="size in pageSizeOptions"
-                  :key="size"
-                  :value="size"
-                >
-                  {{ size }}
-                </option>
-              </select>
-            </div>
-            <button
-              class="action-button"
-              type="button"
-              :disabled="exportDisabled"
-              @click="openExportDialog"
-            >
-              {{ exportLabel }}
-            </button>
-          </div>
-        </section>
-      </section>
-
-      <transition name="export-dialog-backdrop">
-        <div
-          v-if="gridFieldDialogOpen"
-          class="grid-field-dialog-backdrop"
-          @click="closeGridFieldDialog"
-        ></div>
-      </transition>
-      <section
-        class="grid-field-dialog"
-        :class="{ open: gridFieldDialogOpen, closing: gridFieldDialogClosing }"
-      >
-        <header class="export-dialog-header">
-          <div class="export-dialog-title">
-            选择显示字段
-            <label class="export-all-toggle">
-              <input
-                type="checkbox"
-                :checked="isAllSelected"
-                @change="toggleAllSelections($event.target.checked)"
-              />
-              <span>全选</span>
-            </label>
-          </div>
-          <button class="ghost-button" type="button" @click="closeGridFieldDialog">
-            关闭
-          </button>
-        </header>
-        <div class="export-dialog-body">
-          <div
-            v-for="group in exportGroups"
-            :key="group.id"
-            class="export-group"
-          >
-            <label class="export-group-title">
-              <span>{{ group.label }}</span>
-              <input
-                type="checkbox"
-                :checked="isGroupChecked(group)"
-                @change="toggleGroupSelection(group, $event.target.checked)"
-              />
-            </label>
-            <div class="export-group-options">
-              <template v-if="group.id === 'family'">
-                <div
-                  v-for="(row, index) in familyRows"
-                  :key="`grid-family-row-${index}`"
-                  class="export-option-row"
-                >
-                  <label
-                    v-for="field in row"
-                    :key="field.key"
-                    class="export-option"
-                  >
-                    <input v-model="exportSelections[field.key]" type="checkbox" />
-                    <span>{{ field.label }}</span>
-                  </label>
-                </div>
-              </template>
-              <template v-else>
-                <label
-                  v-for="field in group.fields"
-                  :key="field.key"
-                  class="export-option"
-                >
-                  <input v-model="exportSelections[field.key]" type="checkbox" />
-                  <span>{{ field.label }}</span>
-                </label>
-              </template>
+            <div class="student-filter-status">
+              {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
             </div>
           </div>
         </div>
-      </section>
-
-      <transition name="publisher-backdrop">
-        <div
-          v-if="viewOpen"
-          class="student-detail-backdrop"
-          @click="closeView"
-        ></div>
-      </transition>
-      <section
-        class="student-detail-view"
-        :class="{
-          open: viewOpen,
-          closing: viewClosing,
-          split: achievementsOpen || achievementsClosing,
-        }"
-        :aria-hidden="!viewOpen"
-      >
-        <header class="publisher-header">
-          <div class="publisher-title">学生详情</div>
-          <button class="publisher-close" type="button" @click="closeView">
-            关闭
-          </button>
-        </header>
-        <div v-if="viewLoading" class="empty-tip">加载中...</div>
-        <div v-else-if="viewItem" class="info-shell student-detail-body">
-          <div class="info-hero">
-            <button class="avatar-square" type="button" disabled>
-              <img
-                v-if="viewItem.avatarUrl"
-                :src="resolveMediaUrl(viewItem.avatarUrl)"
-                alt="头像"
-              />
-              <span v-else>{{
-                (viewItem.fullName || "同学").slice(0, 1)
-              }}</span>
-            </button>
-            <div class="info-hero-text">
-              <div class="info-hero-title">
-                {{ viewItem.fullName || "未命名" }}
-              </div>
-              <div class="info-hero-subtitle">
-                学号：{{ viewItem.studentNo || "-" }}
-              </div>
-            </div>
-            <div class="info-actions info-actions-double">
-              <button
-                class="action-button"
-                type="button"
-                @click="openAchievements"
-              >
-                个人成就
-              </button>
-              <ExportPdfButton
-                :student="viewItem"
-                :resolve-media-url="resolveMediaUrl"
-                :disabled="!viewItem"
-              />
-            </div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-section-title">学籍信息</div>
-            <div class="info-form-grid">
-              <div class="field-card">
-                <span class="info-label">名字</span>
-                <div class="info-input info-static">
-                  {{ viewItem.fullName || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">学号</span>
-                <div class="info-input info-static">
-                  {{ viewItem.studentNo || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">年级</span>
-                <div class="info-input info-static">
-                  {{ viewItem.classYear ? viewItem.classYear + "级" : "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">学院</span>
-                <div class="info-input info-static">
-                  {{ viewItem.college || "-" }}
-                </div>
-              </div>
-              <div class="field-card field-full">
-                <span class="info-label">班级</span>
-                <div class="info-input info-static">
-                  {{ buildClassName(viewItem) || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">入学时间</span>
-                <div class="info-input info-static">
-                  {{ viewItem.enrollmentDate || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">学生类别</span>
-                <div class="info-input info-static">
-                  {{ viewItem.studentCategory || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">班主任</span>
-                <div class="info-input info-static">
-                  {{ viewItem.classTeacher || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">辅导员</span>
-                <div class="info-input info-static">
-                  {{ viewItem.counselor || "-" }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-section-title">个人证件与联系方式</div>
-            <div class="info-form-grid">
-              <div class="field-card">
-                <span class="info-label">民族</span>
-                <div class="info-input info-static">
-                  {{ viewItem.ethnicity || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">政治面貌</span>
-                <div class="info-input info-static">
-                  {{ viewItem.politicalStatus || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">手机号码</span>
-                <div class="info-input info-static">
-                  {{ viewItem.phone || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">身份证件号</span>
-                <div class="info-input info-static">
-                  {{ viewItem.idNo || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">籍贯</span>
-                <div class="info-input info-static">
-                  {{ viewItem.nativePlace || "-" }}
-                </div>
-              </div>
-              <div class="field-card field-full">
-                <span class="info-label">住址</span>
-                <div class="info-input info-static">
-                  {{ viewItem.address || "-" }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-section-title">住宿信息</div>
-            <div class="info-form-grid">
-              <div class="field-card field-full">
-                <span class="info-label">是否在外居住</span>
-                <div class="info-input info-static">
-                  {{ viewItem.offCampusLiving ? "是" : "否" }}
-                </div>
-              </div>
-              <div
-                class="field-card field-full"
-                v-if="viewItem.offCampusLiving"
-              >
-                <span class="info-label">外居住详细地址</span>
-                <div class="info-input info-static">
-                  {{ viewItem.offCampusAddress || "-" }}
-                </div>
-              </div>
-              <div class="field-card" v-if="!viewItem.offCampusLiving">
-                <span class="info-label">住宿校区</span>
-                <div class="info-input info-static">
-                  {{ viewItem.dormCampus || "-" }}
-                </div>
-              </div>
-              <div class="field-card" v-if="!viewItem.offCampusLiving">
-                <span class="info-label">住宿楼栋</span>
-                <div class="info-input info-static">
-                  {{ viewItem.dormBuilding || "-" }}
-                </div>
-              </div>
-              <div class="field-card" v-if="!viewItem.offCampusLiving">
-                <span class="info-label">住宿房间</span>
-                <div class="info-input info-static">
-                  {{ viewItem.dormRoom || "-" }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-section-title">团组织与入党信息</div>
-            <div class="info-form-grid three">
-              <div class="field-card field-full">
-                <span class="info-label">是否入团</span>
-                <div class="info-input info-static">
-                  {{ viewItem.leagueJoined ? "是" : "否" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">提交入团申请书时间</span>
-                <div class="info-input info-static">
-                  {{ viewItem.leagueApplicationDate || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">入团时间</span>
-                <div class="info-input info-static">
-                  {{
-                    formatDateOrStatus(
-                      viewItem.leagueJoinDate,
-                      viewItem.leagueDeveloping,
-                      "正在发展",
-                    )
-                  }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">团号</span>
-                <div class="info-input info-static">
-                  {{ viewItem.leagueNo || "-" }}
-                </div>
-              </div>
-              <div class="field-card field-full">
-                <span class="info-label">是否申请入党</span>
-                <div class="info-input info-static">
-                  {{ viewItem.partyApplied ? "是" : "否" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">提交入党申请书时间</span>
-                <div class="info-input info-static">
-                  {{ viewItem.applicationDate || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">确定积极分子时间</span>
-                <div class="info-input info-static">
-                  {{
-                    formatDateOrStatus(
-                      viewItem.activistDate,
-                      viewItem.activistDeveloping,
-                      "正在发展",
-                    )
-                  }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">上党课时间</span>
-                <div class="info-input info-static">
-                  {{
-                    formatDateOrStatus(
-                      viewItem.partyTrainingDate,
-                      viewItem.partyTrainingPending,
-                      "暂未报名",
-                    )
-                  }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">确定发展对象时间</span>
-                <div class="info-input info-static">
-                  {{
-                    formatDateOrStatus(
-                      viewItem.developmentTargetDate,
-                      viewItem.developmentTargetDeveloping,
-                      "正在发展",
-                    )
-                  }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">接收为预备党员时间</span>
-                <div class="info-input info-static">
-                  {{
-                    formatDateOrStatus(
-                      viewItem.probationaryMemberDate,
-                      viewItem.probationaryDeveloping,
-                      "正在发展",
-                    )
-                  }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">转为正式党员时间</span>
-                <div class="info-input info-static">
-                  {{
-                    formatDateOrStatus(
-                      viewItem.fullMemberDate,
-                      viewItem.fullMemberDeveloping,
-                      "正在发展",
-                    )
-                  }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-section-title">教育经历</div>
-            <div v-if="educationRows.length" class="education-table-wrap">
-              <table class="education-table">
-                <thead>
-                  <tr>
-                    <th>时间段</th>
-                    <th>学校名称</th>
-                    <th>学历</th>
-                    <th>证明人</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(item, index) in educationRows"
-                    :key="`edu-view-${index}`"
-                  >
-                    <td>
-                      <div class="education-period">
-                        <div class="info-input info-static">
-                          {{ item.startDate || "-" }}
-                        </div>
-                        <span class="education-sep">至</span>
-                        <div class="info-input info-static">
-                          {{ item.isCurrent ? "至今" : item.endDate || "-" }}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="info-input info-static">
-                        {{ item.schoolName || "-" }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="info-input info-static">
-                        {{ item.educationLevel || "-" }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="info-input info-static">
-                        {{ item.witness || "-" }}
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div v-else class="empty-tip">暂无教育经历</div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-section-title">家庭信息</div>
-            <div class="info-form-grid family-grid">
-              <div class="family-section-title">父亲</div>
-              <div class="field-card">
-                <span class="info-label">姓名</span>
-                <div class="info-input info-static">
-                  {{ viewItem.fatherName || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">手机号码</span>
-                <div class="info-input info-static">
-                  {{ viewItem.fatherPhone || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">工作单位</span>
-                <div class="info-input info-static">
-                  {{ viewItem.fatherWorkUnit || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">职务</span>
-                <div class="info-input info-static">
-                  {{ viewItem.fatherTitle || "-" }}
-                </div>
-              </div>
-              <div class="family-section-title">母亲</div>
-              <div class="field-card">
-                <span class="info-label">姓名</span>
-                <div class="info-input info-static">
-                  {{ viewItem.motherName || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">手机号码</span>
-                <div class="info-input info-static">
-                  {{ viewItem.motherPhone || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">工作单位</span>
-                <div class="info-input info-static">
-                  {{ viewItem.motherWorkUnit || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">职务</span>
-                <div class="info-input info-static">
-                  {{ viewItem.motherTitle || "-" }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-section-title">紧急联系人</div>
-            <div class="info-form-grid">
-              <div class="field-card">
-                <span class="info-label">紧急联系人电话</span>
-                <div class="info-input info-static">
-                  {{ viewItem.emergencyPhone || "-" }}
-                </div>
-              </div>
-              <div class="field-card">
-                <span class="info-label">紧急联系人的关系</span>
-                <div class="info-input info-static">
-                  {{ viewItem.emergencyRelation || "-" }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        class="student-achievements-view"
-        :class="{ open: achievementsOpen, closing: achievementsClosing }"
-        :aria-hidden="!achievementsOpen"
-      >
-        <header class="publisher-header">
-          <div class="publisher-title">个人成就</div>
+        <div v-if="gridViewOpen" class="student-grid-tabs">
           <button
-            class="publisher-close"
+            class="student-grid-tab student-grid-tab-add"
             type="button"
-            @click="closeAchievements"
+            @click="openGridFieldDialog"
+            title="选择字段"
           >
-            关闭
+            +
           </button>
-        </header>
-        <div class="student-achievements-body" v-if="viewItem">
-          <iframe
-            class="student-achievements-frame"
-            :key="achievementUrl"
-            :src="achievementUrl"
-            title="学生个人成就"
-          ></iframe>
+          <button
+            v-for="sheet in gridSheets"
+            :key="sheet.id"
+            class="student-grid-tab"
+            :class="{ active: sheet.id === gridActiveSheet }"
+            type="button"
+            @click="gridActiveSheet = sheet.id"
+          >
+            {{ sheet.label }}
+          </button>
+          <span v-if="gridLoading" class="student-grid-status">加载中...</span>
+          <span v-else class="student-grid-status"
+            >共 {{ gridActiveSheetData.rowData.length }} 条</span
+          >
         </div>
       </section>
 
-      <transition name="publisher-backdrop">
-        <div
-          v-if="exportDialogOpen"
-          class="export-dialog-backdrop"
-          @click="closeExportDialog"
-        ></div>
-      </transition>
-      <section
-        class="export-dialog"
-        :class="{
-          open: exportDialogOpen,
-          closing: exportDialogClosing,
-          split: exportPreviewOpen || exportPreviewClosing,
-        }"
-      >
-        <header class="export-dialog-header">
-          <div class="export-dialog-title">
-            导出信息选择
-            <label class="export-all-toggle">
-              <input
-                type="checkbox"
-                :checked="isAllSelected"
-                @change="toggleAllSelections($event.target.checked)"
-              />
-              <span>全选</span>
-            </label>
+      <section class="card student-results-card">
+        <div v-if="!gridViewOpen" class="student-results-header">
+          <div class="info-section-title">筛选结果</div>
+          <div class="student-results-actions">
+            <button
+              class="ghost-button"
+              type="button"
+              @click="selectCurrentPage"
+            >
+              选择本页
+            </button>
+            <button
+              class="ghost-button"
+              type="button"
+              :disabled="selectAllLoading"
+              @click="selectAllFiltered"
+            >
+              {{ selectAllLoading ? "选择中..." : "选择全部" }}
+            </button>
           </div>
-          <button class="ghost-button" type="button" @click="closeExportDialog">
-            关闭
-          </button>
-        </header>
-        <div class="export-dialog-body">
-          <div
-            v-for="group in exportGroups"
-            :key="group.id"
-            class="export-group"
-          >
-            <label class="export-group-title">
-              <span>{{ group.label }}</span>
-              <input
-                type="checkbox"
-                :checked="isGroupSelected(group)"
-                @change="toggleGroupSelection(group, $event.target.checked)"
-              />
-            </label>
-            <div class="export-group-options">
-              <template v-if="group.id === 'family'">
-                <div
-                  v-for="(row, index) in familyRows"
-                  :key="`family-row-${index}`"
-                  class="export-option-row"
-                >
-                  <label
-                    v-for="field in row"
-                    :key="field.key"
-                    class="export-option"
-                  >
-                    <input
-                      v-model="exportSelections[field.key]"
-                      type="checkbox"
-                    />
-                    <span>{{ field.label }}</span>
-                  </label>
-                </div>
-              </template>
-              <template v-else>
+        </div>
+        <div
+          v-if="gridViewOpen"
+          ref="gridWrapRef"
+          class="student-grid-wrap"
+          :class="{ fullscreen: gridFullscreen }"
+        >
+          <AgGridVue
+            class="ag-theme-quartz student-grid"
+            :row-data="gridActiveSheetData.rowData"
+            :column-defs="gridActiveSheetData.colDefs"
+            :default-col-def="gridDefaultColDef"
+            :locale-text="gridLocaleText"
+            :locale-text-func="gridLocaleTextFunc"
+            :animate-rows="true"
+            :pagination="true"
+            :pagination-page-size="100"
+            :suppress-cell-focus="true"
+          />
+        </div>
+        <div v-else-if="loading" class="empty-tip student-results-loading">
+          加载学生信息中...
+        </div>
+        <div v-else-if="pagedStudents.length" class="student-list">
+          <div v-for="item in pagedStudents" :key="item.id" class="student-row">
+            <input v-model="selectedIds" type="checkbox" :value="item.id" />
+            <div class="student-main">
+              <div class="student-name">{{ item.name }}</div>
+              <div class="student-meta">
+                {{ item.gradeYear }}级 {{ item.major }}{{ item.classNo }}班
+                {{ item.studentNo }}
+              </div>
+            </div>
+            <button
+              class="ghost-button"
+              type="button"
+              @click="openDetail(item)"
+            >
+              详情
+            </button>
+          </div>
+        </div>
+        <div v-else class="empty-tip">没有匹配的学生。</div>
+
+        <div v-if="!gridViewOpen">
+          <PaginationBar
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total-pages="totalPages"
+            :page-size-options="pageSizeOptions"
+            mode="full"
+          />
+        </div>
+      </section>
+    </section>
+
+    <!-- Floating action buttons -->
+    <div class="floating-actions">
+      <Transition name="floating-action">
+        <button
+          v-if="hasSelection"
+          class="floating-btn floating-btn-cancel"
+          type="button"
+          @click="cancelSelection"
+        >
+          取消选择
+        </button>
+      </Transition>
+      <button
+        v-if="hasSelection"
+        class="floating-btn floating-btn-export"
+        type="button"
+        @click="openExportDialog"
+      >
+        {{ exportLabel }}
+      </button>
+      <button
+        class="floating-btn floating-btn-toggle"
+        type="button"
+        @click="toggleGridView"
+        :title="gridViewOpen ? '切换列表视图' : '切换表格视图'"
+      >
+        <span class="floating-toggle-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path
+              d="M7 7h10v3h2V5H5v5h2V7zm10 10H7v-3H5v5h14v-5h-2v3zM9 10l-3 2 3 2v-4zm6 4 3-2-3-2v4z"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+        {{ gridViewOpen ? "切换列表" : "切换表格" }}
+      </button>
+    </div>
+
+    <OverlayPanel
+      :open="gridFieldDialogOpen"
+      :closing="gridFieldDialogClosing"
+      title="选择显示字段"
+      aria-label="选择显示字段"
+      size="wide"
+      @close="closeGridFieldDialog"
+    >
+      <template #header>
+        <div class="overlay-custom-header">
+          <span class="overlay-custom-title">选择显示字段</span>
+          <label class="export-all-toggle">
+            <input
+              type="checkbox"
+              :checked="isAllSelected"
+              @change="toggleAllSelections($event.target.checked)"
+            />
+            <span>全选</span>
+          </label>
+        </div>
+      </template>
+      <div class="export-dialog-body">
+        <div v-for="group in exportGroups" :key="group.id" class="export-group">
+          <label class="export-group-title">
+            <span>{{ group.label }}</span>
+            <input
+              type="checkbox"
+              :checked="isGroupChecked(group)"
+              @change="toggleGroupSelection(group, $event.target.checked)"
+            />
+          </label>
+          <div class="export-group-options">
+            <template v-if="group.id === 'family'">
+              <div
+                v-for="(row, index) in familyRows"
+                :key="`grid-family-row-${index}`"
+                class="export-option-row"
+              >
                 <label
-                  v-for="field in group.fields"
+                  v-for="field in row"
                   :key="field.key"
                   class="export-option"
                 >
@@ -915,114 +301,172 @@
                   />
                   <span>{{ field.label }}</span>
                 </label>
-              </template>
-            </div>
+              </div>
+            </template>
+            <template v-else>
+              <label
+                v-for="field in group.fields"
+                :key="field.key"
+                class="export-option"
+              >
+                <input v-model="exportSelections[field.key]" type="checkbox" />
+                <span>{{ field.label }}</span>
+              </label>
+            </template>
           </div>
         </div>
-        <footer class="export-dialog-actions">
-          <button class="ghost-button" type="button" @click="closeExportDialog">
+      </div>
+    </OverlayPanel>
+
+    <transition name="publisher-backdrop">
+      <div
+        v-if="viewOpen"
+        class="student-detail-backdrop"
+        @click="closeView"
+      ></div>
+    </transition>
+    <section
+      class="student-detail-view"
+      :class="{
+        open: viewOpen,
+        closing: viewClosing,
+        split: achievementsOpen || achievementsClosing,
+      }"
+      :aria-hidden="!viewOpen"
+    >
+      <header class="publisher-header">
+        <div class="publisher-title">学生详情</div>
+        <button class="publisher-close" type="button" @click="closeView">
+          关闭
+        </button>
+      </header>
+      <div v-if="viewLoading" class="empty-tip">加载中...</div>
+      <StudentProfileEditor
+        v-else-if="viewItem"
+        :student="viewItem"
+        :resolve-media-url="resolveMediaUrl"
+        :save-profile="saveViewProfile"
+        :can-edit="profile.role === 'ADMIN'"
+        :show-achievements="true"
+        @saved="handleViewProfileSaved"
+        @open-achievements="openAchievements"
+      />
+    </section>
+
+    <section
+      class="student-achievements-view"
+      :class="{ open: achievementsOpen, closing: achievementsClosing }"
+      :aria-hidden="!achievementsOpen"
+    >
+      <header class="publisher-header">
+        <div class="publisher-title">个人成就</div>
+        <button
+          class="publisher-close"
+          type="button"
+          @click="closeAchievements"
+        >
+          关闭
+        </button>
+      </header>
+      <div class="student-achievements-body" v-if="viewItem">
+        <iframe
+          class="student-achievements-frame"
+          :key="achievementUrl"
+          :src="achievementUrl"
+          title="学生个人成就"
+        ></iframe>
+      </div>
+    </section>
+
+    <StudentExportDialog
+      :open="exportDialogOpen"
+      filename-prefix="students_export"
+      preview-title="导出预览(仅显示前三人)"
+      empty-message="没有获取到学生详情，请稍后再试。"
+      :load-rows="loadExportRows"
+      @close="closeExportDialog"
+      @export-success="toastSuccess('学生信息已导出')"
+    />
+
+    <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template #right>
+        <button class="capsule-action" type="button" @click="toggleGridView">
+          {{ gridViewOpen ? "列表" : "表格" }}
+        </button>
+        <button
+          v-if="gridViewOpen"
+          class="capsule-action"
+          :class="{ 'capsule-active': gridFullscreen }"
+          type="button"
+          @click="toggleGridFullscreen"
+        >
+          {{ gridFullscreen ? "退出" : "全屏" }}
+        </button>
+      </template>
+    </MobileCapsule>
+
+    <div
+      :class="['sheet-overlay', { open: gridViewConfirmOpen }]"
+      @click.self="closeGridViewConfirm"
+    >
+      <div class="sheet-modal" @click.stop>
+        <header class="sheet-modal-header">
+          <div class="sheet-modal-title">提示</div>
+        </header>
+        <div class="sheet-modal-body">
+          当前学生数量为 {{ totalItems }} 人，表格视图加载大量数据可能会造成卡顿。<br />
+          建议使用导出功能下载表格查看。<br />
+          是否继续切换到表格视图？
+        </div>
+        <div class="sheet-modal-actions">
+          <button class="ghost-button" type="button" @click="closeGridViewConfirm">
             取消
           </button>
-          <button
-            class="ghost-button"
-            type="button"
-            @click="
-              exportPreviewOpen ? closeExportPreview() : openExportPreview()
-            "
-          >
-            {{ exportPreviewOpen ? "关闭预览" : "预览" }}
+          <button class="action-button" type="button" @click="confirmGridView">
+            继续
           </button>
-          <button
-            class="action-button export-confirm"
-            type="button"
-            :disabled="exporting"
-            @click="confirmExport"
-          >
-            {{ exporting ? "导出中..." : "确认导出" }}
-          </button>
-        </footer>
-      </section>
-
-      <section
-        class="export-preview-view"
-        :class="{ open: exportPreviewOpen, closing: exportPreviewClosing }"
-        :aria-hidden="!exportPreviewOpen"
-      >
-        <header class="export-preview-header">
-          <div class="export-preview-title">导出预览(仅显示前三人)</div>
-          <button
-            class="ghost-button"
-            type="button"
-            @click="closeExportPreview"
-          >
-            关闭
-          </button>
-        </header>
-        <div class="export-preview-body">
-          <div v-if="previewLoading" class="empty-tip">加载预览中...</div>
-          <div v-else-if="!previewSheets.length" class="empty-tip">
-            暂无可预览内容
-          </div>
-          <div v-else class="export-preview-grid">
-            <table class="export-preview-table">
-              <thead>
-                <tr>
-                  <th v-for="(cell, index) in previewHeader" :key="index">
-                    {{ cell }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, rowIndex) in previewRows" :key="rowIndex">
-                  <td v-for="(cell, cellIndex) in row" :key="cellIndex">
-                    {{ cell }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="export-preview-tabs" v-if="previewSheets.length">
-            <button
-              v-for="sheet in previewSheets"
-              :key="sheet.id"
-              class="export-preview-tab"
-              :class="{ active: sheet.id === previewActiveSheet }"
-              type="button"
-              @click="setPreviewSheet(sheet.id)"
-            >
-              {{ sheet.label }}
-            </button>
-          </div>
         </div>
-      </section>
-    </main>
-  </div>
+      </div>
+    </div>
+  </main>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
+import { useRouter, useRoute } from "vue-router";
+
 import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
 import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
-import { useRouter } from "vue-router";
-import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
-import { getStudentProfileById, searchStudentProfiles } from "../api/profile";
+import { getMenuLocation, isMenuEnabled } from "../constants/menu";
+import {
+  getStudentProfileById,
+  saveStudentProfileById,
+  searchStudentProfiles,
+} from "../api/profile";
 import { listAchievements } from "../api/achievement";
-import ExportPdfButton from "../components/ExportPdfButton.vue";
+import MobileCapsule from "../components/MobileCapsule.vue";
+import StudentExportDialog from "../components/StudentExportDialog.vue";
+import StudentProfileEditor from "../components/StudentProfileEditor.vue";
+import PaginationBar from "../components/PaginationBar.vue";
+import StepperInput from "../components/StepperInput.vue";
+import OverlayPanel from "../components/OverlayPanel.vue";
+import { navigateWithViewTransition } from "../utils/viewTransition";
+import { useDashboardShell } from "../composables/useDashboardShell";
+import { useToast } from "../composables/useToast";
+import { resolveMediaUrl } from "../utils/media";
+import { loadUser } from "../utils/userStorage";
 
 const router = useRouter();
-const API_BASE = "http://localhost:8080";
+const route = useRoute();
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
+const { success: toastSuccess } = useToast();
 
 const profile = reactive(loadUser());
 const activeMenu = ref("student-info");
-const menuItems = computed(() => filterMenuItemsByRole(profile.role));
 const selectedIds = ref([]);
-const exporting = ref(false);
 const currentPage = ref(1);
 const pageInput = ref(null);
 const students = ref([]);
@@ -1030,16 +474,13 @@ const totalPages = ref(1);
 const totalItems = ref(0);
 const loading = ref(false);
 const pageSizeOptions = [10, 20, 30, 50];
-const pageSize = ref(20);
+const pageSize = ref(10);
 const viewOpen = ref(false);
 const viewClosing = ref(false);
 const viewItem = ref(null);
 const viewLoading = ref(false);
 const selectAllLoading = ref(false);
 const exportDialogOpen = ref(false);
-const exportDialogClosing = ref(false);
-const exportPreviewOpen = ref(false);
-const exportPreviewClosing = ref(false);
 const gridViewOpen = ref(false);
 const gridLoading = ref(false);
 const gridDetailRows = ref([]);
@@ -1048,19 +489,14 @@ const gridFieldDialogOpen = ref(false);
 const gridFieldDialogClosing = ref(false);
 const gridActiveSheet = ref("main");
 const gridFullscreen = ref(false);
+const gridViewConfirmOpen = ref(false);
+const gridWrapRef = ref(null);
 const gridHasFullDetail = ref(false);
 let gridRequestId = 0;
-const previewActiveSheet = ref("main");
-const previewLoading = ref(false);
-const previewDetailRows = ref([]);
-const previewAchievementData = ref([]);
-let previewRequestId = 0;
-const PDF_FONT_NAME = "HarmonyOSSansSC";
-const PDF_FONT_BLACK = "HarmonyOSSansSCBlack";
-let pdfFontBase64 = null;
-let pdfFontBlackBase64 = null;
 const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
+const sidebarOpen = ref(false);
+const activeCategory = ref("all");
 
 const classYearOptions = Array.from({ length: 11 }, (_, index) => 2020 + index);
 const majorOptions = [
@@ -1140,15 +576,40 @@ const gridLocaleTextFunc = (key, defaultValue) => {
   return defaultValue;
 };
 
-
 const filters = reactive({
   classYear: "",
+  studentCategory: "",
   major: "",
   classNo: "",
   isHkMoTw: false,
   isSpecial: false,
   keyword: "",
 });
+
+const studentCategoryOptions = ["本科生", "研究生"];
+
+const majorOptionsByCategory = {
+  本科生: [
+    "计算机科学与技术",
+    "计算机科学与技术（实验区）",
+    "计算机科学与技术(中外联合培养项目班)",
+    "2025计算机科学与技术（中外联合培养项目班未赴国外学习）",
+    "软件工程",
+    "人工智能",
+    "电子商务",
+    "电子商务（大数据决策分析）",
+    "大数据管理与应用",
+    "大数据管理与应用（佛山校区全学段）",
+    "大数据管理与应用（数字治理）",
+  ],
+  研究生: [
+    "管理科学与工程",
+    "技术经济及管理",
+    "智能科学与技术",
+    "计算机技术",
+    "图书情报",
+  ],
+};
 
 const exportGroups = [
   {
@@ -1177,6 +638,7 @@ const exportGroups = [
       { key: "ethnicity", label: "民族" },
       { key: "politicalStatus", label: "政治面貌" },
       { key: "phone", label: "手机号码" },
+      { key: "backupContact", label: "备用联系方式（QQ/邮箱）" },
       { key: "idNo", label: "身份证号" },
       { key: "nativePlace", label: "籍贯" },
       { key: "address", label: "住址" },
@@ -1265,7 +727,7 @@ function initExportSelections() {
   const selections = {};
   exportGroups.forEach((group) => {
     group.fields.forEach((field) => {
-      selections[field.key] = Boolean(field.defaultSelected);
+      selections[field.key] = true;
     });
   });
   return selections;
@@ -1291,12 +753,16 @@ const familyRows = computed(() => {
 });
 
 const availableMajors = computed(() => {
-  return majorOptions;
+  if (!filters.studentCategory) {
+    return [];
+  }
+  return majorOptionsByCategory[filters.studentCategory] || [];
 });
 
 const hasActiveFilters = computed(() => {
   return Boolean(
     filters.classYear ||
+    filters.studentCategory ||
     filters.major ||
     filters.classNo ||
     filters.isHkMoTw ||
@@ -1306,36 +772,16 @@ const hasActiveFilters = computed(() => {
 });
 
 const pagedStudents = computed(() => students.value);
-const selectedStudents = computed(() => {
-  const idSet = new Set(selectedIds.value.map((id) => String(id)));
-  return students.value.filter((item) => idSet.has(String(item.id)));
-});
-const exportDisabled = computed(
-  () => exporting.value || selectedIds.value.length === 0,
-);
+const exportDisabled = computed(() => selectedIds.value.length === 0);
+const hasSelection = computed(() => selectedIds.value.length > 0);
 const exportLabel = computed(() => {
   const count = selectedIds.value.length;
   return count ? `导出(${count})` : "导出";
 });
-const educationRows = computed(() => {
-  const items = viewItem.value?.educationExperiences;
-  if (!Array.isArray(items)) {
-    return [];
-  }
-  return items.filter((item) => {
-    if (!item) {
-      return false;
-    }
-    return (
-      item.startDate ||
-      item.endDate ||
-      item.schoolName ||
-      item.educationLevel ||
-      item.witness ||
-      item.isCurrent
-    );
-  });
-});
+
+function cancelSelection() {
+  selectedIds.value = [];
+}
 
 const achievementUrl = computed(() => {
   if (!viewItem.value) {
@@ -1356,6 +802,7 @@ const achievementUrl = computed(() => {
 watch(
   () => ({
     classYear: filters.classYear,
+    studentCategory: filters.studentCategory,
     major: filters.major,
     classNo: filters.classNo,
     isHkMoTw: filters.isHkMoTw,
@@ -1374,6 +821,11 @@ watch(
   },
   { deep: true },
 );
+
+// Clear major when student category changes (since major options depend on it)
+watch(() => filters.studentCategory, () => {
+  filters.major = "";
+});
 
 watch(currentPage, () => {
   if (!gridViewOpen.value) {
@@ -1483,10 +935,24 @@ async function fetchGridDetails(items, requestId) {
 }
 
 function toggleGridView() {
+  if (!gridViewOpen.value && totalItems.value > 100) {
+    gridViewConfirmOpen.value = true;
+    return;
+  }
   gridViewOpen.value = !gridViewOpen.value;
   if (gridViewOpen.value) {
     fetchGridStudents();
   }
+}
+
+function confirmGridView() {
+  gridViewConfirmOpen.value = false;
+  gridViewOpen.value = true;
+  fetchGridStudents();
+}
+
+function closeGridViewConfirm() {
+  gridViewConfirmOpen.value = false;
 }
 
 function toggleGridFullscreen() {
@@ -1613,12 +1079,54 @@ function closeAchievements() {
   }, 260);
 }
 
-onMounted(() => {
+function saveViewProfile(payload) {
+  if (!viewItem.value?.id) {
+    throw new Error("缺少学生档案 ID");
+  }
+  return saveStudentProfileById(viewItem.value.id, payload);
+}
+
+function handleViewProfileSaved(data) {
+  if (!data) {
+    return;
+  }
+  viewItem.value = data;
+  const nextClassName = buildClassName(data);
+  students.value = students.value.map((item) => {
+    if (String(item.id) !== String(data.id)) {
+      return item;
+    }
+    return {
+      ...item,
+      name: data.fullName || "未命名",
+      className: nextClassName,
+      gradeYear: data.classYear || "",
+      college: data.college || "",
+      major: data.classMajor || "",
+      classNo: data.classNo || "",
+      studentNo: data.studentNo || "",
+      hkMoTw: data.hkMoTw || false,
+      specialStudent: data.specialStudent || false,
+    };
+  });
+}
+
+onMounted(async () => {
+  const keywordParam = route.query.keyword;
+  if (keywordParam && typeof keywordParam === "string") {
+    filters.keyword = keywordParam;
+    await fetchStudents();
+    if (students.value.length === 1) {
+      openDetail(students.value[0]);
+    }
+    return;
+  }
   fetchStudents();
 });
 
 function setPage(page) {
-  currentPage.value = page;
+  const p = Math.min(Math.max(1, page), totalPages.value);
+  currentPage.value = p;
   pageInput.value = null;
 }
 
@@ -1628,13 +1136,6 @@ function applyPageInput() {
   }
   const safePage = Math.min(Math.max(1, pageInput.value), totalPages.value);
   currentPage.value = safePage;
-}
-
-function formatDateOrStatus(dateValue, statusFlag, statusText) {
-  if (statusFlag) {
-    return statusText;
-  }
-  return dateValue || "-";
 }
 
 function formatDateOrEmpty(dateValue, statusFlag, statusText) {
@@ -1657,46 +1158,14 @@ function buildClassName(item) {
   return `${safeYear}${safeMajor}${safeNo}`.trim();
 }
 
-function normalizeClassNo() {
-  if (filters.classNo === "") {
-    return;
-  }
-  const next = Number(filters.classNo);
-  if (Number.isNaN(next)) {
-    filters.classNo = "";
-    return;
-  }
-  const clamped = Math.min(Math.max(1, next), 10);
-  filters.classNo = String(clamped);
-}
-
-const canDecrementClass = computed(() => true);
-const canIncrementClass = computed(() => true);
-
-function decrementClass() {
-  const current = Number(filters.classNo);
-  if (!filters.classNo || Number.isNaN(current)) {
-    filters.classNo = "10";
-    return;
-  }
-  if (current <= 1) {
-    filters.classNo = "";
-    return;
-  }
-  filters.classNo = String(current - 1);
-}
-
-function incrementClass() {
-  const current = Number(filters.classNo);
-  if (!filters.classNo || Number.isNaN(current)) {
-    filters.classNo = "1";
-    return;
-  }
-  if (current >= 10) {
-    filters.classNo = "";
-    return;
-  }
-  filters.classNo = String(current + 1);
+function resetFilters() {
+  filters.classYear = "";
+  filters.studentCategory = "";
+  filters.major = "";
+  filters.classNo = "";
+  filters.isHkMoTw = false;
+  filters.isSpecial = false;
+  filters.keyword = "";
 }
 
 function buildSearchParams(page, size) {
@@ -1706,6 +1175,9 @@ function buildSearchParams(page, size) {
   };
   if (filters.classYear) {
     params.classYear = filters.classYear;
+  }
+  if (filters.studentCategory) {
+    params.studentCategory = filters.studentCategory;
   }
   if (filters.major) {
     params.major = filters.major;
@@ -1789,6 +1261,7 @@ const MAIN_FIELD_ORDER = [
   "ethnicity",
   "politicalStatus",
   "phone",
+  "backupContact",
   "idNo",
   "nativePlace",
   "address",
@@ -1828,9 +1301,13 @@ const MAIN_FIELD_META = {
   ethnicity: { label: "民族", getter: (item) => item.ethnicity || "" },
   politicalStatus: {
     label: "政治面貌",
-    getter: (item) => item.politicalStatus || "",
+    getter: (item) => item.politicalStatus || "未填写",
   },
   phone: { label: "手机号码", getter: (item) => item.phone || "" },
+  backupContact: {
+    label: "备用联系方式（QQ/邮箱）",
+    getter: (item) => item.backupContact || "",
+  },
   idNo: { label: "身份证号", getter: (item) => item.idNo || "" },
   nativePlace: { label: "籍贯", getter: (item) => item.nativePlace || "" },
   address: { label: "住址", getter: (item) => item.address || "" },
@@ -1848,10 +1325,10 @@ const MAIN_FIELD_META = {
     getter: (item) => item.dormBuilding || "",
   },
   dormRoom: { label: "住宿房间", getter: (item) => item.dormRoom || "" },
-  hkMoTw: { label: "港澳台", getter: (item) => formatYesNo(item.hkMoTw) },
+  hkMoTw: { label: "港澳台", getter: (item) => (item.hkMoTw ? "是" : "否") },
   specialStudent: {
     label: "特殊学生",
-    getter: (item) => formatYesNo(item.specialStudent),
+    getter: (item) => (item.specialStudent ? "是" : "否"),
   },
   fatherName: { label: "父亲姓名", getter: (item) => item.fatherName || "" },
   fatherPhone: { label: "父亲电话", getter: (item) => item.fatherPhone || "" },
@@ -2002,6 +1479,11 @@ const ACHIEVEMENT_CATEGORIES = [
   { key: "works", label: "创作、表演的代表性作品", selectKey: "ach_works" },
 ];
 
+const achievementEntries = computed(() => [
+  { key: "all", label: "全部" },
+  ...ACHIEVEMENT_CATEGORIES,
+]);
+
 const ACHIEVEMENT_FIELDS = {
   certificate: [
     { key: "studentName", label: "学生姓名" },
@@ -2103,7 +1585,7 @@ const gridSheets = computed(() => {
   if (shouldIncludeMainSheet(keys)) {
     const table = buildStudentTable(gridDetailRows.value, keys);
     if (table) {
-      sheets.push({ id: "main", label: "学生", table });
+      sheets.push({ id: "main", label: "全部", table });
     }
   }
   const educationTable = buildEducationTable(gridDetailRows.value, keys);
@@ -2183,137 +1665,6 @@ watch(
   { deep: true },
 );
 
-const previewStudents = computed(() => previewDetailRows.value);
-const previewSelectedKeys = computed(() => getSelectedExportKeys());
-const previewSheets = computed(() => {
-  const keys = previewSelectedKeys.value;
-  const sheets = [];
-  if (shouldIncludeMainSheet(keys)) {
-    const table = buildStudentTable(previewStudents.value, keys);
-    if (table) {
-      sheets.push({ id: "main", label: "学生", table });
-    }
-  }
-  const educationTable = buildEducationTable(previewStudents.value, keys);
-  if (educationTable) {
-    sheets.push({ id: "education", label: "教育经历", table: educationTable });
-  }
-  const partyTable = buildPartyTable(previewStudents.value, keys);
-  if (partyTable) {
-    sheets.push({ id: "party", label: "团组织与入党信息", table: partyTable });
-  }
-  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-    keys.has(item.selectKey),
-  );
-  if (activeAchievementCategories.length) {
-    const overview = buildAchievementOverview(
-      previewStudents.value,
-      keys,
-      previewAchievementData.value,
-    );
-    sheets.push({
-      id: "achievement-overview",
-      label: "成就总览",
-      table: overview,
-    });
-    activeAchievementCategories.forEach((category) => {
-      const detailTable = buildAchievementDetailTable(
-        category.key,
-        previewAchievementData.value,
-      );
-      sheets.push({
-        id: `achievement-${category.key}`,
-        label: category.label,
-        table: detailTable,
-      });
-    });
-  }
-  return sheets;
-});
-
-const activePreviewTable = computed(() => {
-  const sheet = previewSheets.value.find(
-    (item) => item.id === previewActiveSheet.value,
-  );
-  return sheet?.table || [];
-});
-
-const previewHeader = computed(() => activePreviewTable.value[0] || []);
-const previewRows = computed(() => activePreviewTable.value.slice(1, 6));
-
-watch(previewSheets, (sheets) => {
-  if (!sheets.length) {
-    previewActiveSheet.value = "main";
-    return;
-  }
-  if (!sheets.find((sheet) => sheet.id === previewActiveSheet.value)) {
-    previewActiveSheet.value = sheets[0].id;
-  }
-});
-
-async function refreshPreviewData() {
-  if (!exportPreviewOpen.value) {
-    return;
-  }
-  const ids = selectedIds.value.slice(0, 3);
-  if (!ids.length) {
-    previewDetailRows.value = [];
-    previewAchievementData.value = [];
-    return;
-  }
-  previewLoading.value = true;
-  const requestId = (previewRequestId += 1);
-  try {
-    const results = await Promise.all(
-      ids.map((id) =>
-        getStudentProfileById(id)
-          .then(({ data }) => data || null)
-          .catch(() => null),
-      ),
-    );
-    if (requestId !== previewRequestId) {
-      return;
-    }
-    const detailRows = results.filter(Boolean);
-    previewDetailRows.value = detailRows;
-    const selectedKeys = getSelectedExportKeys();
-    const hasAchievement = ACHIEVEMENT_CATEGORIES.some((item) =>
-      selectedKeys.has(item.selectKey),
-    );
-    if (hasAchievement && detailRows.length) {
-      const achievements = await fetchAchievementsForStudents(detailRows);
-      if (requestId !== previewRequestId) {
-        return;
-      }
-      previewAchievementData.value = achievements;
-    } else {
-      previewAchievementData.value = [];
-    }
-  } finally {
-    if (requestId === previewRequestId) {
-      previewLoading.value = false;
-    }
-  }
-}
-
-watch(exportPreviewOpen, (open) => {
-  if (open) {
-    refreshPreviewData();
-  }
-});
-
-watch(selectedIds, () => {
-  refreshPreviewData();
-});
-
-watch(
-  exportSelections,
-  () => {
-    refreshPreviewData();
-  },
-  { deep: true },
-);
-
 function getSelectedExportKeys() {
   return new Set(
     Object.entries(exportSelections)
@@ -2324,17 +1675,10 @@ function getSelectedExportKeys() {
 
 function openExportDialog() {
   exportDialogOpen.value = true;
-  exportDialogClosing.value = false;
 }
 
 function closeExportDialog() {
   exportDialogOpen.value = false;
-  exportDialogClosing.value = true;
-  exportPreviewOpen.value = false;
-  exportPreviewClosing.value = false;
-  setTimeout(() => {
-    exportDialogClosing.value = false;
-  }, 260);
 }
 
 function isGroupSelected(group) {
@@ -2365,239 +1709,22 @@ function toggleAllSelections(checked) {
   });
 }
 
-function setPreviewSheet(id) {
-  previewActiveSheet.value = id;
-}
-
-function openExportPreview() {
-  exportPreviewOpen.value = true;
-  exportPreviewClosing.value = false;
-}
-
-function closeExportPreview() {
-  exportPreviewOpen.value = false;
-  exportPreviewClosing.value = true;
-  setTimeout(() => {
-    exportPreviewClosing.value = false;
-  }, 260);
-}
-
-async function confirmExport() {
-  const success = await handleExport();
-  if (success) {
-    closeExportDialog();
+async function loadExportRows(limit) {
+  const ids =
+    typeof limit === "number"
+      ? selectedIds.value.slice(0, limit)
+      : [...selectedIds.value];
+  if (!ids.length) {
+    return [];
   }
-}
-
-async function handleExport() {
-  if (exporting.value) {
-    return false;
-  }
-  if (!selectedIds.value.length) {
-    window.alert("请先选择学生再导出。");
-    return false;
-  }
-  exporting.value = true;
-  try {
-    const ids = [...selectedIds.value];
-    const results = await Promise.all(
-      ids.map((id) =>
-        getStudentProfileById(id)
-          .then(({ data }) => data || null)
-          .catch(() => null),
-      ),
-    );
-    const rows = results.filter(Boolean);
-    if (!rows.length) {
-      window.alert("没有获取到学生详情，请稍后再试。");
-      return false;
-    }
-    const workbook = XLSX.utils.book_new();
-    const selectedKeys = getSelectedExportKeys();
-    if (!selectedKeys.size) {
-      window.alert("请选择至少一个导出字段。");
-      return false;
-    }
-    if (shouldIncludeMainSheet(selectedKeys)) {
-      const table = buildStudentTable(rows, selectedKeys);
-      if (table) {
-        const worksheet = XLSX.utils.aoa_to_sheet(table);
-        worksheet["!cols"] = computeColumnWidths(table);
-        XLSX.utils.book_append_sheet(workbook, worksheet, "学生");
-      }
-    }
-    const educationTable = buildEducationTable(rows, selectedKeys);
-    if (educationTable) {
-      const educationSheet = XLSX.utils.aoa_to_sheet(educationTable);
-      educationSheet["!cols"] = computeColumnWidths(educationTable);
-      XLSX.utils.book_append_sheet(workbook, educationSheet, "教育经历");
-    }
-    const partyTable = buildPartyTable(rows, selectedKeys);
-    if (partyTable) {
-      const partySheet = XLSX.utils.aoa_to_sheet(partyTable);
-      partySheet["!cols"] = computeColumnWidths(partyTable);
-      XLSX.utils.book_append_sheet(workbook, partySheet, "团组织与入党信息");
-    }
-    const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-      selectedKeys.has(item.selectKey),
-    );
-    if (activeAchievementCategories.length) {
-      const achievementData = await fetchAchievementsForStudents(rows);
-      const overview = buildAchievementOverview(
-        rows,
-        selectedKeys,
-        achievementData,
-      );
-      const overviewSheet = XLSX.utils.aoa_to_sheet(overview);
-      const baseFieldCount = IDENTITY_FIELDS.filter((field) =>
-        selectedKeys.has(field.key),
-      ).length;
-      activeAchievementCategories.forEach((category, index) => {
-        const cell = XLSX.utils.encode_cell({
-          r: 0,
-          c: baseFieldCount + index,
-        });
-        if (!overviewSheet[cell]) {
-          return;
-        }
-        overviewSheet[cell].l = {
-          Target: `#'${category.label}'!A1`,
-        };
-      });
-      overviewSheet["!cols"] = computeColumnWidths(overview);
-      XLSX.utils.book_append_sheet(workbook, overviewSheet, "成就总览");
-      activeAchievementCategories.forEach((category) => {
-        const detailTable = buildAchievementDetailTable(
-          category.key,
-          achievementData,
-        );
-        const detailSheet = XLSX.utils.aoa_to_sheet(detailTable);
-        detailSheet["!cols"] = computeColumnWidths(detailTable);
-        XLSX.utils.book_append_sheet(workbook, detailSheet, category.label);
-      });
-    }
-    XLSX.writeFile(workbook, `students_export_${formatTimestamp()}.xlsx`, {
-      compression: true,
-    });
-  } catch (error) {
-    const fallbackRows = selectedStudents.value;
-    const csvContent = buildStudentCsv(fallbackRows);
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `students_export_${formatTimestamp()}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-  } finally {
-    exporting.value = false;
-  }
-  return true;
-}
-
-function buildExportTables(rows, selectedKeys, achievementData) {
-  const tables = [];
-  if (shouldIncludeMainSheet(selectedKeys)) {
-    const table = buildStudentTable(rows, selectedKeys);
-    if (table) {
-      tables.push({ title: "学生", table });
-    }
-  }
-  const educationTable = buildEducationTable(rows, selectedKeys);
-  if (educationTable) {
-    tables.push({ title: "教育经历", table: educationTable });
-  }
-  const partyTable = buildPartyTable(rows, selectedKeys);
-  if (partyTable) {
-    tables.push({ title: "团组织与入党信息", table: partyTable });
-  }
-  const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-    selectedKeys.has(item.selectKey),
+  const results = await Promise.all(
+    ids.map((id) =>
+      getStudentProfileById(id)
+        .then(({ data }) => data || null)
+        .catch(() => null),
+    ),
   );
-  if (activeAchievementCategories.length) {
-    const overview = buildAchievementOverview(
-      rows,
-      selectedKeys,
-      achievementData,
-    );
-    tables.push({ title: "成就总览", table: overview });
-    activeAchievementCategories.forEach((category) => {
-      const detailTable = buildAchievementDetailTable(
-        category.key,
-        achievementData,
-      );
-      tables.push({ title: category.label, table: detailTable });
-    });
-  }
-  return tables;
-}
-
-async function handleExportPdf() {
-  if (exporting.value) {
-    return;
-  }
-  if (!selectedIds.value.length) {
-    window.alert("请先选择学生再导出。");
-    return;
-  }
-  exporting.value = true;
-  try {
-    const ids = [...selectedIds.value];
-    const results = await Promise.all(
-      ids.map((id) =>
-        getStudentProfileById(id)
-          .then(({ data }) => data || null)
-          .catch(() => null),
-      ),
-    );
-    const rows = results.filter(Boolean);
-    if (!rows.length) {
-      window.alert("没有获取到学生详情，请稍后再试。");
-      return;
-    }
-    const selectedKeys = getSelectedExportKeys();
-    if (!selectedKeys.size) {
-      window.alert("请选择至少一个导出字段。");
-      return;
-    }
-    const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
-      selectedKeys.has(item.selectKey),
-    );
-    const achievementData = activeAchievementCategories.length
-      ? await fetchAchievementsForStudents(rows)
-      : [];
-    const tables = buildExportTables(rows, selectedKeys, achievementData);
-    if (!tables.length) {
-      window.alert("没有可导出的内容。");
-      return;
-    }
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: "a4",
-    });
-    await ensurePdfFonts(doc);
-    tables.forEach((item, index) => {
-      if (index > 0) {
-        doc.addPage("a4", "landscape");
-        doc.setFont(PDF_FONT_NAME, "normal");
-      }
-      doc.setFontSize(14);
-      doc.text(item.title, 40, 32);
-      autoTable(doc, {
-        head: [item.table[0] || []],
-        body: item.table.slice(1),
-        startY: 48,
-        styles: { fontSize: 9, cellPadding: 4, font: PDF_FONT_NAME },
-        headStyles: { fillColor: [31, 79, 87], textColor: 255 },
-      });
-    });
-    doc.save(`students_export_${formatTimestamp()}.pdf`);
-  } finally {
-    exporting.value = false;
-  }
+  return results.filter(Boolean);
 }
 
 function buildStudentTable(rows, selectedKeys) {
@@ -2726,9 +1853,12 @@ function buildAchievementOverview(rows, selectedKeys, achievementData) {
         (studentName && entry.studentName === studentName),
     );
     const records = recordEntry?.records || [];
-    const categoryFlags = activeCategories.map((category) =>
-      records.some((record) => record.category === category.key) ? "1" : "",
-    );
+    const categoryFlags = activeCategories.map((category) => {
+      const count = records.filter(
+        (record) => record.category === category.key,
+      ).length;
+      return count > 0 ? String(count) : "";
+    });
     return [...baseValues, ...categoryFlags];
   });
   return [header, ...body];
@@ -2747,65 +1877,6 @@ function buildAchievementDetailTable(categoryKey, achievementData) {
       });
   });
   return [header, ...rows];
-}
-
-function buildStudentCsv(rows) {
-  const header = ["姓名", "年级", "学院", "专业", "班级", "学号"];
-  const lines = [header.map(escapeCsvCell).join(",")];
-  rows.forEach((item) => {
-    const values = [
-      item.name || "",
-      item.gradeYear || "",
-      item.college || "",
-      item.major || "",
-      item.classNo || "",
-      item.studentNo || "",
-    ];
-    lines.push(values.map(escapeCsvCell).join(","));
-  });
-  return `\ufeff${lines.join("\n")}`;
-}
-
-function escapeCsvCell(value) {
-  const text = value == null ? "" : String(value);
-  if (/[",\n]/.test(text)) {
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-  return text;
-}
-
-async function loadPdfFontBase64(url, cacheKey) {
-  if (cacheKey === "regular" && pdfFontBase64) {
-    return pdfFontBase64;
-  }
-  if (cacheKey === "black" && pdfFontBlackBase64) {
-    return pdfFontBlackBase64;
-  }
-  const response = await fetch(url);
-  const buffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
-  }
-  const base64 = btoa(binary);
-  if (cacheKey === "regular") {
-    pdfFontBase64 = base64;
-  } else if (cacheKey === "black") {
-    pdfFontBlackBase64 = base64;
-  }
-  return base64;
-}
-
-async function ensurePdfFonts(doc) {
-  const base64 = await loadPdfFontBase64(harmonyFontUrl, "regular");
-  const blackBase64 = await loadPdfFontBase64(harmonyFontBlackUrl, "black");
-  doc.addFileToVFS("HarmonyOS_Sans_SC_Regular.ttf", base64);
-  doc.addFont("HarmonyOS_Sans_SC_Regular.ttf", PDF_FONT_NAME, "normal");
-  doc.addFileToVFS("HarmonyOS_Sans_SC_Black.ttf", blackBase64);
-  doc.addFont("HarmonyOS_Sans_SC_Black.ttf", PDF_FONT_BLACK, "normal");
-  doc.setFont(PDF_FONT_NAME, "normal");
 }
 
 function formatYesNo(value) {
@@ -2840,18 +1911,6 @@ function formatEducationText(items) {
     .join(" | ");
 }
 
-function formatTimestamp() {
-  const now = new Date();
-  const pad = (value) => String(value).padStart(2, "0");
-  const yyyy = now.getFullYear();
-  const mm = pad(now.getMonth() + 1);
-  const dd = pad(now.getDate());
-  const hh = pad(now.getHours());
-  const min = pad(now.getMinutes());
-  const ss = pad(now.getSeconds());
-  return `${yyyy}${mm}${dd}_${hh}${min}${ss}`;
-}
-
 const roleLabelMap = {
   STUDENT: "学生",
   TEACHER: "教师",
@@ -2864,947 +1923,69 @@ const avatarText = computed(() => {
   return name.slice(0, 1).toUpperCase();
 });
 
+const activeCategoryIndex = computed(() => {
+  const index = achievementEntries.value.findIndex(
+    (entry) => entry.key === activeCategory.value,
+  );
+  return index === -1 ? 0 : index;
+});
+
+const drawerIndicatorStyle = computed(() => ({
+  transform: `translateY(calc(${activeCategoryIndex.value} * (var(--drawer-item-height) + var(--drawer-item-gap))))`,
+}));
+
 function handleMenuClick(key) {
   if (!isMenuEnabled(key)) {
     return;
   }
   if (key === "achievements") {
-    router.push({ path: "/achievements", query: { category: "all" } });
+    navigateWithViewTransition(router, getMenuLocation(key));
     return;
   }
-  if (key === "my-info") {
-    router.push("/myinfos");
-    return;
-  }
-  if (key === "student-info") {
-    router.push("/student-info");
-    return;
-  }
-  router.push("/myinfos");
+  navigateWithViewTransition(router, getMenuLocation(key));
 }
 
-function resolveMediaUrl(url) {
-  if (!url) {
-    return "";
+function toggleAchievements() {
+  if (!isMenuEnabled("achievements")) {
+    return;
   }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
+  achievementsOpen.value = !achievementsOpen.value;
+  activeMenu.value = "achievements";
+  if (achievementsOpen.value) {
+    handleAchievementEntry("all");
   }
-  return `${API_BASE}${url}`;
+}
+
+function handleAchievementEntry(key) {
+  if (!isMenuEnabled("achievements")) {
+    return;
+  }
+  const safeKey = achievementEntries.value.some((entry) => entry.key === key)
+    ? key
+    : "all";
+  activeCategory.value = safeKey;
+  achievementsOpen.value = true;
+  activeMenu.value = "achievements";
+  sidebarOpen.value = false;
+  navigateWithViewTransition(router, {
+    path: "/achievements",
+    query: { category: safeKey },
+  });
+}
+
+function openSidebar() {
+  sidebarOpen.value = true;
+}
+
+function closeSidebar() {
+  sidebarOpen.value = false;
 }
 
 function goToSettings() {
-  router.push("/settings");
-}
-
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      avatarUrl: raw.avatarUrl || "",
-      role: raw.role || "STUDENT",
-      studentNo: raw.studentNo || "",
-      className: raw.className || "",
-      college: raw.college || "",
-    };
-  } catch {
-    return {
-      username: "",
-      displayName: "",
-      avatarUrl: "",
-      role: "STUDENT",
-      studentNo: "",
-      className: "",
-      college: "",
-    };
-  }
+  navigateWithViewTransition(router, "/settings");
 }
 </script>
 
 <style scoped>
-.student-filter-card {
-  gap: 18px;
-  position: relative;
-  z-index: 40;
-}
-
-.student-right-stack {
-  display: grid;
-  gap: 14px;
-}
-
-.student-filter-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.student-grid-toggle {
-  border: none;
-  background: rgba(3, 107, 114, 0.08);
-  color: #036b72;
-  padding: 0 12px;
-  height: 36px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.student-grid-toggle:hover {
-  background: rgba(3, 107, 114, 0.16);
-}
-
-.student-grid-toggle:active {
-  transform: scale(0.98);
-}
-
-.grid-toggle-icon {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-}
-
-.grid-toggle-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.student-grid-wrap {
-  margin-top: 14px;
-}
-
-.student-grid-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  color: #4f5d63;
-  font-size: 13px;
-}
-
-.student-grid-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.student-grid-title {
-  font-weight: 600;
-  color: #203035;
-}
-
-.student-grid-status {
-  color: #5b6b71;
-}
-
-.student-grid-field-group {
-  display: grid;
-  gap: 6px;
-}
-
-.student-grid-field-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
-  color: #203035;
-}
-
-.student-grid-field-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #4a5a60;
-  font-size: 13px;
-}
-
-.student-grid-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-  align-items: center;
-}
-
-.student-filter-card .student-grid-tabs {
-  margin-top: 12px;
-}
-
-.student-grid-tab {
-  border: 1px solid rgba(3, 107, 114, 0.2);
-  background: #fff;
-  color: #0f4d55;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.student-grid-tab.active {
-  background: rgba(3, 107, 114, 0.12);
-  border-color: rgba(3, 107, 114, 0.35);
-  font-weight: 600;
-}
-
-.grid-field-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(3, 18, 20, 0.35);
-  backdrop-filter: blur(8px);
-  z-index: 70;
-}
-
-.grid-field-dialog {
-  position: fixed;
-  left: 50%;
-  bottom: 16px;
-  width: min(860px, calc(100vw - 32px));
-  max-height: 84vh;
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-  pointer-events: none;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: linear-gradient(
-    140deg,
-    rgba(205, 255, 249, 0.92),
-    rgba(197, 217, 226, 0.78)
-  );
-  box-shadow: 0 28px 70px rgba(3, 107, 114, 0.22);
-  backdrop-filter: blur(12px);
-  z-index: 80;
-  transition:
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.75s ease,
-    filter 0.75s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: auto;
-  scrollbar-width: none;
-  padding: 12px 14px 16px;
-}
-
-.grid-field-dialog.open {
-  transform: translate(-50%, 0) scale(1);
-  opacity: 1;
-  filter: blur(0px);
-  pointer-events: auto;
-}
-
-.grid-field-dialog.closing {
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-}
-
-.grid-field-dialog::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-.student-grid {
-  width: 100%;
-  height: 520px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.student-grid-wrap {
-  position: relative;
-}
-
-.student-grid-wrap.fullscreen {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  background: #f7fafb;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-}
-
-.student-grid-wrap.fullscreen .student-grid {
-  height: calc(100vh - 32px);
-  border-radius: 16px;
-}
-
-.student-grid-fullscreen {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  border: none;
-  background: rgba(3, 107, 114, 0.12);
-  color: #036b72;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.student-grid-fullscreen:hover {
-  background: rgba(3, 107, 114, 0.2);
-}
-
-.student-search {
-  min-width: 220px;
-}
-
-.student-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
-
-.student-filter-row {
-  display: grid;
-  gap: 10px;
-}
-
-.student-filter-two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.student-filter-field {
-  display: grid;
-  gap: 8px;
-}
-
-.student-stepper {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 36px;
-  gap: 10px;
-  align-items: center;
-}
-
-.stepper-button {
-  height: 38px;
-  border-radius: 12px;
-  border: 1px solid rgba(3, 107, 114, 0.25);
-  background: rgba(255, 255, 255, 0.6);
-  color: #0f4d55;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.stepper-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.stepper-input {
-  text-align: center;
-}
-
-.student-filter-inline {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  grid-column: 1 / -1;
-}
-
-.student-results-card {
-  gap: 16px;
-  position: relative;
-  z-index: 1;
-}
-
-.student-results-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.student-results-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.student-list {
-  display: grid;
-  gap: 10px;
-}
-
-.student-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(3, 107, 114, 0.1);
-}
-
-.student-main {
-  display: grid;
-  gap: 4px;
-}
-
-.student-name {
-  font-weight: 700;
-  color: #0f4d55;
-}
-
-.student-meta {
-  font-size: 12px;
-  color: #5c7178;
-}
-
-.student-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.student-pages {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.page-size {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.page-size-input {
-  width: 90px;
-  height: 32px;
-}
-
-.page-button {
-  border-radius: 999px;
-  border: 1px solid rgba(3, 107, 114, 0.25);
-  background: rgba(255, 255, 255, 0.7);
-  color: #0f4d55;
-  height: 32px;
-  padding: 0 12px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.page-button.active {
-  background: rgba(205, 255, 249, 0.9);
-  border-color: rgba(3, 107, 114, 0.45);
-}
-
-.page-input {
-  width: 90px;
-  height: 32px;
-}
-
-.student-detail-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(3, 18, 20, 0.35);
-  backdrop-filter: blur(8px);
-  z-index: 60;
-}
-
-.student-detail-view {
-  position: fixed;
-  left: 50%;
-  bottom: 16px;
-  width: min(980px, calc(100vw - 32px));
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-  pointer-events: none;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: linear-gradient(
-    140deg,
-    rgba(205, 255, 249, 0.92),
-    rgba(197, 217, 226, 0.78)
-  );
-  box-shadow: 0 28px 70px rgba(3, 107, 114, 0.22);
-  backdrop-filter: blur(12px);
-  z-index: 70;
-  transition:
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.75s ease,
-    filter 0.75s ease,
-    left 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-  max-height: 84vh;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: auto;
-  scrollbar-width: none;
-  padding: 12px 14px 16px;
-}
-
-.student-detail-view.split {
-  left: 16px;
-  width: min(720px, calc(50vw - 24px));
-  transform: translate(0, 120%) scale(0.98);
-}
-
-.student-detail-view.open {
-  transform: translate(-50%, 0) scale(1);
-  opacity: 1;
-  filter: blur(0px);
-  pointer-events: auto;
-}
-
-.student-detail-view.split.open {
-  transform: translate(0, 0) scale(1);
-}
-
-.student-detail-view.closing {
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-}
-
-.student-detail-view.split.closing {
-  transform: translate(0, 120%) scale(0.98);
-}
-
-.student-detail-view::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-.export-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(3, 18, 20, 0.35);
-  backdrop-filter: blur(8px);
-  z-index: 80;
-}
-
-.export-dialog {
-  position: fixed;
-  left: 50%;
-  bottom: 16px;
-  width: min(860px, calc(100vw - 32px));
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-  pointer-events: none;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: linear-gradient(
-    140deg,
-    rgba(205, 255, 249, 0.96),
-    rgba(197, 217, 226, 0.85)
-  );
-  box-shadow: 0 26px 60px rgba(3, 107, 114, 0.22);
-  backdrop-filter: blur(12px);
-  z-index: 90;
-  transition:
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.75s ease,
-    filter 0.75s ease,
-    left 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.export-dialog.open {
-  transform: translate(-50%, 0) scale(1);
-  opacity: 1;
-  filter: blur(0px);
-  pointer-events: auto;
-}
-
-.export-dialog.closing {
-  transform: translate(-50%, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-}
-
-.export-dialog.split {
-  left: 8px;
-  width: calc(50vw - 16px);
-  transform: translate(0, 120%) scale(0.98);
-}
-
-.export-dialog.split.open {
-  transform: translate(0, 0) scale(1);
-  filter: blur(0px);
-}
-
-.export-dialog.split.closing {
-  transform: translate(0, 120%) scale(0.98);
-  filter: blur(6px);
-}
-
-.export-dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px 10px;
-  border-bottom: 1px solid rgba(3, 107, 114, 0.12);
-}
-
-.export-dialog-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f4d55;
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.export-all-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #2d5d64;
-}
-
-.export-dialog-body {
-  padding: 14px 18px 8px;
-  overflow: auto;
-  display: grid;
-  gap: 14px;
-}
-
-.export-group {
-  border-radius: 14px;
-  border: 1px solid rgba(3, 107, 114, 0.12);
-  background: rgba(255, 255, 255, 0.6);
-  padding: 12px;
-  display: grid;
-  gap: 10px;
-}
-
-.export-group-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f4d55;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.export-group-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-}
-
-.export-option-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  width: 100%;
-}
-
-.export-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #2d5d64;
-}
-
-.export-dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 12px 18px 16px;
-  border-top: 1px solid rgba(3, 107, 114, 0.12);
-  align-items: center;
-}
-
-.export-dialog-actions .ghost-button,
-.export-dialog-actions .export-confirm {
-  width: auto;
-  min-width: 110px;
-  height: 40px;
-}
-
-.export-confirm {
-  padding: 0 22px;
-}
-
-.export-preview-view {
-  position: fixed;
-  right: 8px;
-  bottom: 16px;
-  width: calc(50vw - 16px);
-  height: 80vh;
-  transform: translate(0, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-  pointer-events: none;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: linear-gradient(
-    140deg,
-    rgba(205, 255, 249, 0.92),
-    rgba(197, 217, 226, 0.78)
-  );
-  box-shadow: 0 28px 70px rgba(3, 107, 114, 0.22);
-  backdrop-filter: blur(12px);
-  z-index: 92;
-  transition:
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.75s ease,
-    filter 0.75s ease;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 12px 14px 16px;
-}
-
-.export-preview-view.open {
-  transform: translate(0, 0) scale(1);
-  opacity: 1;
-  filter: blur(0px);
-  pointer-events: auto;
-}
-
-.export-preview-view.closing {
-  transform: translate(0, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-}
-
-.export-preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.export-preview-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f4d55;
-}
-
-.export-preview-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-.export-preview-grid {
-  flex: 1;
-  min-height: 0;
-  border-radius: 16px;
-  border: 1px solid rgba(3, 107, 114, 0.12);
-  background: rgba(255, 255, 255, 0.92);
-  overflow: auto;
-}
-
-.export-preview-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 12px;
-  color: #1f4f57;
-}
-
-.export-preview-table th,
-.export-preview-table td {
-  border: 1px solid rgba(3, 107, 114, 0.12);
-  padding: 6px 8px;
-  white-space: nowrap;
-}
-
-.export-preview-table th {
-  background: rgba(205, 255, 249, 0.8);
-  font-weight: 700;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.export-preview-tabs {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.export-preview-tab {
-  border-radius: 10px;
-  border: 1px solid rgba(3, 107, 114, 0.25);
-  background: rgba(255, 255, 255, 0.7);
-  color: #0f4d55;
-  height: 32px;
-  padding: 0 12px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 12px;
-}
-
-.export-preview-tab.active {
-  background: rgba(205, 255, 249, 0.9);
-  border-color: rgba(3, 107, 114, 0.45);
-}
-
-@media (max-width: 1100px) {
-  .export-dialog.split {
-    left: 50%;
-    width: min(980px, calc(100vw - 32px));
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-
-  .export-dialog.split.open {
-    transform: translate(-50%, 0) scale(1);
-  }
-
-  .export-dialog.split.closing {
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-
-  .export-preview-view {
-    left: 50%;
-    right: auto;
-    width: min(980px, calc(100vw - 32px));
-    height: 80vh;
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-
-  .export-preview-view.open {
-    transform: translate(-50%, 0) scale(1);
-  }
-
-  .export-preview-view.closing {
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-}
-
-.student-detail-body {
-  display: grid;
-  gap: 14px;
-}
-
-.info-static {
-  display: flex;
-  align-items: center;
-}
-
-.info-actions-single {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.info-actions-double {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.student-achievements-view {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  width: min(720px, calc(50vw - 24px));
-  height: 84vh;
-  transform: translate(0, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-  pointer-events: none;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: linear-gradient(
-    140deg,
-    rgba(205, 255, 249, 0.92),
-    rgba(197, 217, 226, 0.78)
-  );
-  box-shadow: 0 28px 70px rgba(3, 107, 114, 0.22);
-  backdrop-filter: blur(12px);
-  z-index: 72;
-  transition:
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.75s ease,
-    filter 0.75s ease;
-  max-height: 84vh;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-  padding: 12px 14px 16px;
-}
-
-.student-achievements-view.open {
-  transform: translate(0, 0) scale(1);
-  opacity: 1;
-  filter: blur(0px);
-  pointer-events: auto;
-}
-
-.student-achievements-view.closing {
-  transform: translate(0, 120%) scale(0.98);
-  opacity: 0;
-  filter: blur(6px);
-}
-
-.student-achievements-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-}
-
-.student-achievements-frame {
-  border: none;
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
-}
-
-@media (max-width: 1100px) {
-  .student-detail-view.split {
-    left: 50%;
-    width: min(980px, calc(100vw - 32px));
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-
-  .student-detail-view.split.open {
-    transform: translate(-50%, 0) scale(1);
-  }
-
-  .student-detail-view.split.closing {
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-
-  .student-achievements-view {
-    left: 50%;
-    right: auto;
-    width: min(980px, calc(100vw - 32px));
-    height: 84vh;
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-
-  .student-achievements-view.open {
-    transform: translate(-50%, 0) scale(1);
-  }
-
-  .student-achievements-view.closing {
-    transform: translate(-50%, 120%) scale(0.98);
-  }
-}
+@import '../assets/styles/student-info-view.css';
 </style>

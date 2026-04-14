@@ -12,6 +12,7 @@ achievement_papers
 achievement_patents
 achievement_researches
 achievement_works
+cadre_experiences
 contacts
 education_experiences
 post_media
@@ -137,6 +138,19 @@ users
 | work_type        | varchar(64)  | YES  |     | NULL    |                | 作品类型     |
 | author_id        | bigint(20)   | NO   | MUL | NULL    |                | 作者用户ID   |
 
+### cadre_experiences
+
+| Field       | Type         | Null | Key | Default | Extra          | 备注         |
+| ----------- | ------------ | ---- | --- | ------- | -------------- | ------------ |
+| id          | bigint(20)   | NO   | PRI | NULL    | auto_increment | 主键         |
+| start_date  | date         | YES  |     | NULL    |                | 开始日期     |
+| end_date    | date         | YES  |     | NULL    |                | 结束日期     |
+| department  | varchar(128) | YES  |     | NULL    |                | 部门/班级     |
+| position    | varchar(64)  | YES  |     | NULL    |                | 职位         |
+| description | varchar(512) | YES  |     | NULL    |                | 简述         |
+| is_current  | bit(1)       | YES  |     | NULL    |                | 是否当前经历 |
+| profile_id  | bigint(20)   | NO   | MUL | NULL    |                | 关联档案ID   |
+
 ### contacts
 
 | Field      | Type                         | Null | Key | Default | Extra          | 备注         |
@@ -224,10 +238,12 @@ users
 | dorm_room                     | varchar(64)  | YES  |     | NULL    |                | 宿舍房间                 |
 | enrollment_date               | date         | YES  |     | NULL    |                | 入学日期                 |
 | ethnicity                     | varchar(32)  | YES  |     | NULL    |                | 民族                     |
+| backup_contact                | varchar(128) | YES  |     | NULL    |                | 备用联系方式（QQ/邮箱） |
 | father_name                   | varchar(64)  | YES  |     | NULL    |                | 父亲姓名                 |
 | father_phone                  | varchar(32)  | YES  |     | NULL    |                | 父亲联系电话             |
 | father_title                  | varchar(64)  | YES  |     | NULL    |                | 父亲职务                 |
 | father_work_unit              | varchar(128) | YES  |     | NULL    |                | 父亲工作单位             |
+| birth_date                    | date         | YES  |     | NULL    |                | 出生日期                 |
 | full_member_date              | date         | YES  |     | NULL    |                | 转正日期                 |
 | full_member_developing        | bit(1)       | YES  |     | NULL    |                | 预备党员转正培养中       |
 | league_application_date       | date         | YES  |     | NULL    |                | 入团申请日期             |

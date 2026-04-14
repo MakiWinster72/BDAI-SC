@@ -1,31 +1,21 @@
 import request from './request'
 
 export function getAchievements(params = {}) {
-  const token = localStorage.getItem('gcsc_token')
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  return request.get('/api/achievements', { headers, params })
+  return request.get('/api/achievements', { params })
 }
 
 export function getAchievement(category, id) {
-  const token = localStorage.getItem('gcsc_token')
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  return request.get(`/api/achievements/${category}/${id}`, { headers })
+  return request.get(`/api/achievements/${category}/${id}`)
 }
 
 export function createAchievement(category, data) {
-  const token = localStorage.getItem('gcsc_token')
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  return request.post(`/api/achievements/${category}`, data, { headers })
+  return request.post(`/api/achievements/${category}`, data)
 }
 
 export function updateAchievement(category, id, data) {
-  const token = localStorage.getItem('gcsc_token')
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  return request.put(`/api/achievements/${category}/${id}`, data, { headers })
+  return request.put(`/api/achievements/${category}/${id}`, data)
 }
 
 export function deleteAchievement(category, id) {
-  const token = localStorage.getItem('gcsc_token')
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  return request.delete(`/api/achievements/${category}/${id}`, { headers })
+  return request.delete(`/api/achievements/${category}/${id}`)
 }

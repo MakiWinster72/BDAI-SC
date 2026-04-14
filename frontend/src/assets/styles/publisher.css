@@ -1,0 +1,546 @@
+/**
+ * Publisher Styles - 内容发布/编辑相关样式
+ *
+ * 包含内容:
+ * - Publisher Backdrop & Sheet: 发布器遮罩和底部弹出面板
+ * - Publisher Header: 标题栏和关闭按钮
+ * - Editor Toolbar: 富文本编辑器工具栏
+ * - Publisher Input & Preview: 输入框和预览区
+ * - Publisher Media & Footer: 媒体选择和底部操作栏
+ * - Composer: 内容创作组件 (卡片、药丸按钮)
+ */
+
+/* ── Publisher Backdrop ─────────────────────────────────── */
+.publisher-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(61, 7, 112, 0.35);
+  backdrop-filter: blur(8px);
+  z-index: 40;
+}
+
+.publisher-backdrop-enter-active,
+.publisher-backdrop-leave-active {
+  transition:
+    opacity 0.6s ease,
+    backdrop-filter 0.6s ease;
+}
+
+.publisher-backdrop-enter-from,
+.publisher-backdrop-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+
+.publisher-backdrop-enter-to,
+.publisher-backdrop-leave-from {
+  opacity: 1;
+  backdrop-filter: blur(8px);
+}
+
+/* ── Publisher Sheet ───────────────────────────────────── */
+.publisher-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  width: min(980px, calc(100vw - 32px));
+  transform: translate(-50%, 120%) scale(0.98);
+  opacity: 0;
+  filter: blur(6px);
+  pointer-events: none;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(
+    140deg,
+    rgba(205, 255, 249, 0.92),
+    rgba(197, 217, 226, 0.78)
+  );
+  box-shadow: 0 28px 70px rgba(100, 12, 114, 0.22);
+  backdrop-filter: blur(12px);
+  z-index: 50;
+  transition:
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.75s ease,
+    filter 0.75s ease,
+    height 0.6s ease;
+  height: 56vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.publisher-sheet.open {
+  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
+  filter: blur(0px);
+  pointer-events: auto;
+}
+
+.publisher-sheet.expanded {
+  height: 78vh;
+}
+
+.publisher-sheet::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ── Publisher Header ──────────────────────────────────── */
+.publisher-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(100, 12, 114, 0.18);
+}
+
+.publisher-title {
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.publisher-close {
+  border: 1px solid rgba(100, 12, 114, 0.35);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  height: 32px;
+  padding: 0 10px;
+  cursor: pointer;
+  color: var(--primary);
+}
+
+/* ── Editor Toolbar ────────────────────────────────────── */
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(100, 12, 114, 0.16);
+}
+
+.toolbar-item-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(100, 12, 114, 0.22);
+  margin: 0 4px;
+}
+
+.toolbar-button {
+  border: 1px solid rgba(100, 12, 114, 0.25);
+  background: rgba(255, 255, 255, 0.56);
+  border-radius: 12px;
+  height: 34px;
+  width: 38px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #0d515a;
+}
+
+.toolbar-button .icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+}
+
+.toolbar-button .quote-icon {
+  width: auto;
+  height: auto;
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.toolbar-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+.toolbar-dropdown {
+  position: relative;
+}
+
+.toolbar-dropdown.open .toolbar-button {
+  box-shadow: 0 0 0 2px rgba(100, 12, 114, 0.18);
+}
+
+.toolbar-menu {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 40px rgba(100, 12, 114, 0.18);
+  display: grid;
+  gap: 6px;
+  z-index: 60;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.24s ease;
+  transform-origin: top left;
+  min-width: 96px;
+}
+
+.toolbar-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.toolbar-menu-item {
+  width: 80px;
+  border: 1px solid rgba(100, 12, 114, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+  color: #0d515a;
+  font-weight: 700;
+  text-align: center;
+  line-height: 30px;
+  white-space: nowrap;
+}
+
+/* ── Publisher Input & Preview ─────────────────────────── */
+.publisher-input {
+  margin: 12px 0 0;
+  width: 100%;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.38);
+  color: #0f4c54;
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 60px;
+  max-height: 55vh;
+  overflow: auto;
+}
+
+.publisher-preview {
+  margin: 12px 0 0;
+  width: 100%;
+  padding: 0 0 12px;
+  border-top: 0;
+  background: transparent;
+  overflow: visible;
+  text-align: left;
+}
+
+.publisher-section-title {
+  margin: 12px 0 0;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  letter-spacing: 0.4px;
+}
+
+.publisher-section-divider {
+  margin: 8px 0 0;
+  width: 50%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.18);
+}
+
+.publisher-body {
+  width: min(860px, 100%);
+  margin: 0 auto;
+  padding: 0 24px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-body {
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+/* ── Publisher Media ───────────────────────────────────── */
+.publisher-media {
+  padding: 10px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid rgba(100, 12, 114, 0.12);
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* ── Publisher Footer ──────────────────────────────────── */
+.publisher-footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: 10px 12px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(100, 12, 114, 0.16);
+  background: rgba(205, 255, 249, 0.92);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.publisher-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #44636d;
+}
+
+.publisher-hint {
+  font-size: 12px;
+  color: #5b6f78;
+}
+
+/* ── Composer ──────────────────────────────────────────── */
+.composer-shell {
+  margin-bottom: 14px;
+}
+
+.composer-pill {
+  width: 100%;
+  border: 1px solid rgba(100, 12, 114, 0.35);
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.68),
+    rgba(207, 246, 239, 0.75)
+  );
+  border-radius: 999px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #0d515a;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.composer-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(100, 12, 114, 0.12);
+}
+
+.pill-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.pill-text {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+}
+
+.pill-tags {
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(250, 172, 44, 0.2);
+  color: #935500;
+}
+
+.composer-shell .composer-card {
+  margin-top: 10px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-6px);
+  transition:
+    max-height 0.5s ease,
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.composer-shell.open .composer-card {
+  max-height: 600px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.composer-card {
+  padding: 12px;
+}
+
+.composer-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tool-button {
+  border: 1px solid rgba(100, 12, 114, 0.3);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  height: 30px;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #0d515a;
+  font-size: 13px;
+}
+
+.tool-tip {
+  font-size: 12px;
+  color: #5b6f78;
+}
+
+.composer-input {
+  width: 100%;
+  border: 1px solid rgba(100, 12, 114, 0.3);
+  border-radius: 12px;
+  min-height: 92px;
+  padding: 10px 12px;
+  resize: vertical;
+  color: #135a63;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.composer-media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.media-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.12);
+  font-size: 12px;
+  color: var(--primary);
+}
+
+.media-chip .chip-type {
+  font-weight: 800;
+  opacity: 0.75;
+}
+
+.media-chip .chip-name {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-chip button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--primary);
+}
+
+.composer-bar {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: #44636d;
+  font-size: 13px;
+}
+
+.publish-btn {
+  margin-left: auto;
+  width: 90px;
+  height: 36px;
+}
+
+/* ── Post Content (Publisher Output) ───────────────────── */
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6 {
+  margin: 10px 0 6px;
+  color: #0b3f47;
+}
+
+.post-content .md-quote {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-left: 3px solid rgba(150, 160, 165, 0.7);
+  background: rgba(235, 238, 240, 0.75);
+  border-radius: 12px;
+  color: #5d6a70;
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  line-height: 1.5;
+}
+
+.post-content .md-quote-text {
+  display: inline-block;
+  width: 100%;
+  white-space: pre-line;
+}
+
+.post-content ul,
+.post-content ol {
+  margin: 10px 0 10px 18px;
+  padding: 0;
+}
+
+.post-content .md-paragraph {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+}
+
+.post-content li {
+  margin: 4px 0;
+  white-space: pre-wrap;
+}
+
+/* ── Post Attachments ──────────────────────────────────── */
+.post-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.attach-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(100, 12, 114, 0.18);
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 12px;
+}

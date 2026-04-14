@@ -43,6 +43,15 @@ public class StudentProfileController {
         return ResponseEntity.ok(studentProfileService.saveProfile(authentication.getName(), request));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentProfileResponse> saveById(
+        Authentication authentication,
+        @PathVariable Long id,
+        @RequestBody StudentProfileRequest request
+    ) {
+        return ResponseEntity.ok(studentProfileService.saveProfileById(authentication.getName(), id, request));
+    }
+
     @GetMapping("/search")
     public ResponseEntity<StudentSearchResponse> search(
         @RequestParam(defaultValue = "1") int page,
@@ -53,6 +62,7 @@ public class StudentProfileController {
         @RequestParam(required = false) String major,
         @RequestParam(required = false) Boolean hkMoTw,
         @RequestParam(required = false) Boolean specialStudent,
+        @RequestParam(required = false) String studentCategory,
         @RequestParam(required = false) String keyword
     ) {
         return ResponseEntity.ok(
@@ -63,6 +73,7 @@ public class StudentProfileController {
                 major,
                 hkMoTw,
                 specialStudent,
+                studentCategory,
                 keyword,
                 page,
                 size

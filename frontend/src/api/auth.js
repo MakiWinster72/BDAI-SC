@@ -11,3 +11,11 @@ export function login(data) {
 export function getMe() {
   return request.get('/api/auth/me')
 }
+
+export function changePassword(data) {
+  return request.post('/api/auth/change-password', data)
+}
+
+export function getLoginHistory(page = 0, size = 20) {
+  return request.get('/api/auth/login-history', { params: { page, size } })
+}

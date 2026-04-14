@@ -87,27 +87,17 @@ async function handleRegister() {
   feedback.type = "";
   isSubmitting.value = true;
 
+  localStorage.removeItem("gcsc_user");
+  localStorage.removeItem("gcsc_token");
+
   try {
     const { data } = await register(form);
-    feedback.text = data.message || "注册成功";
+    feedback.text = data.message || "注册成功，请登录";
     feedback.type = "success";
-    localStorage.setItem(
-      "gcsc_user",
-      JSON.stringify({
-        username: data.username,
-        displayName: data.displayName,
-        avatarUrl: data.avatarUrl || "",
-        role: data.role,
-        studentNo: data.studentNo,
-        className: data.className,
-        college: data.college,
-      }),
-    );
-    localStorage.setItem("gcsc_token", data.token || "");
 
     setTimeout(() => {
-      router.push("/myinfos");
-    }, 600);
+      router.push("/login");
+    }, 1200);
   } catch (error) {
     feedback.text = parseError(error);
     feedback.type = "error";

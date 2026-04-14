@@ -1,0 +1,168 @@
+/* ── Settings Shell ──────────────────────────────────────── */
+.settings-shell {
+  min-height: unset;
+}
+
+/* ── Clickable Row ──────────────────────────────────────── */
+.settings-row.clickable {
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+/* ── Chevron Icon ───────────────────────────────────────── */
+.chevron {
+  width: 18px;
+  height: 18px;
+  color: #5b7680;
+  transition: transform 280ms ease;
+  flex-shrink: 0;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ── Subtitle ───────────────────────────────────────────── */
+.settings-subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6a8087;
+}
+
+/* ── Expand Area ────────────────────────────────────────── */
+.settings-expand {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(3, 107, 114, 0.1);
+}
+
+/* ── Password Input ──────────────────────────────────────── */
+.pw-input {
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: none !important;
+}
+
+/* ── Password Actions ────────────────────────────────────── */
+.pw-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+/* ── Password Button ─────────────────────────────────────── */
+.pw-btn {
+  height: 36px !important;
+  padding: 0 18px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  margin-top: 0 !important;
+  width: auto !important;
+}
+
+.pw-btn.ghost-button {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+.pw-btn.action-button {
+  background: #036b72 !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+/* ── Export Options ─────────────────────────────────────── */
+.export-options {
+  gap: 12px;
+}
+
+.export-option-button {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(3, 107, 114, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  color: #0f4d55;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.export-option-button:active {
+  transform: scale(0.99);
+}
+
+/* ── Login History List ──────────────────────────────────── */
+.login-history-list {
+  gap: 8px;
+}
+
+.login-history-loading,
+.login-history-empty {
+  text-align: center;
+  color: #6a8087;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.login-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(3, 107, 114, 0.08);
+}
+
+.login-history-device {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f4d55;
+}
+
+.login-history-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.login-history-ip {
+  font-size: 12px;
+  color: #5b7680;
+  font-family: monospace;
+}
+
+.login-history-time {
+  font-size: 12px;
+  color: #6a8087;
+}
+
+/* ── Expand Transition ───────────────────────────────────── */
+.expand-enter-active,
+.expand-leave-active {
+  transition:
+    opacity 240ms ease,
+    max-height 280ms ease;
+  max-height: 320px;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 320px;
+}

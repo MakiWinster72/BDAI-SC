@@ -16,8 +16,8 @@ spring:
     time-zone: Asia/Shanghai
   servlet:
     multipart:
-      max-file-size: 200MB
-      max-request-size: 200MB
+      max-file-size: -1
+      max-request-size: -1
 
 server:
   port: 8080
@@ -26,6 +26,8 @@ app:
   upload-dir: ./uploads
 
 security:
+  cors:
+    allowed-origins: "*"
   jwt:
     secret: gcsc-student-center-jwt-secret-key-change-in-production-2026
     expires-minutes: 120

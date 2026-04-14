@@ -42,6 +42,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  onExportComplete: {
+    type: Function,
+    default: null,
+  },
+  onExportError: {
+    type: Function,
+    default: null,
+  },
 });
 
 const { exportResumePdf, pdfExporting } = useStudentPdfExport();
@@ -53,11 +61,36 @@ const isDisabled = computed(
 async function handleExport() {
   const student = props.getStudent ? props.getStudent() : props.student;
   if (!student) {
+    console.warn("[ExportPdfButton] no student, aborting");
     return;
   }
-  await exportResumePdf({
-    student,
-    resolveMediaUrl: props.resolveMediaUrl,
-  });
+  console.log("[ExportPdfButton] starting export for student:", student.fullName || student.name);
+  try {
+    await exportResumePdf({
+      student,
+      resolveMediaUrl: props.resolveMediaUrl,
+      onComplete: (success) => {
+        console.log("[ExportPdfButton] onComplete called, success=", success);
+        try {
+          if (success && props.onExportComplete) {
+            console.log("[ExportPdfButton] calling onExportComplete");
+            props.onExportComplete();
+          } else if (!success && props.onExportError) {
+            console.log("[ExportPdfButton] calling onExportError");
+            props.onExportError();
+          } else {
+            console.warn("[ExportPdfButton] onComplete but no handler: success=", success);
+          }
+        } catch (cbErr) {
+          console.error("[ExportPdfButton] callback error:", cbErr);
+        }
+      },
+    });
+  } catch (err) {
+    console.error("[ExportPdfButton] export error:", err);
+    if (props.onExportError) {
+      props.onExportError();
+    }
+  }
 }
 </script>

@@ -1,0 +1,92 @@
+/**
+ * Base Styles - 全局基础样式
+ *
+ * 包含内容:
+ * - CSS Reset: box-sizing 重置
+ * - Global Elements: html, body, #app 基础样式
+ * - Keyframe Animations: cardEnter, floatOrb, glowMove
+ *
+ * 注意: 全局底色为中性 #f7f4fa；登录/注册页的紫色渐变定义在 auth.css
+ */
+
+/* ── CSS Reset ─────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+}
+
+/* ── Global Elements ──────────────────────────────────── */
+html {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  /* 阻止 Safari 弹性过度滚动露出 */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  /* 纯色中性底色；登录/注册页的紫色光晕由 auth-layout 自己承载 */
+  background-color: #f7f4fa;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  font-family: "SF Pro Display", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text-main);
+}
+
+#app {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+/* ── Keyframe Animations ───────────────────────────────── */
+
+/**
+ * Canonical card entrance — 用于列表卡片进入动画
+ * 使用方式: animation: cardEnter var(--duration-slow) var(--ease-page) both;
+ */
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * 装饰性浮动球 — 用于 auth 页面背景装饰
+ */
+@keyframes floatOrb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(18px, 20px, 0);
+  }
+}
+
+/**
+ * 背景光晕移动 — 用于渐变背景动画
+ */
+@keyframes glowMove {
+  0% {
+    background-position: 0 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/**
+ * 加载旋转 — 用于 spinner
+ */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

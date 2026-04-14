@@ -1,0 +1,260 @@
+/**
+ * Auth Styles - 登录/注册页面样式
+ *
+ * 包含内容:
+ * - Auth Layout: 登录注册页面容器、背景装饰球
+ * - Auth Card: 玻璃态卡片
+ * - Form Elements: 表单行、标签、输入框
+ * - Action Button: 主要操作按钮
+ * - Feedback Messages: 成功/错误提示
+ * - Switch Link: 登录注册切换链接
+ */
+
+/* ── Auth Layout ─────────────────────────────────────────── */
+.auth-layout {
+  position: relative;
+  min-height: 100vh;
+  padding: 28px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  /* 登录/注册专用紫色渐变，承载光晕装饰球 */
+  background:
+    radial-gradient(circle at 15% 20%, rgba(100, 12, 114, 0.28), transparent 40%),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(199, 125, 255, 0.32),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(100, 12, 114, 0.18),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(155, 89, 182, 0.15),
+      transparent 30%
+    ),
+    linear-gradient(145deg, #f7eeff 0%, #e8d5f7 40%, #dcc8f0 70%, #c9a0dc 100%);
+}
+
+.auth-layout::before,
+.auth-layout::after {
+  content: "";
+  position: absolute;
+  width: 36rem;
+  height: 36rem;
+  border-radius: 50%;
+  filter: blur(90px);
+  z-index: 0;
+  pointer-events: none;
+  animation: floatOrb 16s ease-in-out infinite;
+}
+
+.auth-layout::before {
+  top: -14rem;
+  left: -9rem;
+  background: rgba(100, 12, 114, 0.38);
+}
+
+.auth-layout::after {
+  bottom: -16rem;
+  right: -8rem;
+  background: rgba(155, 89, 182, 0.32);
+  animation-delay: -7s;
+}
+
+/* ── Auth Card ──────────────────────────────────────────── */
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: min(440px, calc(100vw - 40px));
+  padding: 40px 36px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px rgba(100, 12, 114, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transform: translateY(14px);
+  opacity: 0;
+  animation: cardEnter 720ms var(--ease-out) forwards;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--primary-dark);
+}
+
+.auth-subtitle {
+  margin: 6px 0 30px;
+  color: var(--text-sub);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.1px;
+}
+
+/* ── Form Elements ──────────────────────────────────────── */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 13px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  letter-spacing: 0.2px;
+}
+
+.form-label small {
+  color: #7a8b95;
+  margin-left: 6px;
+}
+
+.form-input {
+  width: 100%;
+  border: 1.5px solid rgba(100, 12, 114, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-main);
+  border-radius: 14px;
+  height: 48px;
+  padding: 0 16px;
+  outline: none;
+  font-size: 15px;
+  -webkit-appearance: none;
+  appearance: none;
+  transition:
+    border-color 240ms ease,
+    background-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
+}
+
+.form-input::placeholder {
+  color: rgba(100, 12, 114, 0.38);
+}
+
+/* ── Auth Card Buttons (override canonical button sizes for auth context) */
+/**
+ * Canonical button definitions live in buttons.css.
+ * Auth-specific overrides here ensure full-width, taller (50px) buttons
+ * that match the auth card's visual weight.
+ */
+.auth-card .ghost-button {
+  height: 50px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.auth-card .action-button {
+  margin-top: 8px;
+  width: 100%;
+  height: 50px;
+  padding: 0 24px;
+  font-size: 15px;
+  border-radius: 14px;
+  box-shadow:
+    0 4px 16px rgba(100, 12, 114, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.auth-card .action-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 28px rgba(100, 12, 114, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ── Feedback Messages ──────────────────────────────────── */
+.feedback {
+  margin-top: 14px;
+  min-height: 21px;
+  font-size: 13px;
+}
+
+.feedback.error {
+  color: var(--danger);
+}
+
+.feedback.success {
+  color: var(--success);
+}
+
+/* ── Switch Link ────────────────────────────────────────── */
+.switch-line {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-sub);
+}
+
+.switch-link {
+  color: var(--primary);
+  margin-left: 4px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    border-color 220ms ease,
+    color 220ms ease;
+}
+
+.switch-link:hover {
+  color: var(--primary-dark);
+  border-color: var(--primary);
+}
+
+/* ── Auth Responsive ─────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .auth-card {
+    width: min(460px, calc(100vw - 48px));
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-layout {
+    padding: 18px;
+  }
+
+  .auth-card {
+    padding: 28px 22px;
+    border-radius: 22px;
+  }
+
+  .auth-title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-layout {
+    align-items: center;
+  }
+
+  .auth-card {
+    width: 100%;
+    padding: 24px 18px;
+  }
+
+  .auth-subtitle {
+    margin-bottom: 22px;
+  }
+}

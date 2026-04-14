@@ -1,0 +1,824 @@
+/**
+ * Buttons - 统一按钮样式
+ *
+ * 包含所有按钮类型:
+ * - ghost-button: 次要操作按钮 (描边/幽灵按钮)
+ * - action-button: 主要操作按钮 (填充渐变)
+ * - btn: 通用工具栏/管理按钮 (AdminView)
+ * - icon-btn: 图标按钮 (工具栏操作)
+ * - page-btn: 分页按钮
+ * - notif-btn: 通知审批操作按钮
+ * - reject-btn / cancel-confirm-btn: 驳回/取消确认弹窗按钮
+ * - modal-close-btn / sheet-modal-close: 关闭按钮
+ * - chip-btn: 品牌头部胶囊按钮
+ * - export-option-button: 设置页导出选项
+ * - settings-action: 设置页操作按钮
+ *
+ * 设计原则:
+ * - 统一使用 CSS 变量中的 --primary (紫色系) 作为主色调
+ * - hover 状态: translateY(-1px) + shadow 提升
+ * - active 状态: translateY(0) 按下感
+ * - disabled: opacity 降低, cursor: not-allowed
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   GHOST BUTTON — 次要操作按钮 (描边/幽灵按钮)
+   用于表单、对话框、工具栏中的次要操作
+   ═══════════════════════════════════════════════════════════ */
+
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
+  color: var(--primary);
+  border-radius: 12px;
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 120ms ease,
+    box-shadow 180ms ease;
+}
+
+.ghost-button:hover {
+  background: var(--card-hover);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.ghost-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.ghost-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Ghost — 全高/表单尺寸变体 */
+.ghost-button--full {
+  height: 50px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* Ghost — 超小尺寸 (关闭按钮等) */
+.ghost-button--xs {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACTION BUTTON — 主要操作按钮 (填充渐变)
+   用于表单提交、重要操作入口
+   ═══════════════════════════════════════════════════════════ */
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(100, 12, 114, 0.3);
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(100, 12, 114, 0.4);
+  filter: brightness(1.05);
+}
+
+.action-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(100, 12, 114, 0.3);
+  filter: none;
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+/* Action — 全高/表单尺寸变体 */
+.action-button--full {
+  margin-top: 8px;
+  width: 100%;
+  height: 50px;
+  padding: 0 24px;
+  font-size: 15px;
+  border-radius: 14px;
+  box-shadow:
+    0 4px 16px rgba(100, 12, 114, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.action-button--full:hover {
+  box-shadow:
+    0 8px 28px rgba(100, 12, 114, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BTN — 通用工具栏/管理按钮 (AdminView)
+   用于管理后台的工具栏操作
+   ═══════════════════════════════════════════════════════════ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 96px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform 120ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease,
+    background 180ms ease,
+    opacity 180ms ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.3);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 8px 24px rgba(100, 12, 114, 0.38);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: scale(0.97) translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.btn-ghost {
+  background: var(--primary-surface);
+  color: var(--primary);
+  border: 1px solid rgba(100, 12, 114, 0.18);
+}
+
+.btn-ghost:hover {
+  background: rgba(100, 12, 114, 0.14);
+  border-color: rgba(100, 12, 114, 0.3);
+}
+
+.btn-danger-ghost {
+  background: rgba(192, 57, 43, 0.07);
+  color: var(--danger);
+  border: 1px solid rgba(192, 57, 43, 0.18);
+}
+
+.btn-danger-ghost:hover {
+  background: rgba(192, 57, 43, 0.14);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(192, 57, 43, 0.3);
+}
+
+.btn-danger:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 8px 22px rgba(192, 57, 43, 0.38);
+  transform: translateY(-1px);
+}
+
+.btn-danger:active {
+  transform: scale(0.97) translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ICON BUTTON — 图标按钮
+   用于表格行操作、工具栏等小尺寸操作
+   ═══════════════════════════════════════════════════════════ */
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 120ms ease;
+  flex-shrink: 0;
+}
+
+.icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.icon-btn:hover {
+  background: rgba(100, 12, 114, 0.1);
+  color: var(--primary);
+}
+
+.icon-btn:active {
+  transform: scale(0.93);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE BUTTON — 分页按钮
+   ═══════════════════════════════════════════════════════════ */
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 120ms ease, opacity 160ms ease;
+}
+
+.page-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--primary-surface);
+  border-color: var(--primary);
+}
+
+.page-btn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NOTIF BUTTON — 通知审批操作按钮
+   用于通知列表中的审批操作
+   ═══════════════════════════════════════════════════════════ */
+
+.notif-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
+}
+
+.notif-btn:active {
+  transform: scale(0.96);
+}
+
+.notif-btn.is-cancel {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.notif-btn.is-cancel:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.notif-btn.is-approve {
+  background: rgba(34, 197, 94, 0.12);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.notif-btn.is-approve:hover {
+  background: rgba(34, 197, 94, 0.22);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.notif-btn.is-reject {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.notif-btn.is-reject:hover {
+  background: rgba(239, 68, 68, 0.18);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.18);
+}
+
+.notif-btn.is-info {
+  background: var(--primary-surface);
+  color: var(--primary);
+  border: 1px solid rgba(100, 12, 114, 0.18);
+}
+
+.notif-btn.is-info:hover {
+  background: rgba(100, 12, 114, 0.14);
+  border-color: var(--primary);
+}
+
+.notif-btn.is-submit {
+  margin-top: 10px;
+  height: 38px;
+  padding: 0 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REJECT BUTTONS — 驳回弹窗按钮
+   ═══════════════════════════════════════════════════════════ */
+
+.reject-btn-cancel,
+.reject-btn-confirm {
+  height: 42px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 0 20px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 160ms ease, filter 160ms ease, transform 120ms ease;
+}
+
+.reject-btn-cancel {
+  background: rgba(100, 12, 114, 0.08);
+  color: var(--primary);
+}
+
+.reject-btn-cancel:hover {
+  background: rgba(100, 12, 114, 0.14);
+}
+
+.reject-btn-cancel:active {
+  transform: scale(0.97);
+}
+
+.reject-btn-cancel:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.reject-btn-confirm {
+  background: var(--danger);
+  color: #fff;
+}
+
+.reject-btn-confirm:hover {
+  filter: brightness(1.08);
+}
+
+.reject-btn-confirm:active {
+  transform: scale(0.97);
+}
+
+.reject-btn-confirm:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CANCEL CONFIRM BUTTONS — 取消确认弹窗按钮
+   ═══════════════════════════════════════════════════════════ */
+
+.cancel-confirm-btn {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform 120ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.cancel-confirm-btn:active {
+  transform: scale(0.97);
+}
+
+.cancel-confirm-btn.is-cancel {
+  background: rgba(100, 12, 114, 0.08);
+  color: var(--primary);
+}
+
+.cancel-confirm-btn.is-cancel:hover {
+  background: rgba(100, 12, 114, 0.14);
+}
+
+.cancel-confirm-btn.is-confirm {
+  background: var(--danger);
+  color: #fff;
+}
+
+.cancel-confirm-btn.is-confirm:hover {
+  filter: brightness(1.08);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL CLOSE BUTTONS — 弹窗关闭按钮
+   ═══════════════════════════════════════════════════════════ */
+
+.modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 160ms ease, transform 120ms ease;
+}
+
+.modal-close-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.modal-close-btn:hover {
+  background: rgba(100, 12, 114, 0.16);
+}
+
+.modal-close-btn:active {
+  transform: scale(0.93);
+}
+
+.modal-close-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.sheet-modal-close {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 12, 114, 0.18);
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.sheet-modal-close:hover {
+  background: rgba(100, 12, 114, 0.14);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.sheet-modal-close:active {
+  transform: scale(0.96);
+}
+
+.reject-modal-close {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-sub);
+  cursor: pointer;
+  margin-top: 2px;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.reject-modal-close:hover {
+  background: rgba(100, 12, 114, 0.08);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.reject-modal-close:active {
+  transform: scale(0.95);
+}
+
+.reject-modal-close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHIP BUTTON — 品牌头部胶囊按钮
+   ═══════════════════════════════════════════════════════════ */
+
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip-btn:active {
+  transform: scale(0.96);
+}
+
+/* Primary (Manage) */
+.chip-btn--primary {
+  height: 36px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, #d49a3b 0%, #c8892a 100%);
+  color: #fff;
+  font-size: 13px;
+  box-shadow:
+    0 2px 8px rgba(212, 156, 59, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.chip-btn--primary:hover {
+  background: linear-gradient(135deg, #e0a844 0%, #d49a3b 100%);
+  box-shadow:
+    0 4px 12px rgba(212, 156, 59, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.chip-btn--primary svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+/* Ghost (Settings) */
+.chip-btn--ghost {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chip-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXPORT OPTION BUTTON — 设置页导出选项
+   ═══════════════════════════════════════════════════════════ */
+
+.export-option-button {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
+}
+
+.export-option-button:hover {
+  background: var(--card-hover);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.export-option-button:active {
+  transform: scale(0.99);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS ACTION BUTTON — 设置页操作按钮
+   ═══════════════════════════════════════════════════════════ */
+
+.settings-action {
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--primary);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
+}
+
+.settings-action:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-action:active {
+  transform: translateY(0);
+}
+
+.settings-action.danger {
+  border-color: rgba(203, 53, 53, 0.5);
+  color: var(--danger);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.settings-action.danger:hover {
+  border-color: var(--danger);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITY — 对话框/卡片内按钮容器
+   ═══════════════════════════════════════════════════════════ */
+
+/* 对话框操作栏 */
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.dialog-actions .ghost-button,
+.dialog-actions .action-button {
+  width: 100%;
+  height: 40px;
+  margin-top: 0;
+}
+
+/* 底部弹出面板操作栏 */
+.sheet-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sheet-modal-actions .ghost-button,
+.sheet-modal-actions .action-button {
+  width: 100%;
+  height: 42px;
+  margin-top: 0;
+}
+
+/* 成就卡片操作栏 */
+.achievement-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.achievement-actions .ghost-button,
+.achievement-actions .action-button {
+  margin-top: 0;
+  width: 100%;
+  height: 40px;
+}
+
+/* 信息页操作栏 */
+.info-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.info-actions .action-button {
+  width: 100%;
+  padding: 0 18px;
+  margin-top: 0;
+  height: 38px;
+}
+
+.info-actions .ghost-button {
+  height: 38px;
+  width: 100%;
+  padding: 0 18px;
+}
+
+/* 编辑面板操作栏 */
+.edit-dock-inner .ghost-button,
+.edit-dock-inner .action-button {
+  width: 100%;
+  height: 44px;
+  margin-top: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-button,
+  .action-button,
+  .btn,
+  .icon-btn,
+  .page-btn,
+  .notif-btn,
+  .chip-btn,
+  .export-option-button,
+  .settings-action {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .ghost-button:hover,
+  .action-button:hover,
+  .btn:hover,
+  .icon-btn:hover,
+  .page-btn:hover,
+  .notif-btn:hover,
+  .chip-btn:hover,
+  .export-option-button:hover,
+  .settings-action:hover {
+    transform: none;
+  }
+}

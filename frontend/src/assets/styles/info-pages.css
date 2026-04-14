@@ -1,0 +1,798 @@
+/**
+ * Info Pages Styles - 信息页面样式 (设置页/个人信息页)
+ *
+ * 包含内容:
+ * - Info Shell: 信息页面容器
+ * - Settings Card: 设置项卡片
+ * - Settings Actions: 设置操作按钮
+ * - Info Hero: 信息页头部区域
+ * - Avatar Square: 方形头像上传区
+ * - Info Form Grid: 信息表单网格布局
+ * - Education Record: 教育经历记录
+ * - Cadre Record: 干部经历记录
+ * - Education Period: 教育时间段
+ * - Education Controls: 教育记录控制按钮
+ * - Info Choice: 单选/多选选项
+ */
+
+/* ── Info Shell ─────────────────────────────────────────── */
+.info-shell {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.info-shell-editing {
+  padding-bottom: 24px;
+}
+
+/* ── Settings ───────────────────────────────────────────── */
+.settings-shell {
+  min-height: 420px;
+}
+
+.settings-card {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-text {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.settings-subtitle {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.settings-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-action {
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--primary);
+  border-radius: 14px;
+  height: 40px;
+  padding: 0 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 120ms ease;
+}
+
+.settings-action:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.settings-action:active {
+  transform: translateY(0);
+}
+
+.settings-action.danger {
+  border-color: rgba(203, 53, 53, 0.5);
+  color: var(--danger);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.settings-action.danger:hover {
+  border-color: var(--danger);
+}
+
+/* ── Info Hero ──────────────────────────────────────────── */
+.info-hero {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.avatar-square {
+  width: 140px;
+  height: 140px;
+  border-radius: 18px;
+  border: 1.5px dashed var(--line-strong);
+  background: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 12px;
+  text-align: center;
+  line-height: 1.4;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.avatar-square:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(100, 12, 114, 0.14);
+}
+
+.avatar-square:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.avatar-square:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.avatar-square img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.info-hero-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.info-hero-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.info-label {
+  color: var(--text-sub);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+.info-hint {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-style: italic;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.info-hero-subtitle {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* ── Info Card ──────────────────────────────────────────── */
+.info-card {
+  /* CSS var overrides: flat section card (no glass, no full border) */
+  --card-radius: 0;
+  --card-shadow: none;
+  --card-padding: 18px;
+
+  /* Remove card base border/shadow, use section divider only */
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  /* Layout */
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  /* Section divider: bottom border between cards */
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.info-card:last-child {
+  border-bottom: none;
+}
+
+.info-section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  letter-spacing: 0.3px;
+  padding-left: 10px;
+  position: relative;
+}
+
+.info-section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 4px;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--primary) 0%,
+    var(--primary-light) 100%
+  );
+}
+
+/* ── Info Form Grid ─────────────────────────────────────── */
+.info-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.info-form-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.family-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.family-section-title {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  letter-spacing: 0.3px;
+  padding: 8px 0 4px;
+}
+
+.field-card {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.78);
+  min-width: 0;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.info-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--primary-dark);
+  border-radius: 12px;
+  height: 44px;
+  padding: 0 12px;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.info-input::placeholder {
+  color: var(--text-sub);
+}
+
+.info-input:focus {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 3px var(--primary-surface);
+}
+
+.info-input:focus-visible {
+  outline: none;
+}
+
+.info-input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Info Inline ────────────────────────────────────────── */
+.info-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.address-inline {
+  width: 100%;
+}
+
+.address-detail {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.info-inline-date {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.info-inline-date .info-input {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* ── Education Table ────────────────────────────────────── */
+.education-table-wrap {
+  overflow: visible;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), var(--shadow-sm);
+}
+
+/* ── Record List ────────────────────────────────────────── */
+.record-list {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.record-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.record-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow);
+}
+
+.record-grid {
+  display: grid;
+  gap: 12px 14px;
+  align-items: start;
+}
+
+.record-grid-education {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.record-grid-cadre {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.record-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.record-field-time .education-period {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.record-field-full {
+  grid-column: 1 / -1;
+}
+
+.record-field-time {
+  grid-column: 1 / -1;
+}
+
+.record-field-school {
+  grid-column: span 2;
+}
+
+.record-field-compact {
+  grid-column: span 1;
+}
+
+.record-field-department {
+  grid-column: span 3;
+}
+
+.record-field-position {
+  grid-column: span 1;
+}
+
+/* ── Education Period ───────────────────────────────────── */
+.education-period {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.education-period-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.record-current {
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
+.education-period-row .info-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.education-sep {
+  color: var(--text-sub);
+  font-size: 12px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.record-card textarea.info-input {
+  height: auto;
+  min-height: 60px;
+  padding: 8px 12px;
+  line-height: 1.4;
+  font-size: 13px;
+  resize: vertical;
+}
+
+/* ── Education Controls ─────────────────────────────────── */
+.education-controls-wrap {
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.48);
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+}
+
+.education-controls {
+  display: flex;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 10px 12px;
+}
+
+.education-control {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--primary);
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.education-control:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(100, 12, 114, 0.12);
+}
+
+.education-control:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.education-control:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Info Choice ────────────────────────────────────────── */
+.info-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--primary-dark);
+}
+
+.info-choice-muted {
+  color: var(--text-sub);
+}
+
+.class-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.id-type-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.id-type-inline select {
+  flex: 1;
+  min-width: 0;
+}
+
+.id-type-inline input {
+  flex: 2;
+  min-width: 0;
+}
+
+.class-text {
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.class-num {
+  max-width: 110px;
+}
+
+/* ── Info Actions ──────────────────────────────────────── */
+.info-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.info-actions > * {
+  min-width: 0;
+}
+
+.info-actions .action-button {
+  width: 100%;
+  padding: 0 18px;
+  margin-top: 0;
+  height: 38px;
+}
+
+.info-actions .ghost-button {
+  height: 38px;
+  width: 100%;
+  padding: 0 18px;
+}
+
+/* ── Student Stepper ────────────────────────────────────── */
+.student-stepper {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 10px;
+  align-items: center;
+}
+
+.stepper-button {
+  height: 44px;
+  width: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--primary-dark);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.stepper-button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.stepper-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.stepper-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stepper-input {
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ── Info Responsive ────────────────────────────────────── */
+@media (max-width: 840px) {
+  .info-hero {
+    grid-template-columns: 100px 1fr;
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 14px;
+  }
+
+  .avatar-square {
+    width: 100px;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    flex-shrink: 0;
+  }
+
+  .info-hero-text {
+    align-self: center;
+  }
+
+  .info-actions {
+    grid-column: 1 / -1;
+  }
+
+  .info-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .info-form-grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .family-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .record-grid-education {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .record-grid-cadre {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .record-field-full {
+    grid-column: 1 / -1;
+  }
+
+  .record-field-time,
+  .record-field-school,
+  .record-field-department {
+    grid-column: 1 / -1;
+  }
+
+  .record-field-compact,
+  .record-field-position {
+    grid-column: span 1;
+  }
+
+  .record-list {
+    padding: 12px;
+  }
+
+  .record-card {
+    padding: 14px;
+  }
+
+  .education-period-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .education-sep {
+    justify-self: center;
+  }
+
+  .info-inline-date {
+    flex-wrap: wrap;
+  }
+
+  .info-inline-date .info-input {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .info-hero {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .avatar-square {
+    width: min(120px, 100%);
+  }
+
+  .info-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .record-grid-education,
+  .record-grid-cadre {
+    grid-template-columns: 1fr;
+  }
+
+  .record-field-time,
+  .record-field-school,
+  .record-field-compact,
+  .record-field-department,
+  .record-field-position {
+    grid-column: 1 / -1;
+  }
+
+  .record-list {
+    padding: 10px;
+  }
+
+  .record-card {
+    padding: 12px;
+  }
+
+  .info-shell-editing {
+    padding-bottom: 20px;
+  }
+}

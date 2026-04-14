@@ -1,99 +1,10 @@
 <template>
-  <div class="dashboard-layout">
-    <transition name="publisher-backdrop">
-      <div
-        v-if="sidebarOpen"
-        class="mobile-sidebar-backdrop"
-        @click="closeSidebar"
-      ></div>
-    </transition>
-    <aside class="dashboard-left" :class="{ open: sidebarOpen }">
-      <section class="profile-card">
-        <div class="profile-row profile-main">
-          <div class="profile-avatar">
-            <img
-              v-if="info.avatarUrl"
-              :src="resolveMediaUrl(info.avatarUrl)"
-              alt="头像"
-            />
-            <span v-else>{{ avatarText }}</span>
-          </div>
-          <div class="profile-name-wrap">
-            <p class="profile-name">
-              {{ profile.displayName || profile.username || "同学" }}
-            </p>
-            <p class="profile-role">{{ roleLabel }}</p>
-          </div>
-          <button
-            class="profile-settings"
-            type="button"
-            aria-label="设置"
-            @click="goToSettings"
-          >
-            <img src="/assets/icons/settings.svg" alt="设置" />
-          </button>
-        </div>
-        <div class="profile-row">学号：{{ profile.studentNo || "未填写" }}</div>
-        <div class="profile-row">班级：{{ profile.className || "未填写" }}</div>
-        <div class="profile-row">学院：{{ profile.college || "未填写" }}</div>
-      </section>
-
-      <section class="menu-card">
-        <template v-for="item in menuItems" :key="item.key">
-          <div
-            v-if="item.key === 'achievements'"
-            class="menu-drawer"
-            :class="{ open: achievementsOpen }"
-          >
-            <button
-              class="menu-item menu-drawer-trigger"
-              :class="{
-                active: activeMenu === item.key,
-                disabled: !isMenuEnabled(item.key),
-              }"
-              type="button"
-              :disabled="!isMenuEnabled(item.key)"
-              @click="toggleAchievements"
-            >
-              <span>{{ item.label }}</span>
-              <span class="menu-drawer-caret" aria-hidden="true"></span>
-            </button>
-            <div v-show="achievementsOpen" class="menu-drawer-panel">
-              <button
-                v-for="entry in achievementEntries"
-                :key="entry.key"
-                class="menu-drawer-item"
-                :class="{ active: activeAchievement === entry.key }"
-                type="button"
-                @click="handleAchievementEntry(entry.key)"
-              >
-                {{ entry.label }}
-              </button>
-            </div>
-          </div>
-          <button
-            v-else
-            class="menu-item"
-            :class="{
-              active: activeMenu === item.key,
-              disabled: !isMenuEnabled(item.key),
-            }"
-            type="button"
-            :disabled="!isMenuEnabled(item.key)"
-            @click="handleMenuClick(item.key)"
-          >
-            {{ item.label }}
-          </button>
-        </template>
-      </section>
-    </aside>
-
-    <main class="dashboard-right">
+  <main class="dashboard-right">
       <header class="feed-header">
         <h1 class="feed-title">我的信息</h1>
       </header>
 
-      <section class="info-shell">
+      <section class="info-shell" :class="{ 'info-shell-editing': isEditing }">
         <div class="info-hero">
           <button
             class="avatar-square"
@@ -107,34 +18,39 @@
               alt="头像"
             />
             <span v-else>点击设置头像</span>
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              hidden
+              @change="onAvatarChange"
+            />
           </button>
-          <input
-            ref="avatarInput"
-            type="file"
-            accept="image/*"
-            hidden
-            @change="onAvatarChange"
-          />
           <div class="info-hero-text">
             <div class="info-hero-title">基础信息</div>
             <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
           </div>
           <div class="info-actions">
             <ExportPdfButton
+              v-if="!isEditing"
               :get-student="buildPdfStudentSnapshot"
               :resolve-media-url="resolveMediaUrl"
               button-class="ghost-button"
+              @export-complete="toastSuccess('PDF 导出成功！')"
+              @export-error="toastError('PDF 导出失败')"
             />
-            <button class="ghost-button" type="button" @click="enterEdit">
+            <button
+              v-if="!isEditing"
+              class="ghost-button"
+              type="button"
+              @click="enterEdit"
+            >
               编辑
-            </button>
-            <button class="action-button" type="button" @click="confirmEdit">
-              确认
             </button>
           </div>
         </div>
 
-        <div class="info-card">
+        <div class="card info-card">
           <div class="info-section-title">学籍信息</div>
           <div class="info-form-grid">
             <label class="field-card">
@@ -154,74 +70,17 @@
                 class="info-input"
                 type="text"
                 placeholder="请输入学号"
-                :disabled="!isEditing"
+                disabled
               />
             </label>
             <label class="field-card">
               <span class="info-label">年级</span>
-              <select
+              <StepperInput
                 v-model="info.classYear"
-                class="info-input"
+                :min="2000"
+                :max="2100"
                 :disabled="!isEditing"
-              >
-                <option disabled value="">选择年级</option>
-                <option
-                  v-for="year in classYearOptions"
-                  :key="year"
-                  :value="year"
-                >
-                  {{ year }}
-                </option>
-              </select>
-            </label>
-            <label class="field-card">
-              <span class="info-label">学院</span>
-              <input
-                v-model="info.college"
-                class="info-input"
-                type="text"
-                disabled
-              />
-            </label>
-            <label class="field-card field-full">
-              <span class="info-label">班级</span>
-              <div class="class-inline">
-                <select
-                  v-model="info.classMajor"
-                  class="info-input"
-                  :disabled="!isEditing || !classMajorOptions.length"
-                >
-                  <option disabled value="">选择专业</option>
-                  <option
-                    v-for="major in classMajorOptions"
-                    :key="major"
-                    :value="major"
-                  >
-                    {{ major }}
-                  </option>
-                </select>
-                <input
-                  v-model.number="info.classNo"
-                  class="info-input class-num"
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="1"
-                  placeholder="数字"
-                  :disabled="!isEditing"
-                />
-                <span class="class-text">班</span>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">入学时间</span>
-              <input
-                v-model="info.enrollmentDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="!isEditing"
+                placeholder="今年"
               />
             </label>
             <label class="field-card">
@@ -240,6 +99,41 @@
                   {{ item }}
                 </option>
               </select>
+            </label>
+            <label class="field-card field-full">
+              <span class="info-label">班级</span>
+              <div class="class-inline">
+                <select
+                  v-model="info.classMajor"
+                  class="info-input"
+                  :disabled="
+                    !isEditing ||
+                    !info.college ||
+                    !info.studentCategory ||
+                    !classMajorOptions.length
+                  "
+                >
+                  <option disabled value="">选择专业</option>
+                  <option
+                    v-for="major in classMajorOptions"
+                    :key="major"
+                    :value="major"
+                  >
+                    {{ major }}
+                  </option>
+                </select>
+                <input
+                  v-model.number="info.classNo"
+                  class="info-input class-num"
+                  type="number"
+                  min="1"
+                  max="10"
+                  step="1"
+                  placeholder="数字"
+                  :disabled="!isEditing || info.studentCategory === '研究生'"
+                />
+                <span class="class-text">班</span>
+              </div>
             </label>
             <label class="field-card">
               <span class="info-label">班主任</span>
@@ -261,10 +155,21 @@
                 :disabled="!isEditing"
               />
             </label>
+            <label class="field-card field-full">
+              <span class="info-label">入学时间</span>
+              <input
+                v-model="info.enrollmentDate"
+                class="info-input"
+                type="date"
+                lang="zh-CN"
+                :max="today"
+                :disabled="!isEditing"
+              />
+            </label>
           </div>
         </div>
 
-        <div class="info-card">
+        <div class="card info-card">
           <div class="info-section-title">个人证件与联系方式</div>
           <div class="info-form-grid">
             <label class="field-card">
@@ -297,29 +202,65 @@
                 </option>
               </select>
             </label>
-            <label class="field-card">
-              <span class="info-label">手机号码</span>
-              <input
-                v-model="info.phone"
-                class="info-input"
-                type="tel"
-                placeholder="请输入手机号"
-                maxlength="11"
-                inputmode="numeric"
-                @input="handleDigitsInput('phone', 11, $event)"
-                :disabled="!isEditing"
-              />
+            <label class="field-card field-full">
+              <span class="info-label">手机号码 / 备用联系方式</span>
+              <div class="class-inline">
+                <input
+                  v-model="info.phone"
+                  class="info-input"
+                  type="tel"
+                  placeholder="手机号"
+                  maxlength="11"
+                  inputmode="numeric"
+                  @input="handleDigitsInput('phone', 11, $event)"
+                  :disabled="!isEditing"
+                />
+                <span class="class-text">/</span>
+                <input
+                  v-model="info.backupContact"
+                  class="info-input"
+                  type="text"
+                  placeholder="微信/QQ/邮箱"
+                  :disabled="!isEditing"
+                />
+              </div>
+            </label>
+            <label class="field-card field-full">
+              <span class="info-label">证件类型 / 证件号码</span>
+              <div class="class-inline id-type-inline">
+                <select
+                  v-model="info.idType"
+                  class="info-input"
+                  :disabled="!isEditing"
+                >
+                  <option
+                    v-for="item in idTypeOptions"
+                    :key="item"
+                    :value="item"
+                  >
+                    {{ item }}
+                  </option>
+                </select>
+                <input
+                  v-model="info.idNo"
+                  class="info-input"
+                  type="text"
+                  placeholder="证件号码"
+                  :maxlength="idNoMaxLength"
+                  inputmode="text"
+                  @input="handleIdNoInput"
+                  :disabled="!isEditing"
+                />
+              </div>
             </label>
             <label class="field-card">
-              <span class="info-label">身份证件号</span>
+              <span class="info-label">出生年月</span>
               <input
-                v-model="info.idNo"
+                v-model="info.birthDate"
                 class="info-input"
-                type="text"
-                placeholder="请输入身份证件号"
-                maxlength="18"
-                inputmode="text"
-                @input="handleIdNoInput"
+                type="date"
+                lang="zh-CN"
+                :max="today"
                 :disabled="!isEditing"
               />
             </label>
@@ -385,14 +326,14 @@
                 v-model="info.addressDetail"
                 class="info-input address-detail"
                 type="text"
-                placeholder="请输入详细地址"
+                placeholder="请输入详细地址，精确到门牌号"
                 :disabled="!isEditing"
               />
             </label>
           </div>
         </div>
 
-        <div class="info-card">
+        <div class="card info-card">
           <div class="info-section-title">住宿信息</div>
           <div class="info-form-grid">
             <div class="field-card field-full">
@@ -468,7 +409,7 @@
                 v-model="info.offCampusDetail"
                 class="info-input address-detail"
                 type="text"
-                placeholder="请输入详细地址"
+                placeholder="请输入详细地址，精确到门牌号"
                 :disabled="!isEditing"
               />
             </label>
@@ -508,7 +449,7 @@
                 </option>
               </select>
             </label>
-            <label class="field-card" v-if="!info.offCampusLiving">
+            <label class="field-card field-full" v-if="!info.offCampusLiving">
               <span class="info-label">住宿房间</span>
               <div class="class-inline">
                 <input
@@ -535,7 +476,7 @@
           </div>
         </div>
 
-        <div class="info-card">
+        <div class="card info-card">
           <div class="info-section-title">团组织与入党信息</div>
           <div class="info-form-grid three">
             <div class="field-card field-full">
@@ -561,274 +502,215 @@
                 </label>
               </div>
             </div>
-            <label class="field-card">
-              <span class="info-label">提交入团申请书时间</span>
-              <input
-                v-model="info.leagueApplicationDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="leagueApplicationDisabled"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">入团时间</span>
-              <div class="info-inline info-inline-date">
+            <template v-if="info.leagueJoined">
+              <label class="field-card field-full">
+                <span class="info-label">提交入团申请书时间</span>
                 <input
-                  v-model="info.leagueJoinDate"
+                  v-model="info.leagueApplicationDate"
                   class="info-input"
                   type="date"
                   lang="zh-CN"
                   :max="today"
-                  :disabled="leagueJoinDisabled"
+                  :disabled="leagueApplicationDisabled"
                 />
-                <label class="info-choice info-choice-muted">
+              </label>
+              <label class="field-card field-full">
+                <span class="info-label">入团时间</span>
+                <div class="info-inline">
                   <input
-                    v-model="info.leagueDeveloping"
-                    type="checkbox"
-                    :disabled="leagueApplicationDisabled"
+                    v-model="info.leagueJoinDate"
+                    class="info-input"
+                    type="date"
+                    lang="zh-CN"
+                    :max="today"
+                    :disabled="leagueJoinDisabled"
                   />
-                  正在发展
-                </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">团号</span>
-              <input
-                v-model="info.leagueNo"
-                class="info-input"
-                type="text"
-                placeholder="请输入团号"
-                :disabled="leagueNoDisabled"
-              />
-            </label>
-            <div class="field-card field-full">
-              <span class="info-label">是否申请入党</span>
-              <div class="info-inline">
-                <label class="info-choice">
-                  <input
-                    v-model="info.partyApplied"
-                    type="radio"
-                    :value="true"
-                    :disabled="partyAppliedDisabled"
-                  />
-                  是
-                </label>
-                <label class="info-choice">
-                  <input
-                    v-model="info.partyApplied"
-                    type="radio"
-                    :value="false"
-                    :disabled="partyAppliedDisabled"
-                  />
-                  否
-                </label>
-              </div>
-            </div>
-            <label class="field-card">
-              <span class="info-label">提交入党申请书时间</span>
-              <input
-                v-model="info.applicationDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="applicationDateDisabled"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">确定积极分子时间</span>
-              <div class="info-inline info-inline-date">
+                  <label class="info-choice info-choice-muted">
+                    <input
+                      v-model="info.leagueDeveloping"
+                      type="checkbox"
+                      :disabled="leagueApplicationDisabled"
+                    />
+                    正在发展
+                  </label>
+                </div>
+              </label>
+              <label class="field-card field-full">
+                <span class="info-label">团号</span>
                 <input
-                  v-model="info.activistDate"
+                  v-model="info.leagueNo"
                   class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="activistDateDisabled"
+                  type="text"
+                  placeholder="请输入团号"
+                  :disabled="leagueNoDisabled"
                 />
-                <label class="info-choice info-choice-muted">
+              </label>
+              <div class="field-card field-full">
+                <span class="info-label">是否申请入党</span>
+                <div class="info-inline">
+                  <label class="info-choice">
+                    <input
+                      v-model="info.partyApplied"
+                      type="radio"
+                      :value="true"
+                      :disabled="partyAppliedDisabled"
+                    />
+                    是
+                  </label>
+                  <label class="info-choice">
+                    <input
+                      v-model="info.partyApplied"
+                      type="radio"
+                      :value="false"
+                      :disabled="partyAppliedDisabled"
+                    />
+                    否
+                  </label>
+                </div>
+              </div>
+              <template v-if="info.partyApplied">
+                <label class="field-card field-full">
+                  <span class="info-label">提交入党申请书时间</span>
                   <input
-                    v-model="info.activistDeveloping"
-                    type="checkbox"
+                    v-model="info.applicationDate"
+                    class="info-input"
+                    type="date"
+                    lang="zh-CN"
+                    :max="today"
                     :disabled="applicationDateDisabled"
                   />
-                  正在发展
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">上党课时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.partyTrainingDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="partyTrainingDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.partyTrainingPending"
-                    type="checkbox"
-                    :disabled="activistDateDisabled"
-                  />
-                  暂未报名
+                <label class="field-card field-full">
+                  <span class="info-label">确定积极分子时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.activistDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="activistDateDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.activistDeveloping"
+                        type="checkbox"
+                        :disabled="applicationDateDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">确定发展对象时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.developmentTargetDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="developmentTargetDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.developmentTargetDeveloping"
-                    type="checkbox"
-                    :disabled="partyTrainingDisabled"
-                  />
-                  正在发展
+                <label class="field-card field-full">
+                  <span class="info-label">上党课时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.partyTrainingDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="partyTrainingDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.partyTrainingPending"
+                        type="checkbox"
+                        :disabled="activistDateDisabled"
+                      />
+                      暂未报名
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">接收为预备党员时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.probationaryMemberDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="probationaryDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.probationaryDeveloping"
-                    type="checkbox"
-                    :disabled="developmentTargetDisabled"
-                  />
-                  正在发展
+                <label class="field-card field-full">
+                  <span class="info-label">确定发展对象时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.developmentTargetDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="developmentTargetDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.developmentTargetDeveloping"
+                        type="checkbox"
+                        :disabled="partyTrainingDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">转为正式党员时间</span>
-              <div class="info-inline info-inline-date">
-                <input
-                  v-model="info.fullMemberDate"
-                  class="info-input"
-                  type="date"
-                  lang="zh-CN"
-                  :max="today"
-                  :disabled="fullMemberDisabled"
-                />
-                <label class="info-choice info-choice-muted">
-                  <input
-                    v-model="info.fullMemberDeveloping"
-                    type="checkbox"
-                    :disabled="probationaryDisabled"
-                  />
-                  正在发展
+                <label class="field-card field-full">
+                  <span class="info-label">接收为预备党员时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.probationaryMemberDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="probationaryDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.probationaryDeveloping"
+                        type="checkbox"
+                        :disabled="developmentTargetDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
                 </label>
-              </div>
-            </label>
+                <label class="field-card field-full">
+                  <span class="info-label">转为正式党员时间</span>
+                  <div class="info-inline">
+                    <input
+                      v-model="info.fullMemberDate"
+                      class="info-input"
+                      type="date"
+                      lang="zh-CN"
+                      :max="today"
+                      :disabled="fullMemberDisabled"
+                    />
+                    <label class="info-choice info-choice-muted">
+                      <input
+                        v-model="info.fullMemberDeveloping"
+                        type="checkbox"
+                        :disabled="probationaryDisabled"
+                      />
+                      正在发展
+                    </label>
+                  </div>
+                </label>
+              </template>
+            </template>
           </div>
         </div>
 
-        <div class="info-card">
-          <!-- TODO: 高度设置为两行 -->
+        <div class="card info-card">
           <div class="info-section-title">教育经历</div>
           <div class="info-hint">从小学开始填</div>
           <div ref="educationTableWrap" class="education-table-wrap">
-            <table class="education-table">
-              <thead>
-                <tr>
-                  <th>时间段</th>
-                  <th>学校名称</th>
-                  <th>学历</th>
-                  <th>证明人</th>
-                </tr>
-              </thead>
-              <transition-group name="education-row" tag="tbody">
-                <tr
-                  v-for="(item, index) in educationItems"
-                  :key="`edu-${index}`"
-                >
-                  <td>
-                    <div class="education-period">
-                      <input
-                        v-model="item.startDate"
-                        class="info-input"
-                        type="date"
-                        lang="zh-CN"
-                        :max="today"
-                        :disabled="isEducationRowDisabled(index)"
-                      />
-                      <span class="education-sep">至</span>
-                      <input
-                        v-model="item.endDate"
-                        class="info-input"
-                        type="date"
-                        lang="zh-CN"
-                        :max="today"
-                        :disabled="
-                          isEducationRowDisabled(index) || item.isCurrent
-                        "
-                      />
-                      <label class="info-choice info-choice-muted">
-                        <input
-                          v-model="item.isCurrent"
-                          type="checkbox"
-                          :disabled="
-                            isEducationRowDisabled(index) ||
-                            isEducationCurrentDisabled(item)
-                          "
-                          @change="handleEducationCurrentChange(item, index)"
-                        />
-                        至今
-                      </label>
-                    </div>
-                  </td>
-                  <td>
-                    <input
-                      v-model="item.schoolName"
-                      class="info-input"
-                      type="text"
-                      placeholder="学校名称"
-                      :disabled="isEducationRowDisabled(index)"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      v-model="item.educationLevel"
-                      class="info-input"
-                      type="text"
-                      placeholder="学历"
-                      :disabled="isEducationRowDisabled(index)"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      v-model="item.witness"
-                      class="info-input"
-                      type="text"
-                      placeholder="证明人"
-                      :disabled="isEducationRowDisabled(index)"
-                    />
-                  </td>
-                </tr>
-              </transition-group>
-            </table>
+            <transition-group
+              name="education-row"
+              tag="div"
+              class="record-list"
+            >
+              <RecordRow
+                v-for="(item, index) in educationItems"
+                :key="`edu-${index}`"
+                type="education"
+                :item="item"
+                :index="index"
+                :disabled="isEducationRowDisabled(index)"
+                :today="today"
+                @update:item="educationItems[index] = $event"
+                @current-change="handleEducationCurrentChange"
+              />
+            </transition-group>
             <div class="education-controls-wrap">
               <div class="education-controls">
                 <button
@@ -854,11 +736,104 @@
           </div>
         </div>
 
-        <div class="info-card">
+        <div class="card info-card">
+          <div class="info-section-title">学生干部经历</div>
+          <div ref="cadreTableWrap" class="education-table-wrap">
+            <transition-group
+              name="education-row"
+              tag="div"
+              class="record-list"
+            >
+              <RecordRow
+                v-for="(item, index) in cadreItems"
+                :key="`cadre-${index}`"
+                type="cadre"
+                :item="item"
+                :index="index"
+                :disabled="isCadreRowDisabled(index)"
+                :today="today"
+                @update:item="cadreItems[index] = $event"
+                @current-change="handleCadreCurrentChange"
+              />
+            </transition-group>
+            <div class="education-controls-wrap">
+              <div class="education-controls">
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing"
+                  aria-label="增加一行"
+                  @click="addCadreRow"
+                >
+                  +
+                </button>
+                <button
+                  class="education-control"
+                  type="button"
+                  :disabled="!isEditing || cadreItems.length <= 1"
+                  aria-label="减少一行"
+                  @click="removeCadreRow"
+                >
+                  −
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card info-card">
           <!-- TODO: 单亲/离异等待现场演示求助 -->
-          <div class="info-section-title">家庭信息</div>
+          <div class="info-section-title">
+            家庭信息
+            <button
+              class="hint-button"
+              type="button"
+              aria-label="填写说明"
+              @click="workUnitHintOpen = true"
+            >
+              ?
+            </button>
+          </div>
+          <transition name="dialog-fade">
+            <div
+              v-if="workUnitHintOpen"
+              class="dialog-backdrop"
+              @click="workUnitHintOpen = false"
+            ></div>
+          </transition>
+          <transition name="dialog-pop">
+            <section v-if="workUnitHintOpen" class="dialog-card" @click.stop>
+              <header class="dialog-header">填写说明</header>
+              <div class="dialog-body">
+                <div class="hint-item">
+                  <span class="hint-label">工作单位：</span>无
+                  <span class="hint-sep">|</span>
+                  <span class="hint-label">职务：</span>待业/务农
+                </div>
+                <div class="hint-item">
+                  <span class="hint-label">工作单位：</span>无固定单位
+                  <span class="hint-sep">|</span>
+                  <span class="hint-label">职务：</span>散工
+                </div>
+                <div class="hint-item">
+                  <span class="hint-label">工作单位：</span>个体户
+                  <span class="hint-sep">|</span>
+                  <span class="hint-label">职务：</span>店主
+                </div>
+              </div>
+              <div class="dialog-actions">
+                <button
+                  class="ghost-button"
+                  type="button"
+                  @click="workUnitHintOpen = false"
+                >
+                  知道了
+                </button>
+              </div>
+            </section>
+          </transition>
           <div class="info-form-grid family-grid">
-            <div class="family-section-title">父亲</div>
+            <div class="family-section-title">父亲（监护人）</div>
             <label class="field-card">
               <span class="info-label">姓名</span>
               <input
@@ -891,9 +866,6 @@
                 placeholder="请输入父亲工作单位"
                 :disabled="!isEditing"
               />
-              <div class="info-hint">
-                填写公司名字即可，若开小店则填写个体户，若无固定单位则填写散工，无业则写在家
-              </div>
             </label>
             <label class="field-card">
               <span class="info-label">职务</span>
@@ -904,9 +876,8 @@
                 placeholder="请输入父亲职务"
                 :disabled="!isEditing"
               />
-              <div class="info-hint">无业则填写“务农”</div>
             </label>
-            <div class="family-section-title">母亲</div>
+            <div class="family-section-title">母亲（监护人2）</div>
             <label class="field-card">
               <span class="info-label">姓名</span>
               <input
@@ -953,8 +924,8 @@
           </div>
         </div>
 
-        <div class="info-card">
-          <div class="info-section-title">紧急联系人</div>
+        <div class="card info-card">
+          <div class="info-section-title">紧急联系人（除亲戚外）</div>
           <div class="info-form-grid">
             <label class="field-card">
               <span class="info-label">紧急联系人电话</span>
@@ -982,43 +953,53 @@
           </div>
         </div>
       </section>
-      <div class="mobile-capsule">
-        <div class="capsule-left">
-          <div
-            class="capsule-action"
-            role="button"
-            tabindex="0"
-            @click="openSidebar"
-          >
-            <span class="capsule-icon" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </span>
+      <transition name="edit-dock">
+        <div v-if="isEditing" class="edit-dock">
+          <div class="edit-dock-inner">
+            <button class="ghost-button" type="button" @click="cancelEdit">
+              取消
+            </button>
+            <button class="action-button" type="button" @click="confirmEdit">
+              {{ saveActionLabel }}
+            </button>
           </div>
         </div>
-        <div class="capsule-right"></div>
-      </div>
-    </main>
-  </div>
+      </transition>
+      <MobileCapsule @open-sidebar="openDashboardSidebar" />
+  </main>
 </template>
 
 <script setup>
 import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import ExportPdfButton from "../components/ExportPdfButton.vue";
-import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
+import MobileCapsule from "../components/MobileCapsule.vue";
+import StepperInput from "../components/StepperInput.vue";
+import RecordRow from "../components/RecordRow.vue";
+import {
+  getMenuLocation,
+  isMenuEnabled,
+} from "../constants/menu";
 import { regionData, codeToText } from "element-china-area-data";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { API_BASE } from "../api/request";
+import { navigateWithViewTransition } from "../utils/viewTransition";
+import { resolveMediaUrl } from "../utils/media";
+import {
+  buildClassName,
+  buildDormRoom,
+  buildAddress,
+  parseAddressToRegion,
+  parseDormRoom,
+} from "../utils/profile";
+import { useDashboardShell } from "../composables/useDashboardShell";
+import { useNotifications } from "../composables/useNotifications";
+import { useReviewSettings } from "../composables/useReviewSettings";
+import { useToast } from "../composables/useToast";
 
 const router = useRouter();
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const FIXED_COLLEGE = "大数据与人工智能学院";
 
 const profile = reactive(loadUser());
@@ -1029,13 +1010,20 @@ const avatarInput = ref(null);
 const sidebarOpen = ref(false);
 const achievementsOpen = ref(false);
 const educationTableWrap = ref(null);
+const cadreTableWrap = ref(null);
+const workUnitHintOpen = ref(false);
 const today = getTodayString();
+const originalProfileData = ref(null);
+const savedProfileData = ref(null);
+const { submitProfileReviewRequest, updateReviewRequestStatus, fetchProfileReviewRequests, hasPendingProfileReviewRequest } = useNotifications(profile);
+const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useReviewSettings();
+const { success: toastSuccess, error: toastError } = useToast();
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
   avatarUrl: profile.avatarUrl || "",
   studentNo: profile.studentNo || "",
-  classYear: "",
+  classYear: new Date().getFullYear(),
   classMajor: "",
   classNo: 1,
   className: profile.className || "",
@@ -1054,6 +1042,7 @@ const info = reactive({
   classTeacher: "",
   counselor: "",
   phone: "",
+  backupContact: "",
   address: "",
   addressProvince: "",
   addressCity: "",
@@ -1063,7 +1052,9 @@ const info = reactive({
   offCampusCity: "",
   offCampusCounty: "",
   offCampusDetail: "",
+  idType: "居民身份证",
   idNo: "",
+  birthDate: "",
   nativePlace: "",
   leagueNo: "",
   leagueApplicationDate: "",
@@ -1095,20 +1086,118 @@ const info = reactive({
   motherTitle: "",
 });
 
-const classYearOptions = Array.from({ length: 19 }, (_, index) => 2022 + index);
-const majorOptionsByCollege = {
-  大数据与人工智能学院: [
+const majorOptionsByCategory = {
+  本科生: [
     "计算机科学与技术",
     "计算机科学与技术（实验区）",
+    "计算机科学与技术(中外联合培养项目班)",
+    "2025计算机科学与技术（中外联合培养项目班未赴国外学习）",
     "软件工程",
+    "人工智能",
     "电子商务",
+    "电子商务（大数据决策分析）",
+    "大数据管理与应用",
     "大数据管理与应用（佛山校区全学段）",
     "大数据管理与应用（数字治理）",
   ],
+  研究生: [
+    "管理科学与工程",
+    "技术经济及管理",
+    "智能科学与技术",
+    "计算机技术",
+    "图书情报",
+  ],
 };
-const studentCategoryOptions = ["本科", "研究生"];
+const studentCategoryOptions = ["本科生", "研究生"];
 const politicalStatusOptions = ["群众", "共青团员", "中共预备党员", "中共党员"];
+const idTypeOptions = [
+  "居民身份证",
+  "台湾居民来往大陆通行证",
+  "港澳居民来往内地通行证",
+  "普通护照",
+  "台湾居民居住证",
+  "港澳居民居住证",
+  "外国人永久居留身份证",
+  "外国护照",
+];
 const dormCampusOptions = ["佛山校区", "广州校区"];
+const PROFILE_CHANGE_FIELDS = [
+  { key: "fullName", label: "姓名", section: "学籍信息" },
+  { key: "avatarUrl", label: "头像", section: "基础信息" },
+  { key: "studentNo", label: "学号", section: "学籍信息" },
+  { key: "classYear", label: "年级", section: "学籍信息" },
+  { key: "classMajor", label: "专业", section: "学籍信息" },
+  { key: "classNo", label: "班级", section: "学籍信息" },
+  { key: "className", label: "班级名称", section: "学籍信息" },
+  { key: "enrollmentDate", label: "入学时间", section: "学籍信息" },
+  { key: "studentCategory", label: "学生类别", section: "学籍信息" },
+  { key: "ethnicity", label: "民族", section: "联系方式" },
+  { key: "politicalStatus", label: "政治面貌", section: "联系方式" },
+  { key: "phone", label: "手机号码", section: "联系方式" },
+  { key: "backupContact", label: "备用联系方式", section: "联系方式" },
+  { key: "address", label: "家庭住址", section: "联系方式" },
+  { key: "idType", label: "证件类型", section: "联系方式" },
+  { key: "idNo", label: "证件号码", section: "联系方式" },
+  { key: "birthDate", label: "出生年月", section: "联系方式" },
+  { key: "nativePlace", label: "籍贯", section: "联系方式" },
+  { key: "dormCampus", label: "宿舍校区", section: "住宿信息" },
+  { key: "dormBuilding", label: "宿舍楼栋", section: "住宿信息" },
+  { key: "dormRoom", label: "宿舍房间", section: "住宿信息" },
+  { key: "offCampusLiving", label: "是否校外居住", section: "住宿信息" },
+  { key: "offCampusAddress", label: "校外住址", section: "住宿信息" },
+  { key: "classTeacher", label: "班主任", section: "学籍信息" },
+  { key: "counselor", label: "辅导员", section: "学籍信息" },
+  { key: "leagueJoined", label: "是否入团", section: "党团信息" },
+  { key: "leagueNo", label: "团员编号", section: "党团信息" },
+  { key: "leagueApplicationDate", label: "入团申请时间", section: "党团信息" },
+  { key: "leagueJoinDate", label: "入团时间", section: "党团信息" },
+  { key: "partyApplied", label: "是否申请入党", section: "党团信息" },
+  { key: "applicationDate", label: "入党申请时间", section: "党团信息" },
+  { key: "activistDate", label: "积极分子时间", section: "党团信息" },
+  { key: "partyTrainingDate", label: "党校培训时间", section: "党团信息" },
+  { key: "developmentTargetDate", label: "发展对象时间", section: "党团信息" },
+  { key: "probationaryMemberDate", label: "预备党员时间", section: "党团信息" },
+  { key: "fullMemberDate", label: "转正时间", section: "党团信息" },
+  { key: "emergencyPhone", label: "紧急联系人电话", section: "家庭信息" },
+  { key: "emergencyRelation", label: "与紧急联系人关系", section: "家庭信息" },
+  { key: "fatherName", label: "父亲姓名", section: "家庭信息" },
+  { key: "fatherPhone", label: "父亲电话", section: "家庭信息" },
+  { key: "fatherWorkUnit", label: "父亲工作单位", section: "家庭信息" },
+  { key: "fatherTitle", label: "父亲职务", section: "家庭信息" },
+  { key: "motherName", label: "母亲姓名", section: "家庭信息" },
+  { key: "motherPhone", label: "母亲电话", section: "家庭信息" },
+  { key: "motherWorkUnit", label: "母亲工作单位", section: "家庭信息" },
+  { key: "motherTitle", label: "母亲职务", section: "家庭信息" },
+];
+const idNoMaxLength = computed(() => {
+  switch (info.idType) {
+    case "居民身份证":
+      return 18;
+    case "台湾居民来往大陆通行证":
+    case "港澳居民来往内地通行证":
+      return 9;
+    case "普通护照":
+      return 9;
+    case "台湾居民居住证":
+    case "港澳居民居住证":
+      return 10;
+    case "外国人永久居留身份证":
+      return 15;
+    case "外国护照":
+      return 20;
+    default:
+      return 32;
+  }
+});
+const hasSavedProfileBefore = computed(() => Boolean(savedProfileData.value?.id));
+const isReviewer = computed(() =>
+  profile.role === "ADMIN" || profile.role === "TEACHER"
+);
+const saveActionLabel = computed(() => {
+  if (isReviewer.value) return "保存";
+  return hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled ? "请求审核" : "保存";
+});
+
 const dormBuildingOptions = computed(() => {
   if (info.dormCampus === "佛山校区") {
     return [
@@ -1141,6 +1230,7 @@ const dormBuildingOptions = computed(() => {
 const educationItems = reactive(
   Array.from({ length: 5 }, () => createEducationItem()),
 );
+const cadreItems = reactive(Array.from({ length: 5 }, () => createCadreItem()));
 
 function getTodayString() {
   const now = new Date();
@@ -1159,6 +1249,17 @@ function createEducationItem() {
   };
 }
 
+function createCadreItem() {
+  return {
+    startDate: "",
+    endDate: "",
+    department: "",
+    position: "",
+    description: "",
+    isCurrent: false,
+  };
+}
+
 async function addEducationRow() {
   await animateEducationHeightWithUpdate(() => {
     educationItems.push(createEducationItem());
@@ -1171,6 +1272,21 @@ async function removeEducationRow() {
   }
   await animateEducationHeightWithUpdate(() => {
     educationItems.pop();
+  });
+}
+
+async function addCadreRow() {
+  await animateCadreHeightWithUpdate(() => {
+    cadreItems.push(createCadreItem());
+  });
+}
+
+async function removeCadreRow() {
+  if (cadreItems.length <= 1) {
+    return;
+  }
+  await animateCadreHeightWithUpdate(() => {
+    cadreItems.pop();
   });
 }
 
@@ -1199,7 +1315,31 @@ async function animateEducationHeightWithUpdate(updateFn) {
   el.addEventListener("transitionend", cleanup);
 }
 
-const menuItems = computed(() => filterMenuItemsByRole(profile.role));
+async function animateCadreHeightWithUpdate(updateFn) {
+  const el = cadreTableWrap.value;
+  if (!el) {
+    updateFn();
+    return;
+  }
+  const startHeight = el.getBoundingClientRect().height;
+  updateFn();
+  await nextTick();
+  const targetHeight = el.getBoundingClientRect().height;
+  el.style.height = `${startHeight}px`;
+  el.style.overflow = "hidden";
+  requestAnimationFrame(() => {
+    el.style.transition = "height 260ms ease";
+    el.style.height = `${targetHeight}px`;
+  });
+  const cleanup = () => {
+    el.style.height = "";
+    el.style.transition = "";
+    el.style.overflow = "";
+    el.removeEventListener("transitionend", cleanup);
+  };
+  el.addEventListener("transitionend", cleanup);
+}
+
 const achievementEntries = [
   { key: "all", label: "全部" },
   { key: "contest", label: "学科竞赛、文体艺术" },
@@ -1238,7 +1378,7 @@ const roleLabel = computed(() => {
 });
 
 const classMajorOptions = computed(() => {
-  return majorOptionsByCollege[info.college] || [];
+  return majorOptionsByCategory[info.studentCategory] || [];
 });
 const addressProvinceOptions = computed(() =>
   regionData.map((item) => ({ value: item.value, label: item.label })),
@@ -1280,13 +1420,29 @@ const hasEducationCurrent = computed(() =>
 const currentEducationIndex = computed(() =>
   educationItems.findIndex((entry) => entry.isCurrent),
 );
+const hasCadreCurrent = computed(() =>
+  cadreItems.some((entry) => entry.isCurrent),
+);
+const currentCadreIndex = computed(() =>
+  cadreItems.findIndex((entry) => entry.isCurrent),
+);
 
-async function handleEducationCurrentChange(item, index) {
-  if (item.isCurrent) {
+async function handleEducationCurrentChange({ item, checked, index }) {
+  if (checked) {
     item.endDate = "";
     await animateEducationHeightWithUpdate(() => {
       clearEducationRowsAfter(index);
       pruneEducationRowsAfter(index);
+    });
+  }
+}
+
+async function handleCadreCurrentChange({ item, checked, index }) {
+  if (checked) {
+    item.endDate = "";
+    await animateCadreHeightWithUpdate(() => {
+      clearCadreRowsAfter(index);
+      pruneCadreRowsAfter(index);
     });
   }
 }
@@ -1298,11 +1454,26 @@ function isEducationCurrentDisabled(item) {
   return hasEducationCurrent.value;
 }
 
+function isCadreCurrentDisabled(item) {
+  if (item.isCurrent) {
+    return false;
+  }
+  return hasCadreCurrent.value;
+}
+
 function isEducationRowDisabled(index) {
   if (!isEditing.value) {
     return true;
   }
   const currentIndex = currentEducationIndex.value;
+  return currentIndex !== -1 && index > currentIndex;
+}
+
+function isCadreRowDisabled(index) {
+  if (!isEditing.value) {
+    return true;
+  }
+  const currentIndex = currentCadreIndex.value;
   return currentIndex !== -1 && index > currentIndex;
 }
 
@@ -1313,6 +1484,17 @@ function clearEducationRowsAfter(index) {
     entry.schoolName = "";
     entry.educationLevel = "";
     entry.witness = "";
+    entry.isCurrent = false;
+  });
+}
+
+function clearCadreRowsAfter(index) {
+  cadreItems.slice(index + 1).forEach((entry) => {
+    entry.startDate = "";
+    entry.endDate = "";
+    entry.department = "";
+    entry.position = "";
+    entry.description = "";
     entry.isCurrent = false;
   });
 }
@@ -1332,6 +1514,21 @@ function pruneEducationRowsAfter(index) {
   }
 }
 
+function pruneCadreRowsAfter(index) {
+  if (cadreItems.length <= index + 1) {
+    return;
+  }
+  const kept = cadreItems.slice(0, index + 1);
+  cadreItems.slice(index + 1).forEach((entry) => {
+    if (!isCadreRowEmpty(entry)) {
+      kept.push(entry);
+    }
+  });
+  if (kept.length !== cadreItems.length) {
+    cadreItems.splice(0, cadreItems.length, ...kept);
+  }
+}
+
 function isEducationRowEmpty(entry) {
   return (
     !entry.startDate &&
@@ -1339,6 +1536,17 @@ function isEducationRowEmpty(entry) {
     !entry.schoolName &&
     !entry.educationLevel &&
     !entry.witness &&
+    !entry.isCurrent
+  );
+}
+
+function isCadreRowEmpty(entry) {
+  return (
+    !entry.startDate &&
+    !entry.endDate &&
+    !entry.department &&
+    !entry.position &&
+    !entry.description &&
     !entry.isCurrent
   );
 }
@@ -1435,11 +1643,7 @@ function handleMenuClick(key) {
     toggleAchievements();
     return;
   }
-  if (key === "student-info") {
-    router.push("/student-info");
-    return;
-  }
-  router.push("/myinfos");
+  navigateWithViewTransition(router, getMenuLocation(key));
 }
 
 function toggleAchievements() {
@@ -1463,7 +1667,10 @@ function handleAchievementEntry(key) {
   activeAchievement.value = safeKey;
   activeMenu.value = "achievements";
   sidebarOpen.value = false;
-  router.push({ path: "/achievements", query: { category: safeKey } });
+  navigateWithViewTransition(router, {
+    path: "/achievements",
+    query: { category: safeKey },
+  });
 }
 
 function openSidebar() {
@@ -1474,18 +1681,8 @@ function closeSidebar() {
   sidebarOpen.value = false;
 }
 
-function resolveMediaUrl(url) {
-  if (!url) {
-    return "";
-  }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-  return `${API_BASE}${url}`;
-}
-
 function goToSettings() {
-  router.push("/settings");
+  navigateWithViewTransition(router, "/settings");
 }
 
 function handleDigitsInput(field, maxLength, event) {
@@ -1496,13 +1693,39 @@ function handleDigitsInput(field, maxLength, event) {
 
 function handleIdNoInput(event) {
   const raw = (event.target.value || "").toUpperCase();
-  const cleaned = raw.replace(/[^0-9X]/g, "");
-  const digits = cleaned.replace(/X/g, "").slice(0, 18);
-  if (raw.endsWith("X")) {
-    info.idNo = `${digits.slice(0, 17)}X`.slice(0, 18);
+  const maxLen = idNoMaxLength.value;
+  // 居民身份证: digits + optional X at end
+  if (info.idType === "居民身份证") {
+    const cleaned = raw.replace(/[^0-9X]/g, "");
+    const digits = cleaned.replace(/X/g, "").slice(0, 17);
+    if (raw.endsWith("X")) {
+      info.idNo = `${digits}X`.slice(0, maxLen);
+      return;
+    }
+    info.idNo = digits;
     return;
   }
-  info.idNo = digits;
+  // 通行证类: 8 digits + 1 letter
+  if (
+    info.idType === "台湾居民来往大陆通行证" ||
+    info.idType === "港澳居民来往内地通行证"
+  ) {
+    const cleaned = raw.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
+    const digits = cleaned.replace(/[A-Z]/g, "").slice(0, 8);
+    const letter = cleaned.slice(8, 9).replace(/[^A-Z]/g, "");
+    info.idNo = `${digits}${letter}`.slice(0, maxLen);
+    return;
+  }
+  // 护照类: alphanumeric
+  if (info.idType === "普通护照" || info.idType === "外国护照") {
+    info.idNo = raw
+      .replace(/[^0-9A-Za-z]/g, "")
+      .toUpperCase()
+      .slice(0, maxLen);
+    return;
+  }
+  // 居住证类: digits only
+  info.idNo = raw.replace(/\D/g, "").slice(0, maxLen);
 }
 
 function triggerAvatarUpload() {
@@ -1527,10 +1750,23 @@ async function onAvatarChange(event) {
 }
 
 function enterEdit() {
+  if (hasPendingProfileReviewRequest.value) {
+    toastError("个人信息正在审核，请等待审核结果或前往通知页取消申请");
+    return;
+  }
+  originalProfileData.value = buildCurrentProfileState();
   isEditing.value = true;
 }
 
+function cancelEdit() {
+  if (originalProfileData.value) {
+    applyProfileResponse(originalProfileData.value, { syncSavedProfile: false });
+  }
+  isEditing.value = false;
+}
+
 async function confirmEdit() {
+  const requiresReview = hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled && !isReviewer.value;
   const className = buildClassName(
     info.classYear,
     info.classMajor,
@@ -1566,6 +1802,16 @@ async function confirmEdit() {
       witness: item.witness,
       isCurrent: item.isCurrent,
     }));
+  const cadreExperiences = cadreItems
+    .filter((item) => !isCadreRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      department: item.department,
+      position: item.position,
+      description: item.description,
+      isCurrent: item.isCurrent,
+    }));
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
@@ -1587,8 +1833,11 @@ async function confirmEdit() {
     classTeacher: info.classTeacher,
     counselor: info.counselor,
     phone: info.phone,
+    backupContact: info.backupContact,
     address,
+    idType: info.idType,
     idNo: info.idNo,
+    birthDate: info.birthDate || null,
     nativePlace: info.nativePlace,
     leagueNo: info.leagueNo,
     leagueApplicationDate: info.leagueApplicationDate || null,
@@ -1619,6 +1868,7 @@ async function confirmEdit() {
     motherWorkUnit: info.motherWorkUnit,
     motherTitle: info.motherTitle,
     educationExperiences,
+    cadreExperiences,
   };
   if (info.offCampusLiving) {
     payload.dormCampus = null;
@@ -1657,7 +1907,54 @@ async function confirmEdit() {
   if (fullMemberDisabled.value) {
     payload.fullMemberDate = null;
   }
+  if (!info.leagueJoined) {
+    payload.leagueJoined = false;
+    payload.leagueApplicationDate = null;
+    payload.leagueJoinDate = null;
+    payload.leagueDeveloping = false;
+    payload.leagueNo = null;
+    payload.partyApplied = false;
+    payload.applicationDate = null;
+    payload.activistDate = null;
+    payload.activistDeveloping = false;
+    payload.partyTrainingDate = null;
+    payload.partyTrainingPending = false;
+    payload.developmentTargetDate = null;
+    payload.developmentTargetDeveloping = false;
+    payload.probationaryMemberDate = null;
+    payload.probationaryDeveloping = false;
+    payload.fullMemberDate = null;
+    payload.fullMemberDeveloping = false;
+  } else if (!info.partyApplied) {
+    payload.partyApplied = false;
+    payload.applicationDate = null;
+    payload.activistDate = null;
+    payload.activistDeveloping = false;
+    payload.partyTrainingDate = null;
+    payload.partyTrainingPending = false;
+    payload.developmentTargetDate = null;
+    payload.developmentTargetDeveloping = false;
+    payload.probationaryMemberDate = null;
+    payload.probationaryDeveloping = false;
+    payload.fullMemberDate = null;
+    payload.fullMemberDeveloping = false;
+  }
+  const changes = buildProfileChanges(originalProfileData.value, payload);
   try {
+    if (requiresReview) {
+      const { data: requestData } = await submitProfileReviewRequest({
+        actor: profile.value?.username,
+        payloadSnapshot: payload,
+        changes,
+      });
+      if (reviewSettings.profileReviewAutoApprove && requestData?.status === "approved") {
+        await fetchProfileReviewRequests(true);
+        const updatedProfile = await getStudentProfile();
+        applyProfileResponse(updatedProfile.data);
+      }
+      isEditing.value = false;
+      return;
+    }
     const { data } = await saveStudentProfile(payload);
     applyProfileResponse(data);
     isEditing.value = false;
@@ -1700,6 +1997,16 @@ function buildPdfStudentSnapshot() {
       witness: item.witness,
       isCurrent: item.isCurrent,
     }));
+  const cadreExperiences = cadreItems
+    .filter((item) => !isCadreRowEmpty(item))
+    .map((item) => ({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      department: item.department,
+      position: item.position,
+      description: item.description,
+      isCurrent: item.isCurrent,
+    }));
   return {
     fullName: studentName,
     studentNo,
@@ -1715,7 +2022,10 @@ function buildPdfStudentSnapshot() {
     ethnicity: info.ethnicity,
     politicalStatus: info.politicalStatus,
     phone: info.phone,
+    backupContact: info.backupContact,
+    idType: info.idType,
     idNo: info.idNo,
+    birthDate: info.birthDate,
     nativePlace: info.nativePlace,
     address: addressText,
     dormCampus: info.dormCampus,
@@ -1752,126 +2062,210 @@ function buildPdfStudentSnapshot() {
     fullMemberDate: info.fullMemberDate,
     fullMemberDeveloping: info.fullMemberDeveloping,
     educationExperiences,
+    cadreExperiences,
     avatarUrl: info.avatarUrl,
   };
 }
 
-function buildClassName(year, major, no, fallback) {
-  const hasParts = Boolean(year || major || no);
-  if (!hasParts && fallback) {
-    return fallback;
-  }
-  const safeYear = year ? `${year}级` : "";
-  const safeMajor = major || "";
-  const safeNo = no ? `${no}班` : "";
-  const result = `${safeYear}${safeMajor}${safeNo}`.trim();
-  return result || "";
-}
-
-function buildDormRoom(floor, roomNo, fallback) {
-  const safeFloor = String(floor || "").trim();
-  const safeRoomNo = String(roomNo || "").trim();
-  if (safeFloor || safeRoomNo) {
-    return `${safeFloor}层${safeRoomNo}号`.trim();
-  }
-  return fallback || "";
-}
-
-function buildAddress(province, city, county, detail, fallback) {
-  const parts = [
-    codeToText[province],
-    codeToText[city],
-    codeToText[county],
-  ].filter(Boolean);
-  const safeDetail = String(detail || "").trim();
-  const combined = [...parts, safeDetail].filter(Boolean).join("");
-  if (combined) {
-    return combined;
-  }
-  return String(fallback || "").trim();
-}
-
-function parseAddressToRegion(rawAddress) {
-  const address = String(rawAddress || "").trim();
-  if (!address) {
-    return {
-      province: "",
-      city: "",
-      county: "",
-      detail: "",
-    };
-  }
-  const province = regionData.find((item) => address.startsWith(item.label));
-  if (!province) {
-    return {
-      province: "",
-      city: "",
-      county: "",
-      detail: address,
-    };
-  }
-  let remaining = address.slice(province.label.length);
-  let city = province.children?.find((item) =>
-    remaining.startsWith(item.label),
-  );
-  let county = null;
-
-  if (city) {
-    remaining = remaining.slice(city.label.length);
-    county = city.children?.find((item) => remaining.startsWith(item.label));
-    if (county) {
-      remaining = remaining.slice(county.label.length);
-    }
-  } else {
-    for (const candidate of province.children || []) {
-      for (const item of candidate.children || []) {
-        const prefix = `${candidate.label}${item.label}`;
-        if (remaining.startsWith(prefix)) {
-          city = candidate;
-          county = item;
-          remaining = remaining.slice(prefix.length);
-          break;
-        }
-      }
-      if (city) {
-        break;
-      }
-    }
-  }
-
+function buildCurrentProfileState() {
   return {
-    province: province.value,
-    city: city?.value || "",
-    county: county?.value || "",
-    detail: remaining.trim(),
+    fullName: info.name,
+    avatarUrl: info.avatarUrl,
+    studentNo: info.studentNo,
+    classYear: info.classYear || null,
+    classMajor: info.classMajor,
+    classNo: info.classNo,
+    className: buildClassName(
+      info.classYear,
+      info.classMajor,
+      info.classNo,
+      info.className,
+    ),
+    college: info.college,
+    enrollmentDate: info.enrollmentDate || null,
+    studentCategory: info.studentCategory,
+    ethnicity: info.ethnicity,
+    politicalStatus: info.politicalStatus,
+    dormCampus: info.dormCampus,
+    dormBuilding: info.dormBuilding,
+    dormRoom: buildDormRoom(info.dormFloor, info.dormRoomNo, info.dormRoom),
+    offCampusLiving: info.offCampusLiving,
+    offCampusAddress: buildAddress(
+      info.offCampusProvince,
+      info.offCampusCity,
+      info.offCampusCounty,
+      info.offCampusDetail,
+      info.offCampusAddress,
+    ),
+    classTeacher: info.classTeacher,
+    counselor: info.counselor,
+    phone: info.phone,
+    backupContact: info.backupContact,
+    address: buildAddress(
+      info.addressProvince,
+      info.addressCity,
+      info.addressCounty,
+      info.addressDetail,
+      info.address,
+    ),
+    idType: info.idType,
+    idNo: info.idNo,
+    birthDate: info.birthDate || null,
+    nativePlace: info.nativePlace,
+    leagueNo: info.leagueNo,
+    leagueApplicationDate: info.leagueApplicationDate || null,
+    leagueJoinDate: info.leagueJoinDate || null,
+    leagueJoined: info.leagueJoined,
+    leagueDeveloping: info.leagueDeveloping,
+    partyApplied: info.partyApplied,
+    notDeveloped: info.notDeveloped,
+    applicationDate: info.applicationDate || null,
+    activistDate: info.activistDate || null,
+    activistDeveloping: info.activistDeveloping,
+    partyTrainingDate: info.partyTrainingDate || null,
+    partyTrainingPending: info.partyTrainingPending,
+    developmentTargetDate: info.developmentTargetDate || null,
+    developmentTargetDeveloping: info.developmentTargetDeveloping,
+    probationaryMemberDate: info.probationaryMemberDate || null,
+    probationaryDeveloping: info.probationaryDeveloping,
+    fullMemberDate: info.fullMemberDate || null,
+    fullMemberDeveloping: info.fullMemberDeveloping,
+    emergencyPhone: info.emergencyPhone,
+    emergencyRelation: info.emergencyRelation,
+    fatherName: info.fatherName,
+    fatherPhone: info.fatherPhone,
+    fatherWorkUnit: info.fatherWorkUnit,
+    fatherTitle: info.fatherTitle,
+    motherName: info.motherName,
+    motherPhone: info.motherPhone,
+    motherWorkUnit: info.motherWorkUnit,
+    motherTitle: info.motherTitle,
+    educationExperiences: educationItems.map((item) => ({ ...item })),
+    cadreExperiences: cadreItems.map((item) => ({ ...item })),
   };
 }
 
-function parseDormRoom(rawValue) {
-  const raw = String(rawValue || "").trim();
-  if (!raw) {
-    return { floor: "", roomNo: "" };
+function buildProfileChanges(previousState, nextState) {
+  const changes = PROFILE_CHANGE_FIELDS.reduce((list, field) => {
+    const before = stringifyProfileChangeValue(previousState?.[field.key]);
+    const after = stringifyProfileChangeValue(nextState?.[field.key]);
+    if (before === after) {
+      return list;
+    }
+    list.push({
+      section: field.section,
+      label: field.label,
+      before,
+      after,
+    });
+    return list;
+  }, []);
+
+  const previousEducation = stringifyProfileCollection(previousState?.educationExperiences);
+  const nextEducation = stringifyProfileCollection(nextState?.educationExperiences);
+  if (previousEducation !== nextEducation) {
+    changes.push({
+      section: "教育经历",
+      label: "教育经历",
+      before: previousEducation,
+      after: nextEducation,
+    });
   }
-  const digits = raw.replace(/\D/g, "");
-  if (!digits) {
-    return { floor: "", roomNo: "" };
+
+  const previousCadre = stringifyProfileCollection(previousState?.cadreExperiences);
+  const nextCadre = stringifyProfileCollection(nextState?.cadreExperiences);
+  if (previousCadre !== nextCadre) {
+    changes.push({
+      section: "学生干部经历",
+      label: "学生干部经历",
+      before: previousCadre,
+      after: nextCadre,
+    });
   }
-  if (digits.length <= 2) {
-    return { floor: "", roomNo: digits };
-  }
-  const floor = digits.slice(0, digits.length - 2);
-  const roomNo = digits.slice(-2);
-  return { floor, roomNo };
+
+  return changes;
 }
 
-function applyProfileResponse(data) {
+function stringifyProfileCollection(items) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!list.length) {
+    return "-";
+  }
+  const firstItem = list[0] || {};
+  if ("schoolName" in firstItem || "educationLevel" in firstItem || "witness" in firstItem) {
+    return list.map(formatEducationExperienceItem).filter(Boolean).join("\n");
+  }
+  if ("department" in firstItem || "position" in firstItem || "description" in firstItem) {
+    return list.map(formatCadreExperienceItem).filter(Boolean).join("\n");
+  }
+  return list
+    .map((item) =>
+      Object.entries(item)
+        .map(([, value]) => stringifyProfileChangeValue(value))
+        .filter((value) => value !== "-")
+        .join(" / "),
+    )
+    .filter(Boolean)
+    .join("\n");
+}
+
+function formatEducationExperienceItem(item, index) {
+  const period = formatPeriodText(item?.startDate, item?.endDate, item?.isCurrent);
+  const schoolName = stringifyProfileChangeValue(item?.schoolName);
+  const educationLevel = stringifyProfileChangeValue(item?.educationLevel);
+  const witness = stringifyProfileChangeValue(item?.witness);
+  return [
+    `第${index + 1}条`,
+    `时间：${period}`,
+    `学校名称：${schoolName}`,
+    `学历：${educationLevel}`,
+    `证明人：${witness}`,
+  ].join("\n");
+}
+
+function formatCadreExperienceItem(item, index) {
+  const period = formatPeriodText(item?.startDate, item?.endDate, item?.isCurrent);
+  const department = stringifyProfileChangeValue(item?.department);
+  const position = stringifyProfileChangeValue(item?.position);
+  const description = stringifyProfileChangeValue(item?.description);
+  return [
+    `第${index + 1}条`,
+    `起止时间：${period}`,
+    `班级/社团部门：${department}`,
+    `职位：${position}`,
+    `职责说明：${description}`,
+  ].join("\n");
+}
+
+function formatPeriodText(startDate, endDate, isCurrent) {
+  const start = stringifyProfileChangeValue(startDate);
+  if (isCurrent) {
+    return `${start} 至今`;
+  }
+  const end = stringifyProfileChangeValue(endDate);
+  return `${start} - ${end}`;
+}
+
+function stringifyProfileChangeValue(value) {
+  if (typeof value === "boolean") {
+    return value ? "是" : "否";
+  }
+  if (Array.isArray(value)) {
+    return stringifyProfileCollection(value);
+  }
+  const text = String(value ?? "").trim();
+  return text || "-";
+}
+
+function applyProfileResponse(data, options = {}) {
   if (!data) {
     return;
   }
+  const { syncSavedProfile = true } = options;
   info.name = data.fullName || data.displayName || "";
   info.avatarUrl = data.avatarUrl || profile.avatarUrl || "";
-  info.studentNo = data.studentNo || "";
-  info.classYear = data.classYear || "";
+  info.studentNo = data.studentNo || profile.studentNo || "";
+  info.classYear = data.classYear || new Date().getFullYear();
   info.classMajor = data.classMajor || "";
   info.classNo = data.classNo ?? 1;
   info.className = data.className || "";
@@ -1896,13 +2290,16 @@ function applyProfileResponse(data) {
   info.classTeacher = data.classTeacher || "";
   info.counselor = data.counselor || "";
   info.phone = data.phone || "";
+  info.backupContact = data.backupContact || "";
   info.address = data.address || "";
   const parsedAddress = parseAddressToRegion(info.address);
   info.addressProvince = parsedAddress.province;
   info.addressCity = parsedAddress.city;
   info.addressCounty = parsedAddress.county;
   info.addressDetail = parsedAddress.detail;
+  info.idType = data.idType || "居民身份证";
   info.idNo = data.idNo || "";
+  info.birthDate = data.birthDate || "";
   info.nativePlace = data.nativePlace || "";
   info.leagueNo = data.leagueNo || "";
   info.leagueApplicationDate = data.leagueApplicationDate || "";
@@ -1933,6 +2330,7 @@ function applyProfileResponse(data) {
   info.motherWorkUnit = data.motherWorkUnit || "";
   info.motherTitle = data.motherTitle || "";
   applyEducationExperiences(data.educationExperiences);
+  applyCadreExperiences(data.cadreExperiences);
 
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;
@@ -1940,6 +2338,10 @@ function applyProfileResponse(data) {
   profile.studentNo = data.studentNo || profile.studentNo;
   profile.className = data.className || profile.className;
   profile.college = FIXED_COLLEGE;
+  if (syncSavedProfile) {
+    savedProfileData.value = data;
+    originalProfileData.value = data;
+  }
 
   saveUser(profile);
 }
@@ -1961,6 +2363,23 @@ function applyEducationExperiences(rawItems) {
   educationItems.splice(0, educationItems.length, ...filtered);
 }
 
+function applyCadreExperiences(rawItems) {
+  const nextItems = Array.isArray(rawItems) ? rawItems : [];
+  const normalized = nextItems.map((item) => ({
+    startDate: item?.startDate || "",
+    endDate: item?.isCurrent ? "" : item?.endDate || "",
+    department: item?.department || "",
+    position: item?.position || "",
+    description: item?.description || "",
+    isCurrent: Boolean(item?.isCurrent),
+  }));
+  const filtered = normalized.filter((item) => !isCadreRowEmpty(item));
+  if (!filtered.length) {
+    filtered.push(createCadreItem());
+  }
+  cadreItems.splice(0, cadreItems.length, ...filtered);
+}
+
 function saveUser(data) {
   const user = {
     username: data.username,
@@ -1975,6 +2394,7 @@ function saveUser(data) {
 }
 
 onMounted(async () => {
+  fetchReviewSettings().catch(() => {});
   try {
     const { data } = await getStudentProfile();
     applyProfileResponse(data);
@@ -2003,14 +2423,17 @@ watch(
 );
 
 watch(
-  () => info.college,
-  (college) => {
-    if (!majorOptionsByCollege[college]) {
+  () => info.studentCategory,
+  (category) => {
+    if (!majorOptionsByCategory[category]) {
       info.classMajor = "";
       return;
     }
-    if (!majorOptionsByCollege[college].includes(info.classMajor)) {
+    if (!majorOptionsByCategory[category].includes(info.classMajor)) {
       info.classMajor = "";
+    }
+    if (category === "研究生") {
+      info.classNo = 1;
     }
   },
 );
@@ -2231,3 +2654,7 @@ function loadUser() {
   }
 }
 </script>
+
+<style scoped>
+@import '../assets/styles/my-infos-view.css';
+</style>

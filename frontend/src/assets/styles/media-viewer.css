@@ -1,0 +1,644 @@
+/**
+ * Media Viewer Styles - 全屏媒体查看器样式
+ *
+ * 包含内容:
+ * - Viewer Backdrop: 全屏查看器背景
+ * - Viewer Header: 顶部导航栏 (计数器、关闭按钮)
+ * - Viewer Stage: 中间舞台区域 (箭头导航)
+ * - Viewer Media: 图片/视频/文档展示
+ * - Viewer Transitions: 进入/退出过渡动画
+ * - Directional Slide Transitions: 左右滑动过渡
+ * - Document Viewer: PPTX/PDF/DOCX/XLSX 文档查看器样式
+ * - Sheet Styles: 表格查看器样式
+ */
+
+/* ── Viewer Backdrop ───────────────────────────────────── */
+.viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 14, 18, 0.85);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Viewer Header ─────────────────────────────────────── */
+.viewer-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  background: linear-gradient(to bottom, rgba(3, 14, 18, 0.6), transparent);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.viewer-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: "SF Pro Display", "Segoe UI", sans-serif;
+}
+
+.viewer-current {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.viewer-sep {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 400;
+}
+
+.viewer-total {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.viewer-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 11;
+  pointer-events: auto;
+}
+
+.viewer-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+/* ── Viewer Stage ──────────────────────────────────────── */
+.viewer-stage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 60px 80px;
+}
+
+/* ── Viewer Arrows ─────────────────────────────────────── */
+.viewer-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.viewer-arrow:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.viewer-arrow:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.viewer-prev {
+  left: 24px;
+}
+
+.viewer-next {
+  right: 24px;
+}
+
+/* ── Viewer Media ──────────────────────────────────────── */
+.viewer-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.viewer-image,
+.viewer-video {
+  max-width: 88vw;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.4),
+    0 48px 100px rgba(0, 0, 0, 0.3);
+}
+
+.viewer-video {
+  background: #000;
+}
+
+/* ── Viewer Document ───────────────────────────────────── */
+.viewer-document {
+  width: 92vw;
+  max-width: 1100px;
+  height: 85vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.4),
+    0 48px 100px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Viewer Loading ────────────────────────────────────── */
+.viewer-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #5b717a;
+  font-size: 14px;
+}
+
+.viewer-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(100, 12, 114, 0.15);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Viewer Content ────────────────────────────────────── */
+.viewer-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  background: #fff;
+  min-height: 0;
+}
+
+.viewer-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.viewer-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(250, 172, 44, 0.12);
+  border-bottom: 1px solid rgba(250, 172, 44, 0.25);
+  color: #935500;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ── PPTX Notice ───────────────────────────────────────── */
+.viewer-pptx-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.pptx-icon {
+  font-size: 64px;
+  opacity: 0.6;
+}
+
+.pptx-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.pptx-hint {
+  font-size: 13px;
+  color: #5b717a;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.pptx-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.pptx-download-btn:hover {
+  background: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(100, 12, 114, 0.25);
+  text-decoration: none;
+  color: #fff;
+}
+
+/* ── PDF Styles ────────────────────────────────────────── */
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.4),
+    0 48px 100px rgba(0, 0, 0, 0.3);
+}
+
+.viewer-doc-full {
+  width: 92vw;
+  max-width: 1100px;
+  height: 85vh;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.viewer-doc-full .viewer-content-wrapper {
+  padding: 0;
+  width: max-content;
+  min-width: 100%;
+}
+
+.viewer-content-full {
+  padding: 0 !important;
+  overflow: visible;
+}
+
+.viewer-content-full .pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pdf-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #5b717a;
+  text-align: center;
+}
+
+.pdf-error-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.pdf-error-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3a4a50;
+}
+
+.pdf-error-hint {
+  font-size: 13px;
+  color: #7a8a90;
+}
+
+/* ── DOCX Styles ───────────────────────────────────────── */
+.docx-wrapper {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #1a1a1a;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.docx-wrapper p {
+  margin: 0 0 12px;
+}
+
+.docx-wrapper h1,
+.docx-wrapper h2,
+.docx-wrapper h3,
+.docx-wrapper h4 {
+  margin: 16px 0 8px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.docx-wrapper table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.docx-wrapper td,
+.docx-wrapper th {
+  border: 1px solid #d0d0d0;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.docx-wrapper th {
+  background: rgba(100, 12, 114, 0.08);
+  font-weight: 700;
+}
+
+.docx-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #5b717a;
+  text-align: center;
+}
+
+.docx-error-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.docx-error-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3a4a50;
+}
+
+.docx-error-hint {
+  font-size: 13px;
+  color: #7a8a90;
+}
+
+/* ── Sheet Styles (XLSX) ───────────────────────────────── */
+.sheet-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+}
+
+.sheet-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(100, 12, 114, 0.12);
+  background: rgba(100, 12, 114, 0.03);
+  overflow-x: auto;
+}
+
+.sheet-tab {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b717a;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.sheet-tab:hover {
+  background: rgba(100, 12, 114, 0.08);
+  color: var(--primary);
+}
+
+.sheet-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.sheet-content {
+  flex: 1;
+  overflow: auto;
+}
+
+.sheet-table-wrapper {
+  padding: 16px;
+  overflow: auto;
+}
+
+.sheet-table-wrapper table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+.sheet-table-wrapper td,
+.sheet-table-wrapper th {
+  border: 1px solid #d8e0e3;
+  padding: 6px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sheet-table-wrapper th {
+  background: rgba(100, 12, 114, 0.08);
+  font-weight: 700;
+  color: var(--primary-dark);
+  position: sticky;
+  top: 0;
+}
+
+.sheet-table-wrapper tr:nth-child(even) {
+  background: rgba(100, 12, 114, 0.03);
+}
+
+.sheet-footer {
+  padding: 8px 16px;
+  border-top: 1px solid rgba(100, 12, 114, 0.12);
+  font-size: 12px;
+  color: #7a8a90;
+  background: rgba(100, 12, 114, 0.03);
+}
+
+.sheet-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #5b717a;
+  text-align: center;
+}
+
+.sheet-error-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.sheet-error-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3a4a50;
+}
+
+.sheet-error-hint {
+  font-size: 13px;
+  color: #7a8a90;
+}
+
+/* ── Viewer Dots ────────────────────────────────────────── */
+.viewer-dots {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.viewer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.viewer-dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.viewer-dot.active {
+  width: 24px;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Viewer Transitions ────────────────────────────────── */
+.viewer-enter-active {
+  transition:
+    opacity 0.4s ease,
+    backdrop-filter 0.4s ease;
+}
+
+.viewer-leave-active {
+  transition:
+    opacity 0.3s ease,
+    backdrop-filter 0.3s ease;
+}
+
+.viewer-enter-from,
+.viewer-leave-to {
+  opacity: 0;
+}
+
+.viewer-enter-from .viewer-image,
+.viewer-leave-to .viewer-image {
+  transform: scale(0.92);
+  opacity: 0;
+}
+
+/* ── Directional Slide Transitions ─────────────────────── */
+.slide-right-enter-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-right-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(60px) scale(0.96);
+}
+
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(-60px) scale(0.96);
+}
+
+.slide-left-enter-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-left-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(-60px) scale(0.96);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(60px) scale(0.96);
+}
