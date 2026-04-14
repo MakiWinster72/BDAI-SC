@@ -6,8 +6,11 @@
         :active-menu="activeMenu"
         :active-achievement="activeAchievement"
         :show-achievements-drawer="showAchievementsDrawer"
+        :notification-active-category="notificationActiveCategory"
+        :notification-active-entry="notificationActiveEntry"
         @menu-click="$emit('menu-click', $event)"
         @achievement-entry-click="$emit('achievement-entry-click', $event)"
+        @notification-entry-click="$emit('notification-entry-click', $event)"
       />
     </div>
   </aside>
@@ -16,7 +19,7 @@
 <script setup>
 import CardMenu from "./CardMenu.vue";
 
-defineProps({
+const props = defineProps({
   profile: {
     type: Object,
     required: true,
@@ -33,11 +36,20 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  notificationActiveCategory: {
+    type: String,
+    default: "pending",
+  },
+  notificationActiveEntry: {
+    type: String,
+    default: "",
+  },
 });
 
 defineEmits([
   "menu-click",
   "achievement-entry-click",
+  "notification-entry-click",
   "settings-click",
 ]);
 </script>

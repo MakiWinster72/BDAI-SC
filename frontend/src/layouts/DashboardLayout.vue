@@ -15,8 +15,11 @@
         :active-menu="activeMenu"
         :active-achievement="activeAchievement"
         :show-achievements-drawer="showAchievementsDrawer"
+        :notification-active-category="notificationActiveCategory"
+        :notification-active-entry="notificationActiveEntry"
         @menu-click="handleMenuClick"
         @achievement-entry-click="handleAchievementEntry"
+        @notification-entry-click="handleNotificationEntry"
         @settings-click="goToSettings"
       />
 
@@ -56,6 +59,15 @@ const activeAchievement = computed(() => {
   }
   const raw = route.query.category;
   return typeof raw === "string" && raw ? raw : "all";
+});
+const notificationActiveCategory = computed(() => {
+  if (route.name !== "notifications") return "pending";
+  const raw = route.query.category;
+  return typeof raw === "string" && raw ? raw : "pending";
+});
+const notificationActiveEntry = computed(() => {
+  if (route.name !== "notifications") return "";
+  return typeof route.query.entry === "string" ? route.query.entry : "";
 });
 const showAchievementsDrawer = computed(() => route.name !== "settings");
 const isEmbedded = computed(() => {
@@ -99,6 +111,14 @@ function handleAchievementEntry(key) {
   navigateWithViewTransition(router, {
     path: "/achievements",
     query: { category: key || "all" },
+  });
+}
+
+function handleNotificationEntry({ category, entryId }) {
+  closeSidebar();
+  navigateWithViewTransition(router, {
+    path: "/notifications",
+    query: { category, entry: entryId || "" },
   });
 }
 

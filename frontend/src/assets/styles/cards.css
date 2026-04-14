@@ -376,6 +376,12 @@
 }
 
 /* ── Notification Menu ──────────────────────────────────── */
+.menu-notification-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .menu-notification-list {
   gap: 10px;
 }

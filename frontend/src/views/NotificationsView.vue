@@ -20,14 +20,6 @@ watch(rejectReason, (val) => {
   if (val) localStorage.setItem("gcsc_reject_draft", val);
 });
 const actionError = ref("");
-const selectedId = ref(null);
-
-const CATEGORIES = [
-  { key: "pending", label: "待处理", icon: "clock" },
-  { key: "approved", label: "已通过", icon: "check" },
-  { key: "rejected", label: "已驳回", icon: "x" },
-  { key: "system", label: "系统通知", icon: "bell" },
-];
 
 const activeCategory = computed(() => {
   const raw = route.query.category;
@@ -38,7 +30,7 @@ const filteredEntries = computed(() =>
 );
 const selectedEntry = computed(
   () =>
-    filteredEntries.value.find((entry) => entry.id === selectedId.value) || null,
+    inboxEntries.value.find((entry) => String(entry.id) === String(route.query.entry)) || null,
 );
 const canProcessSelected = computed(() => {
   if (!selectedEntry.value || selectedEntry.value.source !== "review-request") return false;
@@ -63,32 +55,11 @@ const studentDetailItem = ref(null);
 const cancelConfirmOpen = ref(false);
 const achievementReviewSnapshot = computed(() => resolveAchievementReviewPayload(selectedEntry.value));
 
-function setCategory(key) {
-  router.replace({ path: "/notifications", query: { category: key, entry: "" } });
-  selectedId.value = null;
-}
-
-watch(
-  [filteredEntries, activeCategory],
-  ([list]) => {
-    if (!list?.length) return;
-    if (!selectedId.value) {
-      selectedId.value = list[0].id;
-    } else if (!list.find((e) => e.id === selectedId.value)) {
-      selectedId.value = list[0].id;
-    }
-  },
-  { immediate: true },
-);
-
-watch(selectedId, () => {
+watch(selectedEntry, (entry) => {
   rejectEditorOpen.value = false;
   actionError.value = "";
   cancelConfirmOpen.value = false;
   closeStudentDetail();
-});
-
-watch(selectedEntry, (entry) => {
   if (!entry) return;
   if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
     markProcessedEntryRead(entry.id);
@@ -192,6 +163,7 @@ async function approveSelectedRequest() {
   actionError.value = "";
   try {
     await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "approved", reviewer: profile });
+    router.replace({ path: "/notifications", query: { category: activeCategory.value, entry: "" } });
   } catch (error) {
     actionError.value = error?.message || "处理失败，请稍后重试";
   }
@@ -205,6 +177,7 @@ async function rejectSelectedRequest() {
     rejectEditorOpen.value = false;
     rejectReason.value = "";
     localStorage.removeItem("gcsc_reject_draft");
+    router.replace({ path: "/notifications", query: { category: activeCategory.value, entry: "" } });
   } catch (error) {
     actionError.value = error?.message || "处理失败，请稍后重试";
   }
@@ -223,6 +196,7 @@ async function confirmCancelRequest() {
   try {
     await cancelReviewRequest({ requestId: selectedEntry.value.id });
     cancelConfirmOpen.value = false;
+    router.replace({ path: "/notifications", query: { category: activeCategory.value, entry: "" } });
   } catch (error) {
     actionError.value = error?.message || "取消失败，请稍后重试";
   }
@@ -258,192 +232,146 @@ function closeStudentDetail() {
       <h1 class="feed-title">通知详情</h1>
     </header>
 
-    <!-- Category Tabs -->
-    <nav class="notif-tabs" role="tablist">
-      <button
-        v-for="cat in CATEGORIES"
-        :key="cat.key"
-        class="notif-tab"
-        :class="{ active: activeCategory === cat.key }"
-        role="tab"
-        :aria-selected="activeCategory === cat.key"
-        type="button"
-        @click="setCategory(cat.key)"
-      >
-        {{ cat.label }}
-        <span
-          v-if="inboxEntries.filter(e => e.categoryKey === cat.key).length"
-          class="notif-tab-count"
-        >
-          {{ inboxEntries.filter(e => e.categoryKey === cat.key).length }}
-        </span>
-      </button>
-    </nav>
-
-    <!-- Empty State -->
-    <div v-if="!filteredEntries.length" class="notif-empty">
+    <!-- Empty State: no entry selected -->
+    <div v-if="!selectedEntry" class="notif-empty">
       <div class="notif-empty-icon">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-10.999 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       </div>
       <p class="notif-empty-title">暂无通知</p>
-      <p class="notif-empty-sub">当前分类下暂时没有可查看的通知</p>
+      <p class="notif-empty-sub">从左侧选择一条通知查看详情</p>
     </div>
 
-    <!-- Master-Detail Layout -->
-    <div v-else class="notif-master-detail">
-      <!-- Notification List -->
-      <aside class="notif-list" role="list">
-        <button
-          v-for="(entry, i) in filteredEntries"
-          :key="entry.id"
-          class="notif-item"
-          :class="{ active: selectedId === entry.id }"
-          role="listitem"
-          type="button"
-          :style="{ animationDelay: `${i * 35}ms` }"
-          @click="selectedId = entry.id"
-        >
-          <div class="notif-item-top">
-            <span class="notif-badge" :class="entry.badgeClass">{{ entry.badgeText }}</span>
-            <time class="notif-item-time">{{ entry.timeText }}</time>
+    <!-- Detail Panel -->
+    <section v-else class="notif-detail">
+      <Transition name="detail-fade" mode="out-in">
+        <div :key="selectedEntry.id" class="notif-detail-inner">
+
+          <!-- Top Bar -->
+          <div class="notif-detail-top">
+            <div class="notif-detail-badges">
+              <span class="notif-badge" :class="selectedEntry.badgeClass">{{ selectedEntry.badgeText }}</span>
+              <time class="notif-time">{{ selectedEntry.timeText }}</time>
+            </div>
+            <div class="notif-detail-actions">
+              <button v-if="canCancelSelected" class="notif-btn is-cancel" type="button" @click="openCancelConfirm">取消申请</button>
+              <button v-if="canViewStudentInfo" class="notif-btn is-info" type="button" @click="viewStudentInfo">学生信息</button>
+              <template v-if="canProcessSelected">
+                <button class="notif-btn is-approve" type="button" @click="approveSelectedRequest">通过</button>
+                <button class="notif-btn is-reject" type="button" @click="toggleRejectEditor">驳回</button>
+              </template>
+            </div>
           </div>
-          <p class="notif-item-title">{{ entry.title }}</p>
-          <p class="notif-item-content">{{ entry.content }}</p>
-        </button>
-      </aside>
 
-      <!-- Detail Panel -->
-      <section class="notif-detail">
-        <Transition name="detail-fade" mode="out-in">
-          <div v-if="selectedEntry" :key="selectedEntry.id" class="notif-detail-inner">
+          <!-- Title & Content -->
+          <h2 class="notif-title">{{ selectedEntry.title }}</h2>
+          <p class="notif-content">{{ selectedEntry.content }}</p>
 
-            <!-- Top Bar -->
-            <div class="notif-detail-top">
-              <div class="notif-detail-badges">
-                <span class="notif-badge" :class="selectedEntry.badgeClass">{{ selectedEntry.badgeText }}</span>
-                <time class="notif-time">{{ selectedEntry.timeText }}</time>
+          <!-- Rejection Reason -->
+          <div v-if="selectedEntry.reason" class="notif-reason">
+            <div class="notif-section-label">驳回理由</div>
+            <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
+          </div>
+
+          <!-- Achievement Review Snapshot -->
+          <Transition name="section-fade" mode="out-in">
+            <section v-if="achievementReviewSnapshot" key="achievement" class="notif-changes notif-achievement">
+              <div class="notif-section-label">成就审核</div>
+              <div class="notif-compare">
+                <AchievementReviewSnapshotCard
+                  :snapshot="achievementReviewSnapshot.before"
+                  :empty-text="selectedEntry.action === 'create' ? '新增前暂无记录' : '暂无原记录'"
+                />
+                <div class="notif-compare-arrow" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <AchievementReviewSnapshotCard
+                  :snapshot="achievementReviewSnapshot.after"
+                  empty-text="暂无提交内容"
+                />
               </div>
-              <div class="notif-detail-actions">
-                <button v-if="canCancelSelected" class="notif-btn is-cancel" type="button" @click="openCancelConfirm">取消申请</button>
-                <button v-if="canViewStudentInfo" class="notif-btn is-info" type="button" @click="viewStudentInfo">学生信息</button>
-                <template v-if="canProcessSelected">
-                  <button class="notif-btn is-approve" type="button" @click="approveSelectedRequest">通过</button>
-                  <button class="notif-btn is-reject" type="button" @click="toggleRejectEditor">驳回</button>
-                </template>
-              </div>
-            </div>
+            </section>
 
-            <!-- Title & Content -->
-            <h2 class="notif-title">{{ selectedEntry.title }}</h2>
-            <p class="notif-content">{{ selectedEntry.content }}</p>
-
-            <!-- Rejection Reason -->
-            <div v-if="selectedEntry.reason" class="notif-reason">
-              <div class="notif-section-label">驳回理由</div>
-              <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
-            </div>
-
-            <!-- Achievement Review Snapshot -->
-            <Transition name="section-fade" mode="out-in">
-              <section v-if="achievementReviewSnapshot" key="achievement" class="notif-changes notif-achievement">
-                <div class="notif-section-label">成就审核</div>
-                <div class="notif-compare">
-                  <AchievementReviewSnapshotCard
-                    :snapshot="achievementReviewSnapshot.before"
-                    :empty-text="selectedEntry.action === 'create' ? '新增前暂无记录' : '暂无原记录'"
-                  />
-                  <div class="notif-compare-arrow" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+            <!-- Structured Changes -->
+            <section v-else-if="selectedEntry.changes?.length" key="changes" class="notif-changes">
+              <div class="notif-section-label">变更内容</div>
+              <div class="notif-change-list">
+                <article
+                  v-for="change in selectedEntry.changes"
+                  :key="`${change.section || ''}-${change.label}-${change.after}`"
+                  class="notif-change-item"
+                >
+                  <div class="notif-change-head">
+                    <span class="notif-change-label">{{ change.label }}</span>
+                    <span v-if="change.section" class="notif-change-section">{{ change.section }}</span>
                   </div>
-                  <AchievementReviewSnapshotCard
-                    :snapshot="achievementReviewSnapshot.after"
-                    empty-text="暂无提交内容"
-                  />
-                </div>
-              </section>
-
-              <!-- Structured Changes -->
-              <section v-else-if="selectedEntry.changes?.length" key="changes" class="notif-changes">
-                <div class="notif-section-label">变更内容</div>
-                <div class="notif-change-list">
-                  <article
-                    v-for="change in selectedEntry.changes"
-                    :key="`${change.section || ''}-${change.label}-${change.after}`"
-                    class="notif-change-item"
-                  >
-                    <div class="notif-change-head">
-                      <span class="notif-change-label">{{ change.label }}</span>
-                      <span v-if="change.section" class="notif-change-section">{{ change.section }}</span>
+                  <div class="notif-change-values">
+                    <div class="notif-change-col">
+                      <div class="notif-change-cap">修改前</div>
+                      <template v-if="isAvatarChange(change)">
+                        <img
+                          v-if="resolveAvatarUrlForChange(change.before)"
+                          class="notif-change-avatar"
+                          :src="resolveAvatarUrlForChange(change.before)"
+                          alt="修改前头像"
+                        />
+                        <div v-else class="notif-change-val">-</div>
+                      </template>
+                      <template v-else-if="isStructuredChangeValue(change.before)">
+                        <article
+                          v-for="entry in parseStructuredChangeValue(change.before)"
+                          :key="entry.title"
+                          class="notif-change-entry"
+                        >
+                          <div class="notif-change-entry-title">{{ entry.title }}</div>
+                          <div
+                            v-for="detail in entry.details"
+                            :key="detail"
+                            class="notif-change-entry-line"
+                          >{{ detail }}</div>
+                        </article>
+                      </template>
+                      <div v-else class="notif-change-val">{{ formatChangeValue(change.before) }}</div>
                     </div>
-                    <div class="notif-change-values">
-                      <div class="notif-change-col">
-                        <div class="notif-change-cap">修改前</div>
-                        <template v-if="isAvatarChange(change)">
-                          <img
-                            v-if="resolveAvatarUrlForChange(change.before)"
-                            class="notif-change-avatar"
-                            :src="resolveAvatarUrlForChange(change.before)"
-                            alt="修改前头像"
-                          />
-                          <div v-else class="notif-change-val">-</div>
-                        </template>
-                        <template v-else-if="isStructuredChangeValue(change.before)">
-                          <article
-                            v-for="entry in parseStructuredChangeValue(change.before)"
-                            :key="entry.title"
-                            class="notif-change-entry"
-                          >
-                            <div class="notif-change-entry-title">{{ entry.title }}</div>
-                            <div
-                              v-for="detail in entry.details"
-                              :key="detail"
-                              class="notif-change-entry-line"
-                            >{{ detail }}</div>
-                          </article>
-                        </template>
-                        <div v-else class="notif-change-val">{{ formatChangeValue(change.before) }}</div>
-                      </div>
-                      <div class="notif-change-col is-next">
-                        <div class="notif-change-cap">修改后</div>
-                        <template v-if="isAvatarChange(change)">
-                          <img
-                            v-if="resolveAvatarUrlForChange(change.after)"
-                            class="notif-change-avatar"
-                            :src="resolveAvatarUrlForChange(change.after)"
-                            alt="修改后头像"
-                          />
-                          <div v-else class="notif-change-val">-</div>
-                        </template>
-                        <template v-else-if="isStructuredChangeValue(change.after)">
-                          <article
-                            v-for="entry in parseStructuredChangeValue(change.after)"
-                            :key="entry.title"
-                            class="notif-change-entry is-next"
-                          >
-                            <div class="notif-change-entry-title">{{ entry.title }}</div>
-                            <div
-                              v-for="detail in entry.details"
-                              :key="detail"
-                              class="notif-change-entry-line"
-                            >{{ detail }}</div>
-                          </article>
-                        </template>
-                        <div v-else class="notif-change-val is-next">{{ formatChangeValue(change.after) }}</div>
-                      </div>
+                    <div class="notif-change-col is-next">
+                      <div class="notif-change-cap">修改后</div>
+                      <template v-if="isAvatarChange(change)">
+                        <img
+                          v-if="resolveAvatarUrlForChange(change.after)"
+                          class="notif-change-avatar"
+                          :src="resolveAvatarUrlForChange(change.after)"
+                          alt="修改后头像"
+                        />
+                        <div v-else class="notif-change-val">-</div>
+                      </template>
+                      <template v-else-if="isStructuredChangeValue(change.after)">
+                        <article
+                          v-for="entry in parseStructuredChangeValue(change.after)"
+                          :key="entry.title"
+                          class="notif-change-entry is-next"
+                        >
+                          <div class="notif-change-entry-title">{{ entry.title }}</div>
+                          <div
+                            v-for="detail in entry.details"
+                            :key="detail"
+                            class="notif-change-entry-line"
+                          >{{ detail }}</div>
+                        </article>
+                      </template>
+                      <div v-else class="notif-change-val is-next">{{ formatChangeValue(change.after) }}</div>
                     </div>
-                  </article>
-                </div>
-              </section>
-            </Transition>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </Transition>
 
-          </div>
-        </Transition>
-      </section>
-    </div>
+        </div>
+      </Transition>
+    </section>
 
     <!-- Reject Editor Modal -->
     <Teleport to="body">
