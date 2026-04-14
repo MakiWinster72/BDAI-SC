@@ -193,7 +193,7 @@ export const categoryFieldMap = {
     ],
   },
   journal: {
-    titleKey: "publicationName",
+    titleKey: "workTitle",
     dateKey: "publishDate",
     fields: [
       {
@@ -209,7 +209,7 @@ export const categoryFieldMap = {
         placeholder: "请输入学生姓名",
       },
       {
-        key: "publicationName",
+        key: "workTitle",
         label: "作品名称",
         kind: "input",
         placeholder: "请输入作品名称",
@@ -371,7 +371,7 @@ export const categoryFieldMap = {
     ],
   },
   works: {
-    titleKey: "workTitle",
+    titleKey: "workName",
     dateKey: "publishDate",
     fields: [
       {
@@ -387,7 +387,7 @@ export const categoryFieldMap = {
         placeholder: "请输入学生姓名",
       },
       {
-        key: "workTitle",
+        key: "workName",
         label: "作品名称",
         kind: "input",
         placeholder: "请输入作品名称",
@@ -420,7 +420,7 @@ export const categoryFieldMap = {
     ],
   },
   doubleHundred: {
-    titleKey: "activityName",
+    titleKey: "projectName",
     dateKey: "activityDate",
     fields: [
       {
@@ -436,7 +436,7 @@ export const categoryFieldMap = {
         placeholder: "请输入学生姓名",
       },
       {
-        key: "activityName",
+        key: "projectName",
         label: "活动名称",
         kind: "input",
         placeholder: "请输入活动名称",

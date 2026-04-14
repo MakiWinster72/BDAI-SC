@@ -52,9 +52,6 @@ function openAsset(url) {
         <span class="review-achievement-category">
           {{ snapshot.categoryLabel || "成就记录" }}
         </span>
-        <span v-if="snapshot.dateLabel && snapshot.dateValue" class="review-achievement-date">
-          {{ snapshot.dateLabel }} · {{ snapshot.dateValue }}
-        </span>
       </div>
 
       <h3 class="review-achievement-title">{{ snapshot.title || "-" }}</h3>
@@ -149,10 +146,6 @@ function openAsset(url) {
   font-weight: 700;
 }
 
-.review-achievement-date {
-  color: #6c858d;
-  font-size: 12px;
-}
 
 .review-achievement-title {
   margin: 0;

@@ -49,7 +49,8 @@ public class AchievementController {
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(achievementService.getById(username, category, id));
+        String role = resolveRole(authHeader);
+        return ResponseEntity.ok(achievementService.getById(username, role, category, id));
     }
 
     @PostMapping("/{category}")
@@ -76,7 +77,8 @@ public class AchievementController {
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(achievementService.update(username, category, id, request));
+        String role = resolveRole(authHeader);
+        return ResponseEntity.ok(achievementService.update(username, role, category, id, request));
     }
 
     @DeleteMapping("/{category}/{id}")
@@ -89,7 +91,8 @@ public class AchievementController {
         if (username == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        achievementService.delete(username, category, id);
+        String role = resolveRole(authHeader);
+        achievementService.delete(username, role, category, id);
         return ResponseEntity.ok().build();
     }
 
@@ -100,6 +103,18 @@ public class AchievementController {
         try {
             Claims claims = jwtService.parseToken(authHeader.substring(7));
             return claims.getSubject();
+        } catch (JwtException ex) {
+            return null;
+        }
+    }
+
+    private String resolveRole(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        try {
+            Claims claims = jwtService.parseToken(authHeader.substring(7));
+            return claims.get("role", String.class);
         } catch (JwtException ex) {
             return null;
         }
