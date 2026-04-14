@@ -78,8 +78,8 @@
               <StepperInput
                 v-model="info.classYear"
                 :min="2000"
+                :max="2100"
                 :disabled="!isEditing"
-                readonly
                 placeholder="今年"
               />
             </label>

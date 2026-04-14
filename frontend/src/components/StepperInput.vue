@@ -43,10 +43,6 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
   placeholder: {
     type: String,
     default: '全部',
@@ -127,7 +123,6 @@ function increment() {
       :min="min"
       :max="max"
       :disabled="disabled"
-      :readonly="readonly"
       :placeholder="placeholder"
       aria-label="数值"
     />
@@ -226,6 +221,9 @@ function increment() {
   font-variant-numeric: tabular-nums;
   padding: 0 4px;
   box-sizing: border-box;
+  /* 禁止手动输入，只允许通过按钮改变 */
+  pointer-events: none;
+  user-select: none;
 }
 
 .stepper__input::placeholder {
