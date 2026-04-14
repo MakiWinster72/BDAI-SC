@@ -332,6 +332,12 @@ function closeStudentDetail() {
             <h2 class="notif-title">{{ selectedEntry.title }}</h2>
             <p class="notif-content">{{ selectedEntry.content }}</p>
 
+            <!-- Rejection Reason -->
+            <div v-if="selectedEntry.reason" class="notif-reason">
+              <div class="notif-section-label">驳回理由</div>
+              <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
+            </div>
+
             <!-- Achievement Review Snapshot -->
             <Transition name="section-fade" mode="out-in">
               <section v-if="achievementReviewSnapshot" key="achievement" class="notif-changes notif-achievement">
@@ -426,12 +432,6 @@ function closeStudentDetail() {
                 </div>
               </section>
             </Transition>
-
-            <!-- Rejection Reason -->
-            <div v-if="selectedEntry.reason" class="notif-reason">
-              <div class="notif-section-label">驳回理由</div>
-              <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
-            </div>
 
           </div>
         </Transition>
