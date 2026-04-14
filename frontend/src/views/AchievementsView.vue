@@ -1,130 +1,136 @@
 <template>
   <main class="dashboard-right">
-      <header class="feed-header">
-        <h1 class="feed-title">个人成就</h1>
-      </header>
+    <header class="feed-header">
+      <h1 class="feed-title">个人成就</h1>
+    </header>
 
-      <section
-        v-if="activeCategory === 'all'"
-        class="info-card achievement-intro-card"
+    <section
+      v-if="activeCategory === 'all'"
+      class="info-card achievement-intro-card"
+    >
+      <div class="info-section-title">全部</div>
+      <p class="achievement-intro-text">这里存放了我所有的成就！</p>
+    </section>
+
+    <div v-if="!filteredAchievements.length" class="empty-tip">
+      {{ emptyMessage }}
+    </div>
+    <div v-if="errorMessage" class="form-tip">{{ errorMessage }}</div>
+
+    <section class="achievement-list">
+      <article
+        v-for="item in filteredAchievements"
+        :key="item.id"
+        class="achievement-card"
+        :class="{
+          'achievement-card-paper': item.category === 'paper',
+          'achievement-card-journal': item.category === 'journal',
+          'achievement-card-patent': item.category === 'patent',
+          'achievement-card-certificate': item.category === 'certificate',
+          'achievement-card-research': item.category === 'research',
+          'achievement-card-works': item.category === 'works',
+        }"
+        @click="openDetail(item)"
       >
-        <div class="info-section-title">全部</div>
-        <p class="achievement-intro-text">这里存放了我所有的成就！</p>
-      </section>
+        <div class="achievement-card-image">
+          <img v-if="item.image" :src="item.image" alt="成就图片" />
+          <div v-else class="achievement-card-placeholder">未上传图片</div>
+        </div>
+        <AchievementCardBody :item="item" />
+      </article>
+    </section>
 
-      <div v-if="!filteredAchievements.length" class="empty-tip">
-        {{ emptyMessage }}
-      </div>
-      <div v-if="errorMessage" class="form-tip">{{ errorMessage }}</div>
-
-      <section class="achievement-list">
-        <article
-          v-for="item in filteredAchievements"
-          :key="item.id"
-          class="achievement-card"
-          :class="{
-            'achievement-card-paper': item.category === 'paper',
-            'achievement-card-journal': item.category === 'journal',
-            'achievement-card-patent': item.category === 'patent',
-            'achievement-card-certificate': item.category === 'certificate',
-            'achievement-card-research': item.category === 'research',
-            'achievement-card-works': item.category === 'works',
-          }"
-          @click="openDetail(item)"
+    <button
+      class="achievement-add"
+      type="button"
+      :aria-label="addButtonLabel"
+      @click="openEditorForCategory"
+    >
+      <span aria-hidden="true">+</span>
+    </button>
+    <MobileCapsule :hidden="editorOpen" @open-sidebar="openDashboardSidebar">
+      <template #right>
+        <div
+          class="capsule-action capsule-primary"
+          role="button"
+          tabindex="0"
+          :aria-label="addButtonLabel"
+          @click="openEditorForCategory"
         >
-          <div class="achievement-card-image">
-            <img v-if="item.image" :src="item.image" alt="成就图片" />
-            <div v-else class="achievement-card-placeholder">未上传图片</div>
-          </div>
-          <AchievementCardBody :item="item" />
-        </article>
-      </section>
+          +
+        </div>
+      </template>
+    </MobileCapsule>
 
-      <button
-        class="achievement-add"
-        type="button"
-        :aria-label="addButtonLabel"
-        @click="openEditorForCategory"
-      >
-        <span aria-hidden="true">+</span>
-      </button>
-      <MobileCapsule :hidden="editorOpen" @open-sidebar="openDashboardSidebar">
-        <template #right>
-          <div
-            class="capsule-action capsule-primary"
-            role="button"
-            tabindex="0"
-            :aria-label="addButtonLabel"
-            @click="openEditorForCategory"
-          >
-            +
-          </div>
-        </template>
-      </MobileCapsule>
+    <transition name="publisher-backdrop">
+      <div
+        v-if="viewOpen"
+        class="achievement-backdrop"
+        @click="closeView"
+      ></div>
+    </transition>
+    <section
+      class="achievement-view"
+      :class="{ open: viewOpen, closing: viewClosing, 'exit-up': viewExitUp }"
+      :aria-hidden="!viewOpen"
+    >
+      <header class="publisher-header">
+        <div class="publisher-title">成就查看</div>
+        <button class="publisher-close" type="button" @click="closeView">
+          关闭
+        </button>
+      </header>
+      <div v-if="viewLoading" class="empty-tip">加载中...</div>
+      <AchievementDetailRenderer
+        v-else-if="viewItem"
+        :item="viewItem"
+        :attachment-icon="attachmentIcon"
+        :is-video-file="isVideoFile"
+        :is-document-file="isDocumentFile"
+        :is-sheet-file="isSheetFile"
+        :is-pdf-file="isPdfFile"
+        :is-allowed-image="isAllowedImage"
+        :is-pptx-file="isPptxFile"
+        @preview="showPreview"
+        @edit="editFromView"
+        @delete="openDelete"
+      />
+    </section>
 
-      <transition name="publisher-backdrop">
-        <div
-          v-if="viewOpen"
-          class="achievement-backdrop"
-          @click="closeView"
-        ></div>
-      </transition>
-      <section
-        class="achievement-view"
-        :class="{ open: viewOpen, closing: viewClosing, 'exit-up': viewExitUp }"
-        :aria-hidden="!viewOpen"
-      >
-        <header class="publisher-header">
-          <div class="publisher-title">成就查看</div>
-          <button class="publisher-close" type="button" @click="closeView">
-            关闭
-          </button>
-        </header>
-        <div v-if="viewLoading" class="empty-tip">加载中...</div>
-        <AchievementDetailRenderer
-          v-else-if="viewItem"
-          :item="viewItem"
-          :attachment-icon="attachmentIcon"
-          :is-video-file="isVideoFile"
-          :is-document-file="isDocumentFile"
-          :is-sheet-file="isSheetFile"
-          :is-pdf-file="isPdfFile"
-          :is-allowed-image="isAllowedImage"
-          :is-pptx-file="isPptxFile"
-          @preview="showPreview"
-          @edit="editFromView"
-          @delete="openDelete"
-        />
-      </section>
-
-      <transition name="publisher-backdrop">
-        <div
-          v-if="editorOpen"
-          class="achievement-backdrop"
-          @click="closeEditor"
-        ></div>
-      </transition>
-      <section
-        class="achievement-sheet"
-        :class="{ open: editorOpen }"
-        :aria-hidden="!editorOpen"
-      >
-        <header class="publisher-header">
-          <div class="publisher-title">
-            {{ editId ? "编辑成就" : "新增成就" }}
-          </div>
-          <button class="publisher-close" type="button" @click="closeEditor">
-            关闭
-          </button>
-        </header>
-        <div class="achievement-grid" :class="{ 'has-media': form.category }">
-          <transition name="panel-fade">
-            <div v-show="form.category" class="achievement-media-panel">
+    <transition name="publisher-backdrop">
+      <div
+        v-if="editorOpen"
+        class="achievement-backdrop"
+        @click="closeEditor"
+      ></div>
+    </transition>
+    <section
+      class="achievement-sheet"
+      :class="{ open: editorOpen }"
+      :aria-hidden="!editorOpen"
+    >
+      <header class="publisher-header">
+        <div class="publisher-title">
+          {{ editId ? "编辑成就" : "新增成就" }}
+        </div>
+        <button class="publisher-close" type="button" @click="closeEditor">
+          关闭
+        </button>
+      </header>
+      <div class="achievement-grid" :class="{ 'has-media': form.category }">
+        <transition name="panel-fade">
+          <div v-show="form.category" class="achievement-media-panel">
             <div class="achievement-section-label">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
               </svg>
               图片（可选）
             </div>
@@ -202,90 +208,115 @@
               </button>
             </div>
           </div>
-          </transition>
+        </transition>
 
-          <div class="achievement-fields">
-            <div v-if="!editId" class="achievement-category-row">
-              <label class="field-label">成就分类</label>
-              <select v-model="form.category">
-                <option disabled value="">请选择分类</option>
-                <option
-                  v-for="entry in categoryOptions"
-                  :key="entry.key"
-                  :value="entry.key"
-                >
-                  {{ entry.label }}
-                </option>
-              </select>
-            </div>
-            <div v-if="!editId && activeCategoryHint" class="achievement-hint">
-              <button
-                class="achievement-hint-toggle"
-                type="button"
-                :aria-expanded="!hintCollapsed"
-                @click="hintCollapsed = !hintCollapsed"
+        <div class="achievement-fields">
+          <div v-if="!editId" class="achievement-category-row">
+            <label class="field-label">成就分类</label>
+            <select v-model="form.category">
+              <option disabled value="">请选择分类</option>
+              <option
+                v-for="entry in categoryOptions"
+                :key="entry.key"
+                :value="entry.key"
               >
-                <span class="achievement-hint-toggle-label">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  填写说明
-                </span>
+                {{ entry.label }}
+              </option>
+            </select>
+          </div>
+          <div v-if="!editId && activeCategoryHint" class="achievement-hint">
+            <button
+              class="achievement-hint-toggle"
+              type="button"
+              :aria-expanded="!hintCollapsed"
+              @click="hintCollapsed = !hintCollapsed"
+            >
+              <span class="achievement-hint-toggle-label">
                 <svg
-                  class="achievement-hint-chevron"
-                  :class="{ collapsed: hintCollapsed }"
-                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
                 >
-                  <polyline points="18 15 12 9 6 15"/>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
-              </button>
-              <Transition name="hint-expand">
-                <div v-show="!hintCollapsed" class="achievement-hint-body">
-                  <ol class="achievement-hint-list">
-                    <li v-for="item in activeCategoryHint" :key="item">
-                      {{ item }}
-                    </li>
-                  </ol>
-                </div>
-              </Transition>
-            </div>
-            <div v-if="!activeFormConfig" class="empty-tip">
-              请选择成就分类后填写对应信息。
-            </div>
-            <div v-else class="achievement-dynamic-fields">
-              <div
-                v-for="field in activeFormConfig.fields"
-                :key="field.key"
-                class="field-row"
+                填写说明
+              </span>
+              <svg
+                class="achievement-hint-chevron"
+                :class="{ collapsed: hintCollapsed }"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                aria-hidden="true"
               >
-                <label class="field-label">{{ field.label }}</label>
-                <input
-                  v-if="field.kind === 'input'"
-                  v-model="form.fields[field.key]"
-                  class="form-input"
-                  :type="field.type || 'text'"
-                  :placeholder="field.placeholder || ''"
-                />
-                <textarea
-                  v-else
-                  v-model="form.fields[field.key]"
-                  class="publisher-input"
-                  :rows="field.rows || 2"
-                  :placeholder="field.placeholder || ''"
-                ></textarea>
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+            </button>
+            <Transition name="hint-expand">
+              <div v-show="!hintCollapsed" class="achievement-hint-body">
+                <ol class="achievement-hint-list">
+                  <li v-for="item in activeCategoryHint" :key="item">
+                    {{ item }}
+                  </li>
+                </ol>
               </div>
+            </Transition>
+          </div>
+          <div v-if="!activeFormConfig" class="empty-tip">
+            请选择成就分类后填写对应信息。
+          </div>
+          <div v-else class="achievement-dynamic-fields">
+            <div
+              v-for="field in activeFormConfig.fields"
+              :key="field.key"
+              class="field-row"
+            >
+              <label class="field-label">{{ field.label }}</label>
+              <input
+                v-if="field.kind === 'input'"
+                v-model="form.fields[field.key]"
+                class="form-input"
+                :type="field.type || 'text'"
+                :placeholder="field.placeholder || ''"
+              />
+              <textarea
+                v-else
+                v-model="form.fields[field.key]"
+                class="publisher-input"
+                :rows="field.rows || 2"
+                :placeholder="field.placeholder || ''"
+              ></textarea>
             </div>
-            <transition name="panel-fade">
+          </div>
+          <transition name="panel-fade">
             <div v-show="form.category" class="achievement-attachments-panel">
               <div class="achievement-section-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+                  />
                 </svg>
                 附件（可选）
               </div>
-              <div class="media-subtitle">最多 {{ attachmentMaxCount }} 个 · 单个不超过 {{ attachmentLimitLabel }}</div>
+              <div class="media-subtitle">
+                最多 {{ attachmentMaxCount }} 个 · 单个不超过
+                {{ attachmentLimitLabel }}
+              </div>
               <div v-if="!attachmentPreviews.length" class="media-empty">
                 暂无附件
               </div>
@@ -331,168 +362,217 @@
                 </div>
               </div>
             </div>
-            </transition>
+          </transition>
 
-            <div class="achievement-actions">
-              <button class="ghost-button" type="button" @click="closeEditor">
-                取消
-              </button>
-              <button
-                class="action-button"
-                type="button"
-                @click="saveAchievement"
-              >
-                {{ editId ? "保存修改" : "保存成就" }}
-              </button>
-            </div>
+          <div class="achievement-actions">
+            <button class="ghost-button" type="button" @click="closeEditor">
+              取消
+            </button>
+            <button
+              class="action-button"
+              type="button"
+              @click="saveAchievement"
+            >
+              提交审核
+            </button>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Media Preview -->
-      <Teleport to="body">
-        <Transition name="viewer" appear>
-          <div v-if="previewVisible" class="viewer-backdrop" @click="hidePreview">
-            <div class="viewer-header" @click.stop>
-              <div class="viewer-counter">
-                <span class="viewer-current">{{ previewIndex + 1 }}</span>
-                <span class="viewer-sep">/</span>
-                <span class="viewer-total">{{ previewImages.length }}</span>
-              </div>
-              <button class="viewer-close" @click="hidePreview">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+    <!-- Media Preview -->
+    <Teleport to="body">
+      <Transition name="viewer" appear>
+        <div v-if="previewVisible" class="viewer-backdrop" @click="hidePreview">
+          <div class="viewer-header" @click.stop>
+            <div class="viewer-counter">
+              <span class="viewer-current">{{ previewIndex + 1 }}</span>
+              <span class="viewer-sep">/</span>
+              <span class="viewer-total">{{ previewImages.length }}</span>
             </div>
-
-            <div class="viewer-stage">
-              <button
-                v-if="previewImages.length > 1 && previewIndex > 0"
-                class="viewer-arrow viewer-prev"
-                @click.stop="previewPrev"
+            <button class="viewer-close" @click="hidePreview">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
 
-              <Transition :name="'slide-' + slideDirection" mode="out-in">
-                <div class="viewer-media" :key="previewIndex" @click.stop>
-                  <video
-                    v-if="previewType === 'video'"
-                    :src="previewImages[previewIndex]"
-                    class="viewer-video"
-                    controls
-                    autoplay
-                  ></video>
-                  <div
-                    v-else-if="previewType === 'document' || previewType === 'sheet' || previewType === 'pdf'"
-                    class="viewer-document"
-                    :class="{ 'viewer-doc-full': previewType === 'pdf' }"
-                  >
-                    <div v-if="previewLoading" class="viewer-loading">
-                      <div class="spinner spinner-lg"></div>
-                      <span>加载中...</span>
-                    </div>
-                    <div v-else class="viewer-content-wrapper">
-                      <div v-if="previewType === 'document'" class="viewer-tip">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="12" y1="16" x2="12" y2="12"></line>
-                          <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                        因渲染限制，预览与实际文件可能存在样式差异
-                      </div>
-                      <div v-if="previewType === 'sheet'" class="viewer-tip">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="12" y1="16" x2="12" y2="12"></line>
-                          <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                        点击工作表标签可切换Sheet | 因渲染限制，预览与实际可能存在差异
-                      </div>
-                      <div v-html="previewContent" class="viewer-content" :class="{ 'viewer-content-full': previewType === 'pdf' || previewType === 'document' }"></div>
-                    </div>
+          <div class="viewer-stage">
+            <button
+              v-if="previewImages.length > 1 && previewIndex > 0"
+              class="viewer-arrow viewer-prev"
+              @click.stop="previewPrev"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+
+            <Transition :name="'slide-' + slideDirection" mode="out-in">
+              <div class="viewer-media" :key="previewIndex" @click.stop>
+                <video
+                  v-if="previewType === 'video'"
+                  :src="previewImages[previewIndex]"
+                  class="viewer-video"
+                  controls
+                  autoplay
+                ></video>
+                <div
+                  v-else-if="
+                    previewType === 'document' ||
+                    previewType === 'sheet' ||
+                    previewType === 'pdf'
+                  "
+                  class="viewer-document"
+                  :class="{ 'viewer-doc-full': previewType === 'pdf' }"
+                >
+                  <div v-if="previewLoading" class="viewer-loading">
+                    <div class="spinner spinner-lg"></div>
+                    <span>加载中...</span>
                   </div>
-                  <img
-                    v-else
-                    :src="previewImages[previewIndex]"
-                    class="viewer-image"
-                    alt=""
-                    @click.stop
-                  />
+                  <div v-else class="viewer-content-wrapper">
+                    <div v-if="previewType === 'document'" class="viewer-tip">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      因渲染限制，预览与实际文件可能存在样式差异
+                    </div>
+                    <div v-if="previewType === 'sheet'" class="viewer-tip">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      点击工作表标签可切换Sheet |
+                      因渲染限制，预览与实际可能存在差异
+                    </div>
+                    <div
+                      v-html="previewContent"
+                      class="viewer-content"
+                      :class="{
+                        'viewer-content-full':
+                          previewType === 'pdf' || previewType === 'document',
+                      }"
+                    ></div>
+                  </div>
                 </div>
-              </Transition>
+                <img
+                  v-else
+                  :src="previewImages[previewIndex]"
+                  class="viewer-image"
+                  alt=""
+                  @click.stop
+                />
+              </div>
+            </Transition>
 
-              <button
-                v-if="previewImages.length > 1 && previewIndex < previewImages.length - 1"
-                class="viewer-arrow viewer-next"
-                @click.stop="previewNext"
+            <button
+              v-if="
+                previewImages.length > 1 &&
+                previewIndex < previewImages.length - 1
+              "
+              class="viewer-arrow viewer-next"
+              @click.stop="previewNext"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
-
-            <div class="viewer-dots" v-if="previewImages.length > 1" @click.stop>
-              <button
-                v-for="(_, i) in previewImages"
-                :key="i"
-                class="viewer-dot"
-                :class="{ active: i === previewIndex }"
-                @click="previewIndex = i; slideDirection = i > previewIndex ? 'right' : 'left'"
-              ></button>
-            </div>
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
           </div>
-        </Transition>
-      </Teleport>
 
-      <div
-        v-if="deleteDialogOpen"
-        class="dialog-backdrop"
-        @click="closeDelete"
-      ></div>
-      <section
-        v-if="deleteDialogOpen"
-        class="dialog-card"
-        @click.stop
-      >
-        <header class="dialog-header">确认删除</header>
-        <div class="dialog-body">删除后无法恢复，确定要删除这条动态吗？</div>
-        <div class="dialog-actions">
-          <button class="ghost-button" type="button" @click="closeDelete">
-            取消
-          </button>
-          <button
-            class="action-button"
-            type="button"
-            :disabled="deleteBusy"
-            @click="confirmDelete"
-          >
-            确定删除
-          </button>
+          <div class="viewer-dots" v-if="previewImages.length > 1" @click.stop>
+            <button
+              v-for="(_, i) in previewImages"
+              :key="i"
+              class="viewer-dot"
+              :class="{ active: i === previewIndex }"
+              @click="
+                previewIndex = i;
+                slideDirection = i > previewIndex ? 'right' : 'left';
+              "
+            ></button>
+          </div>
         </div>
-      </section>
+      </Transition>
+    </Teleport>
 
-      <input
-        ref="imageInput"
-        type="file"
-        accept=".jpeg,.jpg,.png,.heif,image/jpeg,image/png,image/heif"
-        multiple
-        hidden
-        @change="onImageChange"
-      />
-      <input
-        ref="attachmentInput"
-        type="file"
-        accept=".docx,.doc,.pdf,.xls,.xlsx,.zip,.rar,.7z,.pptx,.ppt,.mp4,.mov,.jpeg,.jpg,.png,.heif,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,video/mp4,video/quicktime,image/jpeg,image/png,image/heif"
-        multiple
-        hidden
-        @change="onAttachmentChange"
-      />
+    <div
+      v-if="deleteDialogOpen"
+      class="dialog-backdrop"
+      @click="closeDelete"
+    ></div>
+    <section v-if="deleteDialogOpen" class="dialog-card" @click.stop>
+      <header class="dialog-header">确认删除</header>
+      <div class="dialog-body">删除后无法恢复，确定要删除这条动态吗？</div>
+      <div class="dialog-actions">
+        <button class="ghost-button" type="button" @click="closeDelete">
+          取消
+        </button>
+        <button
+          class="action-button"
+          type="button"
+          :disabled="deleteBusy"
+          @click="confirmDelete"
+        >
+          确定删除
+        </button>
+      </div>
+    </section>
+
+    <input
+      ref="imageInput"
+      type="file"
+      accept=".jpeg,.jpg,.png,.heif,image/jpeg,image/png,image/heif"
+      multiple
+      hidden
+      @change="onImageChange"
+    />
+    <input
+      ref="attachmentInput"
+      type="file"
+      accept=".docx,.doc,.pdf,.xls,.xlsx,.zip,.rar,.7z,.pptx,.ppt,.mp4,.mov,.jpeg,.jpg,.png,.heif,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,video/mp4,video/quicktime,image/jpeg,image/png,image/heif"
+      multiple
+      hidden
+      @change="onAttachmentChange"
+    />
   </main>
 </template>
 
@@ -507,10 +587,7 @@ import {
   watch,
 } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import {
-  getMenuLocation,
-  isMenuEnabled,
-} from "../constants/menu";
+import { getMenuLocation, isMenuEnabled } from "../constants/menu";
 import {
   createAchievement,
   deleteAchievement,
@@ -530,6 +607,7 @@ import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useNotifications } from "../composables/useNotifications";
 import { useReviewSettings } from "../composables/useReviewSettings";
+import { useToast } from "../composables/useToast";
 import {
   resolveMediaUrl,
   stripMediaUrl,
@@ -547,10 +625,7 @@ import {
   parseJsonArray,
 } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
-import {
-  dedupeAchievements,
-  attachmentIcon,
-} from "../utils/achievement";
+import { dedupeAchievements, attachmentIcon } from "../utils/achievement";
 import {
   categoryFieldMap,
   categoryHints,
@@ -567,7 +642,9 @@ const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
 const { submitAchievementReviewRequest } = useNotifications(profile);
-const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useReviewSettings();
+const { settings: reviewSettings, fetchSettings: fetchReviewSettings } =
+  useReviewSettings();
+const { info: toastInfo } = useToast();
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
 const hintCollapsed = ref(false);
@@ -849,6 +926,7 @@ function resetForm() {
 }
 
 async function saveAchievement() {
+  toastInfo("已提交审核，请等待审核成功后显示");
   const config = activeFormConfig.value;
   if (!config) {
     errorMessage.value = "请先选择成就分类";
@@ -899,7 +977,10 @@ async function saveAchievement() {
         recordId: editId.value,
         changes,
       });
-      if (reviewSettings.achievementReviewAutoApprove && reviewRequest?.status === "approved") {
+      if (
+        reviewSettings.achievementReviewAutoApprove &&
+        reviewRequest?.status === "approved"
+      ) {
         await fetchAchievements();
       }
       resetForm();
@@ -963,7 +1044,10 @@ function buildAchievementChanges({ category, payload, existingItem }) {
 
   const previousImages = stringifyChangeValue(existingItem?.imageUrls || []);
   const nextImages = stringifyChangeValue(resolveImageUrlsFromPayload(payload));
-  if ((!existingItem && nextImages !== "-") || (existingItem && previousImages !== nextImages)) {
+  if (
+    (!existingItem && nextImages !== "-") ||
+    (existingItem && previousImages !== nextImages)
+  ) {
     changes.push({
       section: "多媒体",
       label: "图片",
@@ -973,7 +1057,9 @@ function buildAchievementChanges({ category, payload, existingItem }) {
   }
 
   const previousAttachments = stringifyChangeValue(
-    (existingItem?.attachments || []).map((item) => item.name || item.url || ""),
+    (existingItem?.attachments || []).map(
+      (item) => item.name || item.url || "",
+    ),
   );
   const nextAttachments = stringifyChangeValue(
     (payload?.fields?.[ATTACHMENTS_FIELD]
@@ -1022,7 +1108,9 @@ function buildAchievementDraftSourceFromPayload(payload) {
   return {
     fields: payload?.fields || {},
     imageUrl: payload?.imageUrl || "",
-    imageUrls: resolveImageUrlsFromPayload(payload).map((url) => resolveMediaUrl(url)),
+    imageUrls: resolveImageUrlsFromPayload(payload).map((url) =>
+      resolveMediaUrl(url),
+    ),
     attachments: resolveAttachmentsFromPayload(payload),
   };
 }
@@ -1050,7 +1138,8 @@ function buildAchievementReviewSnapshot({ category, source }) {
   const fieldConfigList = Array.isArray(config?.fields) ? config.fields : [];
   const titleKey = config?.titleKey || "";
   const dateKey = config?.dateKey || "";
-  const dateField = fieldConfigList.find((field) => field.key === dateKey) || null;
+  const dateField =
+    fieldConfigList.find((field) => field.key === dateKey) || null;
   const imageUrls = Array.isArray(source?.imageUrls)
     ? source.imageUrls.filter(Boolean).map((url) => resolveMediaUrl(url))
     : resolveImageUrlsFromPayload({
@@ -1070,7 +1159,8 @@ function buildAchievementReviewSnapshot({ category, source }) {
   return {
     category,
     categoryLabel:
-      achievementEntries.find((entry) => entry.key === category)?.label || "成就记录",
+      achievementEntries.find((entry) => entry.key === category)?.label ||
+      "成就记录",
     title: stringifyChangeValue(fields[titleKey]),
     dateLabel: dateField?.label || "",
     dateValue: dateKey ? stringifyChangeValue(fields[dateKey]) : "",
@@ -1086,7 +1176,10 @@ function buildAchievementReviewSnapshot({ category, source }) {
 
 function stringifyChangeValue(value) {
   if (Array.isArray(value)) {
-    const filtered = value.filter(Boolean).map((item) => String(item).trim()).filter(Boolean);
+    const filtered = value
+      .filter(Boolean)
+      .map((item) => String(item).trim())
+      .filter(Boolean);
     return filtered.length ? filtered.join("、") : "-";
   }
   const text = String(value ?? "").trim();
@@ -1256,7 +1349,7 @@ function showPreview(urls, index = 0) {
   previewImages.value = urls;
   previewIndex.value = index;
   previewVisible.value = true;
-  document.body.style.overflow = 'hidden';
+  document.body.style.overflow = "hidden";
   previewContent.value = "";
   previewLoading.value = false;
   // Detect media type
@@ -1332,11 +1425,15 @@ async function switchSheet(sheetIndex) {
       editable: false,
     });
     // Build new tabs
-    const tabs = sheetNames.map((name, i) => `
-      <div class="sheet-tab ${i === sheetIndex ? 'active' : ''}" onclick="window.__switchSheet(${i})">
+    const tabs = sheetNames
+      .map(
+        (name, i) => `
+      <div class="sheet-tab ${i === sheetIndex ? "active" : ""}" onclick="window.__switchSheet(${i})">
         ${name}
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
     previewContent.value = `
       <div class="sheet-container">
         <div class="sheet-tabs">${tabs}</div>
@@ -1357,7 +1454,7 @@ async function switchSheet(sheetIndex) {
 
 function hidePreview() {
   previewVisible.value = false;
-  document.body.style.overflow = '';
+  document.body.style.overflow = "";
 }
 
 function previewPrev() {
@@ -1380,7 +1477,6 @@ function closeDelete() {
   }
   deleteDialogOpen.value = false;
 }
-
 
 function selectEditorImage(index) {
   if (index < 0 || index >= form.imageUrls.length) {
@@ -1582,7 +1678,7 @@ watch(
 
 // Delegate sheet tab clicks after content renders
 watch(previewContent, () => {
-  if (previewType.value === 'sheet') {
+  if (previewType.value === "sheet") {
     nextTick(() => {
       const container = document.querySelector(".viewer-document");
       if (container) {
