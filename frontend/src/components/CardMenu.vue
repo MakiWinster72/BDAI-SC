@@ -32,6 +32,9 @@
           @click="selectNotificationCategory(cat.key)"
         >
           {{ cat.label }}
+          <span v-if="inboxEntries.filter(e => e.categoryKey === cat.key).length" class="tab-count">
+            {{ inboxEntries.filter(e => e.categoryKey === cat.key).length }}
+          </span>
         </button>
       </nav>
     </div>

@@ -757,15 +757,16 @@
 }
 
 .admin-tab {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 7px;
-  padding: 9px 12px;
+  gap: 2px;
+  padding: 7px 6px;
   border-radius: 13px;
   border: none;
   background: transparent;
   color: var(--text-sub);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   flex: 1;
@@ -808,6 +809,25 @@
 
 .admin-tab:active {
   transform: scale(0.97);
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.1);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-tab.active .tab-count {
+  background: rgba(100, 12, 114, 0.2);
+  color: var(--primary-dark);
 }
 
 @media (prefers-reduced-motion: reduce) {
