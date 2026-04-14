@@ -235,25 +235,41 @@
   height: 0;
 }
 
+/* ── Achievement Grid (Sheet Editor Layout) ─────────────── */
 .achievement-grid {
-  display: grid;
-  grid-template-columns: 256px minmax(0, 1fr);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 18px;
-  align-items: start;
   padding: 8px 18px 96px;
   overflow: hidden;
   overflow-y: auto;
   flex: 1;
   scrollbar-width: none;
-}
-
-.achievement-grid:not(.has-media) {
-  grid-template-columns: 1fr;
+  min-height: 0;
 }
 
 .achievement-grid::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* Left panel: media upload */
+.achievement-media-panel {
+  flex: 0 0 240px;
+  max-width: 240px;
+  align-self: stretch;
+  position: sticky;
+  top: 0;
+}
+
+/* Right panel: form fields */
+.achievement-fields {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* ── Achievement Sheet Transitions ──────────────────────── */
@@ -321,18 +337,6 @@
   box-shadow: var(--shadow);
 }
 
-.achievement-media-panel {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(100, 12, 114, 0.1);
-  background: rgba(255, 255, 255, 0.65);
-  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.07);
-  align-self: start;
-  position: sticky;
-  top: 0;
-}
 
 /* ── Shared Section Label ───────────────────────────────── */
 .achievement-section-label {
@@ -718,12 +722,6 @@
   transform: translateY(0);
 }
 
-/* ── Achievement Fields ─────────────────────────────────── */
-.achievement-fields {
-  display: grid;
-  gap: 10px 12px;
-  align-items: start;
-}
 
 /* Category selector row — full width, prominent */
 .achievement-category-row {
@@ -914,6 +912,9 @@
 .achievement-list {
   display: grid;
   gap: 14px;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* ── Achievement Card ───────────────────────────────────── */
@@ -1915,11 +1916,22 @@
   }
 
   .achievement-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    padding: 8px 12px 100px;
+    gap: 14px;
   }
 
   .achievement-media-panel {
+    flex: none;
+    max-width: 350px;
+    width: 100%;
+    margin: 8px auto;
     position: static;
+  }
+
+  .achievement-grid.has-media .achievement-fields {
+    flex: 1 1 auto;
+    width: 100%;
   }
 
   .achievement-card {
@@ -1975,11 +1987,6 @@
     bottom: 10px;
     border-radius: 20px 20px 0 0;
     max-height: 94vh;
-  }
-
-  .achievement-grid {
-    padding: 8px 12px 100px;
-    gap: 12px;
   }
 
   .date-range-inline {
