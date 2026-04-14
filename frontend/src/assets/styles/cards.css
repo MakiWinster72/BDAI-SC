@@ -481,12 +481,13 @@
 
 .menu-notification-item {
   display: grid;
-  gap: 7px;
+  gap: 3px;
   border: 1.5px solid transparent;
-  border-radius: 16px;
-  padding: 13px;
+  border-radius: 14px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.5);
   cursor: pointer;
+  text-align: left;
   transition:
     background-color 180ms ease,
     border-color 160ms ease,
@@ -517,17 +518,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 6px;
 }
 
 .menu-notification-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 22px;
-  padding: 0 10px;
+  min-height: 18px;
+  padding: 0 6px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -553,23 +554,23 @@
 }
 
 .menu-notification-time {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-sub);
 }
 
 .menu-notification-title {
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .menu-notification-content,
 .menu-notification-meta,
 .menu-notification-reason {
   color: #4f6d76;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .menu-notification-detail {
@@ -815,13 +816,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   border-radius: 999px;
   background: rgba(100, 12, 114, 0.1);
   color: var(--primary);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
 }
 
