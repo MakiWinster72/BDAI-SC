@@ -85,6 +85,11 @@
             <div class="menu-notification-head">
               <span class="menu-notification-badge" :class="entry.badgeClass">{{ entry.badgeText }}</span>
               <time class="menu-notification-time">{{ entry.timeText }}</time>
+              <span
+                v-if="(entry.categoryKey === 'approved' || entry.categoryKey === 'rejected') && !processedReadIds.has(String(entry.id))"
+                class="menu-notification-dot"
+                aria-label="未读"
+              />
             </div>
             <p class="menu-notification-title">{{ entry.title }}</p>
             <p class="menu-notification-content">{{ entry.content }}</p>
@@ -157,7 +162,7 @@ const emit = defineEmits([
   "notification-entry-click",
 ]);
 
-const { inboxEntries, pendingCount, processedUnreadCount } = useNotifications(props.profile);
+const { inboxEntries, pendingCount, processedUnreadCount, processedReadIds, markProcessedEntryRead } = useNotifications(props.profile);
 
 const menuItems = computed(() => filterMenuItemsByRole(props.profile.role));
 
@@ -278,6 +283,10 @@ function selectNotificationCategory(category) {
 }
 
 function selectNotificationEntry(entryId) {
+  const entry = filteredNotificationEntries.value.find((e) => String(e.id) === String(entryId));
+  if (entry && (entry.categoryKey === "approved" || entry.categoryKey === "rejected")) {
+    markProcessedEntryRead(String(entryId));
+  }
   emit("notification-entry-click", { category: notificationActiveCategory.value, entryId: String(entryId) });
 }
 

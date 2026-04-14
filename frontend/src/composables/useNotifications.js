@@ -514,12 +514,12 @@ export function useNotifications(userSource) {
     inboxEntries.value.filter(
       (entry) =>
         (entry.categoryKey === "approved" || entry.categoryKey === "rejected") &&
-        !store.processedReadIds.has(entry.id),
+        !store.processedReadIds.has(String(entry.id)),
     ).length,
   );
 
   function markProcessedEntryRead(entryId) {
-    store.processedReadIds.add(entryId);
+    store.processedReadIds.add(String(entryId));
     persistStore();
   }
 
@@ -528,6 +528,7 @@ export function useNotifications(userSource) {
     pendingCount,
     categoryCounts,
     processedUnreadCount,
+    processedReadIds: store.processedReadIds,
     reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
     hasPendingProfileReviewRequest,
