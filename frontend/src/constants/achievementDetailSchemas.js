@@ -94,28 +94,4 @@ export const achievementDetailSchemas = {
       },
     ],
   },
-  doubleHundred: {
-    groups: [
-      {
-        label: "项目说明",
-        rows: [
-          row("参与内容", (fields) =>
-            text(fields.content || fields.projectContent || fields.remark || fields.note),
-          ),
-        ],
-      },
-    ],
-  },
-  ieerTraining: {
-    groups: [
-      {
-        label: "项目信息",
-        rows: [
-          row("项目名称", (fields) => text(fields.projectName || fields.title)),
-          row("项目级别", (fields) => text(fields.projectLevel || fields.level)),
-          row("具体工作", (fields) => text(fields.work || fields.duty || fields.remark)),
-        ],
-      },
-    ],
-  },
 };

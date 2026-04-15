@@ -70,7 +70,7 @@ export const categoryHints = {
     "影响范围：指全国（含国际）、区域、省内。",
   ],
   doubleHundred: ["请填写双百工程的具体参与内容"],
-  ieerTraining: ["请填写项目名称和项目级别", "请说明在项目中的具体工作"],
+  ieerTraining: ["请填写大学生创新创业训练计划项目的具体内容"],
 };
 
 export const categoryFieldMap = {
