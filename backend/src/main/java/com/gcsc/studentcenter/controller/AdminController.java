@@ -1,5 +1,6 @@
 package com.gcsc.studentcenter.controller;
 
+import com.gcsc.studentcenter.dto.CreateUserRequest;
 import com.gcsc.studentcenter.dto.UpdateUserRequest;
 import com.gcsc.studentcenter.dto.UserListItemResponse;
 import com.gcsc.studentcenter.service.BackupService;
@@ -42,6 +43,22 @@ public class AdminController {
             return "ADMIN".equals(role);
         } catch (JwtException ex) {
             return false;
+        }
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<?> createUser(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestBody CreateUserRequest request
+    ) {
+        if (!isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            var user = userService.createUser(request);
+            return ResponseEntity.ok(new UserListItemResponse(user));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 

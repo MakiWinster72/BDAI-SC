@@ -16,6 +16,10 @@ export function deleteUser(id) {
   return request.delete(`/api/admin/users/${id}`)
 }
 
+export function createUser(data) {
+  return request.post('/api/admin/users', data)
+}
+
 // Download SQL backup via native fetch (binary response)
 export function downloadBackupDb() {
   const token = localStorage.getItem('gcsc_token')

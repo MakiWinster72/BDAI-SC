@@ -1,9 +1,9 @@
 <script setup>
-import { computed, onMounted, reactive, shallowRef, watch } from "vue";
+import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
 import PaginationBar from "../components/PaginationBar.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
-import { getUserList, updateUser, deleteUser, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments } from "../api/admin";
+import { getUserList, updateUser, deleteUser, createUser, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments } from "../api/admin";
 import { useToast } from "../composables/useToast";
 import { loadUser } from "../utils/userStorage";
 
@@ -349,6 +349,81 @@ const editModal = reactive({
     role: "",
   },
 });
+
+const addUserModal = reactive({
+  visible: false,
+  saving: false,
+  error: "",
+  textarea: "",
+});
+
+const importFileRef = ref(null);
+
+function openAddUserModal() {
+  addUserModal.textarea = "";
+  addUserModal.error = "";
+  addUserModal.visible = true;
+}
+
+function closeAddUserModal() {
+  addUserModal.visible = false;
+}
+
+async function handleCreateUser() {
+  const lines = addUserModal.textarea.trim().split("\n").filter(l => l.trim());
+  if (lines.length === 0) {
+    addUserModal.error = "请输入用户信息";
+    return;
+  }
+  for (let i = 0; i < lines.length; i++) {
+    const parts = lines[i].split(",").map(p => p.trim());
+    if (parts.length < 3) {
+      addUserModal.error = `第 ${i + 1} 行格式错误，需要：名字,学号,密码`;
+      return;
+    }
+  }
+  addUserModal.saving = true;
+  addUserModal.error = "";
+  try {
+    for (const line of lines) {
+      const [displayName, username, password] = line.split(",").map(p => p.trim());
+      await createUser({ displayName, username, password });
+    }
+    await loadUsers(1);
+    closeAddUserModal();
+    success(`已创建 ${lines.length} 个用户`);
+  } catch (e) {
+    addUserModal.error = e?.response?.data?.message || "创建失败";
+  } finally {
+    addUserModal.saving = false;
+  }
+}
+
+async function handleImportFile(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const name = file.name.toLowerCase();
+  try {
+    if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+      const XLSX = await import("xlsx");
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      const rows = data.filter(r => r && r.length >= 3);
+      addUserModal.textarea = rows.map(r => `${r[0]},${r[1]},${r[2]}`).join("\n");
+    } else if (name.endsWith(".csv") || name.endsWith(".txt")) {
+      const text = await file.text();
+      const lines = text.trim().split("\n").filter(l => l.trim());
+      addUserModal.textarea = lines.map(l => l.split(",").map(p => p.trim()).join(",")).join("\n");
+    } else {
+      addUserModal.error = "不支持的文件格式，请上传 xlsx、csv 或 txt 文件";
+    }
+  } catch (err) {
+    addUserModal.error = "文件解析失败";
+  }
+  e.target.value = "";
+}
 
 function openEditModal(user) {
   editModal.user = user;
@@ -845,6 +920,16 @@ watch([userSearch, userRoleFilter], () => {
                 <span class="count-num">{{ userTotal }}</span>
                 <span class="count-label">位用户</span>
               </div>
+              <button
+                class="btn btn-primary"
+                type="button"
+                @click="openAddUserModal"
+              >
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                添加用户
+              </button>
             </div>
 
             <!-- Toolbar -->
@@ -1134,6 +1219,76 @@ watch([userSearch, userRoleFilter], () => {
               <button class="btn btn-ghost" type="button" @click="closeEditModal">取消</button>
               <button class="btn btn-primary" type="button" :disabled="editModal.saving" @click="handleUpdateUser">
                 {{ editModal.saving ? "保存中…" : "保存" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Add User Modal -->
+    <Teleport to="body">
+      <div :class="['sheet-overlay', { open: addUserModal.visible }]" @click.self="closeAddUserModal" role="dialog" aria-modal="true" aria-label="添加用户">
+        <div class="sheet-modal user-edit-modal" @click.stop>
+          <div class="modal-top-bar">
+            <div class="modal-title-group">
+              <h3 class="modal-title">添加用户</h3>
+              <p class="modal-subtitle">默认角色为学生</p>
+            </div>
+            <button class="modal-close-btn" type="button" aria-label="关闭" @click="closeAddUserModal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div class="modal-field">
+              <label class="modal-label" for="add-users-textarea">用户信息</label>
+              <textarea
+                id="add-users-textarea"
+                v-model="addUserModal.textarea"
+                class="modal-textarea"
+                rows="8"
+                placeholder="每行一个用户：显示名称,学号(用于登录),密码&#10;示例：&#10;张三,2024001,password123&#10;李四,2024002,password456"
+              ></textarea>
+              <div class="field-hint" style="margin-top: 8px;">
+                <strong>注意：使用英文逗号，前后不要有空格</strong>
+              </div>
+              <div class="modal-field" style="margin-top: 12px;">
+                <input
+                  id="import-file"
+                  ref="importFileRef"
+                  type="file"
+                  accept=".xlsx,.xls,.csv,.txt"
+                  class="file-input"
+                  style="display: none;"
+                  @change="handleImportFile"
+                />
+                <button
+                  class="btn btn-ghost"
+                  type="button"
+                  @click="importFileRef.click()"
+                >
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  从文件导入
+                </button>
+                <span class="field-hint" style="margin-left: 8px;">支持格式：xlsx、csv、txt</span>
+                <span class="field-hint" style="margin-left: 8px; margin-top: 4px;">xlsx：三列无表头（姓名、学号、密码）· csv/txt：每行用英文逗号分隔（姓名,学号,密码）</span>
+              </div>
+            </div>
+            <Transition name="msg-fade">
+              <div v-if="addUserModal.error" class="msg-banner error modal-error" role="alert">{{ addUserModal.error }}</div>
+            </Transition>
+          </div>
+
+          <div class="modal-footer">
+            <div class="modal-footer-btns" style="margin-left: auto;">
+              <button class="btn btn-ghost" type="button" @click="closeAddUserModal">取消</button>
+              <button class="btn btn-primary" type="button" :disabled="addUserModal.saving" @click="handleCreateUser">
+                {{ addUserModal.saving ? "创建中…" : "创建用户" }}
               </button>
             </div>
           </div>

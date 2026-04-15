@@ -1,8 +1,10 @@
 package com.gcsc.studentcenter.service;
 
+import com.gcsc.studentcenter.dto.CreateUserRequest;
 import com.gcsc.studentcenter.dto.UpdateUserRequest;
 import com.gcsc.studentcenter.dto.UserListItemResponse;
 import com.gcsc.studentcenter.entity.AppUser;
+import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
@@ -12,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,21 @@ public class UserService {
     public UserService(AppUserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public AppUser createUser(CreateUserRequest request) {
+        if (userRepository.existsByUsername(request.getUsername().trim())) {
+            throw new RuntimeException("用户名已存在");
+        }
+        AppUser user = new AppUser();
+        user.setUsername(request.getUsername().trim());
+        user.setDisplayName(request.getDisplayName() != null ? request.getDisplayName().trim() : request.getUsername().trim());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(UserRole.STUDENT);
+        user.setStudentNo(request.getStudentNo() != null ? request.getStudentNo().trim() : null);
+        user.setClassName(request.getClassName() != null ? request.getClassName().trim() : null);
+        user.setCreatedAt(LocalDateTime.now());
+        return userRepository.save(user);
     }
 
     public Map<String, Object> listUsersPaginated(int page, int size, String search, String role, String className) {
