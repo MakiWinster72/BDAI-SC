@@ -625,6 +625,17 @@ export function useNotifications(userSource) {
     ),
   );
 
+  function findPendingAchievementReview(recordId, category) {
+    if (!recordId) return null;
+    return store.achievementReviewRequests.find(
+      (item) =>
+        item.resourceType === "achievement" &&
+        String(item.recordId) === String(recordId) &&
+        item.category === category &&
+        item.status === "pending",
+    ) || null;
+  }
+
   return {
     inboxEntries,
     pendingCount,
@@ -632,6 +643,7 @@ export function useNotifications(userSource) {
     reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
     hasPendingProfileReviewRequest,
+    findPendingAchievementReview,
     fetchAchievementReviewRequests,
     fetchProfileReviewRequests,
     submitAchievementReviewRequest,

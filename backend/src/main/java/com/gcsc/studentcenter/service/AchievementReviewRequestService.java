@@ -70,7 +70,7 @@ public class AchievementReviewRequestService {
             if (request.getRecordId() == null) {
                 throw new IllegalArgumentException("修改审核必须指定成就记录");
             }
-            achievementService.getById(username, category, request.getRecordId());
+            achievementService.getById(username, requester.getRole().name(), category, request.getRecordId());
         }
         validatePayload(payload);
 
@@ -196,6 +196,7 @@ public class AchievementReviewRequestService {
             ? achievementService.create(request.getRequester().getUsername(), request.getCategory(), payload)
             : achievementService.update(
                 request.getRequester().getUsername(),
+                request.getRequester().getRole().name(),
                 request.getCategory(),
                 request.getRecordId(),
                 payload

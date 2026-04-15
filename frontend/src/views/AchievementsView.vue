@@ -641,7 +641,7 @@ const router = useRouter();
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
-const { submitAchievementReviewRequest } = useNotifications(profile);
+const { submitAchievementReviewRequest, findPendingAchievementReview } = useNotifications(profile);
 const { settings: reviewSettings, fetchSettings: fetchReviewSettings } =
   useReviewSettings();
 const { info: toastInfo } = useToast();
@@ -1318,6 +1318,11 @@ function editFromView() {
   if (!viewItem.value) {
     return;
   }
+  const pending = findPendingAchievementReview(viewItem.value.id, viewItem.value.category);
+  if (pending) {
+    toastInfo("请等待通过审核后，再进行编辑或前往取消申请");
+    return;
+  }
   const item = viewItem.value;
   editId.value = item.id;
   form.category = item.category || "";
@@ -1343,6 +1348,13 @@ function editFromView() {
 function openDelete() {
   if (deleteDialogOpen.value) {
     return;
+  }
+  if (viewItem.value) {
+    const pending = findPendingAchievementReview(viewItem.value.id, viewItem.value.category);
+    if (pending) {
+      toastInfo("请等待通过审核后，再进行删除或前往取消申请");
+      return;
+    }
   }
   deleteDialogOpen.value = true;
 }
