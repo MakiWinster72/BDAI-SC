@@ -46,6 +46,18 @@ public class AdminController {
         }
     }
 
+    private String extractUsername(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        try {
+            Claims claims = jwtService.parseToken(authHeader.substring(7));
+            return claims.getSubject();
+        } catch (JwtException ex) {
+            return null;
+        }
+    }
+
     @PostMapping("/users")
     public ResponseEntity<?> createUser(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
@@ -74,7 +86,8 @@ public class AdminController {
         if (!isAdmin(authHeader)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(userService.listUsersPaginated(page, size, search, role, className));
+        String currentUsername = extractUsername(authHeader);
+        return ResponseEntity.ok(userService.listUsersPaginated(page, size, search, role, className, currentUsername));
     }
 
     @GetMapping("/users/ids")
@@ -87,7 +100,8 @@ public class AdminController {
         if (!isAdmin(authHeader)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(userService.listAllUserIds(search, role, className));
+        String currentUsername = extractUsername(authHeader);
+        return ResponseEntity.ok(userService.listAllUserIds(search, role, className, currentUsername));
     }
 
     @PutMapping("/users/{id}")

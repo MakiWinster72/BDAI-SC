@@ -46,7 +46,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Map<String, Object> listUsersPaginated(int page, int size, String search, String role, String className) {
+    public Map<String, Object> listUsersPaginated(int page, int size, String search, String role, String className, String excludeUsername) {
         Specification<AppUser> spec = (root, query, cb) -> {
             List<Predicate> preds = new ArrayList<>();
             if (search != null && !search.isBlank()) {
@@ -63,6 +63,9 @@ public class UserService {
             }
             if (className != null && !className.isBlank()) {
                 preds.add(cb.like(cb.lower(root.get("className")), "%" + className.trim().toLowerCase() + "%"));
+            }
+            if (excludeUsername != null && !excludeUsername.isBlank()) {
+                preds.add(cb.notEqual(root.get("username"), excludeUsername));
             }
             return cb.and(preds.toArray(new Predicate[0]));
         };
@@ -81,7 +84,11 @@ public class UserService {
         );
     }
 
-    public List<Long> listAllUserIds(String search, String role, String className) {
+    public Map<String, Object> listUsersPaginated(int page, int size, String search, String role, String className) {
+        return listUsersPaginated(page, size, search, role, className, null);
+    }
+
+    public List<Long> listAllUserIds(String search, String role, String className, String excludeUsername) {
         Specification<AppUser> spec = (root, query, cb) -> {
             List<Predicate> preds = new ArrayList<>();
             if (search != null && !search.isBlank()) {
@@ -98,6 +105,9 @@ public class UserService {
             }
             if (className != null && !className.isBlank()) {
                 preds.add(cb.like(cb.lower(root.get("className")), "%" + className.trim().toLowerCase() + "%"));
+            }
+            if (excludeUsername != null && !excludeUsername.isBlank()) {
+                preds.add(cb.notEqual(root.get("username"), excludeUsername));
             }
             return cb.and(preds.toArray(new Predicate[0]));
         };
