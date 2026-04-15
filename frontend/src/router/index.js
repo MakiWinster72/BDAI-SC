@@ -65,6 +65,12 @@ router.beforeEach((to) => {
       return '/myinfos'
     }
   }
+  if (to.path === '/register') {
+    const allowReg = localStorage.getItem('gcsc_allowRegistration')
+    if (allowReg === '0') {
+      return '/login'
+    }
+  }
   return true
 })
 

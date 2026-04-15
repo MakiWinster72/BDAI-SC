@@ -1,5 +1,13 @@
 import request, { API_BASE } from './request'
 
+export function getSystemSettings() {
+  return request.get('/api/settings/system')
+}
+
+export function updateSystemSettings(data) {
+  return request.put('/api/admin/settings/system', data)
+}
+
 export function getUserList({ page = 1, size = 20, search = '', role = '', className = '' } = {}) {
   const params = { page, size }
   if (search) params.search = search

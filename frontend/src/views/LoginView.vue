@@ -227,7 +227,7 @@
             </div>
           </Transition>
 
-          <div class="switch-line">
+          <div v-if="allowRegistration" class="switch-line">
             还没有账号？
             <RouterLink class="switch-link" to="/register">去注册</RouterLink>
           </div>
@@ -242,6 +242,7 @@
 import { reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { login } from "../api/auth";
+import { getSystemSettings } from "../api/admin";
 import { useToast } from "../composables/useToast";
 
 const route = useRoute();
@@ -257,6 +258,19 @@ const isSubmitting = ref(false);
 const feedback = reactive({ text: "", type: "" });
 const showPassword = ref(false);
 const usernameError = ref("");
+const allowRegistration = ref(true);
+
+async function fetchSystemSettings() {
+  try {
+    const res = await getSystemSettings();
+    allowRegistration.value = res.data.allowRegistration !== false;
+    localStorage.setItem('gcsc_allowRegistration', allowRegistration.value ? '1' : '0');
+  } catch (e) {
+    allowRegistration.value = true;
+    localStorage.setItem('gcsc_allowRegistration', '1');
+  }
+}
+fetchSystemSettings();
 
 function parseError(error) {
   if (error?.response?.data?.message) {

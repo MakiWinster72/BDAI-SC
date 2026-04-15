@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
 import PaginationBar from "../components/PaginationBar.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
-import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments } from "../api/admin";
+import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments } from "../api/admin";
 import { useToast } from "../composables/useToast";
 import { loadUser } from "../utils/userStorage";
 
@@ -161,6 +161,29 @@ const allFilteredSelected = shallowRef(false);
 const someSelected = computed(() => selectedUserIds.value.size > 0);
 const allPageSelected = computed(() => users.value.length > 0 && selectedUserIds.value.size === users.value.length);
 
+const systemSettings = reactive({ allowRegistration: true });
+const systemSettingsMsg = shallowRef("");
+
+async function fetchSystemSettings() {
+  try {
+    const res = await getSystemSettings();
+    systemSettings.allowRegistration = res.data.allowRegistration !== false;
+  } catch (e) {
+    // ignore
+  }
+}
+
+async function handleSaveSystemSettings() {
+  systemSettingsMsg.value = "";
+  try {
+    await updateSystemSettings({ allowRegistration: systemSettings.allowRegistration });
+    systemSettingsMsg.value = "设置已保存";
+    setTimeout(() => { systemSettingsMsg.value = ""; }, 2000);
+  } catch (e) {
+    error("保存失败");
+  }
+}
+
 function toggleUserSelect(id) {
   const s = new Set(selectedUserIds.value);
   if (s.has(id)) s.delete(id);
@@ -280,7 +303,7 @@ function parseExts(value) {
 }
 
 async function loadPage() {
-  await Promise.all([fetchUploadSettings(), fetchReviewSettings()]);
+  await Promise.all([fetchUploadSettings(), fetchReviewSettings(), fetchSystemSettings()]);
   syncFormFromSettings();
   syncReviewFormFromSettings();
 }
@@ -1265,7 +1288,29 @@ watch([userSearch, userRoleFilter], () => {
               </div>
             </div>
             <div class="card-body">
-              <p style="color: var(--text-muted); text-align: center; padding: 40px 0;">功能开发中…</p>
+              <div class="toggle-section">
+                <div class="toggle-row">
+                  <div class="toggle-copy">
+                    <span class="toggle-title">开放注册</span>
+                    <span class="toggle-hint">关闭后，用户将无法自行注册账号</span>
+                  </div>
+                  <label class="toggle-switch" :aria-label="`开放注册: ${systemSettings.allowRegistration ? '已开启' : '已关闭'}`">
+                    <input
+                      v-model="systemSettings.allowRegistration"
+                      type="checkbox"
+                      role="switch"
+                      :aria-checked="systemSettings.allowRegistration"
+                      @change="handleSaveSystemSettings"
+                    />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <Transition name="msg-fade">
+                <div v-if="systemSettingsMsg" :class="['msg-banner', 'success']" role="status">{{ systemSettingsMsg }}</div>
+              </Transition>
             </div>
           </div>
         </div>
