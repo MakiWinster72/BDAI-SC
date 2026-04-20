@@ -6,6 +6,15 @@
 - Java 21+
 - MySQL 8.0+
 
+## 数据库配置
+
+```sql
+CREATE DATABASE IF NOT EXISTS gcsc DEFAULT CHARACTER SET utf8mb4;
+CREATE USER IF NOT EXISTS 'gcsc'@'localhost' IDENTIFIED BY 'gcsc';
+GRANT ALL PRIVILEGES ON gcsc.* TO 'gcsc'@'localhost';
+FLUSH PRIVILEGES;
+```
+
 ## 后端启动
 
 ```bash
@@ -19,13 +28,4 @@ mvn spring-boot:run
 cd frontend
 npm install
 npm run dev
-```
-
-## 数据库配置
-
-```sql
-CREATE DATABASE IF NOT EXISTS gcsc DEFAULT CHARACTER SET utf8mb4;
-CREATE USER IF NOT EXISTS 'gcsc'@'localhost' IDENTIFIED BY 'gcsc';
-GRANT ALL PRIVILEGES ON gcsc.* TO 'gcsc'@'localhost';
-FLUSH PRIVILEGES;
 ```
