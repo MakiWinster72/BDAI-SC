@@ -1,129 +1,426 @@
-# BDAI_SC 学生中心（注册/登录）
+# BDAI_SC 学生中心
 
-当前实现：
-- `backend/`：Java 21 + Spring Boot + Maven + MySQL
-- `frontend/`：Vue 3 + Vite
-- 功能：用户名/密码登录、显示名称+用户名+密码注册
-- 鉴权：JWT（登录/注册返回 `token`，前端自动携带 `Authorization`）
+```
+                              @@@@@@@@@@@@@@@@@@@@
+                        @@@@@@@@@@@@##*++*##@@@@@@@@@@@@
+                     @@@@@@@*...*##############*...*@@@@@@@
+                  @@@@@@..+###########.*-.###########+..#@@@@@
+               @@@@@#..#### .###...#####.*##.#..*##.#####..#@@@@@
+             @@@@@..#####..#-####.#..#.-..++#-..##.+#.######..@@@@@
+           @@@@@..######@###.######################+.#### ####..@@@@@
+          @@@@..#####..-+.##.####-....+##+....-######....#######..@@@@
+         @@@@.########.######..##################..#####.####.####.@@@@
+       @@@@. ########.####.*########..*..###..@#####*.####.#.##.###..@@@@
+      @@@@.-###..#.#####.########.-#.-#..###..#..######.####.@##..##-.@@@@
+      @@@.-###-##..###.#####...##...###..###..#-.*.+#####.@##@.**+###-.@@@
+     @@@#.#####.*####.##.. -...###..###..###..###...##.###.###..*..##@.#@@@
+    @@@@.###.*.#+###.##.#.##...###..###..###..###...##.#.##.#####+..###.@@@@
+    @@@.-#####.+###.###.-.##...###..###..###..###...##.#.### @#+..#-.##-.@@@
+    @@@.###.+##.##.####.-.##...###..###..###..###...##.#.####.## #-.####.@@@
+   @@@@.####....##.####.-.##...###..###..###..###...##.#.####.#####.###@.@@@@
+   @@@@.######.###.####.-......###..###..###........##.#.####.##-..**.##.#@@@
+   @@@@.####.##.##.####.+......###..###..###........##.#.####.#####.-###.@@@@
+   @@@#.@###..**##.####.-.##...###..###..###..###...##.#.####.###+#..###.@@@@
+    @@@.###....###.####.-.##...###..###..###..###...##.#.####.### ...###.@@@
+    @@@.-##########.###.-.##...###..###..###..###...##.#.### ###+##.###-.@@@
+    @@@@.#####......###.+.##...###..###..###..###...##.#.###......#####.@@@@
+     @@@#.##.........###...#...###..###..###..###...##.####.........##.#@@@
+      @@@.-#..........######...##...###..###..###...######.....#....#-.@@@
+      @@@@.-#....##.....#########.+#..#..###..##########.....# ....#-.@@@@
+       @@@@..#....#.......##########..-..###..########............#..@@@@
+         @@@@.#*....#........######################.......--....*#.#@@@
+          @@@@..#......#.........*############*........#.......#..@@@@
+           @@@@@..#......#.#.................................#..@@@@@
+             @@@@@..##..........#..............##.........##..@@@@@
+               @@@@@#..##...........##..#..#+..........##..@@@@@@
+                  @@@@@@..-##*....................*##-..#@@@@@
+                     @@@@@@@*...*##############*...*@@@@@@@
+                        @@@@@@@@@@@###*++*###@@@@@@@@@@@
+                              @@@@@@@@@@@@@@@@@@@@
+```
 
-## quickStart！
-### 0. 统一配置（推荐先做）
+[![Java 21](https://img.shields.io/badge/Java-21-5382a1?style=flat-square&logo=openjdk)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3.5-6db33f?style=flat-square&logo=spring)](https://spring.io/projects/spring-boot)
+[![Vue 3](https://img.shields.io/badge/Vue-3.5-4fc08d?style=flat-square&logo=vuedotjs)](https://vuejs.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479a1?style=flat-square&logo=mysql)](https://www.mysql.com/)
+[![JWT](https://img.shields.io/badge/JWT-0.12.6-000?style=flat-square&logo=jsonwebtokens)](https://github.com/jwtk/jjwt)
 
-在项目根目录使用一份配置文件管理前后端参数（地址、端口、密钥等）：
+---
+
+## 目录
+
+- [特性](#特性)
+- [技术栈](#技术栈)
+- [快速启动](#快速启动)
+- [项目结构](#项目结构)
+- [数据库](#数据库)
+- [API 概览](#api-概览)
+- [成就类型](#成就类型)
+- [角色权限](#角色权限)
+- [配置说明](#配置说明)
+- [开发指南](#开发指南)
+- [贡献规范](#贡献规范)
+
+---
+
+## 特性
+
+- **多角色系统** — 学生（STUDENT）、教师（TEACHER）、管理员（ADMIN）三级权限
+- **学生档案** — 完整个人信息、教育经历、班干部经历、政治面貌、家庭信息管理
+- **9 类成就记录** — 竞赛、科研、论文、专利、证书、作品、期刊、双百工程、培训
+- **审核流程** — 学生提交 → 教师/管理员审核，支持通过/拒绝/退回修改
+- **文件上传** — 图片、视频、PDF、Word、Excel 附件（最大 200MB）
+- **多格式导出** — xlsx、pdf/docx 导出学生档案与成就数据
+- **通知中心** — 审核状态实时推送通知
+- **JWT 鉴权** — 无状态认证，支持 120 分钟令牌过期
+- **响应式布局** — 桌面端侧边栏 + 移动端胶囊导航
+
+---
+
+## 技术栈
+
+### 后端
+
+| 技术            | 版本   | 用途       |
+| --------------- | ------ | ---------- |
+| Java            | 21     | 运行时     |
+| Spring Boot     | 3.3.5  | Web 框架   |
+| Spring Security | 6.x    | 认证与授权 |
+| JPA / Hibernate | 6.x    | ORM        |
+| MySQL           | 8.0    | 数据库     |
+| JJWT            | 0.12.6 | JWT 令牌   |
+| Maven           | 3.x    | 构建工具   |
+
+### 前端
+
+| 技术              | 版本 | 用途        |
+| ----------------- | ---- | ----------- |
+| Vue               | 3.5  | UI 框架     |
+| Vite              | 5.4  | 构建工具    |
+| Vue Router        | 4.4  | 路由        |
+| Axios             | 1.7  | HTTP 客户端 |
+| AG Grid           | 31.3 | 数据表格    |
+| jsPDF + autoTable | 2.5  | PDF 导出    |
+| xlsx              | 0.18 | Excel 导出  |
+| docx-preview      | 0.3  | Word 预览   |
+
+---
+
+## 快速启动
+
+### 前置条件
+
+- JDK 21+
+- Node.js 18+
+- MySQL 8.0+
+- Maven 3.9+
+
+### 1. 配置环境
 
 ```bash
 cp .env.example .env
 ```
 
-按需修改 `.env` 中的关键项：
-- `BDAI_SC_FRONTEND_PORT` / `BDAI_SC_BACKEND_PORT`
-- `BDAI_SC_DB_URL` / `BDAI_SC_DB_USER` / `BDAI_SC_DB_PASSWORD`
-- `BDAI_SC_JWT_SECRET`
-- `VITE_API_BASE`
+按需修改 `.env` 中的数据库密码、JWT 密钥等配置。
 
-### 1. 数据库准备
+### 2. 创建数据库
 
 ```sql
-# 或使用自己的账号密码
 CREATE DATABASE IF NOT EXISTS bdai_sc DEFAULT CHARACTER SET utf8mb4;
 CREATE USER IF NOT EXISTS 'bdai_sc'@'localhost' IDENTIFIED BY 'bdai_sc';
 GRANT ALL PRIVILEGES ON bdai_sc.* TO 'bdai_sc'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-### 2. 启动后端
+### 3. 启动后端
 
 ```bash
 cd backend
 mvn spring-boot:run
+# 后端地址: http://localhost:8080
 ```
 
-后端默认地址：`http://localhost:8080`
-
-若启动时报 `Unable to determine Dialect without JDBC metadata`，按下面检查：
-- 确认 MySQL 已启动，并且 `bdai_sc` 库存在。
-- 确认连接用户是 `bdai_sc`，不是 `bdai_sc@localhost:3306` 这样的完整串。
-- 用下面命令手工验证连接：
-
-```bash
-mysql -ubdai_sc -pbdai_sc -h127.0.0.1 -P3306 -e "use bdai_sc; show tables;"
-```
-
-### 3. 启动前端
+### 4. 启动前端
 
 ```bash
 cd frontend
 npm install
 npm run dev
+# 前端地址: http://localhost:5173
 ```
 
-前端默认地址：`http://localhost:5173`
+> 首次启动后 JPA 会自动建表（`ddl-auto: update`），无需手动执行 SQL 初始化脚本。
 
-## 实现说明
+---
 
-- 后端
-  - 用户表：`backend/src/main/java/com/gcsc/studentcenter/entity/AppUser.java`
-  - 注册/登录：`backend/src/main/java/com/gcsc/studentcenter/service/AuthService.java`
-  - JWT：`backend/src/main/java/com/gcsc/studentcenter/service/JwtService.java`
-  - 认证过滤器：`backend/src/main/java/com/gcsc/studentcenter/config/JwtAuthenticationFilter.java`
-- 前端
-  - 登录页：`frontend/src/views/LoginView.vue`
-  - 注册页：`frontend/src/views/RegisterView.vue`
-  - 首页：`frontend/src/views/HomeView.vue`
+## 项目结构
 
-## Git 提交规范
+```
+GCSC/
+├── backend/                          # Spring Boot 后端
+│   ├── src/main/java/com/gcsc/studentcenter/
+│   │   ├── StudentCenterApplication.java   # 启动类
+│   │   ├── config/                         # 安全配置、CORS、JWT 过滤器
+│   │   ├── controller/                     # REST 控制器
+│   │   │   ├── AuthController.java         # 登录/注册
+│   │   │   ├── AchievementController.java  # 成就 CRUD
+│   │   │   ├── StudentProfileController.java # 学生档案
+│   │   │   ├── AdminController.java        # 管理后台
+│   │   │   ├── UploadController.java       # 文件上传
+│   │   │   └── SystemSettingsController.java
+│   │   ├── service/                        # 业务逻辑层
+│   │   ├── repository/                      # 数据访问层
+│   │   ├── entity/                          # JPA 实体
+│   │   ├── dto/                              # 请求/响应 DTO
+│   │   └── exception/                        # 全局异常处理
+│   ├── src/main/resources/
+│   │   └── application.yml                   # 主配置（从 .env 导入变量）
+│   └── pom.xml
+│
+├── frontend/                         # Vue 3 前端
+│   ├── src/
+│   │   ├── api/                      # Axios 请求模块
+│   │   │   ├── request.js            # axios 实例 + 拦截器
+│   │   │   ├── auth.js               # 认证
+│   │   │   ├── profile.js            # 学生档案
+│   │   │   └── achievements.js       # 成就接口
+│   │   ├── assets/styles/            # 全局 CSS
+│   │   │   ├── _variables.css        # CSS 变量
+│   │   │   ├── layout.css            # 布局
+│   │   │   ├── dialogs.css           # 对话框/Toast
+│   │   │   └── achievements.css      # 成就页样式
+│   │   ├── components/               # Vue 组件
+│   │   ├── composables/               # 组合式函数
+│   │   ├── constants/                # 菜单/成就类型常量
+│   │   ├── layouts/                  # 页面布局（DashboardLayout）
+│   │   ├── router/                   # Vue Router 配置
+│   │   ├── utils/                     # 导出/渲染/工具函数
+│   │   └── views/                    # 页面级组件
+│   │       ├── LoginView.vue          # 登录
+│   │       ├── RegisterView.vue       # 注册
+│   │       ├── AchievementsView.vue   # 成就墙
+│   │       ├── MyInfosView.vue        # 我的信息
+│   │       ├── StudentInfoView.vue    # 学生信息（教师/管理员）
+│   │       ├── NotificationsView.vue  # 通知中心
+│   │       └── AdminView.vue          # 管理后台
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
+│
+├── docs/                             # 开发文档
+│   ├── database.md                    # 数据库表结构
+│   ├── auth.md                        # 认证流程详解
+│   ├── animation.md                   # 动画规范
+│   └── storage.md                     # 文件存储说明
+├── assets/                           # 产品截图
+├── scripts/                          # 工具脚本
+└── .env.example                      # 环境配置示例
+```
 
-- `feat:` 新功能
-- `style:` 仅样式改动
-- `fix:` 修复问题
-- `docs:` 文档改动
-- `refactor:` 重构（不改功能）
-- `chore:` 工程维护
-- 前缀后建议使用中文描述，例如：`feat: 完成注册登录接口`
+---
 
-## TODO:
-1. [x] 注册登录 ✅ 2026-03-06
-2. [ ] 分角色（学生/教师/管理员）
-3. [ ] 填写信息（学生）
-4. [ ] 导出信息（教师）
-5. [ ] 发布近期成就/动态（教师/学生）
-6. [ ] 社区互动（教师/学生）
-7. [ ] 分学院（看情况）
-8. TODO: 页面设计增加logo的位置
+## 数据库
 
-## 页面设计预览
+### 表概览
 
-### 主页：
+| 表名                          | 用途                                                       |
+| ----------------------------- | ---------------------------------------------------------- |
+| `users`                       | 用户（登录账号、角色、密码哈希）                           |
+| `student_profiles`            | 学生档案（个人信息、政治面貌、家庭信息）                   |
+| `education_experiences`       | 教育经历（嵌入表）                                         |
+| `cadre_experiences`           | 班干部经历（嵌入表）                                       |
+| `achievement_*`               | 9 类成就表（竞赛/科研/论文/专利/证书/作品/期刊/双百/培训） |
+| `achievement_review_requests` | 成就审核请求                                               |
+| `profile_review_requests`     | 档案变更审核请求                                           |
+| `posts`                       | 动态/通知                                                  |
+| `post_media`                  | 动态媒体附件                                               |
+| `contacts`                    | 教师/部门联系方式                                          |
 
-登录进来就看见的页面，左上为目前登录信息小卡片，左下为不同分区的菜单栏，右侧为学院内动态/置顶公告。
-![](assets/2026-03-09-1.png)
+详细表结构见 [`docs/database.md`](docs/database.md)。
 
-### 我的信息
+---
 
-个人信息页，学生在该页面填写个人信息，初次登录会提示进入该页面填写，后续更改需要请求变更（或取消该限制，直接更改）
-![](assets/2026-03-09-5.png)
+## API 概览
 
-### 学生信息（仅教师/管理员）
+### 认证
 
-教师/管理员可以在此页面筛选学生，并选择对应的学生导出信息。
-![](assets/2026-03-09-10.png)
+| 方法 | 路径                 | 说明                                      |
+| ---- | -------------------- | ----------------------------------------- |
+| POST | `/api/auth/register` | 注册（username + displayName + password） |
+| POST | `/api/auth/login`    | 登录（返回 JWT）                          |
+| GET  | `/api/auth/me`       | 获取当前用户信息                          |
 
-### 设置页
+### 学生档案
 
-设置页，点击小卡片右上角可进入，目前还没想好有什么可以设置的。
-![](assets/2026-03-09-2.png)
+| 方法 | 路径                           | 说明                            |
+| ---- | ------------------------------ | ------------------------------- |
+| GET  | `/api/profile`                 | 获取当前用户档案                |
+| PUT  | `/api/profile`                 | 更新档案                        |
+| GET  | `/api/profile/{id}`            | 获取指定用户档案（教师/管理员） |
+| GET  | `/api/profile/students`        | 分页查询学生列表（教师/管理员） |
+| POST | `/api/profile/review-requests` | 提交档案变更申请                |
 
-### 成就页
+### 成就
 
-成就页，学生可在成就页记录自己的成就。成就可配图（证书，记录等），形成画廊展示。可以为该成就补充信息，如名字，经历时间，获得成就的日期，该成就的描述，个人感想等。
-![](assets/2026-03-09-3.png)
+| 方法       | 路径                                           | 说明                    |
+| ---------- | ---------------------------------------------- | ----------------------- |
+| GET/POST   | `/api/achievements/{type}`                     | 获取/创建某类型成就     |
+| GET        | `/api/achievements/{type}/{id}`                | 获取单条成就详情        |
+| PUT/DELETE | `/api/achievements/{type}/{id}`                | 更新/删除成就           |
+| POST       | `/api/achievements/{type}/{id}/review-request` | 提交审核                |
+| POST       | `/api/achievements/{type}/{id}/approve`        | 审核通过（教师/管理员） |
+| POST       | `/api/achievements/{type}/{id}/reject`         | 审核拒绝                |
 
-### 记录页
+> `type` 可选值: `contest` `research` `paper` `patent` `certificate` `works` `journal` `double-hundred` `training`
 
-记录页，该页面为学生记录的隐私动态，仅自己可见。
-![](assets/2026-03-09-4.png)
+### 管理
 
-### 教师联系方式
+| 方法     | 路径                         | 说明                 |
+| -------- | ---------------------------- | -------------------- |
+| GET      | `/api/admin/stats`           | 系统统计             |
+| GET      | `/api/admin/students`        | 学生列表（支持筛选） |
+| PUT      | `/api/admin/users/{id}/role` | 修改用户角色         |
+| GET/POST | `/api/admin/review-settings` | 审核设置             |
+| GET      | `/api/admin/upload-settings` | 上传设置             |
 
-联系页，学生可在该页面查看老师/部门的联系方式。
-![](assets/2026-03-09-9.png)
+### 文件
+
+| 方法 | 路径          | 说明                                 |
+| ---- | ------------- | ------------------------------------ |
+| POST | `/api/upload` | 上传文件（支持图片/视频/PDF/Office） |
+| GET  | `/uploads/**` | 访问已上传文件                       |
+
+---
+
+## 成就类型
+
+| 类型 | 实体                       | 关键字段                               |
+| ---- | -------------------------- | -------------------------------------- |
+| 竞赛 | `AchievementContest`       | 竞赛名称、奖项等级、获奖人数、获奖日期 |
+| 科研 | `AchievementResearch`      | 项目名称、项目负责人、指导教师工号     |
+| 论文 | `AchievementPaper`         | 论文题目、期刊名称、发表日期、收录情况 |
+| 专利 | `AchievementPatent`        | 专利名称、专利类型、授权号、授权日期   |
+| 证书 | `AchievementCertificate`   | 证书名称、证书类型、获得日期           |
+| 作品 | `AchievementWorks`         | 作品名称、发布场合、影响范围           |
+| 期刊 | `AchievementJournal`       | 刊物名称、作品题目、发表日期           |
+| 双百 | `AchievementDoubleHundred` | 双百工程相关                           |
+| 培训 | `AchievementIeerTraining`  | 培训记录                               |
+
+所有成就类型均支持：标题、描述、图片附件、创建时间、关联作者。
+
+---
+
+## 角色权限
+
+| 功能             | STUDENT        | TEACHER | ADMIN |
+| ---------------- | -------------- | ------- | ----- |
+| 登录/注册        | ✅             | ✅      | ✅    |
+| 管理个人档案     | ✅（提交审核） | ✅      | ✅    |
+| 提交成就         | ✅             | ✅      | ✅    |
+| 审核成就         | ❌             | ✅      | ✅    |
+| 审核档案变更     | ❌             | ✅      | ✅    |
+| 查看所有学生档案 | ❌             | ✅      | ✅    |
+| 导出学生信息     | ❌             | ✅      | ✅    |
+| 系统设置         | ❌             | ❌      | ✅    |
+| 管理用户角色     | ❌             | ❌      | ✅    |
+
+---
+
+## 配置说明
+
+所有配置通过 `.env` 文件管理，Spring Boot 通过 `application.yml` 中的 `spring.config.import` 自动导入：
+
+```bash
+# 关键配置项
+BDAI_SC_DB_URL=jdbc:mysql://127.0.0.1:3306/bdai_sc?useUnicode=true&...
+BDAI_SC_DB_USER=bdai_sc
+BDAI_SC_DB_PASSWORD=bdai_sc
+BDAI_SC_JWT_SECRET=your-super-secret-key   # 生产环境务必更换
+BDAI_SC_JWT_EXPIRES_MINUTES=120
+BDAI_SC_UPLOAD_DIR=./uploads                # 文件存储目录
+VITE_API_BASE=http://localhost:8080         # 前端 API 地址
+```
+
+---
+
+## 开发指南
+
+### 后端
+
+```bash
+# 运行
+mvn spring-boot:run
+
+# 构建 JAR
+mvn clean package
+
+# 运行测试
+mvn test
+
+# 单个测试类
+mvn test -Dtest=AuthServiceTest
+```
+
+### 前端
+
+```bash
+# 安装依赖
+npm install
+
+# 开发服务器
+npm run dev
+
+# 生产构建
+npm run build
+
+# 预览构建结果
+npm run preview
+```
+
+### 添加新成就类型
+
+1. 在 `backend/entity/` 创建新实体（如 `AchievementNewType.java`），继承通用结构
+2. 在 `backend/repository/` 创建对应的 `JpaRepository`
+3. 在 `backend/controller/` 添加 REST 控制器
+4. 在 `frontend/src/constants/achievementConstants.js` 添加类型常量
+5. 在 `frontend/src/api/` 添加 API 请求模块
+6. 在前端视图或成就页中接入
+
+### 前端组件规范
+
+- 使用 `<script setup>` 组合式 API
+- 全局按钮样式：`ghost-button`（描边）、`action-button`（填充）
+- 对话框使用 `sheet-overlay` / `sheet-modal` 模式（见 `dialogs.css`）
+- 动画时长：`0.42s cubic-bezier(0.22, 1, 0.36, 1)`（transform）、`0.38s ease`（opacity）
+
+---
+
+## 贡献规范
+
+### Git 提交规范
+
+```
+feat:     新功能
+fix:      修复问题
+style:    仅样式改动
+docs:     文档改动
+refactor: 重构（不改变功能）
+chore:    工程维护
+```
+
+前缀后使用中文描述，如：`feat: 添加学生档案导出功能`
+
+### 分支命名
+
+```
+feat/feature-name     # 新功能
+fix/bug-description   # Bug 修复
+page/page-name        # 新页面
+style/description     # 样式调整
+```
+
+---
+
+## 许可证
+
+本项目仅供学习与内部使用。
