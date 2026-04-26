@@ -377,9 +377,11 @@ const ROLE_LABELS = {
   ADMIN: "管理员",
   TEACHER: "教师",
   STUDENT: "学生",
+  CADRE: "班干部",
 };
 const ROLE_OPTIONS = [
   { value: "STUDENT", label: "学生" },
+  { value: "CADRE", label: "班干部" },
   { value: "TEACHER", label: "教师" },
   { value: "ADMIN", label: "管理员" },
 ];

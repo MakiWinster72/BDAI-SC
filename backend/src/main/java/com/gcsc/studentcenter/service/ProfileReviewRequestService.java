@@ -56,11 +56,19 @@ public class ProfileReviewRequestService {
         return requests.stream()
             .filter(r -> {
                 if ("pending".equals(r.getStatus())) {
-                    // pending: only reviewers (TEACHER/ADMIN) can see, not regular students
+                    // pending: only reviewers (TEACHER/ADMIN/CADRE) can see, not regular students
                     if (!isReviewer(user)) return false;
-                    // ADMIN can see all pending, TEACHER can only see their assigned class students
+                    // ADMIN can see all pending
+                    if (user.getRole() == UserRole.ADMIN) {
+                        return true;
+                    }
+                    // TEACHER can only see their assigned class students
                     if (user.getRole() == UserRole.TEACHER) {
                         return userService.isStudentInTeacherAssignedClass(user, r.getRequester());
+                    }
+                    // CADRE can only see their own class students
+                    if (user.getRole() == UserRole.CADRE) {
+                        return isStudentInCadreOwnClass(user, r.getRequester());
                     }
                     return true;
                 }
@@ -72,10 +80,22 @@ public class ProfileReviewRequestService {
             .toList();
     }
 
+    private boolean isStudentInCadreOwnClass(AppUser cadre, AppUser student) {
+        String cadreClass = cadre.getClassName();
+        if (cadreClass == null || cadreClass.isBlank()) {
+            return false; // CADRE with no class set sees nothing
+        }
+        String studentClass = student.getClassName();
+        if (studentClass == null || studentClass.isBlank()) {
+            return false;
+        }
+        return cadreClass.trim().equals(studentClass.trim());
+    }
+
     @Transactional
     public ProfileReviewRequestResponse submit(String username, ProfileReviewSubmitRequest request) {
         AppUser requester = loadUser(username);
-        if (requester.getRole() != UserRole.STUDENT) {
+        if (requester.getRole() != UserRole.STUDENT && requester.getRole() != UserRole.CADRE) {
             throw new IllegalArgumentException("仅学生可提交个人信息审核");
         }
         if (!reviewSettingsService.isProfileReviewEnabled()) {
@@ -108,6 +128,7 @@ public class ProfileReviewRequestService {
         AppUser reviewer = loadReviewer(reviewerUsername);
         ProfileReviewRequest request = loadRequest(requestId);
         ensurePending(request);
+        ensureReviewerCanAccessRequest(reviewer, request);
         return toResponse(applyApprovedRequest(request, reviewer));
     }
 
@@ -116,6 +137,7 @@ public class ProfileReviewRequestService {
         AppUser reviewer = loadReviewer(reviewerUsername);
         ProfileReviewRequest request = loadRequest(requestId);
         ensurePending(request);
+        ensureReviewerCanAccessRequest(reviewer, request);
         String reason = trimToNull(decisionRequest.getReason());
         if (reason == null || reason.isEmpty()) {
             throw new IllegalArgumentException("驳回时必须填写理由");
@@ -181,7 +203,7 @@ public class ProfileReviewRequestService {
     }
 
     private boolean isReviewer(AppUser user) {
-        return user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.TEACHER;
+        return user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.TEACHER || user.getRole() == UserRole.CADRE;
     }
 
     private ProfileReviewRequest loadRequest(Long requestId) {
@@ -192,6 +214,24 @@ public class ProfileReviewRequestService {
     private void ensurePending(ProfileReviewRequest request) {
         if (!"pending".equals(request.getStatus())) {
             throw new IllegalArgumentException("该审核请求已处理");
+        }
+    }
+
+    private void ensureReviewerCanAccessRequest(AppUser reviewer, ProfileReviewRequest request) {
+        if (reviewer.getRole() == UserRole.ADMIN) {
+            return;
+        }
+        if (reviewer.getRole() == UserRole.TEACHER) {
+            if (userService.isStudentInTeacherAssignedClass(reviewer, request.getRequester())) {
+                return;
+            }
+            throw new IllegalArgumentException("无权处理该审核请求");
+        }
+        if (reviewer.getRole() == UserRole.CADRE) {
+            if (isStudentInCadreOwnClass(reviewer, request.getRequester())) {
+                return;
+            }
+            throw new IllegalArgumentException("无权处理该审核请求");
         }
     }
 

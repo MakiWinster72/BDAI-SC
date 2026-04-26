@@ -90,6 +90,14 @@ public class StudentProfileController {
             if (allowedClassNames == null) {
                 allowedClassNames = Collections.emptyList();
             }
+        } else if (user != null && user.getRole() == UserRole.CADRE) {
+            // CADRE can only see students in their own class
+            String cadreClass = user.getClassName();
+            if (cadreClass != null && !cadreClass.isBlank()) {
+                allowedClassNames = List.of(cadreClass.trim());
+            } else {
+                allowedClassNames = Collections.emptyList(); // CADRE with no class sees nothing
+            }
         }
         return ResponseEntity.ok(
             studentProfileService.searchProfiles(
