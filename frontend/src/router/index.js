@@ -48,7 +48,7 @@ const router = createRouter({
           path: 'class-reviews',
           name: 'class-reviews',
           component: ClassReviewsView,
-          meta: { allowedRoles: ['CADRE', 'ADMIN'] }
+          meta: { allowedRoles: ['CADRE'] }
         }
       ]
     },

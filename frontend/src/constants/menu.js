@@ -27,7 +27,7 @@ const ENABLED_MENU_KEYS = new Set([
 
 const ROLE_MENU_VISIBILITY = {
   "student-info": new Set(["TEACHER", "ADMIN"]),
-  "class-reviews": new Set(["CADRE", "ADMIN"]),
+  "class-reviews": new Set(["CADRE"]),
   "admin": new Set(["ADMIN"]),
 };
 

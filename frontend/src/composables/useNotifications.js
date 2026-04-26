@@ -532,6 +532,24 @@ export function useNotifications(userSource) {
     ).length,
   );
 
+  // Class review entries for CADRE role - filtered by requester's class matching current user's class
+  const classReviewEntries = computed(() => {
+    if (currentUser.value.role !== "CADRE") return [];
+    const myClass = currentUser.value.className;
+    if (!myClass) return [];
+
+    const allRequests = [
+      ...store.achievementReviewRequests,
+      ...store.profileReviewRequests,
+    ].filter((r) => {
+      const requesterClass = r.requester?.className;
+      if (!requesterClass) return false;
+      return requesterClass.trim() === myClass.trim();
+    });
+
+    return allRequests.map((r) => buildReviewEntry(r, currentUser.value));
+  });
+
   function markProcessedEntryRead(entryId) {
     store.processedReadIds.add(String(entryId));
     persistStore();
@@ -566,5 +584,6 @@ export function useNotifications(userSource) {
     updateReviewRequestStatus,
     cancelReviewRequest,
     markProcessedEntryRead,
+    classReviewEntries,
   };
 }

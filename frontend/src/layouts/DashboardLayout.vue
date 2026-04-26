@@ -17,9 +17,14 @@
         :show-achievements-drawer="showAchievementsDrawer"
         :notification-active-category="notificationActiveCategory"
         :notification-active-entry="notificationActiveEntry"
+        :class-reviews-active-category="classReviewsActiveCategory"
+        :class-reviews-active-entry="classReviewsActiveEntry"
+        :class-review-entries="classReviewEntries"
         @menu-click="handleMenuClick"
         @achievement-entry-click="handleAchievementEntry"
         @notification-entry-click="handleNotificationEntry"
+        @class-reviews-entry-click="handleClassReviewsEntry"
+        @class-reviews-category-change="handleClassReviewsCategory"
         @settings-click="goToSettings"
       />
 
@@ -45,6 +50,7 @@ import {
   getMenuLocation,
 } from "../constants/menu";
 import { dashboardShellKey } from "../composables/useDashboardShell";
+import { useClassReviews } from "../composables/useClassReviews";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { loadUser } from "../utils/userStorage";
 
@@ -81,6 +87,19 @@ const isEmbedded = computed(() => {
   const value = raw.trim().toLowerCase();
   return value === "1" || value === "true";
 });
+
+const { getPendingEntries } = useClassReviews();
+
+const classReviewsActiveCategory = computed(() => {
+  if (route.name !== "class-reviews") return "all";
+  const raw = route.query.category;
+  return typeof raw === "string" && raw ? raw : "all";
+});
+const classReviewsActiveEntry = computed(() => {
+  if (route.name !== "class-reviews") return "";
+  return typeof route.query.entry === "string" ? route.query.entry : "";
+});
+const classReviewEntries = computed(() => getPendingEntries());
 
 provide(dashboardShellKey, {
   openSidebar,
@@ -119,6 +138,22 @@ function handleNotificationEntry({ category, entryId }) {
   navigateWithViewTransition(router, {
     path: "/notifications",
     query: { category, entry: entryId || "" },
+  });
+}
+
+function handleClassReviewsEntry({ entry }) {
+  closeSidebar();
+  navigateWithViewTransition(router, {
+    path: "/class-reviews",
+    query: { entry: entry.id + '-' + entry.resourceType },
+  });
+}
+
+function handleClassReviewsCategory(category) {
+  closeSidebar();
+  navigateWithViewTransition(router, {
+    path: "/class-reviews",
+    query: { category },
   });
 }
 
