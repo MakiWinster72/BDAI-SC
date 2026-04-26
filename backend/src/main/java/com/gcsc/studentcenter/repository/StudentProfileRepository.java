@@ -30,7 +30,7 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
         )
         from StudentProfile sp
         join sp.user u
-        where u.role = com.gcsc.studentcenter.entity.UserRole.STUDENT
+        where u.role in (com.gcsc.studentcenter.entity.UserRole.STUDENT, com.gcsc.studentcenter.entity.UserRole.CADRE)
             and (:classYear is null or sp.classYear = :classYear)
             and (:classNo is null or sp.classNo = :classNo)
             and (:college is null or sp.college = :college)
