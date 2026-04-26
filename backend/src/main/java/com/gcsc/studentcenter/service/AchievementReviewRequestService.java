@@ -47,7 +47,18 @@ public class AchievementReviewRequestService {
         List<AchievementReviewRequest> requests = isReviewer(user)
             ? achievementReviewRequestRepository.findAllByOrderByUpdatedAtDesc()
             : achievementReviewRequestRepository.findAllByRequester_UsernameOrderByUpdatedAtDesc(username);
-        return requests.stream().map(this::toResponse).toList();
+        return requests.stream()
+            .filter(r -> {
+                if ("pending".equals(r.getStatus())) {
+                    // pending: only reviewers (TEACHER/ADMIN) can see, not regular students
+                    return isReviewer(user);
+                }
+                // processed: only requester or reviewer can see
+                return r.getRequester().getUsername().equals(username)
+                    || (r.getReviewer() != null && r.getReviewer().getUsername().equals(username));
+            })
+            .map(this::toResponse)
+            .toList();
     }
 
     @Transactional
