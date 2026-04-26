@@ -542,6 +542,10 @@ export function useNotifications(userSource) {
       ...store.achievementReviewRequests,
       ...store.profileReviewRequests,
     ].filter((r) => {
+      // Exclude own requests
+      if (r.requester?.username === currentUser.value.username) return false;
+      // Exclude other CADRE requests - only regular students need review
+      if (r.requester?.role === "CADRE") return false;
       const requesterClass = r.requester?.className;
       if (!requesterClass) return false;
       return requesterClass.trim() === myClass.trim();

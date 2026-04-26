@@ -50,7 +50,6 @@ import {
   getMenuLocation,
 } from "../constants/menu";
 import { dashboardShellKey } from "../composables/useDashboardShell";
-import { useClassReviews } from "../composables/useClassReviews";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { loadUser } from "../utils/userStorage";
 
@@ -88,18 +87,16 @@ const isEmbedded = computed(() => {
   return value === "1" || value === "true";
 });
 
-const { getPendingEntries } = useClassReviews();
-
 const classReviewsActiveCategory = computed(() => {
-  if (route.name !== "class-reviews") return "all";
+  if (route.name !== "notifications" || route.query.panel !== "class-reviews") return "pending";
   const raw = route.query.category;
-  return typeof raw === "string" && raw ? raw : "all";
+  return typeof raw === "string" && raw ? raw : "pending";
 });
 const classReviewsActiveEntry = computed(() => {
-  if (route.name !== "class-reviews") return "";
+  if (route.name !== "notifications" || route.query.panel !== "class-reviews") return "";
   return typeof route.query.entry === "string" ? route.query.entry : "";
 });
-const classReviewEntries = computed(() => getPendingEntries());
+const classReviewEntries = computed(() => []); // Not used in layout, CardMenu gets it directly from useNotifications
 
 provide(dashboardShellKey, {
   openSidebar,
@@ -144,16 +141,16 @@ function handleNotificationEntry({ category, entryId }) {
 function handleClassReviewsEntry({ entry }) {
   closeSidebar();
   navigateWithViewTransition(router, {
-    path: "/class-reviews",
-    query: { entry: entry.id + '-' + entry.resourceType },
+    path: "/notifications",
+    query: { panel: "class-reviews", category: "pending", entry: String(entry.id) },
   });
 }
 
 function handleClassReviewsCategory(category) {
   closeSidebar();
   navigateWithViewTransition(router, {
-    path: "/class-reviews",
-    query: { category },
+    path: "/notifications",
+    query: { panel: "class-reviews", category },
   });
 }
 

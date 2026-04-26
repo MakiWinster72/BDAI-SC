@@ -12,7 +12,7 @@ export const MENU_ROUTE_MAP = {
   achievements: { path: "/achievements", query: { category: "all" } },
   "my-info": { path: "/myinfos" },
   "student-info": { path: "/student-info" },
-  "class-reviews": { path: "/class-reviews" },
+  "class-reviews": { path: "/notifications", query: { panel: "class-reviews" } },
   admin: { path: "/admin" },
 };
 
@@ -53,6 +53,10 @@ export function getMenuLocation(key) {
 export function getActiveMenuFromRoute(route) {
   const routeName = route?.name;
   if (routeName === "notifications") {
+    // Check if it's actually class-reviews mode
+    if (route?.query?.panel === "class-reviews") {
+      return "class-reviews";
+    }
     return "notifications";
   }
   if (routeName === "achievements") {
