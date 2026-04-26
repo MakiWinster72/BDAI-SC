@@ -287,8 +287,8 @@ async function handleExportPdfFromSettings() {
 }
 
 function handleLogout() {
-  localStorage.removeItem("gcsc_token");
-  localStorage.removeItem("gcsc_user");
+  localStorage.removeItem("bdai_sc_token");
+  localStorage.removeItem("bdai_sc_user");
   router.push("/login");
 }
 

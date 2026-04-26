@@ -4,7 +4,7 @@
 
 1. 前端在注册或登录页收集表单信息，调用 `/api/auth/register` 或 `/api/auth/login`。
 2. 后端校验请求数据，注册时写入用户并生成 JWT，登录时校验密码并生成 JWT。
-3. 前端保存 `gcsc_token` 与 `gcsc_user` 到 `localStorage`。
+3. 前端保存 `bdai_sc_token` 与 `bdai_sc_user` 到 `localStorage`。
 4. 之后所有请求通过 Axios 请求拦截器自动加上 `Authorization: Bearer <token>`。
 5. 后端 `JwtAuthenticationFilter` 解析 JWT，写入 Spring Security 上下文，完成鉴权。
 6. 若后端返回 401，前端清除本地 token 并跳转到登录页。
@@ -62,14 +62,14 @@
 
 - 文件位置：`frontend/src/views/RegisterView.vue`
 - 提交表单调用 `register` API。
-- 注册成功后写入 `gcsc_user` 与 `gcsc_token` 到 `localStorage`。
+- 注册成功后写入 `bdai_sc_user` 与 `bdai_sc_token` 到 `localStorage`。
 - 目前表单只包含 `displayName`、`username`、`password`。
 
 ### 登录页
 
 - 文件位置：`frontend/src/views/LoginView.vue`
 - 提交表单调用 `login` API。
-- 登录成功后写入 `gcsc_user` 与 `gcsc_token` 到 `localStorage`。
+- 登录成功后写入 `bdai_sc_user` 与 `bdai_sc_token` 到 `localStorage`。
 
 ### API 与请求拦截
 
@@ -83,7 +83,7 @@
 - 文件位置：`frontend/src/router/index.js`
 - 需要登录的页面通过 `meta.requiresAuth` 保护。
 - 未登录访问受限页面自动跳转登录。
-- `allowedRoles` 做基础角色限制，依赖本地 `gcsc_user.role`。
+- `allowedRoles` 做基础角色限制，依赖本地 `bdai_sc_user.role`。
 
 ## 相关配置
 

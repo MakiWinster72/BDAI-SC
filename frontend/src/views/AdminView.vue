@@ -36,7 +36,7 @@ async function handleBackupDb() {
       return;
     }
     const blob = await res.blob();
-    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "gcsc_backup.sql";
+    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "bdai_sc_backup.sql";
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -61,7 +61,7 @@ async function handleBackupZip() {
       return;
     }
     const blob = await res.blob();
-    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "gcsc_attachments.zip";
+    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "bdai_sc_attachments.zip";
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

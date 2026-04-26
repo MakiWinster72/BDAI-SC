@@ -32,6 +32,9 @@ public class AchievementCertificate {
     @Column(name = "obtain_date")
     private LocalDate obtainDate;
 
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -94,6 +97,14 @@ public class AchievementCertificate {
 
     public void setObtainDate(LocalDate obtainDate) {
         this.obtainDate = obtainDate;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getImageUrl() {

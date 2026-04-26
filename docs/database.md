@@ -1,6 +1,6 @@
 # Database
 
-数据库：`gcsc`
+数据库：`bdai_sc`
 
 ## Tables
 

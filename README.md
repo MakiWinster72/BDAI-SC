@@ -1,4 +1,4 @@
-# GCSC 学生中心（注册/登录）
+# BDAI_SC 学生中心（注册/登录）
 
 当前实现：
 - `backend/`：Java 21 + Spring Boot + Maven + MySQL
@@ -7,13 +7,27 @@
 - 鉴权：JWT（登录/注册返回 `token`，前端自动携带 `Authorization`）
 
 ## quickStart！
+### 0. 统一配置（推荐先做）
+
+在项目根目录使用一份配置文件管理前后端参数（地址、端口、密钥等）：
+
+```bash
+cp .env.example .env
+```
+
+按需修改 `.env` 中的关键项：
+- `BDAI_SC_FRONTEND_PORT` / `BDAI_SC_BACKEND_PORT`
+- `BDAI_SC_DB_URL` / `BDAI_SC_DB_USER` / `BDAI_SC_DB_PASSWORD`
+- `BDAI_SC_JWT_SECRET`
+- `VITE_API_BASE`
+
 ### 1. 数据库准备
 
 ```sql
 # 或使用自己的账号密码
-CREATE DATABASE IF NOT EXISTS gcsc DEFAULT CHARACTER SET utf8mb4;
-CREATE USER IF NOT EXISTS 'gcsc'@'localhost' IDENTIFIED BY 'gcsc';
-GRANT ALL PRIVILEGES ON gcsc.* TO 'gcsc'@'localhost';
+CREATE DATABASE IF NOT EXISTS bdai_sc DEFAULT CHARACTER SET utf8mb4;
+CREATE USER IF NOT EXISTS 'bdai_sc'@'localhost' IDENTIFIED BY 'bdai_sc';
+GRANT ALL PRIVILEGES ON bdai_sc.* TO 'bdai_sc'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -27,12 +41,12 @@ mvn spring-boot:run
 后端默认地址：`http://localhost:8080`
 
 若启动时报 `Unable to determine Dialect without JDBC metadata`，按下面检查：
-- 确认 MySQL 已启动，并且 `gcsc` 库存在。
-- 确认连接用户是 `gcsc`，不是 `gcsc@localhost:3306` 这样的完整串。
+- 确认 MySQL 已启动，并且 `bdai_sc` 库存在。
+- 确认连接用户是 `bdai_sc`，不是 `bdai_sc@localhost:3306` 这样的完整串。
 - 用下面命令手工验证连接：
 
 ```bash
-mysql -ugcsc -pgcsc -h127.0.0.1 -P3306 -e "use gcsc; show tables;"
+mysql -ubdai_sc -pbdai_sc -h127.0.0.1 -P3306 -e "use bdai_sc; show tables;"
 ```
 
 ### 3. 启动前端

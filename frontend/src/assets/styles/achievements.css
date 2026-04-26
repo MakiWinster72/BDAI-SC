@@ -1840,6 +1840,24 @@
   background: var(--card);
 }
 
+.radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  accent-color: rgba(100, 12, 114, 0.7);
+}
+
 /* ── Publisher Backdrop Transition ─────────────────────── */
 .publisher-backdrop-enter-active,
 .publisher-backdrop-leave-active {

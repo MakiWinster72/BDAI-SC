@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GCSC Student Center - Full-stack web application for student achievement management.
+BDAI_SC Student Center - Full-stack web application for student achievement management.
 
 - **Backend**: Java 21 + Spring Boot 3.3.5 + MySQL + JPA + Spring Security + JWT
 - **Frontend**: Vue 3 (Composition API with `<script setup>`) + Vite + Vue Router + Axios + AG Grid
@@ -34,9 +34,9 @@ npm run preview      # Preview production build
 
 ### Database Setup
 ```sql
-CREATE DATABASE IF NOT EXISTS gcsc DEFAULT CHARACTER SET utf8mb4;
-CREATE USER IF NOT EXISTS 'gcsc'@'localhost' IDENTIFIED BY 'gcsc';
-GRANT ALL PRIVILEGES ON gcsc.* TO 'gcsc'@'localhost';
+CREATE DATABASE IF NOT EXISTS bdai_sc DEFAULT CHARACTER SET utf8mb4;
+CREATE USER IF NOT EXISTS 'bdai_sc'@'localhost' IDENTIFIED BY 'bdai_sc';
+GRANT ALL PRIVILEGES ON bdai_sc.* TO 'bdai_sc'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -114,7 +114,7 @@ Global styles in `frontend/src/assets/styles/`:
 - Supported previews: images, videos, PDFs, docx/doc, xlsx/xls
 
 ### Frontend Request Module
-- Token stored as `gcsc_token` in localStorage
+- Token stored as `bdai_sc_token` in localStorage
 - 401 responses automatically clear token and redirect to `/login`
 - `VITE_API_BASE` env var overrides default `http://localhost:8080`
 

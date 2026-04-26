@@ -288,6 +288,20 @@
                 :type="field.type || 'text'"
                 :placeholder="field.placeholder || ''"
               />
+              <div v-else-if="field.kind === 'radio'" class="radio-group">
+                <label
+                  v-for="opt in field.options"
+                  :key="opt.value"
+                  class="radio-label"
+                >
+                  <input
+                    type="radio"
+                    :value="opt.value"
+                    v-model="form.fields[field.key]"
+                  />
+                  {{ opt.label }}
+                </label>
+              </div>
               <textarea
                 v-else
                 v-model="form.fields[field.key]"
@@ -641,7 +655,7 @@ const router = useRouter();
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
-const { submitAchievementReviewRequest } = useNotifications(profile);
+const { submitAchievementReviewRequest, findPendingAchievementReview } = useNotifications(profile);
 const { settings: reviewSettings, fetchSettings: fetchReviewSettings } =
   useReviewSettings();
 const { info: toastInfo } = useToast();
@@ -829,7 +843,7 @@ function getCurrentStudentNo() {
     return studentNo;
   }
   try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
+    const raw = JSON.parse(localStorage.getItem("bdai_sc_user") || "{}");
     return raw.studentNo || profile.studentNo || "";
   } catch {
     return profile.studentNo || "";
@@ -1318,6 +1332,11 @@ function editFromView() {
   if (!viewItem.value) {
     return;
   }
+  const pending = findPendingAchievementReview(viewItem.value.id, viewItem.value.category);
+  if (pending) {
+    toastInfo("请等待通过审核后，再进行编辑或前往取消申请");
+    return;
+  }
   const item = viewItem.value;
   editId.value = item.id;
   form.category = item.category || "";
@@ -1343,6 +1362,13 @@ function editFromView() {
 function openDelete() {
   if (deleteDialogOpen.value) {
     return;
+  }
+  if (viewItem.value) {
+    const pending = findPendingAchievementReview(viewItem.value.id, viewItem.value.category);
+    if (pending) {
+      toastInfo("请等待通过审核后，再进行删除或前往取消申请");
+      return;
+    }
   }
   deleteDialogOpen.value = true;
 }

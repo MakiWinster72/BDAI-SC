@@ -4,7 +4,7 @@ import {
   updateAchievementUploadSettings,
 } from "../api/achievementUploadSettings";
 
-const STORAGE_KEY = "gcsc_achievement_upload_settings";
+const STORAGE_KEY = "bdai_sc_achievement_upload_settings";
 
 const DEFAULT_SETTINGS = Object.freeze({
   imageMaxCount: 3,

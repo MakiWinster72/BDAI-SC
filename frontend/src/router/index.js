@@ -51,7 +51,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const isLoggedIn = Boolean(localStorage.getItem('gcsc_token'))
+  const isLoggedIn = Boolean(localStorage.getItem('bdai_sc_token'))
   if (to.meta.requiresAuth && !isLoggedIn) {
     return '/login'
   }
@@ -59,7 +59,7 @@ router.beforeEach((to) => {
     return '/myinfos'
   }
   if (to.meta.allowedRoles) {
-    const raw = JSON.parse(localStorage.getItem('gcsc_user') || '{}')
+    const raw = JSON.parse(localStorage.getItem('bdai_sc_user') || '{}')
     const role = raw.role || 'STUDENT'
     if (!to.meta.allowedRoles.includes(role)) {
       return '/myinfos'

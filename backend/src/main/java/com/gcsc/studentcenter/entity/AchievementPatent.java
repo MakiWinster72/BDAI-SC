@@ -38,6 +38,9 @@ public class AchievementPatent {
     @Column(name = "first_inventor", length = 16)
     private String firstInventor;
 
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -116,6 +119,14 @@ public class AchievementPatent {
 
     public void setFirstInventor(String firstInventor) {
         this.firstInventor = firstInventor;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getImageUrl() {

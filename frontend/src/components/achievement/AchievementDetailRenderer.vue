@@ -4,6 +4,8 @@ import { achievementDetailSchemas } from "../../constants/achievementDetailSchem
 import AchievementDetailContest from "./details/AchievementDetailContest.vue";
 import AchievementDetailSchemaContent from "./details/AchievementDetailSchemaContent.vue";
 import AchievementDetailWorks from "./details/AchievementDetailWorks.vue";
+import AchievementDetailDoubleHundred from "./details/AchievementDetailDoubleHundred.vue";
+import AchievementDetailIeerTraining from "./details/AchievementDetailIeerTraining.vue";
 
 const props = defineProps({
   item: {
@@ -50,6 +52,12 @@ const detailComponent = computed(() => {
   }
   if (props.item.category === "works") {
     return AchievementDetailWorks;
+  }
+  if (props.item.category === "doubleHundred") {
+    return AchievementDetailDoubleHundred;
+  }
+  if (props.item.category === "ieerTraining") {
+    return AchievementDetailIeerTraining;
   }
   if (hasSchemaDetail.value) {
     return AchievementDetailSchemaContent;

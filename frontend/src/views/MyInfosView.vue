@@ -2390,7 +2390,7 @@ function saveUser(data) {
     className: data.className || "",
     college: FIXED_COLLEGE,
   };
-  localStorage.setItem("gcsc_user", JSON.stringify(user));
+  localStorage.setItem("bdai_sc_user", JSON.stringify(user));
 }
 
 onMounted(async () => {
@@ -2631,7 +2631,7 @@ watch(
 
 function loadUser() {
   try {
-    const raw = JSON.parse(localStorage.getItem("gcsc_user") || "{}");
+    const raw = JSON.parse(localStorage.getItem("bdai_sc_user") || "{}");
     return {
       username: raw.username || "",
       displayName: raw.displayName || "",

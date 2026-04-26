@@ -15,9 +15,9 @@ const profile = reactive(loadUser());
 const { inboxEntries, updateReviewRequestStatus, cancelReviewRequest, markProcessedEntryRead } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
-const rejectReason = ref(localStorage.getItem("gcsc_reject_draft") || "");
+const rejectReason = ref(localStorage.getItem("bdai_sc_reject_draft") || "");
 watch(rejectReason, (val) => {
-  if (val) localStorage.setItem("gcsc_reject_draft", val);
+  if (val) localStorage.setItem("bdai_sc_reject_draft", val);
 });
 const actionError = ref("");
 
@@ -176,7 +176,7 @@ async function rejectSelectedRequest() {
     await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "rejected", reviewer: profile, reason: rejectReason.value });
     rejectEditorOpen.value = false;
     rejectReason.value = "";
-    localStorage.removeItem("gcsc_reject_draft");
+    localStorage.removeItem("bdai_sc_reject_draft");
     router.replace({ path: "/notifications", query: { category: activeCategory.value, entry: "" } });
   } catch (error) {
     actionError.value = error?.message || "处理失败，请稍后重试";

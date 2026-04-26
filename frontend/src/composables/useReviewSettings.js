@@ -1,7 +1,7 @@
 import { reactive, shallowRef } from "vue";
 import { getReviewSettings, updateReviewSettings } from "../api/reviewSettings";
 
-const STORAGE_KEY = "gcsc_review_settings";
+const STORAGE_KEY = "bdai_sc_review_settings";
 
 const DEFAULT_SETTINGS = Object.freeze({
   profileReviewEnabled: true,

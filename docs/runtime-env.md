@@ -1,8 +1,8 @@
-# GCSC Student Center 运行环境与最低配置
+# BDAI_SC Student Center 运行环境与最低配置
 
 ## 项目简介
 
-GCSC Student Center 是一个学生成绩管理全栈 Web 应用。
+BDAI_SC Student Center 是一个学生成绩管理全栈 Web 应用。
 
 ## 技术栈
 
@@ -62,7 +62,7 @@ GCSC Student Center 是一个学生成绩管理全栈 Web 应用。
 
 | 变量名 | 必填 | 默认值 | 说明 |
 |--------|------|--------|------|
-| `spring.datasource.url` | 是 | - | MySQL 连接 URL，如 `jdbc:mysql://localhost:3306/gcsc` |
+| `spring.datasource.url` | 是 | - | MySQL 连接 URL，如 `jdbc:mysql://localhost:3306/bdai_sc` |
 | `spring.datasource.username` | 是 | - | MySQL 用户名 |
 | `spring.datasource.password` | 是 | - | MySQL 密码 |
 | `security.jwt.secret` | 是 | - | JWT 签名密钥（至少 32 字符） |
@@ -77,9 +77,9 @@ GCSC Student Center 是一个学生成绩管理全栈 Web 应用。
 ## 数据库初始化
 
 ```sql
-CREATE DATABASE IF NOT EXISTS gcsc DEFAULT CHARACTER SET utf8mb4;
-CREATE USER IF NOT EXISTS 'gcsc'@'localhost' IDENTIFIED BY 'gcsc';
-GRANT ALL PRIVILEGES ON gcsc.* TO 'gcsc'@'localhost';
+CREATE DATABASE IF NOT EXISTS bdai_sc DEFAULT CHARACTER SET utf8mb4;
+CREATE USER IF NOT EXISTS 'bdai_sc'@'localhost' IDENTIFIED BY 'bdai_sc';
+GRANT ALL PRIVILEGES ON bdai_sc.* TO 'bdai_sc'@'localhost';
 FLUSH PRIVILEGES;
 ```
 

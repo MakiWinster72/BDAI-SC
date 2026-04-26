@@ -46,6 +46,9 @@ public class AchievementIeerTraining {
     @Column(name = "final_status", length = 32)
     private String finalStatus;
 
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -148,6 +151,14 @@ public class AchievementIeerTraining {
 
     public void setFinalStatus(String finalStatus) {
         this.finalStatus = finalStatus;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getImageUrl() {

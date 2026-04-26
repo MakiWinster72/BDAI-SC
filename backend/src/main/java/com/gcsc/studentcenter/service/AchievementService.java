@@ -687,6 +687,7 @@ public class AchievementService {
         paper.setPublishDate(parseDate(valueOf(fields, "publishDate")));
         paper.setAuthorOrder(valueOf(fields, "authorOrder"));
         paper.setIndexed(valueOf(fields, "indexed"));
+        paper.setRemark(valueOf(fields, "remark"));
         paper.setImageUrl(imageUrl);
         paper.setImageUrls(valueOf(fields, "_imageUrls"));
         paper.setAttachments(valueOf(fields, "_attachments"));
@@ -706,6 +707,7 @@ public class AchievementService {
         paper.setPublishDate(parseDate(valueOf(fields, "publishDate")));
         paper.setAuthorOrder(valueOf(fields, "authorOrder"));
         paper.setIndexed(valueOf(fields, "indexed"));
+        paper.setRemark(valueOf(fields, "remark"));
         paper.setImageUrl(imageUrl);
         paper.setImageUrls(valueOf(fields, "_imageUrls"));
         paper.setAttachments(valueOf(fields, "_attachments"));
@@ -724,6 +726,7 @@ public class AchievementService {
         journal.setWorkTitle(workTitle);
         journal.setPublicationName(valueOf(fields, "publicationName"));
         journal.setPublishDate(parseDate(valueOf(fields, "publishDate")));
+        journal.setRemark(valueOf(fields, "remark"));
         journal.setImageUrl(imageUrl);
         journal.setImageUrls(valueOf(fields, "_imageUrls"));
         journal.setAttachments(valueOf(fields, "_attachments"));
@@ -741,6 +744,7 @@ public class AchievementService {
         journal.setStudentName(valueOf(fields, "studentName"));
         journal.setPublicationName(valueOf(fields, "publicationName"));
         journal.setPublishDate(parseDate(valueOf(fields, "publishDate")));
+        journal.setRemark(valueOf(fields, "remark"));
         journal.setImageUrl(imageUrl);
         journal.setImageUrls(valueOf(fields, "_imageUrls"));
         journal.setAttachments(valueOf(fields, "_attachments"));
@@ -761,6 +765,7 @@ public class AchievementService {
         patent.setGrantNo(valueOf(fields, "grantNo"));
         patent.setGrantDate(parseDate(valueOf(fields, "grantDate")));
         patent.setFirstInventor(valueOf(fields, "firstInventor"));
+        patent.setRemark(valueOf(fields, "remark"));
         patent.setImageUrl(imageUrl);
         patent.setImageUrls(valueOf(fields, "_imageUrls"));
         patent.setAttachments(valueOf(fields, "_attachments"));
@@ -780,6 +785,7 @@ public class AchievementService {
         patent.setGrantNo(valueOf(fields, "grantNo"));
         patent.setGrantDate(parseDate(valueOf(fields, "grantDate")));
         patent.setFirstInventor(valueOf(fields, "firstInventor"));
+        patent.setRemark(valueOf(fields, "remark"));
         patent.setImageUrl(imageUrl);
         patent.setImageUrls(valueOf(fields, "_imageUrls"));
         patent.setAttachments(valueOf(fields, "_attachments"));
@@ -798,6 +804,7 @@ public class AchievementService {
         certificate.setCertificateType(valueOf(fields, "certificateType"));
         certificate.setCertificateName(certificateName);
         certificate.setObtainDate(parseDate(valueOf(fields, "obtainDate")));
+        certificate.setRemark(valueOf(fields, "remark"));
         certificate.setImageUrl(imageUrl);
         certificate.setImageUrls(valueOf(fields, "_imageUrls"));
         certificate.setAttachments(valueOf(fields, "_attachments"));
@@ -815,6 +822,7 @@ public class AchievementService {
         certificate.setStudentName(valueOf(fields, "studentName"));
         certificate.setCertificateType(valueOf(fields, "certificateType"));
         certificate.setObtainDate(parseDate(valueOf(fields, "obtainDate")));
+        certificate.setRemark(valueOf(fields, "remark"));
         certificate.setImageUrl(imageUrl);
         certificate.setImageUrls(valueOf(fields, "_imageUrls"));
         certificate.setAttachments(valueOf(fields, "_attachments"));
@@ -833,6 +841,7 @@ public class AchievementService {
         research.setProjectName(projectName);
         research.setTeacherNo(valueOf(fields, "teacherNo"));
         research.setProjectLeader(valueOf(fields, "projectLeader"));
+        research.setRemark(valueOf(fields, "remark"));
         research.setImageUrl(imageUrl);
         research.setImageUrls(valueOf(fields, "_imageUrls"));
         research.setAttachments(valueOf(fields, "_attachments"));
@@ -850,6 +859,7 @@ public class AchievementService {
         research.setStudentName(valueOf(fields, "studentName"));
         research.setTeacherNo(valueOf(fields, "teacherNo"));
         research.setProjectLeader(valueOf(fields, "projectLeader"));
+        research.setRemark(valueOf(fields, "remark"));
         research.setImageUrl(imageUrl);
         research.setImageUrls(valueOf(fields, "_imageUrls"));
         research.setAttachments(valueOf(fields, "_attachments"));
@@ -922,6 +932,7 @@ public class AchievementService {
         doubleHundred.setPlannedLevel(valueOf(fields, "plannedLevel"));
         doubleHundred.setCollege(valueOf(fields, "college"));
         doubleHundred.setFinalLevel(valueOf(fields, "finalLevel"));
+        doubleHundred.setRemark(valueOf(fields, "remark"));
         doubleHundred.setImageUrl(imageUrl);
         doubleHundred.setImageUrls(valueOf(fields, "_imageUrls"));
         doubleHundred.setAttachments(valueOf(fields, "_attachments"));
@@ -948,6 +959,7 @@ public class AchievementService {
         doubleHundred.setPlannedLevel(valueOf(fields, "plannedLevel"));
         doubleHundred.setCollege(valueOf(fields, "college"));
         doubleHundred.setFinalLevel(valueOf(fields, "finalLevel"));
+        doubleHundred.setRemark(valueOf(fields, "remark"));
         doubleHundred.setImageUrl(imageUrl);
         doubleHundred.setImageUrls(valueOf(fields, "_imageUrls"));
         doubleHundred.setAttachments(valueOf(fields, "_attachments"));
@@ -971,6 +983,7 @@ public class AchievementService {
         ieerTraining.setRecommendedLevel(valueOf(fields, "recommendedLevel"));
         ieerTraining.setIsKeyArea(valueOf(fields, "isKeyArea"));
         ieerTraining.setFinalStatus(valueOf(fields, "finalStatus"));
+        ieerTraining.setRemark(valueOf(fields, "remark"));
         ieerTraining.setImageUrl(imageUrl);
         ieerTraining.setImageUrls(valueOf(fields, "_imageUrls"));
         ieerTraining.setAttachments(valueOf(fields, "_attachments"));
@@ -993,6 +1006,7 @@ public class AchievementService {
         ieerTraining.setRecommendedLevel(valueOf(fields, "recommendedLevel"));
         ieerTraining.setIsKeyArea(valueOf(fields, "isKeyArea"));
         ieerTraining.setFinalStatus(valueOf(fields, "finalStatus"));
+        ieerTraining.setRemark(valueOf(fields, "remark"));
         ieerTraining.setImageUrl(imageUrl);
         ieerTraining.setImageUrls(valueOf(fields, "_imageUrls"));
         ieerTraining.setAttachments(valueOf(fields, "_attachments"));
@@ -1038,6 +1052,7 @@ public class AchievementService {
         fields.put("publishDate", formatDate(paper.getPublishDate()));
         fields.put("authorOrder", paper.getAuthorOrder());
         fields.put("indexed", paper.getIndexed());
+        fields.put("remark", paper.getRemark());
         if (paper.getImageUrls() != null) {
             fields.put("_imageUrls", paper.getImageUrls());
         }
@@ -1060,6 +1075,7 @@ public class AchievementService {
         fields.put("workTitle", journal.getWorkTitle());
         fields.put("publicationName", journal.getPublicationName());
         fields.put("publishDate", formatDate(journal.getPublishDate()));
+        fields.put("remark", journal.getRemark());
         if (journal.getImageUrls() != null) {
             fields.put("_imageUrls", journal.getImageUrls());
         }
@@ -1084,6 +1100,7 @@ public class AchievementService {
         fields.put("grantNo", patent.getGrantNo());
         fields.put("grantDate", formatDate(patent.getGrantDate()));
         fields.put("firstInventor", patent.getFirstInventor());
+        fields.put("remark", patent.getRemark());
         if (patent.getImageUrls() != null) {
             fields.put("_imageUrls", patent.getImageUrls());
         }
@@ -1106,6 +1123,7 @@ public class AchievementService {
         fields.put("certificateType", certificate.getCertificateType());
         fields.put("certificateName", certificate.getCertificateName());
         fields.put("obtainDate", formatDate(certificate.getObtainDate()));
+        fields.put("remark", certificate.getRemark());
         if (certificate.getImageUrls() != null) {
             fields.put("_imageUrls", certificate.getImageUrls());
         }
@@ -1128,6 +1146,7 @@ public class AchievementService {
         fields.put("projectName", research.getProjectName());
         fields.put("teacherNo", research.getTeacherNo());
         fields.put("projectLeader", research.getProjectLeader());
+        fields.put("remark", research.getRemark());
         if (research.getImageUrls() != null) {
             fields.put("_imageUrls", research.getImageUrls());
         }
@@ -1186,6 +1205,7 @@ public class AchievementService {
         fields.put("plannedLevel", doubleHundred.getPlannedLevel());
         fields.put("college", doubleHundred.getCollege());
         fields.put("finalLevel", doubleHundred.getFinalLevel());
+        fields.put("remark", doubleHundred.getRemark());
         if (doubleHundred.getImageUrls() != null) {
             fields.put("_imageUrls", doubleHundred.getImageUrls());
         }
@@ -1213,6 +1233,7 @@ public class AchievementService {
         fields.put("recommendedLevel", ieerTraining.getRecommendedLevel());
         fields.put("isKeyArea", ieerTraining.getIsKeyArea());
         fields.put("finalStatus", ieerTraining.getFinalStatus());
+        fields.put("remark", ieerTraining.getRemark());
         if (ieerTraining.getImageUrls() != null) {
             fields.put("_imageUrls", ieerTraining.getImageUrls());
         }

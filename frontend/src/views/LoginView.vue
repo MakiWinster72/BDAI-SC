@@ -304,7 +304,7 @@ async function handleLogin() {
     }
 
     localStorage.setItem(
-      "gcsc_user",
+      "bdai_sc_user",
       JSON.stringify({
         username: data.username,
         displayName: data.displayName,
@@ -315,7 +315,7 @@ async function handleLogin() {
         college: data.college,
       }),
     );
-    localStorage.setItem("gcsc_token", data.token || "");
+    localStorage.setItem("bdai_sc_token", data.token || "");
     router.push("/myinfos");
   } catch (error) {
     feedback.text = parseError(error);

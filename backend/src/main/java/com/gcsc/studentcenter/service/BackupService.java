@@ -78,7 +78,7 @@ public class BackupService {
         int port = Integer.parseInt(dbInfo[1]);
         String database = dbInfo[2];
 
-        Path tempSqlFile = Files.createTempFile("gcsc_restore_", ".sql");
+        Path tempSqlFile = Files.createTempFile("bdai_sc_restore_", ".sql");
         try {
             Files.write(tempSqlFile, sqlContent);
 
@@ -112,11 +112,11 @@ public class BackupService {
     }
 
     public String generateBackupFilename() {
-        return "gcsc_backup_" + LocalDateTime.now().format(FILE_DATE_FMT) + ".sql";
+        return "bdai_sc_backup_" + LocalDateTime.now().format(FILE_DATE_FMT) + ".sql";
     }
 
     public String generateAttachmentsFilename() {
-        return "gcsc_attachments_" + LocalDateTime.now().format(FILE_DATE_FMT) + ".zip";
+        return "bdai_sc_attachments_" + LocalDateTime.now().format(FILE_DATE_FMT) + ".zip";
     }
 
     /**

@@ -58,6 +58,9 @@ public class AchievementDoubleHundred {
     @Column(name = "final_level", length = 32)
     private String finalLevel;
 
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -192,6 +195,14 @@ public class AchievementDoubleHundred {
 
     public void setFinalLevel(String finalLevel) {
         this.finalLevel = finalLevel;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getImageUrl() {

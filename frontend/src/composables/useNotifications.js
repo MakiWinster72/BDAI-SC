@@ -14,7 +14,7 @@ import {
   submitProfileReviewRequestApi,
 } from "../api/profileReviewRequests";
 
-const STORAGE_KEY = "gcsc_notification_center";
+const STORAGE_KEY = "bdai_sc_notification_center";
 const DELAYED_THRESHOLD_MS = 3 * 24 * 60 * 60 * 1000;
 const CATEGORY_LABELS = {
   contest: "学科竞赛、文体艺术",
@@ -295,7 +295,7 @@ async function fetchAchievementReviewRequests(force = false) {
   if (typeof window === "undefined") {
     return store.achievementReviewRequests;
   }
-  const token = localStorage.getItem("gcsc_token");
+  const token = localStorage.getItem("bdai_sc_token");
   if (!token) {
     store.achievementReviewRequests = [];
     store.achievementReviewFetched = true;
@@ -322,7 +322,7 @@ async function fetchProfileReviewRequests(force = false) {
   if (typeof window === "undefined") {
     return store.profileReviewRequests;
   }
-  const token = localStorage.getItem("gcsc_token");
+  const token = localStorage.getItem("bdai_sc_token");
   if (!token) {
     store.profileReviewRequests = [];
     store.profileReviewFetched = true;
@@ -523,6 +523,17 @@ export function useNotifications(userSource) {
     persistStore();
   }
 
+  function findPendingAchievementReview(recordId, category) {
+    if (!recordId) return null;
+    return store.achievementReviewRequests.find(
+      (item) =>
+        item.resourceType === "achievement" &&
+        String(item.recordId) === String(recordId) &&
+        item.category === category &&
+        item.status === "pending",
+    ) || null;
+  }
+
   return {
     inboxEntries,
     pendingCount,
@@ -532,6 +543,7 @@ export function useNotifications(userSource) {
     reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
     hasPendingProfileReviewRequest,
+    findPendingAchievementReview,
     fetchAchievementReviewRequests,
     fetchProfileReviewRequests,
     submitAchievementReviewRequest,

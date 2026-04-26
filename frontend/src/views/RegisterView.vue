@@ -2,7 +2,7 @@
   <div class="auth-layout">
     <div class="auth-card">
       <h1 class="auth-title">创建账号</h1>
-      <p class="auth-subtitle">注册后即可登录 GCSC 学生中心</p>
+      <p class="auth-subtitle">注册后即可登录 BDAI_SC 学生中心</p>
 
       <form @submit.prevent="handleRegister">
         <div class="form-row">
@@ -87,8 +87,8 @@ async function handleRegister() {
   feedback.type = "";
   isSubmitting.value = true;
 
-  localStorage.removeItem("gcsc_user");
-  localStorage.removeItem("gcsc_token");
+  localStorage.removeItem("bdai_sc_user");
+  localStorage.removeItem("bdai_sc_token");
 
   try {
     const { data } = await register(form);

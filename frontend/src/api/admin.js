@@ -38,7 +38,7 @@ export function createUser(data) {
 
 // Download SQL backup via native fetch (binary response)
 export function downloadBackupDb() {
-  const token = localStorage.getItem('gcsc_token')
+  const token = localStorage.getItem('bdai_sc_token')
   return fetch(`${API_BASE}/api/admin/backup/db`, {
     headers: { Authorization: `Bearer ${token}` }
   })
@@ -46,7 +46,7 @@ export function downloadBackupDb() {
 
 // Restore database from SQL file upload
 export function restoreBackupDb(file) {
-  const token = localStorage.getItem('gcsc_token')
+  const token = localStorage.getItem('bdai_sc_token')
   const formData = new FormData()
   formData.append('file', file)
   return fetch(`${API_BASE}/api/admin/restore/db`, {
@@ -58,7 +58,7 @@ export function restoreBackupDb(file) {
 
 // Download attachments as ZIP
 export function downloadBackupAttachments() {
-  const token = localStorage.getItem('gcsc_token')
+  const token = localStorage.getItem('bdai_sc_token')
   return fetch(`${API_BASE}/api/admin/backup/attachments`, {
     headers: { Authorization: `Bearer ${token}` }
   })
@@ -66,7 +66,7 @@ export function downloadBackupAttachments() {
 
 // Restore attachments from ZIP upload
 export function restoreBackupAttachments(file) {
-  const token = localStorage.getItem('gcsc_token')
+  const token = localStorage.getItem('bdai_sc_token')
   const formData = new FormData()
   formData.append('file', file)
   return fetch(`${API_BASE}/api/admin/restore/attachments`, {
