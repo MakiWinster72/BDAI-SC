@@ -2760,7 +2760,9 @@ function detectHkMoFromIdNo(idNo) {
 watch(
   () => info.idType,
   (nextType) => {
-    info.idNo = "";
+    if (isEditing.value) {
+      info.idNo = "";
+    }
     if (TW_ID_TYPES.includes(nextType)) {
       info.isHk = false;
       info.isMo = false;
