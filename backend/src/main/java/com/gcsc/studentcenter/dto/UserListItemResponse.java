@@ -17,6 +17,7 @@ public class UserListItemResponse {
     private String avatarUrl;
     private LocalDateTime createdAt;
     private String assignedClasses;
+    private String remark;
 
     public UserListItemResponse() {}
 
@@ -31,6 +32,7 @@ public class UserListItemResponse {
         this.avatarUrl = user.getAvatarUrl();
         this.createdAt = user.getCreatedAt();
         this.assignedClasses = user.getAssignedClasses();
+        this.remark = user.getRemark();
     }
 
     public Long getId() {
@@ -71,5 +73,9 @@ public class UserListItemResponse {
 
     public String getAssignedClasses() {
         return assignedClasses;
+    }
+
+    public String getRemark() {
+        return remark;
     }
 }

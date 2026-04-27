@@ -10,6 +10,7 @@ public class StudentSearchItemResponse {
     private String college;
     private Boolean hkMoTw;
     private Boolean specialStudent;
+    private String specialStudentType;
 
     public StudentSearchItemResponse(
         Long id,
@@ -20,7 +21,8 @@ public class StudentSearchItemResponse {
         String classNo,
         String college,
         Boolean hkMoTw,
-        Boolean specialStudent
+        Boolean specialStudent,
+        String specialStudentType
     ) {
         this.id = id;
         this.fullName = fullName;
@@ -31,6 +33,7 @@ public class StudentSearchItemResponse {
         this.college = college;
         this.hkMoTw = hkMoTw;
         this.specialStudent = specialStudent;
+        this.specialStudentType = specialStudentType;
     }
 
     public Long getId() {
@@ -67,5 +70,9 @@ public class StudentSearchItemResponse {
 
     public Boolean getSpecialStudent() {
         return specialStudent;
+    }
+
+    public String getSpecialStudentType() {
+        return specialStudentType;
     }
 }

@@ -453,10 +453,11 @@ const editModal = reactive({
     // Teacher assigned classes: list of full class name strings
     assignedClasses: [],
     // New class entry fields
-    newClassYear: "",
+    newClassYear: 2024,
     newClassCategory: "本科生",
     newClassMajor: "",
     newClassNo: 1,
+    remark: "",
   },
 });
 
@@ -485,23 +486,57 @@ async function handleCreateUser() {
     addUserModal.error = "请输入用户信息";
     return;
   }
+  // Parse and validate all lines first
+  const parsedUsers = [];
+  const errors = [];
+  const seenUsernames = new Set();
+
   for (let i = 0; i < lines.length; i++) {
     const parts = lines[i].split(",").map(p => p.trim());
     if (parts.length < 3) {
-      addUserModal.error = `第 ${i + 1} 行格式错误，需要：名字,学号,密码`;
-      return;
+      errors.push(`第 ${i + 1} 行：${parts[0] || '空'}，${parts[1] || '空'}，字段不足`);
+      continue;
     }
+    const [displayName, username, password] = parts;
+    if (seenUsernames.has(username)) {
+      errors.push(`第 ${i + 1} 行：${displayName}，${username}，重复`);
+      continue;
+    }
+    seenUsernames.add(username);
+    parsedUsers.push({ displayName, username, password, line: i + 1 });
   }
+
+  if (errors.length > 0) {
+    addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    return;
+  }
+
+  if (parsedUsers.length === 0) {
+    addUserModal.error = "没有有效用户数据";
+    return;
+  }
+
   addUserModal.saving = true;
   addUserModal.error = "";
+  const created = [];
+  const failed = [];
   try {
-    for (const line of lines) {
-      const [displayName, username, password] = line.split(",").map(p => p.trim());
-      await createUser({ displayName, username, password });
+    for (const user of parsedUsers) {
+      try {
+        await createUser(user);
+        created.push(user.username);
+      } catch (e) {
+        const msg = e?.response?.data?.message || "失败";
+        failed.push(`${user.displayName}，${user.username}，${msg}`);
+      }
     }
     await loadUsers(1);
     closeAddUserModal();
-    success(`已创建 ${lines.length} 个用户`);
+    if (failed.length > 0) {
+      addUserModal.error = `已创建 ${created.length} 个用户，失败 ${failed.length} 个：${failed.slice(0, 3).join("；")}${failed.length > 3 ? "…" : ""}`;
+    } else {
+      success(`已创建 ${created.length} 个用户`);
+    }
   } catch (e) {
     addUserModal.error = e?.response?.data?.message || "创建失败";
   } finally {
@@ -514,20 +549,50 @@ async function handleImportFile(e) {
   if (!file) return;
   const name = file.name.toLowerCase();
   try {
+    let rawLines = [];
     if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
       const XLSX = await import("xlsx");
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-      const rows = data.filter(r => r && r.length >= 3);
-      addUserModal.textarea = rows.map(r => `${r[0]},${r[1]},${r[2]}`).join("\n");
+      rawLines = data.filter(r => r && r.length >= 3);
     } else if (name.endsWith(".csv") || name.endsWith(".txt")) {
       const text = await file.text();
-      const lines = text.trim().split("\n").filter(l => l.trim());
-      addUserModal.textarea = lines.map(l => l.split(",").map(p => p.trim()).join(",")).join("\n");
+      rawLines = text.trim().split("\n").filter(l => l.trim());
     } else {
       addUserModal.error = "不支持的文件格式，请上传 xlsx、csv 或 txt 文件";
+      e.target.value = "";
+      return;
+    }
+
+    // Validate and find issues
+    const errors = [];
+    const seenUsernames = new Set();
+    rawLines.forEach((row, idx) => {
+      const parts = Array.isArray(row) ? row.map(p => String(p).trim()) : String(row).split(",").map(p => p.trim());
+      const displayName = parts[0] || '空';
+      const username = parts[1] || '空';
+      if (parts.length < 3) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，字段不足`);
+        return;
+      }
+      if (seenUsernames.has(username)) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，重复`);
+      }
+      seenUsernames.add(username);
+    });
+
+    const validRows = rawLines.map(r => {
+      const parts = Array.isArray(r) ? r.map(p => String(p).trim()) : String(r).split(",").map(p => p.trim());
+      return parts.slice(0, 3).join(",");
+    });
+    addUserModal.textarea = validRows.join("\n");
+
+    if (errors.length > 0) {
+      addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    } else {
+      addUserModal.error = "";
     }
   } catch (err) {
     addUserModal.error = "文件解析失败";
@@ -536,16 +601,19 @@ async function handleImportFile(e) {
 }
 
 async function openEditModal(user) {
-  editModal.user = user;
-  editModal.form.username = user.username;
+  // Always get fresh user data from users array to avoid stale reference
+  const freshUser = users.value.find(u => u.id === user.id) || user;
+  editModal.user = freshUser;
+  editModal.form.username = freshUser.username;
   editModal.form.password = "";
-  editModal.form.role = user.role;
+  editModal.form.role = freshUser.role;
+  editModal.form.remark = freshUser.remark || "";
   // Load existing assigned classes for teachers
-  const existingAssigned = user.assignedClasses
-    ? user.assignedClasses.split(",").map(c => c.trim()).filter(Boolean)
+  const existingAssigned = freshUser.assignedClasses
+    ? freshUser.assignedClasses.split(",").map(c => c.trim()).filter(Boolean)
     : [];
   editModal.form.assignedClasses = existingAssigned;
-  editModal.form.newClassYear = "";
+  editModal.form.newClassYear = 2024;
   editModal.form.newClassCategory = "本科生";
   editModal.form.newClassMajor = "";
   editModal.form.newClassNo = 1;
@@ -574,7 +642,7 @@ function addTeacherAssignedClass() {
     return;
   }
   editModal.form.assignedClasses.push(className);
-  editModal.form.newClassYear = "";
+  editModal.form.newClassYear = 2024;
   editModal.form.newClassMajor = "";
   editModal.form.newClassNo = 1;
   editModal.error = "";
@@ -598,18 +666,20 @@ async function handleUpdateUser() {
     if (editModal.form.role !== editModal.user.role) {
       data.role = editModal.form.role;
     }
+    if (editModal.form.remark !== (editModal.user.remark || "")) {
+      data.remark = editModal.form.remark;
+    }
+    const currentRole = editModal.form.role || editModal.user.role;
+    if (currentRole === "TEACHER" || currentRole === "ADMIN") {
+      data.assignedClasses = editModal.form.assignedClasses.join(",");
+    }
     if (Object.keys(data).length > 0) {
       const res = await updateUser(editModal.user.id, data);
       if (res.data.success === false) {
         editModal.error = res.data.message || "更新失败";
+        editModal.saving = false;
         return;
       }
-    }
-    // Update teacher assigned classes if role is TEACHER
-    const currentRole = editModal.form.role || editModal.user.role;
-    if (currentRole === "TEACHER") {
-      const assignedClassesStr = editModal.form.assignedClasses.join(",");
-      await updateTeacherAssignedClasses(editModal.user.id, assignedClassesStr);
     }
     await loadUsers(userCurrentPage.value);
     closeEditModal();
@@ -1157,11 +1227,12 @@ watch([userSearch, userRoleFilter], () => {
                           @change="selectAllPage"
                         />
                       </th>
-                      <th scope="col">用户名</th>
-                      <th scope="col">显示名称</th>
-                      <th scope="col">角色</th>
-                      <th scope="col">学号</th>
+                      <th scope="col" style="width: 130px;">用户名</th>
+                      <th scope="col" style="width: 100px;">显示名称</th>
+                      <th scope="col" style="width: 80px;">角色</th>
+                      <th scope="col" style="width: 120px;">学号</th>
                       <th scope="col">班级</th>
+                      <th scope="col" style="width: 120px;">备注</th>
                       <th scope="col" class="col-action"></th>
                     </tr>
                   </thead>
@@ -1184,6 +1255,7 @@ watch([userSearch, userRoleFilter], () => {
                       </td>
                       <td class="td-mono">{{ user.studentNo || '—' }}</td>
                       <td>{{ user.className || '—' }}</td>
+                      <td class="td-remark">{{ user.remark || '—' }}</td>
                       <td class="td-action">
                         <button class="icon-btn" @click.stop="openEditModal(user)" aria-label="编辑用户">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -1456,6 +1528,16 @@ watch([userSearch, userRoleFilter], () => {
               <select id="edit-role" v-model="editModal.form.role" class="modal-select">
                 <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
+            </div>
+            <div class="modal-field">
+              <label class="modal-label" for="edit-remark">备注</label>
+              <input
+                id="edit-remark"
+                v-model="editModal.form.remark"
+                class="modal-input"
+                type="text"
+                placeholder="如：班主任、班长、团支书等"
+              />
             </div>
             <Transition name="msg-fade">
               <div v-if="editModal.form.role === 'TEACHER'" class="modal-field">

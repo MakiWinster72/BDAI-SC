@@ -167,6 +167,12 @@ public class StudentProfile {
     @Column(name = "is_special")
     private Boolean specialStudent;
 
+    @Column(name = "special_student_type", length = 255)
+    private String specialStudentType;
+
+    @Column(name = "special_student_remark", length = 255)
+    private String specialStudentRemark;
+
     @Column(name = "father_name", length = 64)
     private String fatherName;
 
@@ -582,6 +588,22 @@ public class StudentProfile {
 
     public void setSpecialStudent(Boolean specialStudent) {
         this.specialStudent = specialStudent;
+    }
+
+    public String getSpecialStudentType() {
+        return specialStudentType;
+    }
+
+    public void setSpecialStudentType(String specialStudentType) {
+        this.specialStudentType = specialStudentType;
+    }
+
+    public String getSpecialStudentRemark() {
+        return specialStudentRemark;
+    }
+
+    public void setSpecialStudentRemark(String specialStudentRemark) {
+        this.specialStudentRemark = specialStudentRemark;
     }
 
     public String getFatherName() {

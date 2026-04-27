@@ -157,7 +157,7 @@
 }
 
 .admin-panel-single {
-  max-width: 720px;
+  max-width: 900px;
   width: 100%;
 }
 
@@ -1002,6 +1002,7 @@
 /* Content */
 .users-content {
   padding: 0;
+  overflow: hidden;
 }
 
 /* Center state */
@@ -1055,7 +1056,8 @@
 
 /* Checkbox */
 .col-checkbox {
-  width: 36px;
+  width: 40px;
+  min-width: 40px;
   padding: 11px 8px 11px 16px !important;
   text-align: center;
 }
@@ -1069,12 +1071,14 @@
 
 /* Table */
 .table-wrap {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
 .users-table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
   font-size: 13.5px;
 }
@@ -1089,11 +1093,13 @@
   color: var(--text-sub);
   border-bottom: 1px solid var(--line);
   background: rgba(100, 12, 114, 0.04);
-  white-space: nowrap;
   position: sticky;
   top: 0;
   z-index: 1;
 }
+
+.users-table th.col-checkbox { width: 40px; min-width: 40px; }
+.users-table th.col-action { width: 56px; min-width: 56px; }
 
 .users-table td {
   padding: 13px 16px;
@@ -1101,6 +1107,8 @@
   vertical-align: middle;
   background: transparent;
   transition: background 120ms ease;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .users-table tr + tr td {
@@ -1116,11 +1124,20 @@
   font-size: 12.5px;
   color: var(--primary);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .td-action {
   text-align: center;
-  width: 3rem;
+  width: 56px;
+  min-width: 56px;
+  padding-right: 16px !important;
+}
+
+.td-remark {
+  font-size: 12.5px;
+  color: var(--text-sub);
+  max-width: 100px;
 }
 
 /* Role Chip */
@@ -1132,6 +1149,7 @@
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .role-admin {
@@ -1147,6 +1165,11 @@
 .role-student {
   background: rgba(39, 174, 96, 0.09);
   color: var(--success);
+}
+
+.role-cadre {
+  background: rgba(234, 179, 8, 0.09);
+  color: #b45309;
 }
 
 /* Icon Button */

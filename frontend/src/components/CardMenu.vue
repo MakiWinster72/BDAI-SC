@@ -294,7 +294,7 @@ const titleTransitionName = computed(() =>
   panelDirection.value === "forward" ? "menu-title-forward" : "menu-title-back",
 );
 const panelTitle = computed(() => {
-  if (currentPanel.value === "achievements") return "个人成就";
+  if (currentPanel.value === "achievements") return "个人成果";
   if (currentPanel.value === "notifications") return "通知详情";
   if (currentPanel.value === "class-reviews") return "班级审核";
   return "导航";

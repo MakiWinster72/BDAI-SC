@@ -145,6 +145,8 @@ public class StudentProfileService {
         profile.setMotherPhone(normalize(request.getMotherPhone()));
         profile.setMotherWorkUnit(normalize(request.getMotherWorkUnit()));
         profile.setMotherTitle(normalize(request.getMotherTitle()));
+        profile.setSpecialStudentType(normalize(request.getSpecialStudentType()));
+        profile.setSpecialStudentRemark(normalize(request.getSpecialStudentRemark()));
         syncEducationExperiences(profile, request.getEducationExperiences());
         syncCadreExperiences(profile, request.getCadreExperiences());
 
@@ -162,6 +164,7 @@ public class StudentProfileService {
         String major,
         Boolean hkMoTw,
         Boolean specialStudent,
+        String specialStudentType,
         String studentCategory,
         String keyword,
         int page,
@@ -177,6 +180,7 @@ public class StudentProfileService {
             normalize(major),
             hkMoTw,
             specialStudent,
+            normalize(specialStudentType),
             normalize(studentCategory),
             normalize(keyword),
             allowedClassNames,
@@ -263,6 +267,8 @@ public class StudentProfileService {
             profile != null ? profile.getMotherPhone() : null,
             profile != null ? profile.getMotherWorkUnit() : null,
             profile != null ? profile.getMotherTitle() : null,
+            profile != null ? profile.getSpecialStudentType() : null,
+            profile != null ? profile.getSpecialStudentRemark() : null,
             toEducationItems(profile != null ? profile.getEducationExperiences() : null),
             toCadreItems(profile != null ? profile.getCadreExperiences() : null)
         );

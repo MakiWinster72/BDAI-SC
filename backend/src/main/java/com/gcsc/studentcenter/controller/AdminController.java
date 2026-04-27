@@ -116,7 +116,7 @@ public class AdminController {
         }
         try {
             var user = userService.updateUser(id, request);
-            return ResponseEntity.ok(new UserListItemResponse(user));
+            return ResponseEntity.ok(Map.of("success", true, "data", new UserListItemResponse(user)));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }

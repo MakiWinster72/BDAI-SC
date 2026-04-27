@@ -102,10 +102,18 @@
                 <input v-model="filters.isHkMoTw" type="checkbox" />
                 港澳台
               </label>
-              <label class="info-choice">
-                <input v-model="filters.isSpecial" type="checkbox" />
-                特殊学生
-              </label>
+              <div class="student-special-filter">
+                <span class="info-label" style="margin-right: 6px;">特殊学生</span>
+                <select v-model="filters.specialStudentType" class="info-input">
+                  <option
+                    v-for="opt in specialStudentTypeOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
             </div>
             <div class="student-filter-status">
               {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
@@ -198,6 +206,9 @@
               <div class="student-meta">
                 {{ item.gradeYear }}级 {{ item.major }}{{ item.classNo }}班
                 {{ item.studentNo }}
+              </div>
+              <div v-if="item.specialStudentType" class="student-special-badge">
+                {{ getSpecialStudentTypeLabel(item.specialStudentType) }}
               </div>
             </div>
             <button
@@ -585,13 +596,34 @@ const gridLocaleTextFunc = (key, defaultValue) => {
   return defaultValue;
 };
 
+const specialStudentTypeOptions = [
+  { value: "", label: "无" },
+  { value: "HIGH_CARE", label: "高关怀" },
+  { value: "ECONOMIC_SPECIAL", label: "经济困难>特殊困难" },
+  { value: "ECONOMIC_DIFFICULT", label: "经济困难>困难" },
+  { value: "ECONOMIC_GENERAL", label: "经济困难>一般困难" },
+  { value: "DISABILITY", label: "残疾" },
+  { value: "ORPHAN", label: "孤儿" },
+  { value: "ACADEMIC_DIFFICULTY", label: "学业困难" },
+];
+
+const specialStudentTypeLabelMap = {
+  HIGH_CARE: "高关怀",
+  ECONOMIC_SPECIAL: "经济困难>特殊困难",
+  ECONOMIC_DIFFICULT: "经济困难>困难",
+  ECONOMIC_GENERAL: "经济困难>一般困难",
+  DISABILITY: "残疾",
+  ORPHAN: "孤儿",
+  ACADEMIC_DIFFICULTY: "学业困难",
+};
+
 const filters = reactive({
   classYear: "",
   studentCategory: "",
   major: "",
   classNo: "",
   isHkMoTw: false,
-  isSpecial: false,
+  specialStudentType: "",
   keyword: "",
 });
 
@@ -775,7 +807,7 @@ const hasActiveFilters = computed(() => {
     filters.major ||
     filters.classNo ||
     filters.isHkMoTw ||
-    filters.isSpecial ||
+    filters.specialStudentType ||
     filters.keyword,
   );
 });
@@ -815,7 +847,7 @@ watch(
     major: filters.major,
     classNo: filters.classNo,
     isHkMoTw: filters.isHkMoTw,
-    isSpecial: filters.isSpecial,
+    specialStudentType: filters.specialStudentType,
     keyword: filters.keyword,
   }),
   () => {
@@ -877,6 +909,7 @@ async function fetchStudents() {
       studentNo: item.studentNo || "",
       hkMoTw: item.hkMoTw || false,
       specialStudent: item.specialStudent || false,
+      specialStudentType: item.specialStudentType || "",
     }));
     totalPages.value = Math.max(1, data?.totalPages || 1);
     totalItems.value = data?.total || 0;
@@ -1095,6 +1128,10 @@ function saveViewProfile(payload) {
   return saveStudentProfileById(viewItem.value.id, payload);
 }
 
+function getSpecialStudentTypeLabel(type) {
+  return specialStudentTypeLabelMap[type] || type || "";
+}
+
 function handleViewProfileSaved(data) {
   if (!data) {
     return;
@@ -1116,6 +1153,7 @@ function handleViewProfileSaved(data) {
       studentNo: data.studentNo || "",
       hkMoTw: data.hkMoTw || false,
       specialStudent: data.specialStudent || false,
+      specialStudentType: data.specialStudentType || "",
     };
   });
 }
@@ -1173,7 +1211,7 @@ function resetFilters() {
   filters.major = "";
   filters.classNo = "";
   filters.isHkMoTw = false;
-  filters.isSpecial = false;
+  filters.specialStudentType = "";
   filters.keyword = "";
 }
 
@@ -1197,8 +1235,8 @@ function buildSearchParams(page, size) {
   if (filters.isHkMoTw) {
     params.hkMoTw = true;
   }
-  if (filters.isSpecial) {
-    params.specialStudent = true;
+  if (filters.specialStudentType) {
+    params.specialStudentType = filters.specialStudentType;
   }
   if (filters.keyword && filters.keyword.trim()) {
     params.keyword = filters.keyword.trim();
