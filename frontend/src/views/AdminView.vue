@@ -485,23 +485,57 @@ async function handleCreateUser() {
     addUserModal.error = "请输入用户信息";
     return;
   }
+  // Parse and validate all lines first
+  const parsedUsers = [];
+  const errors = [];
+  const seenUsernames = new Set();
+
   for (let i = 0; i < lines.length; i++) {
     const parts = lines[i].split(",").map(p => p.trim());
     if (parts.length < 3) {
-      addUserModal.error = `第 ${i + 1} 行格式错误，需要：名字,学号,密码`;
-      return;
+      errors.push(`第 ${i + 1} 行：${parts[0] || '空'}，${parts[1] || '空'}，字段不足`);
+      continue;
     }
+    const [displayName, username, password] = parts;
+    if (seenUsernames.has(username)) {
+      errors.push(`第 ${i + 1} 行：${displayName}，${username}，重复`);
+      continue;
+    }
+    seenUsernames.add(username);
+    parsedUsers.push({ displayName, username, password, line: i + 1 });
   }
+
+  if (errors.length > 0) {
+    addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    return;
+  }
+
+  if (parsedUsers.length === 0) {
+    addUserModal.error = "没有有效用户数据";
+    return;
+  }
+
   addUserModal.saving = true;
   addUserModal.error = "";
+  const created = [];
+  const failed = [];
   try {
-    for (const line of lines) {
-      const [displayName, username, password] = line.split(",").map(p => p.trim());
-      await createUser({ displayName, username, password });
+    for (const user of parsedUsers) {
+      try {
+        await createUser(user);
+        created.push(user.username);
+      } catch (e) {
+        const msg = e?.response?.data?.message || "失败";
+        failed.push(`${user.displayName}，${user.username}，${msg}`);
+      }
     }
     await loadUsers(1);
     closeAddUserModal();
-    success(`已创建 ${lines.length} 个用户`);
+    if (failed.length > 0) {
+      addUserModal.error = `已创建 ${created.length} 个用户，失败 ${failed.length} 个：${failed.slice(0, 3).join("；")}${failed.length > 3 ? "…" : ""}`;
+    } else {
+      success(`已创建 ${created.length} 个用户`);
+    }
   } catch (e) {
     addUserModal.error = e?.response?.data?.message || "创建失败";
   } finally {
@@ -514,20 +548,50 @@ async function handleImportFile(e) {
   if (!file) return;
   const name = file.name.toLowerCase();
   try {
+    let rawLines = [];
     if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
       const XLSX = await import("xlsx");
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-      const rows = data.filter(r => r && r.length >= 3);
-      addUserModal.textarea = rows.map(r => `${r[0]},${r[1]},${r[2]}`).join("\n");
+      rawLines = data.filter(r => r && r.length >= 3);
     } else if (name.endsWith(".csv") || name.endsWith(".txt")) {
       const text = await file.text();
-      const lines = text.trim().split("\n").filter(l => l.trim());
-      addUserModal.textarea = lines.map(l => l.split(",").map(p => p.trim()).join(",")).join("\n");
+      rawLines = text.trim().split("\n").filter(l => l.trim());
     } else {
       addUserModal.error = "不支持的文件格式，请上传 xlsx、csv 或 txt 文件";
+      e.target.value = "";
+      return;
+    }
+
+    // Validate and find issues
+    const errors = [];
+    const seenUsernames = new Set();
+    rawLines.forEach((row, idx) => {
+      const parts = Array.isArray(row) ? row.map(p => String(p).trim()) : String(row).split(",").map(p => p.trim());
+      const displayName = parts[0] || '空';
+      const username = parts[1] || '空';
+      if (parts.length < 3) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，字段不足`);
+        return;
+      }
+      if (seenUsernames.has(username)) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，重复`);
+      }
+      seenUsernames.add(username);
+    });
+
+    const validRows = rawLines.map(r => {
+      const parts = Array.isArray(r) ? r.map(p => String(p).trim()) : String(r).split(",").map(p => p.trim());
+      return parts.slice(0, 3).join(",");
+    });
+    addUserModal.textarea = validRows.join("\n");
+
+    if (errors.length > 0) {
+      addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    } else {
+      addUserModal.error = "";
     }
   } catch (err) {
     addUserModal.error = "文件解析失败";
