@@ -2,11 +2,7 @@
   <header class="brand-header" ref="headerRef">
     <!-- Left: Logo + Wordmark -->
     <div class="brand-logo-group">
-      <img
-        src="/assets/icons/xylogo.png"
-        alt="XY"
-        class="brand-logo-icon"
-      />
+      <img src="/assets/icons/xylogo.png" alt="XY" class="brand-logo-icon" />
       <img
         src="/assets/icons/xylogo_with_text.png"
         alt="大数据与人工智能学院"
@@ -47,7 +43,12 @@
           @click="$emit('menu-click', 'admin')"
         >
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M3 5h14M3 10h14M3 15h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path
+              d="M3 5h14M3 10h14M3 15h8"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
           </svg>
           <span>管理</span>
         </button>
@@ -57,7 +58,11 @@
           aria-label="设置"
           @click="$emit('settings-click')"
         >
-          <img src="/assets/icons/settings.svg" alt="设置" class="settings-icon" />
+          <img
+            src="/assets/icons/settings.svg"
+            alt="设置"
+            class="settings-icon"
+          />
         </button>
       </div>
     </div>
@@ -89,7 +94,8 @@ function onScroll() {
 
   // Phase 1: scrolling 0 → THRESHOLD — header stays visible (sticky)
   // Phase 2: scrolling THRESHOLD → 100vh — header slides out proportionally
-  const progress = Math.min(1, scrollY / vh - SCROLL_THRESHOLD) / (1 - SCROLL_THRESHOLD);
+  const progress =
+    Math.min(1, scrollY / vh - SCROLL_THRESHOLD) / (1 - SCROLL_THRESHOLD);
 
   if (!headerRef.value) return;
 
@@ -129,45 +135,44 @@ const roleLabel = computed(() => {
   if (props.profile.role === "TEACHER") return "教师";
   return "学生";
 });
-
 </script>
 
 <style scoped>
 /* ── Header Shell ──────────────────────────────────────── */
 .brand-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  padding: 0 34px;
-  height: 86px;
-  background: linear-gradient(135deg, #1a0a2e 0%, #2d1050 50%, #5c0f7a 100%);
-  border: 1px solid rgba(212, 156, 59, 0.15);
-  border-radius: 20px;
+  padding: 0 30px 45px;
+  height: 180px;
+  margin: -28px -28px 0;
+  background-image: url("/assets/statics/banner.png");
+  background-size: cover;
+  background-position: center;
+  border-radius: 0;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   z-index: 10;
-  /* GPU 加速，避免重排 */
   will-change: transform, opacity;
-  /* 隐出末段的微淡 */
   transition: opacity 60ms ease;
 }
 
-/* Subtle top highlight line */
+/* Overlay: dark vignette → content-blend fade at bottom */
 .brand-header::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
+  inset: 0;
   background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.2) 30%,
-    rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0.2) 70%,
-    transparent 100%
+    180deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.02) 10%,
+    rgba(0, 0, 0, 0.18) 60%,
+    rgba(0, 0, 0, 0.32) 70%,
+    rgba(26, 10, 46, 0.6) 80%,
+    rgb(247, 244, 250) 100%
   );
+  z-index: 1;
 }
 
 /* ── Logo Group ────────────────────────────────────────── */
@@ -176,20 +181,23 @@ const roleLabel = computed(() => {
   align-items: center;
   gap: 16px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .brand-logo-icon {
-  height: 72px;
+  height: 62px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(100, 12, 114, 0.4));
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.5));
 }
 
 .brand-logo-text {
-  height: 43px;
+  height: 37px;
   width: auto;
   object-fit: contain;
   opacity: 0.95;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
 }
 
 /* ── Profile Chip ──────────────────────────────────────── */
@@ -199,15 +207,19 @@ const roleLabel = computed(() => {
   gap: 0;
   height: 58px;
   padding: 7px 10px 7px 7px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: background 200ms ease, box-shadow 200ms ease;
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  position: relative;
+  z-index: 2;
+  transition:
+    background 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .brand-profile-chip:hover {
