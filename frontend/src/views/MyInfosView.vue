@@ -252,6 +252,7 @@
                   :disabled="!isEditing"
                 />
               </div>
+              <div v-if="idNoHint" class="info-hint">{{ idNoHint }}，如与真实证件不符请联系管理员</div>
             </label>
             <label class="field-card">
               <span class="info-label">出生年月</span>
@@ -1120,6 +1121,10 @@ const idTypeOptions = [
   "外国人永久居留身份证",
   "外国护照",
 ];
+
+function detectIdType(raw) {
+  return null;
+}
 const dormCampusOptions = ["佛山校区", "广州校区"];
 const PROFILE_CHANGE_FIELDS = [
   { key: "fullName", label: "姓名", section: "学籍信息" },
@@ -1174,19 +1179,44 @@ const idNoMaxLength = computed(() => {
     case "居民身份证":
       return 18;
     case "台湾居民来往大陆通行证":
+      return 8;
     case "港澳居民来往内地通行证":
       return 9;
     case "普通护照":
       return 9;
     case "台湾居民居住证":
+      return 18;
     case "港澳居民居住证":
-      return 10;
+      return 18;
     case "外国人永久居留身份证":
-      return 15;
+      return 18;
     case "外国护照":
       return 20;
     default:
       return 32;
+  }
+});
+
+const idNoHint = computed(() => {
+  switch (info.idType) {
+    case "居民身份证":
+      return "18位（17位数字 + 1位数字/X）";
+    case "台湾居民来往大陆通行证":
+      return "8位纯数字（台胞证）";
+    case "港澳居民来往内地通行证":
+      return "9位（H/M + 8位数字，回乡证）";
+    case "普通护照":
+      return "9位（E + 8位数字）";
+    case "台湾居民居住证":
+      return "18位纯数字（83开头）";
+    case "港澳居民居住证":
+      return "18位纯数字（81/82开头）";
+    case "外国人永久居留身份证":
+      return "18位纯数字（新版五星卡）";
+    case "外国护照":
+      return "6-9位字母数字组合";
+    default:
+      return "";
   }
 });
 const hasSavedProfileBefore = computed(() => Boolean(savedProfileData.value?.id));
@@ -1694,38 +1724,63 @@ function handleDigitsInput(field, maxLength, event) {
 function handleIdNoInput(event) {
   const raw = (event.target.value || "").toUpperCase();
   const maxLen = idNoMaxLength.value;
-  // 居民身份证: digits + optional X at end
+  // 居民身份证: 17位数字 + 1位数字/X
   if (info.idType === "居民身份证") {
     const cleaned = raw.replace(/[^0-9X]/g, "");
     const digits = cleaned.replace(/X/g, "").slice(0, 17);
-    if (raw.endsWith("X")) {
+    if (cleaned.endsWith("X")) {
       info.idNo = `${digits}X`.slice(0, maxLen);
       return;
     }
     info.idNo = digits;
     return;
   }
-  // 通行证类: 8 digits + 1 letter
-  if (
-    info.idType === "台湾居民来往大陆通行证" ||
-    info.idType === "港澳居民来往内地通行证"
-  ) {
-    const cleaned = raw.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
-    const digits = cleaned.replace(/[A-Z]/g, "").slice(0, 8);
-    const letter = cleaned.slice(8, 9).replace(/[^A-Z]/g, "");
-    info.idNo = `${digits}${letter}`.slice(0, maxLen);
+  // 台湾居民来往大陆通行证（台胞证）: 8位纯数字
+  if (info.idType === "台湾居民来往大陆通行证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 8);
     return;
   }
-  // 护照类: alphanumeric
-  if (info.idType === "普通护照" || info.idType === "外国护照") {
+  // 港澳居民来往内地通行证（回乡证）: H/M + 8位数字
+  if (info.idType === "港澳居民来往内地通行证") {
+    const cleaned = raw.replace(/[^0-9A-Z]/g, "").toUpperCase();
+    const letter = cleaned.slice(0, 1).replace(/[^HM]/g, "");
+    const digits = cleaned.replace(/[A-Z]/g, "").slice(0, 8);
+    info.idNo = `${letter}${digits}`.slice(0, maxLen);
+    return;
+  }
+  // 普通护照: E + 8位数字
+  if (info.idType === "普通护照") {
+    const cleaned = raw.replace(/[^0-9A-Z]/g, "").toUpperCase();
+    const letter = cleaned.slice(0, 1).replace(/[^E]/g, "");
+    const digits = cleaned.replace(/[A-Z]/g, "").slice(0, 8);
+    info.idNo = `${letter}${digits}`.slice(0, maxLen);
+    return;
+  }
+  // 台湾居民居住证: 18位纯数字（83开头）
+  if (info.idType === "台湾居民居住证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 18);
+    return;
+  }
+  // 港澳居民居住证: 18位纯数字（81/82开头）
+  if (info.idType === "港澳居民居住证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 18);
+    return;
+  }
+  // 外国人永久居留身份证（五星卡）: 18位纯数字
+  if (info.idType === "外国人永久居留身份证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 18);
+    return;
+  }
+  // 外国护照: 6-9位字母数字组合
+  if (info.idType === "外国护照") {
     info.idNo = raw
-      .replace(/[^0-9A-Za-z]/g, "")
+      .replace(/[^0-9A-Z]/g, "")
       .toUpperCase()
       .slice(0, maxLen);
     return;
   }
-  // 居住证类: digits only
-  info.idNo = raw.replace(/\D/g, "").slice(0, maxLen);
+  // 默认: alphanumeric
+  info.idNo = raw.replace(/[^0-9A-Z]/g, "").toUpperCase().slice(0, maxLen);
 }
 
 function triggerAvatarUpload() {
@@ -2626,6 +2681,13 @@ watch(
       return;
     }
     info.fullMemberDate = "";
+  },
+);
+
+watch(
+  () => info.idType,
+  () => {
+    info.idNo = "";
   },
 );
 
