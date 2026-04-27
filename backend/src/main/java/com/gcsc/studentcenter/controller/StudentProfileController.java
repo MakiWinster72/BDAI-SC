@@ -73,6 +73,7 @@ public class StudentProfileController {
         @RequestParam(required = false) String major,
         @RequestParam(required = false) Boolean hkMoTw,
         @RequestParam(required = false) Boolean specialStudent,
+        @RequestParam(required = false) String specialStudentType,
         @RequestParam(required = false) String studentCategory,
         @RequestParam(required = false) String keyword
     ) {
@@ -107,6 +108,7 @@ public class StudentProfileController {
                 major,
                 hkMoTw,
                 specialStudent,
+                specialStudentType,
                 studentCategory,
                 keyword,
                 page,

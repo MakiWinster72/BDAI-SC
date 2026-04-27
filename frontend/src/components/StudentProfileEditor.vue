@@ -85,6 +85,17 @@ const idTypeOptions = [
 ];
 const dormCampusOptions = ["佛山校区", "广州校区"];
 
+const specialStudentTypeOptions = [
+  { value: "", label: "无" },
+  { value: "HIGH_CARE", label: "高关怀" },
+  { value: "ECONOMIC_SPECIAL", label: "经济困难>特殊困难" },
+  { value: "ECONOMIC_DIFFICULT", label: "经济困难>困难" },
+  { value: "ECONOMIC_GENERAL", label: "经济困难>一般困难" },
+  { value: "DISABILITY", label: "残疾" },
+  { value: "ORPHAN", label: "孤儿" },
+  { value: "ACADEMIC_DIFFICULTY", label: "学业困难" },
+];
+
 const educationItems = reactive(Array.from({ length: 5 }, () => createEducationItem()));
 const cadreItems = reactive(Array.from({ length: 5 }, () => createCadreItem()));
 
@@ -531,6 +542,8 @@ function createEmptyInfo() {
     motherPhone: "",
     motherWorkUnit: "",
     motherTitle: "",
+    specialStudentType: "",
+    specialStudentRemark: "",
   };
 }
 
@@ -900,6 +913,8 @@ function buildSavePayload() {
     motherPhone: info.motherPhone,
     motherWorkUnit: info.motherWorkUnit,
     motherTitle: info.motherTitle,
+    specialStudentType: info.specialStudentType,
+    specialStudentRemark: info.specialStudentRemark,
     educationExperiences,
     cadreExperiences,
   };
@@ -1249,6 +1264,8 @@ function applyProfileResponse(data) {
   info.motherPhone = source.motherPhone || "";
   info.motherWorkUnit = source.motherWorkUnit || "";
   info.motherTitle = source.motherTitle || "";
+  info.specialStudentType = source.specialStudentType || "";
+  info.specialStudentRemark = source.specialStudentRemark || "";
   applyEducationExperiences(source.educationExperiences);
   applyCadreExperiences(source.cadreExperiences);
 }
@@ -2298,6 +2315,35 @@ function applyProfileResponse(data) {
         </label>
       </div>
     </div>
+
+    <div class="info-card">
+      <div class="info-section-title">特殊学生类型</div>
+      <div class="info-form-grid">
+        <label class="field-card">
+          <span class="info-label">特殊学生类别</span>
+          <select v-model="info.specialStudentType" class="info-input" :disabled="!isEditing" style="max-width: 200px;">
+            <option
+              v-for="opt in specialStudentTypeOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </option>
+          </select>
+        </label>
+        <label class="field-card field-full special-remark-field">
+          <span class="info-label">备注</span>
+          <textarea
+            v-model="info.specialStudentRemark"
+            class="info-input remark-textarea"
+            rows="2"
+            placeholder="请输入备注"
+            :disabled="!isEditing"
+          ></textarea>
+        </label>
+      </div>
+    </div>
+
     <transition name="edit-dock">
       <div v-if="isEditing" class="edit-dock">
         <div class="edit-dock-inner">
@@ -2317,3 +2363,18 @@ function applyProfileResponse(data) {
     </transition>
   </section>
 </template>
+
+<style scoped>
+.special-remark-field {
+  margin-top: 4px;
+}
+
+.remark-textarea {
+  height: auto;
+  min-height: 60px;
+  padding: 8px 12px;
+  line-height: 1.4;
+  font-size: 13px;
+  resize: vertical;
+}
+</style>

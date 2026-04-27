@@ -63,6 +63,8 @@ public class StudentProfileResponse {
     private String motherPhone;
     private String motherWorkUnit;
     private String motherTitle;
+    private String specialStudentType;
+    private String specialStudentRemark;
     private List<EducationExperienceItem> educationExperiences;
     private List<CadreExperienceItem> cadreExperiences;
 
@@ -126,6 +128,8 @@ public class StudentProfileResponse {
         String motherPhone,
         String motherWorkUnit,
         String motherTitle,
+        String specialStudentType,
+        String specialStudentRemark,
         List<EducationExperienceItem> educationExperiences,
         List<CadreExperienceItem> cadreExperiences
     ) {
@@ -188,6 +192,8 @@ public class StudentProfileResponse {
         this.motherPhone = motherPhone;
         this.motherWorkUnit = motherWorkUnit;
         this.motherTitle = motherTitle;
+        this.specialStudentType = specialStudentType;
+        this.specialStudentRemark = specialStudentRemark;
         this.educationExperiences = educationExperiences;
         this.cadreExperiences = cadreExperiences;
     }
@@ -426,6 +432,14 @@ public class StudentProfileResponse {
 
     public String getMotherTitle() {
         return motherTitle;
+    }
+
+    public String getSpecialStudentType() {
+        return specialStudentType;
+    }
+
+    public String getSpecialStudentRemark() {
+        return specialStudentRemark;
     }
 
     public List<EducationExperienceItem> getEducationExperiences() {
