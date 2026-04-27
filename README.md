@@ -92,7 +92,7 @@ npm run dev
 
 ```
 GCSC/
-├── backend/                          # Spring Boot 后端
+├── backend/                                # Spring Boot 后端
 │   ├── src/main/java/com/gcsc/studentcenter/
 │   │   ├── StudentCenterApplication.java   # 启动类
 │   │   ├── config/                         # 安全配置、CORS、JWT 过滤器
@@ -104,12 +104,12 @@ GCSC/
 │   │   │   ├── UploadController.java       # 文件上传
 │   │   │   └── SystemSettingsController.java
 │   │   ├── service/                        # 业务逻辑层
-│   │   ├── repository/                      # 数据访问层
-│   │   ├── entity/                          # JPA 实体
-│   │   ├── dto/                              # 请求/响应 DTO
-│   │   └── exception/                        # 全局异常处理
+│   │   ├── repository/                     # 数据访问层
+│   │   ├── entity/                         # JPA 实体
+│   │   ├── dto/                            # 请求/响应 DTO
+│   │   └── exception/                      # 全局异常处理
 │   ├── src/main/resources/
-│   │   └── application.yml                   # 主配置（从 .env 导入变量）
+│   │   └── application.yml                 # 主配置（从 .env 导入变量）
 │   └── pom.xml
 │
 ├── frontend/                          # Vue 3 前端
@@ -142,11 +142,6 @@ GCSC/
 │   ├── vite.config.js
 │   └── package.json
 │
-├── docs/                              # 开发文档
-│   ├── database.md                    # 数据库表结构
-│   ├── auth.md                        # 认证流程详解
-│   ├── animation.md                   # 动画规范
-│   └── storage.md                     # 文件存储说明
 ├── assets/                            # 产品截图
 ├── scripts/                           # 工具脚本
 └── .env.example                       # 环境配置示例
@@ -170,8 +165,6 @@ GCSC/
 | `posts`                       | 动态/通知                                                  |
 | `post_media`                  | 动态媒体附件                                               |
 | `contacts`                    | 教师/部门联系方式                                          |
-
-详细表结构见 [`docs/database.md`](docs/database.md)。
 
 ---
 
