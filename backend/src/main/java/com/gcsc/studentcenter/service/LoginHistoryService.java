@@ -22,6 +22,7 @@ import java.util.Optional;
 public class LoginHistoryService {
 
     private static final int RETENTION_DAYS = 30;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final LoginHistoryRepository loginHistoryRepository;
     private final AppUserRepository appUserRepository;
@@ -73,9 +74,11 @@ public class LoginHistoryService {
     public Page<LoginHistoryResponse> getLoginHistory(String username, int page, int size) {
         AppUser user = appUserRepository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
-        Pageable pageable = PageRequest.of(page, size);
+        int cappedSize = Math.min(size, MAX_PAGE_SIZE);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), cappedSize);
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(RETENTION_DAYS);
         Page<LoginHistory> historyPage = loginHistoryRepository
-            .findAllByUserIdOrderByLoginTimeDesc(user.getId(), pageable);
+            .findByUserIdAndLoginTimeAfterOrderByLoginTimeDesc(user.getId(), cutoff, pageable);
         return historyPage.map(this::toResponse);
     }
 
@@ -87,9 +90,12 @@ public class LoginHistoryService {
     }
 
     private LoginHistoryResponse toResponse(LoginHistory history) {
+        String ua = history.getUserAgent();
         return new LoginHistoryResponse(
             history.getIpAddress(),
             history.getDeviceName(),
+            parseBrowser(ua),
+            parseOs(ua),
             history.getLoginTime()
         );
     }
