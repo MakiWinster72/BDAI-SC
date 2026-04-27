@@ -90,7 +90,7 @@
   min-height: 26px;
   margin-bottom: 0;
   margin-top: 5px;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   justify-content: center;
   flex-direction: column;
@@ -119,7 +119,7 @@
   padding: 0 9px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.5);
   color: var(--primary);
   font-size: 12px;
   font-weight: 700;
@@ -131,9 +131,9 @@
 }
 
 .menu-card-back:hover {
-  background: rgba(255, 255, 255, 0.68);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
 }
 
 .menu-card-title {
@@ -151,6 +151,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transform-origin: left center;
+  box-shadow: 0 2px 8px rgba(100, 12, 114, 0.06);
 }
 
 .menu-card-body {
@@ -275,6 +276,7 @@
     background-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
     color 180ms ease,
     border-color 160ms ease,
+    box-shadow 160ms ease,
     transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
@@ -302,15 +304,15 @@
 }
 
 .menu-item:hover:not(.disabled):not(.active) {
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.88);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(100, 12, 114, 0.08);
 }
 
 .menu-item.active {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: #fff;
   border-color: transparent;
-  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .menu-item-label {
@@ -491,6 +493,7 @@
   transition:
     background-color 180ms ease,
     border-color 160ms ease,
+    box-shadow 160ms ease,
     transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
@@ -505,13 +508,15 @@
 }
 
 .menu-notification-item:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.82);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(100, 12, 114, 0.08);
 }
 
 .menu-notification-item.active {
   background: rgba(100, 12, 114, 0.07);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(100, 12, 114, 0.12);
 }
 
 .menu-notification-head {
@@ -756,8 +761,8 @@
   gap: 4px;
   padding: 5px;
   border-radius: 18px;
-  background: rgba(100, 12, 114, 0.05);
-  border: 1px solid var(--line);
+  background: rgba(100, 12, 114, 0.04);
+  border: 1px solid rgba(100, 12, 114, 0.1);
   width: 100%;
   box-sizing: border-box;
 }
@@ -773,7 +778,7 @@
   gap: 2px;
   padding: 7px 6px;
   border-radius: 13px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text-sub);
   font-size: 12px;
@@ -784,7 +789,8 @@
   transition:
     background 200ms cubic-bezier(0.22, 1, 0.36, 1),
     color 200ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease,
+    box-shadow 160ms ease,
     transform 120ms ease;
   white-space: nowrap;
 }
@@ -797,8 +803,9 @@
 }
 
 .admin-tab:hover:not(.active) {
-  background: rgba(100, 12, 114, 0.08);
+  background: rgba(100, 12, 114, 0.06);
   color: var(--primary);
+  border-color: rgba(100, 12, 114, 0.1);
 }
 
 .admin-tab:hover:not(.active) .tab-icon {
@@ -806,10 +813,11 @@
 }
 
 .admin-tab.active {
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.95);
   color: var(--primary-dark);
   font-weight: 700;
-  box-shadow: 0 2px 12px rgba(100, 12, 114, 0.15), 0 1px 3px rgba(100, 12, 114, 0.1);
+  border-color: rgba(100, 12, 114, 0.15);
+  box-shadow: 0 2px 8px rgba(100, 12, 114, 0.08);
 }
 
 .admin-tab.active .tab-icon {
@@ -836,8 +844,8 @@
 }
 
 .admin-tab.active .tab-count {
-  background: rgba(100, 12, 114, 0.2);
-  color: var(--primary-dark);
+  background: var(--primary);
+  color: #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {
