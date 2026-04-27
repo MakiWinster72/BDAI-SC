@@ -12,36 +12,6 @@
   
 ---
 
-## 目录
-
-- [特性](#特性)
-- [技术栈](#技术栈)
-- [快速启动](#快速启动)
-- [项目结构](#项目结构)
-- [数据库](#数据库)
-- [API 概览](#api-概览)
-- [成就类型](#成就类型)
-- [角色权限](#角色权限)
-- [配置说明](#配置说明)
-- [开发指南](#开发指南)
-- [贡献规范](#贡献规范)
-
----
-
-## 特性
-
-- **多角色系统** — 学生（STUDENT）、教师（TEACHER）、管理员（ADMIN）三级权限
-- **学生档案** — 完整个人信息、教育经历、班干部经历、政治面貌、家庭信息管理
-- **9 类成就记录** — 竞赛、科研、论文、专利、证书、作品、期刊、双百工程、培训
-- **审核流程** — 学生提交 → 教师/管理员审核，支持通过/拒绝/退回修改
-- **文件上传** — 图片、视频、PDF、Word、Excel 附件（最大 200MB）
-- **多格式导出** — xlsx、pdf/docx 导出学生档案与成就数据
-- **通知中心** — 审核状态实时推送通知
-- **JWT 鉴权** — 无状态认证，支持 120 分钟令牌过期
-- **响应式布局** — 桌面端侧边栏 + 移动端胶囊导航
-
----
-
 ## 技术栈
 
 ### 后端
@@ -142,25 +112,25 @@ GCSC/
 │   │   └── application.yml                   # 主配置（从 .env 导入变量）
 │   └── pom.xml
 │
-├── frontend/                         # Vue 3 前端
+├── frontend/                          # Vue 3 前端
 │   ├── src/
-│   │   ├── api/                      # Axios 请求模块
-│   │   │   ├── request.js            # axios 实例 + 拦截器
-│   │   │   ├── auth.js               # 认证
-│   │   │   ├── profile.js            # 学生档案
-│   │   │   └── achievements.js       # 成就接口
-│   │   ├── assets/styles/            # 全局 CSS
-│   │   │   ├── _variables.css        # CSS 变量
-│   │   │   ├── layout.css            # 布局
-│   │   │   ├── dialogs.css           # 对话框/Toast
-│   │   │   └── achievements.css      # 成就页样式
-│   │   ├── components/               # Vue 组件
+│   │   ├── api/                       # Axios 请求模块
+│   │   │   ├── request.js             # axios 实例 + 拦截器
+│   │   │   ├── auth.js                # 认证
+│   │   │   ├── profile.js             # 学生档案
+│   │   │   └── achievements.js        # 成就接口
+│   │   ├── assets/styles/             # 全局 CSS
+│   │   │   ├── _variables.css         # CSS 变量
+│   │   │   ├── layout.css             # 布局
+│   │   │   ├── dialogs.css            # 对话框/Toast
+│   │   │   └── achievements.css       # 成就页样式
+│   │   ├── components/                # Vue 组件
 │   │   ├── composables/               # 组合式函数
-│   │   ├── constants/                # 菜单/成就类型常量
-│   │   ├── layouts/                  # 页面布局（DashboardLayout）
-│   │   ├── router/                   # Vue Router 配置
+│   │   ├── constants/                 # 菜单/成就类型常量
+│   │   ├── layouts/                   # 页面布局（DashboardLayout）
+│   │   ├── router/                    # Vue Router 配置
 │   │   ├── utils/                     # 导出/渲染/工具函数
-│   │   └── views/                    # 页面级组件
+│   │   └── views/                     # 页面级组件
 │   │       ├── LoginView.vue          # 登录
 │   │       ├── RegisterView.vue       # 注册
 │   │       ├── AchievementsView.vue   # 成就墙
@@ -172,14 +142,14 @@ GCSC/
 │   ├── vite.config.js
 │   └── package.json
 │
-├── docs/                             # 开发文档
+├── docs/                              # 开发文档
 │   ├── database.md                    # 数据库表结构
 │   ├── auth.md                        # 认证流程详解
 │   ├── animation.md                   # 动画规范
 │   └── storage.md                     # 文件存储说明
-├── assets/                           # 产品截图
-├── scripts/                          # 工具脚本
-└── .env.example                      # 环境配置示例
+├── assets/                            # 产品截图
+├── scripts/                           # 工具脚本
+└── .env.example                       # 环境配置示例
 ```
 
 ---
@@ -277,17 +247,19 @@ GCSC/
 
 ## 角色权限
 
-| 功能             | STUDENT        | TEACHER | ADMIN |
-| ---------------- | -------------- | ------- | ----- |
-| 登录/注册        | ✅             | ✅      | ✅    |
-| 管理个人档案     | ✅（提交审核） | ✅      | ✅    |
-| 提交成就         | ✅             | ✅      | ✅    |
-| 审核成就         | ❌             | ✅      | ✅    |
-| 审核档案变更     | ❌             | ✅      | ✅    |
-| 查看所有学生档案 | ❌             | ✅      | ✅    |
-| 导出学生信息     | ❌             | ✅      | ✅    |
-| 系统设置         | ❌             | ❌      | ✅    |
-| 管理用户角色     | ❌             | ❌      | ✅    |
+| 功能         | STUDENT        | CADRE | TEACHER | ADMIN |
+| ------------ | -------------- | ----- | ------- | ----- |
+| 登录/注册    | ✅             | ✅    | ✅      | ✅    |
+| 管理个人档案 | ✅（提交审核） | ✅    | ✅      | ✅    |
+| 提交成就     | ✅             | ✅    | ✅      | ✅    |
+| 审核成就     | ❌             | 本班  | ✅      | ✅    |
+| 审核档案变更 | ❌             | 本班  | ✅      | ✅    |
+| 查看学生档案 | 仅本人         | 本班  | 所管    | 全部  |
+| 导出学生信息 | ❌             | ❌    | ✅      | ✅    |
+| 系统设置     | ❌             | ❌    | ❌      | ✅    |
+| 管理用户角色 | ❌             | ❌    | ❌      | ✅    |
+
+> STUDENT 是默认角色, CADRE是班干部, TEACHER是老师, ADMIN是管理员
 
 ---
 
@@ -300,7 +272,7 @@ GCSC/
 BDAI_SC_DB_URL=jdbc:mysql://127.0.0.1:3306/bdai_sc?useUnicode=true&...
 BDAI_SC_DB_USER=bdai_sc
 BDAI_SC_DB_PASSWORD=bdai_sc
-BDAI_SC_JWT_SECRET=your-super-secret-key   # 生产环境务必更换
+BDAI_SC_JWT_SECRET=your-super-secret-key
 BDAI_SC_JWT_EXPIRES_MINUTES=120
 BDAI_SC_UPLOAD_DIR=./uploads                # 文件存储目录
 VITE_API_BASE=http://localhost:8080         # 前端 API 地址
@@ -344,7 +316,7 @@ npm run preview
 
 ### 添加新成就类型
 
-1. 在 `backend/entity/` 创建新实体（如 `AchievementNewType.java`），继承通用结构
+1. 在 `backend/entity/` 创建新实体，继承通用结构
 2. 在 `backend/repository/` 创建对应的 `JpaRepository`
 3. 在 `backend/controller/` 添加 REST 控制器
 4. 在 `frontend/src/constants/achievementConstants.js` 添加类型常量
