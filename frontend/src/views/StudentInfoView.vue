@@ -140,7 +140,10 @@
 
       <section class="card student-results-card">
         <div v-if="!gridViewOpen" class="student-results-header">
-          <div class="info-section-title">筛选结果</div>
+          <div class="info-section-title">
+            筛选结果
+            <span v-if="hasActiveFilters" class="student-results-count">已筛选</span>
+          </div>
           <div class="student-results-actions">
             <button
               class="ghost-button"
@@ -182,8 +185,14 @@
           加载学生信息中...
         </div>
         <div v-else-if="pagedStudents.length" class="student-list">
-          <div v-for="item in pagedStudents" :key="item.id" class="student-row">
+          <div
+            v-for="item in pagedStudents"
+            :key="item.id"
+            class="student-row"
+            :class="{ selected: selectedIds.includes(item.id) }"
+          >
             <input v-model="selectedIds" type="checkbox" :value="item.id" />
+            <div class="student-avatar">{{ (item.name || '?')[0] }}</div>
             <div class="student-main">
               <div class="student-name">{{ item.name }}</div>
               <div class="student-meta">
