@@ -126,8 +126,15 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar â€
 ### Backend
 - Database tables/columns: snake_case (`student_profiles`, `display_name`)
 - Foreign keys: `table_name_id` pattern
-- Role names in DB become `ROLE_<name>` in Spring Security
+- Role names in DB become `ROLE_<role>` in Spring Security (STUDENT, TEACHER, ADMIN, CADRE)
 - Use `@Valid` on DTOs for validation
+
+### Review/Approval Workflow
+1. Student submits review request with `payloadSnapshot` and `changes`
+2. TEACHER/ADMIN sees pending entry in NotificationsView
+3. Approve: sets status to `approved`; Reject: requires reason
+4. Cancel: requester can cancel own pending request
+5. Auto-approve: if `reviewSettings.achievementReviewAutoApprove` or `profileReviewAutoApprove`
 
 ### Frontend
 - Views in `frontend/src/views/`
@@ -139,7 +146,6 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar â€
 ### Design & Animation Patterns
 - Dialogs use `sheet-overlay` / `sheet-modal` pattern from `dialogs.css` â€” frosted glass backdrop with `z-index: 1000`, modal at `z-index: 1010+`
 - Animation timing: `0.42s cubic-bezier(0.22, 1, 0.36, 1)` for transform, `0.38s ease` for opacity
-- See `docs/animation.md` for full animation guidelines
 
 ## Git Workflow
 - Features: `feat/feature-name`
@@ -147,6 +153,3 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar â€
 - Pages: `page/page-name`
 - Style: `style/description`
 - Commit style: Present tense, verb first (e.g., "Add login page")
-
-## Project Roadmap
-See `TODO.md` for planned features including: xlsx/pdf/csv export, dark mode, mobile optimizations (capsule UI, sidebar).

@@ -14,7 +14,6 @@ backend/uploads/
 .idea/
 .vscode/
 *.iml
-AGENTS.md
 
 # os
 .DS_Store
