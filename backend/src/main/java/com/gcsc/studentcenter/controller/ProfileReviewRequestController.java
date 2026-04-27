@@ -3,12 +3,14 @@ package com.gcsc.studentcenter.controller;
 import com.gcsc.studentcenter.dto.ProfileReviewDecisionRequest;
 import com.gcsc.studentcenter.dto.ProfileReviewRequestResponse;
 import com.gcsc.studentcenter.dto.ProfileReviewSubmitRequest;
+import com.gcsc.studentcenter.dto.SupportingDocumentsRequest;
 import com.gcsc.studentcenter.service.ProfileReviewRequestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/profile-review-requests")
@@ -65,5 +67,18 @@ public class ProfileReviewRequestController {
     ) {
         profileReviewRequestService.cancel(id, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/supporting-documents")
+    public ResponseEntity<ProfileReviewRequestResponse> setSupportingDocuments(
+        Authentication authentication,
+        @PathVariable("id") Long id,
+        @RequestBody SupportingDocumentsRequest body
+    ) {
+        List<Map<String, String>> docs = body != null && body.getDocuments() != null
+            ? body.getDocuments() : List.of();
+        return ResponseEntity.ok(
+            profileReviewRequestService.setSupportingDocuments(id, authentication.getName(), docs)
+        );
     }
 }

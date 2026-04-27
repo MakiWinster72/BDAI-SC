@@ -9,6 +9,8 @@ public class AchievementUploadSettingsRequest {
     private String attachmentVideoExts;
     private String attachmentImageExts;
     private String attachmentArchiveExts;
+    private Integer supportingDocMaxCount;
+    private Integer supportingDocMaxSizeMb;
 
     public Integer getImageMaxCount() {
         return imageMaxCount;
@@ -72,5 +74,21 @@ public class AchievementUploadSettingsRequest {
 
     public void setAttachmentArchiveExts(String attachmentArchiveExts) {
         this.attachmentArchiveExts = attachmentArchiveExts;
+    }
+
+    public Integer getSupportingDocMaxCount() {
+        return supportingDocMaxCount;
+    }
+
+    public void setSupportingDocMaxCount(Integer supportingDocMaxCount) {
+        this.supportingDocMaxCount = supportingDocMaxCount;
+    }
+
+    public Integer getSupportingDocMaxSizeMb() {
+        return supportingDocMaxSizeMb;
+    }
+
+    public void setSupportingDocMaxSizeMb(Integer supportingDocMaxSizeMb) {
+        this.supportingDocMaxSizeMb = supportingDocMaxSizeMb;
     }
 }

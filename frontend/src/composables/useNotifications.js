@@ -5,6 +5,7 @@ import {
   cancelAchievementReviewRequest,
   listAchievementReviewRequests,
   rejectAchievementReviewRequest,
+  setAchievementReviewRequestDocuments,
   submitAchievementReviewRequestApi,
 } from "../api/achievementReviewRequests";
 import {
@@ -12,6 +13,7 @@ import {
   cancelProfileReviewRequest,
   listProfileReviewRequests,
   rejectProfileReviewRequest,
+  setProfileReviewRequestDocuments,
   submitProfileReviewRequestApi,
 } from "../api/profileReviewRequests";
 
@@ -236,6 +238,7 @@ function buildReviewEntry(request, user) {
     recordId: request.recordId || null,
     payloadSnapshot: request.payloadSnapshot || null,
     changes: Array.isArray(request.changes) ? request.changes : [],
+    supportingDocuments: Array.isArray(request.supportingDocuments) ? request.supportingDocuments : [],
     categoryKey,
     timeText: formatRelativeTime(request.updatedAt || request.createdAt),
     createdAt: request.updatedAt || request.createdAt,
@@ -452,6 +455,22 @@ async function cancelReviewRequest({ requestId, resourceType }) {
   );
 }
 
+async function setSupportingDocuments({ requestId, documents, resourceType }) {
+  const isAch = resourceType === "achievement";
+  if (!isAch && resourceType !== "profile") {
+    throw new Error("审核请求类型无效");
+  }
+  const response = isAch
+    ? await setAchievementReviewRequestDocuments(requestId, documents)
+    : await setProfileReviewRequestDocuments(requestId, documents);
+  if (isAch) {
+    upsertAchievementReviewRequest(response.data);
+  } else {
+    upsertProfileReviewRequest(response.data);
+  }
+  return response.data;
+}
+
 export function useNotifications(userSource) {
   ensureLoaded();
   fetchDelayedThreshold();
@@ -616,6 +635,7 @@ export function useNotifications(userSource) {
     addNotification,
     updateReviewRequestStatus,
     cancelReviewRequest,
+    setSupportingDocuments,
     markProcessedEntryRead,
     markEntryRead,
     markEntryUnread,

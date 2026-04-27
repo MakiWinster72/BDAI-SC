@@ -6,16 +6,19 @@ import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import { API_BASE } from "../api/request";
 import { useNotifications } from "../composables/useNotifications";
 import { searchStudentProfiles, getStudentProfileById } from "../api/profile";
+import { uploadMedia } from "../api/upload";
+import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { resolveMediaUrl } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
 import { useToast } from "../composables/useToast";
 
 const { error: toastError } = useToast();
+const { settings: uploadLimits } = useAchievementUploadSettings();
 
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, markProcessedEntryRead, markEntryRead, classReviewEntries } = useNotifications(profile);
+const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, classReviewEntries } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
 const rejectReason = ref(localStorage.getItem("bdai_sc_reject_draft") || "");
@@ -61,10 +64,16 @@ const studentDetailItem = ref(null);
 const cancelConfirmOpen = ref(false);
 const achievementReviewSnapshot = computed(() => resolveAchievementReviewPayload(selectedEntry.value));
 
+const supportingDocsUploading = ref(false);
+const supportingDocsError = ref("");
+const newSupportingDocText = ref("");
+const supportingDocuments = computed(() => selectedEntry.value?.supportingDocuments || []);
+
 watch(selectedEntry, (entry) => {
   rejectEditorOpen.value = false;
   actionError.value = "";
   cancelConfirmOpen.value = false;
+  supportingDocsError.value = "";
   closeStudentDetail();
   if (!entry) return;
   markEntryRead(entry.id);
@@ -87,6 +96,23 @@ function resolveAvatarUrlForChange(value) {
   const url = formatChangeValue(value);
   if (!url || url === "-") return null;
   return resolveMediaUrl(url);
+}
+
+function resolveExtension(filename = "") {
+  const clean = String(filename).toLowerCase();
+  const idx = clean.lastIndexOf(".");
+  return idx >= 0 && idx < clean.length - 1 ? clean.substring(idx + 1) : "";
+}
+
+function supportingDocIcon(doc) {
+  const ext = resolveExtension(doc?.name || doc?.url || "");
+  if (ext === "pdf") return "/assets/icons/pdf.svg";
+  if (ext === "xls" || ext === "xlsx") return "/assets/icons/excel.svg";
+  if (ext === "ppt" || ext === "pptx") return "/assets/icons/ppt.svg";
+  if (["zip", "rar", "7z"].includes(ext)) return "/assets/icons/zip.svg";
+  if (["mp4", "mov", "webm"].includes(ext)) return "/assets/icons/video.svg";
+  if (["jpeg", "jpg", "png", "heif"].includes(ext)) return "/assets/icons/image.svg";
+  return "/assets/icons/doc.svg";
 }
 
 function isStructuredChangeValue(value) {
@@ -231,6 +257,76 @@ function closeStudentDetail() {
   studentDetailOpen.value = false;
   setTimeout(() => { studentDetailItem.value = null; }, 450);
 }
+
+async function handleSupportingDocUpload(file) {
+  if (!file || !selectedEntry.value) return;
+  supportingDocsError.value = "";
+  const currentFileCount = supportingDocuments.value.filter(d => (d.type || "file") !== "text").length;
+  if (currentFileCount >= uploadLimits.supportingDocMaxCount) {
+    supportingDocsError.value = `最多上传 ${uploadLimits.supportingDocMaxCount} 个文件`;
+    return;
+  }
+  const maxBytes = uploadLimits.supportingDocMaxSizeMb * 1024 * 1024;
+  if (file.size > maxBytes) {
+    supportingDocsError.value = `文件大小不能超过 ${uploadLimits.supportingDocMaxSizeMb}MB`;
+    return;
+  }
+  supportingDocsUploading.value = true;
+  try {
+    const { data: uploaded } = await uploadMedia(file, { context: "review-supporting" });
+    if (!uploaded?.success || !uploaded?.url) {
+      throw new Error("上传失败，请稍后重试");
+    }
+    const newDoc = {
+      url: uploaded.url,
+      name: uploaded.originalName || file.name,
+      mediaType: uploaded.mediaType || "",
+    };
+    const updated = [...supportingDocuments.value, newDoc];
+    await setSupportingDocuments({
+      requestId: selectedEntry.value.id,
+      documents: updated,
+      resourceType: selectedEntry.value.resourceType,
+    });
+  } catch (e) {
+    supportingDocsError.value = e?.response?.data?.message || e?.message || "上传失败";
+  } finally {
+    supportingDocsUploading.value = false;
+  }
+}
+
+async function handleAddSupportingText() {
+  const text = newSupportingDocText.value.trim();
+  if (!text || !selectedEntry.value) return;
+  supportingDocsError.value = "";
+  try {
+    const newDoc = { type: "text", content: text };
+    const updated = [...supportingDocuments.value, newDoc];
+    await setSupportingDocuments({
+      requestId: selectedEntry.value.id,
+      documents: updated,
+      resourceType: selectedEntry.value.resourceType,
+    });
+    newSupportingDocText.value = "";
+  } catch (e) {
+    supportingDocsError.value = e?.response?.data?.message || e?.message || "添加失败";
+  }
+}
+
+async function handleRemoveSupportingDoc(index) {
+  if (!selectedEntry.value) return;
+  supportingDocsError.value = "";
+  try {
+    const updated = supportingDocuments.value.filter((_, i) => i !== index);
+    await setSupportingDocuments({
+      requestId: selectedEntry.value.id,
+      documents: updated,
+      resourceType: selectedEntry.value.resourceType,
+    });
+  } catch (e) {
+    supportingDocsError.value = e?.response?.data?.message || e?.message || "删除失败";
+  }
+}
 </script>
 
 <template>
@@ -280,6 +376,82 @@ function closeStudentDetail() {
             <div class="notif-section-label">驳回理由</div>
             <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
           </div>
+
+          <!-- Supporting Documents -->
+          <section v-if="canCancelSelected || supportingDocuments.length" class="notif-changes notif-supporting-docs">
+            <div class="notif-section-label">证明资料</div>
+            <div v-if="canCancelSelected" class="supporting-docs-upload">
+              <div class="supporting-docs-add-row">
+                <input
+                  v-model="newSupportingDocText"
+                  class="supporting-docs-text-input"
+                  type="text"
+                  placeholder="输入文字说明..."
+                  maxlength="500"
+                  @keyup.enter="handleAddSupportingText"
+                />
+                <button
+                  class="supporting-docs-add-text-btn"
+                  type="button"
+                  :disabled="!newSupportingDocText.trim()"
+                  @click="handleAddSupportingText"
+                >
+                  添加文字
+                </button>
+              </div>
+              <label class="supporting-docs-upload-btn" :class="{ 'is-uploading': supportingDocsUploading }">
+                <input
+                  type="file"
+                  class="supporting-docs-input"
+                  :disabled="supportingDocsUploading"
+                  @change="handleSupportingDocUpload($event.target.files[0])"
+                />
+                <span v-if="supportingDocsUploading">上传中...</span>
+                <span v-else>+ 上传文件</span>
+              </label>
+              <span v-if="supportingDocsError" class="supporting-docs-error">{{ supportingDocsError }}</span>
+            </div>
+            <div v-if="supportingDocuments.length" class="supporting-docs-list">
+              <div
+                v-for="(doc, idx) in supportingDocuments"
+                :key="`${doc.type || 'file'}-${doc.url || doc.content}-${idx}`"
+                :class="[(doc.type || 'file') === 'text' ? 'supporting-docs-text' : 'supporting-docs-file']"
+              >
+                <template v-if="(doc.type || 'file') === 'text'">
+                  <span class="supporting-docs-text-content">{{ doc.content }}</span>
+                  <div class="supporting-docs-text-actions">
+                    <button
+                      v-if="canCancelSelected"
+                      class="supporting-docs-remove"
+                      type="button"
+                      title="删除"
+                      @click.stop="handleRemoveSupportingDoc(idx)"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <img :src="supportingDocIcon(doc)" alt="" class="supporting-docs-file-icon" />
+                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="window.open(resolveMediaUrl(doc.url), '_blank')">{{ doc.name }}</span>
+                  <button
+                    v-if="canCancelSelected"
+                    class="supporting-docs-remove"
+                    type="button"
+                    title="删除"
+                    @click.stop="handleRemoveSupportingDoc(idx)"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <p v-if="!supportingDocuments.length && !canCancelSelected" class="supporting-docs-empty">暂无证明资料</p>
+          </section>
 
           <!-- Achievement Review Snapshot -->
           <Transition name="section-fade" mode="out-in">

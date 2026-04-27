@@ -50,6 +50,9 @@ public class AchievementReviewRequest {
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
 
+    @Column(name = "supporting_documents_json", columnDefinition = "TEXT")
+    private String supportingDocumentsJson;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -154,6 +157,14 @@ public class AchievementReviewRequest {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public String getSupportingDocumentsJson() {
+        return supportingDocumentsJson;
+    }
+
+    public void setSupportingDocumentsJson(String supportingDocumentsJson) {
+        this.supportingDocumentsJson = supportingDocumentsJson;
     }
 
     public LocalDateTime getCreatedAt() {

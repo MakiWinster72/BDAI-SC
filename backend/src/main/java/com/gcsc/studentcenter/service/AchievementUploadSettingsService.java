@@ -35,10 +35,14 @@ public class AchievementUploadSettingsService {
   private static final int DEFAULT_IMAGE_MAX_SIZE_MB = 10;
   private static final int DEFAULT_ATTACHMENT_MAX_COUNT = 10;
   private static final int DEFAULT_ATTACHMENT_MAX_SIZE_MB = 50;
+  private static final int DEFAULT_SUPPORTING_DOC_MAX_COUNT = 10;
+  private static final int DEFAULT_SUPPORTING_DOC_MAX_SIZE_MB = 50;
   private static final int MIN_IMAGE_MAX_COUNT = 1;
   private static final int MAX_IMAGE_MAX_COUNT = 9;
   private static final int MIN_ATTACHMENT_MAX_COUNT = 1;
   private static final int MAX_ATTACHMENT_MAX_COUNT = 20;
+  private static final int MIN_SUPPORTING_DOC_MAX_COUNT = 1;
+  private static final int MAX_SUPPORTING_DOC_MAX_COUNT = 20;
   private static final int MIN_FILE_MAX_SIZE_MB = 1;
   private static final int MAX_FILE_MAX_SIZE_MB = 200;
 
@@ -91,6 +95,16 @@ public class AchievementUploadSettingsService {
             MIN_FILE_MAX_SIZE_MB,
             MAX_FILE_MAX_SIZE_MB,
             "附件大小限制应在 1MB 到 200MB 之间"),
+        normalizeRange(
+            request.getSupportingDocMaxCount(),
+            MIN_SUPPORTING_DOC_MAX_COUNT,
+            MAX_SUPPORTING_DOC_MAX_COUNT,
+            "证明资料数量限制应在 1 到 20 之间"),
+        normalizeRange(
+            request.getSupportingDocMaxSizeMb(),
+            MIN_FILE_MAX_SIZE_MB,
+            MAX_FILE_MAX_SIZE_MB,
+            "证明资料大小限制应在 1MB 到 200MB 之间"),
         normalizeExtList(request.getAttachmentDocumentExts()),
         normalizeExtList(request.getAttachmentVideoExts()),
         normalizeExtList(request.getAttachmentImageExts()),
@@ -101,6 +115,8 @@ public class AchievementUploadSettingsService {
     payload.put("imageMaxSizeMb", settings.imageMaxSizeMb);
     payload.put("attachmentMaxCount", settings.attachmentMaxCount);
     payload.put("attachmentMaxSizeMb", settings.attachmentMaxSizeMb);
+    payload.put("supportingDocMaxCount", settings.supportingDocMaxCount);
+    payload.put("supportingDocMaxSizeMb", settings.supportingDocMaxSizeMb);
     payload.put("attachmentDocumentExts", settings.attachmentDocumentExts);
     payload.put("attachmentVideoExts", settings.attachmentVideoExts);
     payload.put("attachmentImageExts", settings.attachmentImageExts);
@@ -155,6 +171,12 @@ public class AchievementUploadSettingsService {
         throw new IllegalArgumentException("当前设置不允许上传该附件格式");
       }
     }
+    if ("review-supporting".equals(context)) {
+      validateByMegabytes(file.getSize(), settings.supportingDocMaxSizeMb, "证明资料");
+      if (!isAllowedAttachmentExtension(resolveExtension(file.getOriginalFilename()), settings)) {
+        throw new IllegalArgumentException("当前设置不允许上传该格式");
+      }
+    }
   }
 
   private AchievementUploadSettingsResponse toResponse(Settings settings) {
@@ -166,7 +188,9 @@ public class AchievementUploadSettingsService {
         joinExtList(settings.attachmentDocumentExts),
         joinExtList(settings.attachmentVideoExts),
         joinExtList(settings.attachmentImageExts),
-        joinExtList(settings.attachmentArchiveExts));
+        joinExtList(settings.attachmentArchiveExts),
+        settings.supportingDocMaxCount,
+        settings.supportingDocMaxSizeMb);
   }
 
   private Settings readSettings() {
@@ -180,6 +204,8 @@ public class AchievementUploadSettingsService {
         intValue(raw.get("imageMaxSizeMb"), DEFAULT_IMAGE_MAX_SIZE_MB),
         intValue(raw.get("attachmentMaxCount"), DEFAULT_ATTACHMENT_MAX_COUNT),
         intValue(raw.get("attachmentMaxSizeMb"), DEFAULT_ATTACHMENT_MAX_SIZE_MB),
+        intValue(raw.get("supportingDocMaxCount"), DEFAULT_SUPPORTING_DOC_MAX_COUNT),
+        intValue(raw.get("supportingDocMaxSizeMb"), DEFAULT_SUPPORTING_DOC_MAX_SIZE_MB),
         extListValue(raw.get("attachmentDocumentExts"), List.of("docx", "doc", "pdf", "xls", "xlsx", "pptx", "ppt")),
         extListValue(raw.get("attachmentVideoExts"), List.of("mp4", "mov")),
         extListValue(raw.get("attachmentImageExts"), List.of("jpeg", "jpg", "png", "heif")),
@@ -217,6 +243,8 @@ public class AchievementUploadSettingsService {
     defaults.put("imageMaxSizeMb", DEFAULT_IMAGE_MAX_SIZE_MB);
     defaults.put("attachmentMaxCount", DEFAULT_ATTACHMENT_MAX_COUNT);
     defaults.put("attachmentMaxSizeMb", DEFAULT_ATTACHMENT_MAX_SIZE_MB);
+    defaults.put("supportingDocMaxCount", DEFAULT_SUPPORTING_DOC_MAX_COUNT);
+    defaults.put("supportingDocMaxSizeMb", DEFAULT_SUPPORTING_DOC_MAX_SIZE_MB);
     defaults.put("attachmentDocumentExts", List.of("docx", "doc", "pdf", "xls", "xlsx", "pptx", "ppt"));
     defaults.put("attachmentVideoExts", List.of("mp4", "mov"));
     defaults.put("attachmentImageExts", List.of("jpeg", "jpg", "png", "heif"));
@@ -356,6 +384,8 @@ public class AchievementUploadSettingsService {
     private final int imageMaxSizeMb;
     private final int attachmentMaxCount;
     private final int attachmentMaxSizeMb;
+    private final int supportingDocMaxCount;
+    private final int supportingDocMaxSizeMb;
     private final List<String> attachmentDocumentExts;
     private final List<String> attachmentVideoExts;
     private final List<String> attachmentImageExts;
@@ -366,6 +396,8 @@ public class AchievementUploadSettingsService {
         int imageMaxSizeMb,
         int attachmentMaxCount,
         int attachmentMaxSizeMb,
+        int supportingDocMaxCount,
+        int supportingDocMaxSizeMb,
         List<String> attachmentDocumentExts,
         List<String> attachmentVideoExts,
         List<String> attachmentImageExts,
@@ -374,6 +406,8 @@ public class AchievementUploadSettingsService {
       this.imageMaxSizeMb = imageMaxSizeMb;
       this.attachmentMaxCount = attachmentMaxCount;
       this.attachmentMaxSizeMb = attachmentMaxSizeMb;
+      this.supportingDocMaxCount = supportingDocMaxCount;
+      this.supportingDocMaxSizeMb = supportingDocMaxSizeMb;
       this.attachmentDocumentExts = attachmentDocumentExts;
       this.attachmentVideoExts = attachmentVideoExts;
       this.attachmentImageExts = attachmentImageExts;

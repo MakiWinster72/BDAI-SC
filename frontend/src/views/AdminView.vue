@@ -253,6 +253,8 @@ const form = reactive({
   attachmentVideoExts: settings.attachmentVideoExts,
   attachmentImageExts: settings.attachmentImageExts,
   attachmentArchiveExts: settings.attachmentArchiveExts,
+  supportingDocMaxCount: settings.supportingDocMaxCount,
+  supportingDocMaxSizeMb: settings.supportingDocMaxSizeMb,
 });
 const reviewForm = reactive({
   profileReviewEnabled: reviewSettings.profileReviewEnabled,
@@ -266,6 +268,9 @@ const imageSubtitle = computed(
 );
 const attachmentSubtitle = computed(
   () => `最多 ${form.attachmentMaxCount} 个 · 单个不超过 ${form.attachmentMaxSizeMb}MB`,
+);
+const supportingDocSubtitle = computed(
+  () => `最多 ${form.supportingDocMaxCount} 个 · 单个不超过 ${form.supportingDocMaxSizeMb}MB`,
 );
 const enabledPreviewTypes = computed(() =>
   ATTACHMENT_TYPE_OPTIONS.map((item) => ({
@@ -319,6 +324,8 @@ function syncFormFromSettings() {
   form.attachmentVideoExts = settings.attachmentVideoExts;
   form.attachmentImageExts = settings.attachmentImageExts;
   form.attachmentArchiveExts = settings.attachmentArchiveExts;
+  form.supportingDocMaxCount = settings.supportingDocMaxCount;
+  form.supportingDocMaxSizeMb = settings.supportingDocMaxSizeMb;
 }
 
 function syncReviewFormFromSettings() {
@@ -340,6 +347,8 @@ async function handleSubmit() {
     attachmentVideoExts: form.attachmentVideoExts,
     attachmentImageExts: form.attachmentImageExts,
     attachmentArchiveExts: form.attachmentArchiveExts,
+    supportingDocMaxCount: Number(form.supportingDocMaxCount),
+    supportingDocMaxSizeMb: Number(form.supportingDocMaxSizeMb),
   });
   if (result.success) {
     saveMessage.value = "上传限制已更新，成就页面会同步显示。";
@@ -883,6 +892,46 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
               </div>
 
+              <!-- Supporting Docs Block -->
+              <div class="setting-group">
+                <div class="setting-group-label">
+                  <span class="group-index">03</span>
+                  <span class="group-title">证明资料</span>
+                </div>
+                <div class="field-row">
+                  <div class="field-cell">
+                    <label class="field-label" for="sd-count">最多上传数量</label>
+                    <div class="input-wrap">
+                      <input
+                        id="sd-count"
+                        v-model.number="form.supportingDocMaxCount"
+                        class="text-input"
+                        type="number"
+                        min="1"
+                        max="20"
+                        aria-label="证明资料最多上传数量"
+                      />
+                      <span class="input-unit">个</span>
+                    </div>
+                  </div>
+                  <div class="field-cell">
+                    <label class="field-label" for="sd-size">单个文件最大大小</label>
+                    <div class="input-wrap">
+                      <input
+                        id="sd-size"
+                        v-model.number="form.supportingDocMaxSizeMb"
+                        class="text-input"
+                        type="number"
+                        min="1"
+                        max="200"
+                        aria-label="证明资料单个文件最大大小 MB"
+                      />
+                      <span class="input-unit">MB</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Feedback -->
               <Transition name="msg-fade">
                 <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
@@ -971,6 +1020,17 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
                 <div class="preview-tip">
                   {{ attachmentTypeSummary || "暂无可用附件类型" }} · 单个不超过 {{ form.attachmentMaxSizeMb }}MB
+                </div>
+              </div>
+              <!-- Supporting Docs Preview -->
+              <div class="preview-box" aria-hidden="true">
+                <div class="preview-box-header">
+                  <span class="preview-box-title">证明资料</span>
+                  <span class="preview-box-sub">{{ supportingDocSubtitle }}</span>
+                </div>
+                <div class="preview-empty">
+                  <div class="preview-add-btn">+</div>
+                  <span class="preview-empty-text">学生在审核通知中上传证明资料</span>
                 </div>
               </div>
             </div>
