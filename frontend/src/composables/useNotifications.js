@@ -556,7 +556,7 @@ export function useNotifications(userSource) {
 
   const hasPendingProfileReviewRequest = computed(() =>
     visibleReviewRequests.value.some(
-      (item) => item.resourceType === "profile" && item.status === "pending",
+      (item) => item.resourceType === "profile" && item.status === "pending" && item.requester?.username === currentUser.value?.username,
     ),
   );
 
