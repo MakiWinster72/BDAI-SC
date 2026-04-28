@@ -32,7 +32,7 @@
     </div>
 
     <ToastContainer />
-    <div v-if="!isEmbedded" style="margin-top: auto">
+    <div v-if="!isEmbedded" class="dashboard-footer-wrap">
       <AppFooter />
     </div>
   </div>
