@@ -47,7 +47,7 @@
     >
       <span aria-hidden="true">+</span>
     </button>
-    <MobileCapsule :hidden="editorOpen" @open-sidebar="openDashboardSidebar">
+    <MobileCapsule :hidden="editorOpen || viewOpen" @open-sidebar="openDashboardSidebar">
       <template #right>
         <div
           class="capsule-action capsule-primary"
