@@ -203,8 +203,12 @@ export function useProfileSnapshot({
       specialStudent: info.specialStudent,
       specialStudentType: info.specialStudentType,
       specialStudentRemark: info.specialStudentRemark,
-      educationExperiences: educationItems.map((item) => ({ ...item })),
-      cadreExperiences: cadreItems.map((item) => ({ ...item })),
+      educationExperiences: educationItems
+        .filter((item) => !isEducationRowEmpty(item))
+        .map((item) => ({ ...item })),
+      cadreExperiences: cadreItems
+        .filter((item) => !isCadreRowEmpty(item))
+        .map((item) => ({ ...item })),
     };
   }
 
