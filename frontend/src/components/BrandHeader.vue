@@ -18,6 +18,7 @@
       class="brand-profile-chip"
       :class="{ 'chip-expanded': expanded }"
       @click="onChipClick"
+      @pointerdown="onChipInteraction"
     >
       <!-- Avatar / Click indicator -->
       <div class="chip-avatar-wrap">
@@ -89,7 +90,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { resolveMediaUrl } from "../utils/media";
 
 const props = defineProps({
@@ -106,16 +107,38 @@ const chipRef = ref(null);
 const isHidden = ref(false);
 const expanded = ref(false);
 const isMobile = ref(false);
+let collapseTimer = null;
 
 const MOBILE_BREAKPOINT = 840;
+const COLLAPSE_DELAY = 3000;
 
 function checkMobile() {
   isMobile.value = window.innerWidth < MOBILE_BREAKPOINT;
 }
 
+function scheduleCollapse() {
+  clearTimeout(collapseTimer);
+  if (expanded.value && isMobile.value) {
+    collapseTimer = setTimeout(() => {
+      expanded.value = false;
+    }, COLLAPSE_DELAY);
+  }
+}
+
 function onChipClick() {
   if (!isMobile.value) return;
   expanded.value = !expanded.value;
+}
+
+function onChipInteraction() {
+  scheduleCollapse();
+}
+
+function onDocumentClick(e) {
+  if (!expanded.value || !isMobile.value) return;
+  if (chipRef.value && !chipRef.value.contains(e.target)) {
+    expanded.value = false;
+  }
 }
 
 // Chip scroll-driven positioning
@@ -209,11 +232,22 @@ onMounted(() => {
   checkMobile();
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", checkMobile);
+  document.addEventListener("click", onDocumentClick);
 });
 
 onUnmounted(() => {
+  clearTimeout(collapseTimer);
   window.removeEventListener("scroll", onScroll);
   window.removeEventListener("resize", checkMobile);
+  document.removeEventListener("click", onDocumentClick);
+});
+
+watch(expanded, () => {
+  if (expanded.value) {
+    scheduleCollapse();
+  } else {
+    clearTimeout(collapseTimer);
+  }
 });
 
 const avatarText = computed(() => {
