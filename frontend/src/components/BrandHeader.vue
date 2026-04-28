@@ -13,18 +13,34 @@
     </header>
 
     <!-- Right: User Profile Chip (outside header to avoid transform taint) -->
-    <div ref="chipRef" class="brand-profile-chip">
-      <!-- Avatar -->
-      <div class="chip-avatar">
-        <img
-          v-if="profile.avatarUrl"
-          :src="resolveMediaUrl(profile.avatarUrl)"
-          alt="头像"
-        />
-        <span v-else>{{ avatarText }}</span>
+    <div
+      ref="chipRef"
+      class="brand-profile-chip"
+      :class="{ 'chip-expanded': expanded }"
+      @click="onChipClick"
+    >
+      <!-- Avatar / Click indicator -->
+      <div class="chip-avatar-wrap">
+        <Transition name="chip-swap" mode="out-in">
+          <div v-if="!isMobile || expanded" key="avatar" class="chip-avatar">
+            <img
+              v-if="profile.avatarUrl"
+              :src="resolveMediaUrl(profile.avatarUrl)"
+              alt="头像"
+            />
+            <span v-else>{{ avatarText }}</span>
+          </div>
+          <img
+            v-else
+            key="click"
+            src="/assets/icons/click.svg"
+            alt="点击展开"
+            class="chip-click-icon"
+          />
+        </Transition>
       </div>
 
-      <!-- Name & Role -->
+      <!-- Name & Role (always visible) -->
       <div class="chip-info">
         <span class="chip-name">
           {{ profile.displayName || profile.username || "同学" }}
@@ -32,40 +48,41 @@
         <span class="chip-role">{{ roleLabel }}</span>
       </div>
 
-      <!-- Divider -->
-      <div class="chip-divider" aria-hidden="true" />
+      <!-- Divider + Actions (collapsed on mobile) -->
+      <div class="chip-tail" :class="{ 'chip-tail--visible': expanded || !isMobile }">
+        <div class="chip-divider" aria-hidden="true" />
 
-      <!-- Actions -->
-      <div class="chip-actions">
-        <button
-          v-if="profile.role === 'ADMIN'"
-          class="chip-btn chip-btn--primary"
-          type="button"
-          aria-label="管理后台"
-          @click="$emit('menu-click', 'admin')"
-        >
-          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path
-              d="M3 5h14M3 10h14M3 15h8"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
+        <div class="chip-actions">
+          <button
+            v-if="profile.role === 'ADMIN'"
+            class="chip-btn chip-btn--primary"
+            type="button"
+            aria-label="管理后台"
+            @click.stop="$emit('menu-click', 'admin')"
+          >
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M3 5h14M3 10h14M3 15h8"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>管理</span>
+          </button>
+          <button
+            class="chip-btn chip-btn--ghost"
+            type="button"
+            aria-label="设置"
+            @click.stop="$emit('settings-click')"
+          >
+            <img
+              src="/assets/icons/settings.svg"
+              alt="设置"
+              class="settings-icon"
             />
-          </svg>
-          <span>管理</span>
-        </button>
-        <button
-          class="chip-btn chip-btn--ghost"
-          type="button"
-          aria-label="设置"
-          @click="$emit('settings-click')"
-        >
-          <img
-            src="/assets/icons/settings.svg"
-            alt="设置"
-            class="settings-icon"
-          />
-        </button>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -87,6 +104,19 @@ defineEmits(["settings-click", "menu-click"]);
 const headerRef = ref(null);
 const chipRef = ref(null);
 const isHidden = ref(false);
+const expanded = ref(false);
+const isMobile = ref(false);
+
+const MOBILE_BREAKPOINT = 840;
+
+function checkMobile() {
+  isMobile.value = window.innerWidth < MOBILE_BREAKPOINT;
+}
+
+function onChipClick() {
+  if (!isMobile.value) return;
+  expanded.value = !expanded.value;
+}
 
 // Chip scroll-driven positioning
 // Natural chip position within banner (banner 180px, padding-bottom 45px, chip 58px):
@@ -176,11 +206,14 @@ function onScroll() {
 }
 
 onMounted(() => {
+  checkMobile();
   window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", checkMobile);
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", onScroll);
+  window.removeEventListener("resize", checkMobile);
 });
 
 const avatarText = computed(() => {
@@ -287,6 +320,7 @@ const roleLabel = computed(() => {
     background 200ms ease,
     box-shadow 200ms ease,
     border-color 200ms ease;
+  touch-action: manipulation;
 }
 
 .brand-profile-chip:hover {
@@ -297,6 +331,10 @@ const roleLabel = computed(() => {
 }
 
 /* ── Avatar ────────────────────────────────────────────── */
+.chip-avatar-wrap {
+  flex-shrink: 0;
+}
+
 .chip-avatar {
   width: 43px;
   height: 43px;
@@ -311,6 +349,31 @@ const roleLabel = computed(() => {
   flex-shrink: 0;
   border: 1.5px solid rgba(212, 156, 59, 0.35);
   transition: border-color 200ms ease;
+}
+
+.chip-click-icon {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+/* ── Chip content swap transition ─────────────────────── */
+.chip-swap-enter-active,
+.chip-swap-leave-active {
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+
+.chip-swap-enter-from {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+.chip-swap-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
 }
 
 .brand-profile-chip:hover .chip-avatar {
@@ -353,6 +416,23 @@ const roleLabel = computed(() => {
   background: rgba(255, 255, 255, var(--chip-divider-alpha, 0.12));
   margin: 0 4px;
   flex-shrink: 0;
+}
+
+/* ── Tail (divider + actions, collapsible on mobile) ──── */
+.chip-tail {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  max-width: 240px;
+  opacity: 1;
+  transition:
+    max-width 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 340ms ease;
+}
+
+.chip-tail:not(.chip-tail--visible) {
+  max-width: 0;
+  opacity: 0;
 }
 
 /* ── Actions ──────────────────────────────────────────── */
@@ -432,6 +512,14 @@ const roleLabel = computed(() => {
 }
 
 /* ── Mobile: shrink chip ────────────────────────────── */
+@media (max-width: 840px) {
+  .brand-profile-chip:not(.chip-expanded) {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+}
+
 @media (max-width: 720px) {
   .brand-profile-chip {
     height: 50px;
@@ -443,6 +531,11 @@ const roleLabel = computed(() => {
     width: 38px;
     height: 38px;
     font-size: 16px;
+  }
+
+  .chip-click-icon {
+    width: 38px;
+    height: 38px;
   }
 
   .chip-info {
@@ -502,6 +595,11 @@ const roleLabel = computed(() => {
     width: 34px;
     height: 34px;
     font-size: 14px;
+  }
+
+  .chip-click-icon {
+    width: 34px;
+    height: 34px;
   }
 
   .chip-info {
