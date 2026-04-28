@@ -32,7 +32,7 @@
           </div>
           <div class="info-actions">
             <ExportPdfButton
-              v-if="!isEditing"
+              :disabled="isEditing"
               :get-student="buildPdfStudentSnapshot"
               :resolve-media-url="resolveMediaUrl"
               button-class="ghost-button"
@@ -40,9 +40,9 @@
               @export-error="toastError('PDF 导出失败')"
             />
             <button
-              v-if="!isEditing"
-              class="ghost-button"
+              class="action-button"
               type="button"
+              :disabled="isEditing"
               @click="enterEdit"
             >
               编辑
@@ -980,7 +980,12 @@
           </div>
         </div>
       </transition>
-      <MobileCapsule @open-sidebar="openDashboardSidebar" />
+      <MobileCapsule @open-sidebar="openDashboardSidebar">
+        <template v-if="isEditing" #right>
+          <div class="capsule-action" @click="cancelEdit">取消</div>
+          <div class="capsule-primary" @click="confirmEdit">{{ saveActionLabel }}</div>
+        </template>
+      </MobileCapsule>
   </main>
 </template>
 
