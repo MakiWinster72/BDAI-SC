@@ -550,6 +550,10 @@ const roleLabel = computed(() => {
 
 /* ── Mobile: shrink chip ────────────────────────────── */
 @media (max-width: 840px) {
+  .brand-logo-group {
+    display: none;
+  }
+
   .brand-profile-chip:not(.chip-expanded) {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
