@@ -546,6 +546,7 @@
   gap: 8px;
   flex-wrap: wrap;
   width: 100%;
+  min-width: 0;
 }
 
 .id-type-inline {
@@ -553,6 +554,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
 }
 
 .id-type-inline select {
@@ -885,32 +887,37 @@
     grid-template-columns: 1fr;
   }
 
-  /* ── Inline fields: wrap on phones ──────────────── */
+  /* ── Inline fields: keep single row, squeeze on phones ── */
   .class-inline {
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
   }
 
   .class-inline .info-input:first-child {
-    flex: 2 0 140px;
+    flex: 2 1 0;
+    min-width: 0;
   }
 
   .class-num {
-    max-width: 80px;
+    flex: 0 0 auto;
+    width: 56px;
+    min-width: 44px;
   }
 
   .id-type-inline {
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
   }
 
   .id-type-inline select {
-    flex: 1 0 140px;
+    flex: 1 1 0;
     min-width: 0;
   }
 
   .id-type-inline input {
-    flex: 2 0 180px;
+    flex: 2 1 0;
     min-width: 0;
   }
 
