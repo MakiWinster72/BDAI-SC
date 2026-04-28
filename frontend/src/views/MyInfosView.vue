@@ -732,6 +732,15 @@
                 >
                   −
                 </button>
+                <button
+                  class="education-control education-control-clear"
+                  type="button"
+                  :disabled="!isEditing"
+                  aria-label="清空教育经历"
+                  @click="handleClearEducation"
+                >
+                  清空
+                </button>
               </div>
             </div>
           </div>
@@ -776,6 +785,15 @@
                   @click="removeCadreRow"
                 >
                   −
+                </button>
+                <button
+                  class="education-control education-control-clear"
+                  type="button"
+                  :disabled="!isEditing"
+                  aria-label="清空干部经历"
+                  @click="handleClearCadre"
+                >
+                  清空
                 </button>
               </div>
             </div>
@@ -1347,6 +1365,18 @@ async function removeCadreRow() {
   }
   await animateCadreHeightWithUpdate(() => {
     cadreItems.pop();
+  });
+}
+
+async function handleClearEducation() {
+  await animateEducationHeightWithUpdate(() => {
+    educationItems.splice(0, educationItems.length, createEducationItem());
+  });
+}
+
+async function handleClearCadre() {
+  await animateCadreHeightWithUpdate(() => {
+    cadreItems.splice(0, cadreItems.length, createCadreItem());
   });
 }
 
