@@ -2424,7 +2424,7 @@ onUnmounted(() => {
 
 .mobile-filter-input:focus {
   outline: none;
-  border-color: var(--primary, #640c72);
+  border-color: var(--primary, var(--primary));
   box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
   background: var(--card, #fff);
 }
@@ -2449,7 +2449,7 @@ onUnmounted(() => {
 
 .mobile-filter-select:focus {
   outline: none;
-  border-color: var(--primary, #640c72);
+  border-color: var(--primary, var(--primary));
   box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
   background: var(--card, #fff);
 }
@@ -2492,7 +2492,7 @@ onUnmounted(() => {
 }
 
 .mobile-filter-chip.active {
-  background: var(--primary, #640c72);
+  background: var(--primary, var(--primary));
   color: #fff;
 }
 
@@ -2533,7 +2533,7 @@ onUnmounted(() => {
   height: 46px;
   border: none;
   border-radius: 23px;
-  background: linear-gradient(135deg, var(--primary, #640c72) 0%, var(--primary-dark, #4a0956) 100%);
+  background: linear-gradient(135deg, var(--primary, var(--primary)) 0%, var(--primary-dark, var(--primary-dark)) 100%);
   font-size: 15px;
   font-weight: 600;
   color: #fff;
@@ -2573,7 +2573,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: #0a6b74;
+  color: var(--primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;

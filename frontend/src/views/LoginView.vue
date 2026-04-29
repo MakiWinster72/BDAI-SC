@@ -111,9 +111,9 @@
             <path d="M40,40 L10,30 A30,30 0 0,1 40,10 Z" class="pie-slice-4"/>
           </svg>
           <div class="pie-legend">
-            <div class="pie-legend-item"><span class="pie-dot" style="background:#d49c3b"></span>竞赛</div>
-            <div class="pie-legend-item"><span class="pie-dot" style="background:#9b59b6"></span>科研</div>
-            <div class="pie-legend-item"><span class="pie-dot" style="background:#640c72"></span>论文</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:#FF85BB"></span>竞赛</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:#FFCEE3"></span>科研</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:var(--primary)"></span>论文</div>
             <div class="pie-legend-item"><span class="pie-dot" style="background:rgba(255,255,255,0.25)"></span>其他</div>
           </div>
         </div>

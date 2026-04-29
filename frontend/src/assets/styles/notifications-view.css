@@ -968,7 +968,7 @@
 
 /* ── Supporting Documents ──────────────────────────────────── */
 .notif-supporting-docs {
-  background: rgba(3, 107, 114, 0.03);
+  background: rgba(100, 12, 114, 0.03);
 }
 
 .supporting-docs-upload {
@@ -990,26 +990,26 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 10px;
-  border: 1px solid rgba(3, 107, 114, 0.16);
+  border: 1px solid rgba(100, 12, 114, 0.16);
   background: rgba(255, 255, 255, 0.8);
   font-size: 13px;
-  color: #0f4d55;
+  color: var(--primary);
   outline: none;
   box-sizing: border-box;
 }
 
 .supporting-docs-text-input:focus {
-  border-color: rgba(3, 107, 114, 0.4);
-  box-shadow: 0 0 0 3px rgba(3, 107, 114, 0.08);
+  border-color: rgba(100, 12, 114, 0.4);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.08);
 }
 
 .supporting-docs-add-text-btn {
   height: 36px;
   padding: 0 14px;
   border-radius: 10px;
-  border: 1px solid rgba(3, 107, 114, 0.18);
-  background: rgba(3, 107, 114, 0.06);
-  color: #036b72;
+  border: 1px solid rgba(100, 12, 114, 0.18);
+  background: rgba(100, 12, 114, 0.06);
+  color: var(--primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -1018,7 +1018,7 @@
 }
 
 .supporting-docs-add-text-btn:hover:not(:disabled) {
-  background: rgba(3, 107, 114, 0.14);
+  background: rgba(100, 12, 114, 0.14);
 }
 
 .supporting-docs-add-text-btn:disabled {
@@ -1032,19 +1032,19 @@
   height: 36px;
   padding: 0 16px;
   border-radius: 10px;
-  background: rgba(3, 107, 114, 0.08);
-  color: #036b72;
+  background: rgba(100, 12, 114, 0.08);
+  color: var(--primary);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  border: 1px solid rgba(3, 107, 114, 0.18);
+  border: 1px solid rgba(100, 12, 114, 0.18);
   transition: background 160ms ease, box-shadow 160ms ease;
   position: relative;
 }
 
 .supporting-docs-upload-btn:hover {
-  background: rgba(3, 107, 114, 0.14);
-  box-shadow: 0 4px 12px rgba(3, 107, 114, 0.15);
+  background: rgba(100, 12, 114, 0.14);
+  box-shadow: 0 4px 12px rgba(100, 12, 114, 0.15);
 }
 
 .supporting-docs-upload-btn.is-uploading {
@@ -1076,7 +1076,7 @@
   padding: 12px 14px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(3, 107, 114, 0.1);
+  border: 1px solid rgba(100, 12, 114, 0.1);
   cursor: pointer;
   transition: background 160ms ease;
   text-align: left;
@@ -1132,14 +1132,14 @@
   justify-content: space-between;
   padding: 10px 14px;
   border-radius: 12px;
-  background: rgba(3, 107, 114, 0.06);
-  border: 1px solid rgba(3, 107, 114, 0.12);
+  background: rgba(100, 12, 114, 0.06);
+  border: 1px solid rgba(100, 12, 114, 0.12);
   gap: 10px;
 }
 
 .supporting-docs-text-content {
   flex: 1;
-  color: #0f4d55;
+  color: var(--primary);
   font-size: 13.5px;
   line-height: 1.65;
   white-space: pre-wrap;

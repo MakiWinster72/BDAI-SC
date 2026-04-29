@@ -162,7 +162,7 @@ const ICONS = {
 .toast-progress-bar {
   height: 100%;
   border-radius: 999px;
-  background: var(--primary, #640c72);
+  background: var(--primary, var(--primary));
   transition: width 180ms linear;
 }
 

@@ -1972,7 +1972,7 @@ watch([userSearch, userRoleFilter], () => {
 
 .capsule-action.capsule-active {
   color: #fff;
-  background: linear-gradient(135deg, #640c72 0%, #4a0a56 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 }
 
 @media (max-width: 840px) {

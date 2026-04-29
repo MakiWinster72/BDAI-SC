@@ -204,8 +204,9 @@
 .achievement-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(61, 7, 112, 0.35);
-  backdrop-filter: blur(8px);
+  background: rgba(45, 26, 62, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 40;
 }
 

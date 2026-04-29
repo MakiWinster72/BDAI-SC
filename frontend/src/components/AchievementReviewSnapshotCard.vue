@@ -112,7 +112,7 @@ function openAsset(url) {
     rgba(205, 255, 249, 0.92),
     rgba(197, 217, 226, 0.78)
   );
-  box-shadow: 0 24px 60px rgba(3, 107, 114, 0.16);
+  box-shadow: 0 24px 60px rgba(100, 12, 114, 0.16);
   padding: 18px;
   display: grid;
   gap: 16px;
@@ -140,7 +140,7 @@ function openAsset(url) {
   min-height: 28px;
   padding: 0 12px;
   border-radius: 999px;
-  background: rgba(3, 107, 114, 0.12);
+  background: rgba(100, 12, 114, 0.12);
   color: #0f555d;
   font-size: 12px;
   font-weight: 700;
@@ -168,7 +168,7 @@ function openAsset(url) {
   background: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   aspect-ratio: 4 / 3;
-  box-shadow: 0 10px 24px rgba(3, 107, 114, 0.12);
+  box-shadow: 0 10px 24px rgba(100, 12, 114, 0.12);
 }
 
 .review-achievement-image img {
@@ -243,7 +243,7 @@ function openAsset(url) {
 
 .review-achievement-empty {
   min-height: 280px;
-  border: 1px dashed rgba(3, 107, 114, 0.18);
+  border: 1px dashed rgba(100, 12, 114, 0.18);
   border-radius: 18px;
   display: grid;
   place-items: center;

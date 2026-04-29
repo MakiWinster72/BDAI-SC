@@ -185,9 +185,9 @@ function updateChip(scrollY) {
   const cp = (scrollY - COLOR_START) / (COLOR_END - COLOR_START);
   const t = Math.min(1, Math.max(0, cp));
 
-  const nameColor = lerpHexColor("ffffff", "2d1a3e", t);
-  const subColor = lerpHexColor("ffffff", "5c5266", t);
-  const ghostColor = lerpHexColor("ffffff", "2d1a3e", t);
+  const nameColor = lerpHexColor("ffffff", "640c72", t);
+  const subColor = lerpHexColor("ffffff", "5a6a8a", t);
+  const ghostColor = lerpHexColor("ffffff", "640c72", t);
   const borderColor =
     t > 0.5
       ? `rgba(${Math.round(lerp(255, 0, t))}, ${Math.round(lerp(255, 0, t))}, ${Math.round(lerp(255, 0, t))}, ${lerp(0.18, 0.095, t).toFixed(3)})`
@@ -306,8 +306,8 @@ const roleLabel = computed(() => {
     rgba(0, 0, 0, 0.02) 10%,
     rgba(0, 0, 0, 0.18) 60%,
     rgba(0, 0, 0, 0.32) 70%,
-    rgba(26, 10, 46, 0.6) 80%,
-    rgb(247, 244, 250) 100%
+    rgba(100, 12, 114, 0.55) 80%,
+    rgb(245, 245, 245) 100%
   );
   z-index: 1;
 }
@@ -406,15 +406,15 @@ const roleLabel = computed(() => {
   width: 43px;
   height: 43px;
   border-radius: 999px;
-  background: rgba(212, 156, 59, 0.25);
+  background: rgba(255, 133, 187, 0.22);
   display: grid;
   place-items: center;
   font-weight: 700;
   font-size: 17px;
-  color: #f5d89a;
+  color: #FFCEE3;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1.5px solid rgba(212, 156, 59, 0.35);
+  border: 1.5px solid rgba(255, 133, 187, 0.35);
   transition: border-color 200ms ease;
 }
 
@@ -445,7 +445,7 @@ const roleLabel = computed(() => {
 }
 
 .brand-profile-chip:hover .chip-avatar {
-  border-color: rgba(212, 156, 59, 0.55);
+  border-color: rgba(255, 133, 187, 0.55);
 }
 
 .chip-avatar img {
@@ -536,17 +536,17 @@ const roleLabel = computed(() => {
 .chip-btn--primary {
   height: 36px;
   padding: 0 14px;
-  background: linear-gradient(135deg, #d49a3b 0%, #c8892a 100%);
+  background: linear-gradient(135deg, #FF85BB 0%, #e875a8 100%);
   color: #fff;
   box-shadow:
-    0 2px 8px rgba(212, 156, 59, 0.35),
+    0 2px 8px rgba(255, 133, 187, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .chip-btn--primary:hover {
-  background: linear-gradient(135deg, #e0a844 0%, #d49a3b 100%);
+  background: linear-gradient(135deg, #ff9ac7 0%, #FF85BB 100%);
   box-shadow:
-    0 4px 12px rgba(212, 156, 59, 0.45),
+    0 4px 12px rgba(255, 133, 187, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 

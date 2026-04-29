@@ -156,7 +156,7 @@ function increment() {
   height: 100%;
   border: none;
   background: transparent;
-  color: var(--primary, #640c72);
+  color: var(--primary, var(--primary));
   cursor: pointer;
   outline: none;
   padding: 0;
