@@ -13,6 +13,7 @@ public class StudentSearchItemResponse {
     private Boolean isTw;
     private Boolean specialStudent;
     private String specialStudentType;
+    private String avatarUrl;
 
     public StudentSearchItemResponse(
         Long id,
@@ -26,7 +27,8 @@ public class StudentSearchItemResponse {
         Boolean isMo,
         Boolean isTw,
         Boolean specialStudent,
-        String specialStudentType
+        String specialStudentType,
+        String avatarUrl
     ) {
         this.id = id;
         this.fullName = fullName;
@@ -40,6 +42,7 @@ public class StudentSearchItemResponse {
         this.isTw = isTw;
         this.specialStudent = specialStudent;
         this.specialStudentType = specialStudentType;
+        this.avatarUrl = avatarUrl;
     }
 
     public Long getId() {
@@ -88,5 +91,9 @@ public class StudentSearchItemResponse {
 
     public String getSpecialStudentType() {
         return specialStudentType;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 }

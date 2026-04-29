@@ -532,6 +532,13 @@
   box-shadow: 0 2px 8px rgba(100, 12, 114, 0.25);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  overflow: hidden;
+}
+
+.student-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .student-main {

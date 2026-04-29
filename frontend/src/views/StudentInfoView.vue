@@ -229,7 +229,10 @@
             @click="openDetail(item)"
           >
             <input v-model="selectedIds" type="checkbox" :value="item.id" @click.stop />
-            <div class="student-avatar">{{ (item.name || '?')[0] }}</div>
+            <div class="student-avatar">
+              <img v-if="item.avatarUrl" :src="resolveMediaUrl(item.avatarUrl)" :alt="item.name" />
+              <span v-else>{{ (item.name || '?')[0] }}</span>
+            </div>
             <div class="student-main">
               <div class="student-name-row">
                 <span class="student-name">{{ item.name }}</span>
@@ -900,6 +903,7 @@ async function fetchStudents() {
     students.value = (data?.items || []).map((item) => ({
       id: item.id,
       name: item.fullName || "未命名",
+      avatarUrl: item.avatarUrl || "",
       className: buildClassName(item),
       gradeYear: item.classYear || "",
       college: item.college || "",
