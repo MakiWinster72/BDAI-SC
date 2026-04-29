@@ -1871,4 +1871,17 @@ watch([userSearch, userRoleFilter], () => {
 .add-class-btn:hover {
   opacity: 0.9;
 }
+
+@media (max-width: 768px) {
+  .add-user-layout {
+    width: calc(100vw - 32px);
+    max-width: 480px;
+  }
+  .add-user-example-panel {
+    display: none;
+  }
+  .add-user-modal {
+    width: 100% !important;
+  }
+}
 </style>

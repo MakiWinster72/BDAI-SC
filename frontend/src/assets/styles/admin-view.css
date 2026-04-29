@@ -1603,6 +1603,10 @@
 @media (max-width: 640px) {
   .admin-shell {
     gap: 14px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   .admin-header {
     padding: 4px 16px 0;
@@ -1657,6 +1661,50 @@
   }
   .modal-footer-btns .btn {
     width: 100%;
+  }
+  .users-card {
+    overflow: hidden;
+  }
+  .table-wrap {
+    max-width: 100%;
+  }
+  .users-card-header .btn {
+    width: 100%;
+  }
+  .users-selection-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 16px;
+  }
+  .users-selection-bar .btn {
+    min-width: 0;
+    height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .backup-two-btns {
+    flex-direction: column;
+  }
+  .backup-btn {
+    min-width: 0;
+  }
+  .restore-item-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .restore-item-row .btn {
+    width: 100%;
+  }
+  .toggle-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .user-edit-modal {
+    max-width: calc(100vw - 32px);
+  }
+  .add-user-modal {
+    width: calc(100vw - 32px) !important;
+    max-width: 480px;
   }
 }
 
