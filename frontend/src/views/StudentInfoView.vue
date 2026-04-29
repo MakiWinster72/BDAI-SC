@@ -3,10 +3,19 @@
     <MobileCapsule @open-sidebar="openDashboardSidebar">
       <template #right>
         <button class="capsule-action is-filter" type="button" @click="openMobileFilter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+          </svg>
           筛选
           <span v-if="hasActiveFilters" class="capsule-filter-dot"></span>
         </button>
         <button class="capsule-action" type="button" @click="toggleGridView">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+          </svg>
           {{ gridViewOpen ? "列表" : "表格" }}
         </button>
         <button
@@ -18,8 +27,51 @@
         >
           {{ gridFullscreen ? "退出" : "全屏" }}
         </button>
+        <button
+          v-if="!gridViewOpen"
+          class="capsule-action"
+          :class="{ 'capsule-active': selectMenuOpen }"
+          type="button"
+          aria-label="选择学生"
+          @click.stop="toggleSelectMenu"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          选择
+        </button>
       </template>
     </MobileCapsule>
+
+    <Teleport to="body">
+      <Transition name="select-float">
+        <div v-if="selectMenuOpen && !gridViewOpen" class="select-float-menu" @click.stop>
+          <button
+            class="select-float-btn"
+            type="button"
+            @click="handleSelectPage"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+            </svg>
+            选择本页
+          </button>
+          <button
+            class="select-float-btn"
+            type="button"
+            :disabled="selectAllLoading"
+            @click="handleSelectAll"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            {{ selectAllLoading ? "选择中..." : "选择全部" }}
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
 
     <header class="feed-header">
       <h1 class="feed-title">学生信息</h1>
@@ -585,7 +637,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -650,6 +702,33 @@ const achievementsClosing = ref(false);
 const sidebarOpen = ref(false);
 const activeCategory = ref("all");
 const mobileFilterOpen = ref(false);
+const selectMenuOpen = ref(false);
+
+function toggleSelectMenu() {
+  selectMenuOpen.value = !selectMenuOpen.value;
+}
+
+function closeSelectMenu() {
+  selectMenuOpen.value = false;
+}
+
+function handleSelectPage() {
+  closeSelectMenu();
+  selectCurrentPage();
+}
+
+function handleSelectAll() {
+  closeSelectMenu();
+  selectAllFiltered();
+}
+
+function onDocumentClick(e) {
+  if (!selectMenuOpen.value) return;
+  const menu = document.querySelector(".select-float-menu");
+  if (menu && !menu.contains(e.target)) {
+    closeSelectMenu();
+  }
+}
 
 function openMobileFilter() {
   mobileFilterOpen.value = true;
@@ -1319,6 +1398,7 @@ function handleViewProfileSaved(data) {
 }
 
 onMounted(async () => {
+  document.addEventListener("click", onDocumentClick);
   const keywordParam = route.query.keyword;
   if (keywordParam && typeof keywordParam === "string") {
     filters.keyword = keywordParam;
@@ -2203,6 +2283,10 @@ function closeSidebar() {
 function goToSettings() {
   navigateWithViewTransition(router, "/settings");
 }
+
+onUnmounted(() => {
+  document.removeEventListener("click", onDocumentClick);
+});
 </script>
 
 <style scoped>
@@ -2467,9 +2551,81 @@ function goToSettings() {
   transform: translateY(0);
 }
 
-/* Hide desktop filter on mobile */
+/* Floating select menu above capsule */
+.select-float-menu {
+  position: fixed;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 56;
+}
+
+.select-float-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #0a6b74;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.select-float-btn:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+}
+
+.select-float-btn:active {
+  transform: scale(0.96);
+}
+
+.select-float-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Transition */
+.select-float-enter-active {
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-float-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-float-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.94);
+}
+
+.select-float-leave-to {
+  opacity: 0;
+  transform: translateY(4px) scale(0.96);
+}
+
+/* Hide desktop filter and results actions on mobile */
 @media (max-width: 768px) {
   .student-filter-card {
+    display: none;
+  }
+  .student-results-actions {
     display: none;
   }
 }
