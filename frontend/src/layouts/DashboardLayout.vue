@@ -32,9 +32,11 @@
     </div>
 
     <!-- Mobile sidebar overlay -->
-    <template v-if="sidebarOpen">
-      <div class="mobile-sidebar-backdrop" @click="closeSidebar" />
-      <div class="mobile-sidebar-panel">
+    <Transition name="sidebar">
+      <div v-if="sidebarOpen" class="mobile-sidebar-backdrop" @click="closeSidebar" />
+    </Transition>
+    <Transition name="sidebar-panel">
+      <div v-if="sidebarOpen" class="mobile-sidebar-panel">
         <DashboardSidebar
           :profile="profile"
           :active-menu="activeMenu"
@@ -53,7 +55,7 @@
           @settings-click="goToSettings"
         />
       </div>
-    </template>
+    </Transition>
 
     <ToastContainer />
     <div v-if="!isEmbedded" class="dashboard-footer-wrap">
