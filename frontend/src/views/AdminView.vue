@@ -186,6 +186,14 @@ async function fetchSystemSettings() {
   }
 }
 
+function stepThreshold(delta) {
+  const next = (systemSettings.delayedThresholdDays || 2) + delta;
+  if (next >= 1 && next <= 30) {
+    systemSettings.delayedThresholdDays = next;
+    handleSaveSystemSettings();
+  }
+}
+
 async function handleSaveSystemSettings() {
   systemSettingsMsg.value = "";
   try {
@@ -1527,17 +1535,35 @@ watch([userSearch, userRoleFilter], () => {
                     <span class="toggle-title">待处理自动滞后</span>
                     <span class="toggle-hint">超过指定天数未处理的请求自动移入已滞后标签</span>
                   </div>
-                  <div class="input-wrap" style="width: 80px;">
+                  <div class="stepper-wrap">
+                    <button
+                      class="stepper-btn"
+                      type="button"
+                      aria-label="减少天数"
+                      :disabled="systemSettings.delayedThresholdDays <= 1"
+                      @click="stepThreshold(-1)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14" /></svg>
+                    </button>
                     <input
                       v-model.number="systemSettings.delayedThresholdDays"
-                      class="text-input"
+                      class="stepper-input"
                       type="number"
                       min="1"
                       max="30"
                       aria-label="待处理自动滞后天数"
                       @change="handleSaveSystemSettings"
                     />
-                    <span class="input-unit">天</span>
+                    <button
+                      class="stepper-btn"
+                      type="button"
+                      aria-label="增加天数"
+                      :disabled="systemSettings.delayedThresholdDays >= 30"
+                      @click="stepThreshold(1)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                    <span class="stepper-unit">天</span>
                   </div>
                 </div>
               </div>
