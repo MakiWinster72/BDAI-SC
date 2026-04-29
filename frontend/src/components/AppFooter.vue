@@ -276,5 +276,10 @@ const friendLinks = [
   .footer-copyright {
     text-align: left;
   }
+
+  .footer-beian-link {
+    display: block;
+    margin-top: 2px;
+  }
 }
 </style>
