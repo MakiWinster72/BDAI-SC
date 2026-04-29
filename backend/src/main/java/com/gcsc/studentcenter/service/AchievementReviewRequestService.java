@@ -53,6 +53,8 @@ public class AchievementReviewRequestService {
         return requests.stream()
             .filter(r -> {
                 if ("pending".equals(r.getStatus())) {
+                    // pending: requester can always see their own pending request
+                    if (r.getRequester().getUsername().equals(username)) return true;
                     // pending: only reviewers (TEACHER/ADMIN/CADRE) can see, not regular students
                     if (!isReviewer(user)) return false;
                     // ADMIN can see all pending
