@@ -1953,6 +1953,7 @@ watch([userSearch, userRoleFilter], () => {
   gap: 1px;
   color: var(--primary);
   padding: 6px clamp(3px, 2.2vw, 10px);
+  border: 1px solid rgba(100, 12, 114, 0.12);
 }
 .admin-capsule-btn .capsule-icon {
   flex-shrink: 0;
