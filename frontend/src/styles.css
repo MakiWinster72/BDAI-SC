@@ -1980,6 +1980,7 @@ body {
   border-radius: 12px;
   border: 1px solid rgba(3, 107, 114, 0.12);
   background: rgba(255, 255, 255, 0.9);
+  min-width: 0;
 }
 
 .attachment-item img {
@@ -1992,6 +1993,9 @@ body {
   font-size: 13px;
   color: #1f4f57;
   word-break: break-all;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .attachment-remove,
@@ -2003,6 +2007,8 @@ body {
   cursor: pointer;
   font-size: 12px;
   text-decoration: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .attachment-remove:hover,

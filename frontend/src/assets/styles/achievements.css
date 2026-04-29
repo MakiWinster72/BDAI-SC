@@ -599,6 +599,8 @@
   background: var(--primary-surface);
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .attachment-formats:hover {
@@ -609,6 +611,7 @@
 .format-row {
   display: flex;
   gap: 12px;
+  min-width: 0;
 }
 
 .format-item {
@@ -617,6 +620,8 @@
   gap: 6px;
   font-size: 11px;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .format-icon {
@@ -634,6 +639,9 @@
 .format-exts {
   color: var(--text-sub);
   font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .media-empty {
@@ -649,11 +657,14 @@
   border-radius: 16px;
   border: 1px solid rgba(100, 12, 114, 0.1);
   background: rgba(255, 255, 255, 0.7);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .attachment-list {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .attachment-item {
@@ -665,6 +676,7 @@
   border: 1px solid var(--line);
   background: var(--card);
   transition: border-color 180ms ease, box-shadow 180ms ease;
+  min-width: 0;
 }
 
 .attachment-item:hover {
@@ -682,6 +694,9 @@
   font-size: 14px;
   color: var(--text-main);
   word-break: break-all;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .attachment-remove,
@@ -694,6 +709,8 @@
   font-size: 12px;
   text-decoration: none;
   transition: color 180ms ease, transform 120ms ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .attachment-remove:hover,
@@ -715,7 +732,7 @@
   height: 28px;
   border-radius: 6px;
   border: none;
-  background: var(--primary-surface);
+  background: var(--bg-secondary);
   color: var(--primary);
   cursor: pointer;
   text-decoration: none;
