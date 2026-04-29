@@ -1615,7 +1615,7 @@
     padding: 0 14px;
   }
   .admin-tabs {
-    margin: 0 14px;
+    display: none;
   }
   .card-header {
     padding: 16px 16px 0;
