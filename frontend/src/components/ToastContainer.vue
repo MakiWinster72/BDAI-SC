@@ -67,6 +67,7 @@ const ICONS = {
 
 .toast {
   position: static;
+  transform: none;
   display: flex;
   align-items: flex-start;
   gap: 9px;
@@ -191,9 +192,14 @@ const ICONS = {
 @media (max-width: 840px) {
   .toast-container {
     top: 16px;
-    right: 12px;
-    left: 12px;
-    max-width: 100%;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    max-width: 80%;
+  }
+  .toast {
+    font-size: 12px;
+    padding: 8px 10px;
   }
 }
 .toast-anim-move {

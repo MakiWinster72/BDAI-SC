@@ -1,5 +1,22 @@
 <template>
   <main class="dashboard-right">
+    <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template #right>
+        <button class="capsule-action" type="button" @click="toggleGridView">
+          {{ gridViewOpen ? "列表" : "表格" }}
+        </button>
+        <button
+          v-if="gridViewOpen"
+          class="capsule-action"
+          :class="{ 'capsule-active': gridFullscreen }"
+          type="button"
+          @click="toggleGridFullscreen"
+        >
+          {{ gridFullscreen ? "退出" : "全屏" }}
+        </button>
+      </template>
+    </MobileCapsule>
+
     <header class="feed-header">
       <h1 class="feed-title">学生信息</h1>
     </header>
@@ -265,22 +282,6 @@
       >
         {{ exportLabel }}
       </button>
-      <button
-        class="floating-btn floating-btn-toggle"
-        type="button"
-        @click="toggleGridView"
-        :title="gridViewOpen ? '切换列表视图' : '切换表格视图'"
-      >
-        <span class="floating-toggle-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path
-              d="M7 7h10v3h2V5H5v5h2V7zm10 10H7v-3H5v5h14v-5h-2v3zM9 10l-3 2 3 2v-4zm6 4 3-2-3-2v4z"
-              fill="currentColor"
-            />
-          </svg>
-        </span>
-        {{ gridViewOpen ? "切换列表" : "切换表格" }}
-      </button>
     </div>
 
     <OverlayPanel
@@ -418,23 +419,6 @@
       @close="closeExportDialog"
       @export-success="toastSuccess('学生信息已导出')"
     />
-
-    <MobileCapsule @open-sidebar="openDashboardSidebar">
-      <template #right>
-        <button class="capsule-action" type="button" @click="toggleGridView">
-          {{ gridViewOpen ? "列表" : "表格" }}
-        </button>
-        <button
-          v-if="gridViewOpen"
-          class="capsule-action"
-          :class="{ 'capsule-active': gridFullscreen }"
-          type="button"
-          @click="toggleGridFullscreen"
-        >
-          {{ gridFullscreen ? "退出" : "全屏" }}
-        </button>
-      </template>
-    </MobileCapsule>
 
     <div
       :class="['sheet-overlay', { open: gridViewConfirmOpen }]"

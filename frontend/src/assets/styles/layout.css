@@ -18,6 +18,7 @@
   flex-direction: column;
   gap: 20px;
   min-height: 100vh;
+  overflow-x: hidden;
   /* 内容区比 html 底色略暖，与顶部品牌头形成从上到下的色彩过渡 */
   background:
     linear-gradient(

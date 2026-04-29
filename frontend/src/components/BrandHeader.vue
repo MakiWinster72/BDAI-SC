@@ -269,6 +269,7 @@ const roleLabel = computed(() => {
 /* ── Header Wrapper ──────────────────────────────────────── */
 .brand-header-wrapper {
   margin: -28px -28px 0;
+  overflow: hidden;
 }
 
 /* ── Header Shell ──────────────────────────────────────── */
@@ -337,7 +338,7 @@ const roleLabel = computed(() => {
   position: fixed;
   /* top set by JS on scroll; CSS sets initial position before JS runs */
   top: calc(75px + env(safe-area-inset-top, 0px));
-  right: calc(20px + env(safe-area-inset-right, 0px));
+  right: calc(28px + env(safe-area-inset-right, 0px));
   z-index: 35;
   display: flex;
   align-items: center;
@@ -550,12 +551,17 @@ const roleLabel = computed(() => {
 
 /* ── Mobile: shrink chip ────────────────────────────── */
 @media (max-width: 840px) {
+  .brand-header-wrapper {
+    margin: -20px -20px 0;
+  }
+
   .brand-logo-group {
     display: none;
   }
 
   .brand-profile-chip {
     top: calc(106px + env(safe-area-inset-top, 0px));
+    right: calc(20px + env(safe-area-inset-right, 0px));
   }
 
   .brand-profile-chip:not(.chip-expanded) {
@@ -569,7 +575,6 @@ const roleLabel = computed(() => {
   .brand-profile-chip {
     height: 50px;
     padding: 5px 9px 5px 5px;
-    right: calc(14px + env(safe-area-inset-right, 0px));
   }
 
   .chip-avatar {
@@ -630,10 +635,14 @@ const roleLabel = computed(() => {
 }
 
 @media (max-width: 480px) {
+  .brand-header-wrapper {
+    margin: -14px -14px 0;
+  }
+
   .brand-profile-chip {
     height: 44px;
     padding: 4px 7px 4px 4px;
-    right: calc(10px + env(safe-area-inset-right, 0px));
+    right: calc(14px + env(safe-area-inset-right, 0px));
   }
 
   .chip-avatar {
