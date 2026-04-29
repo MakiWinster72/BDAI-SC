@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
 import PaginationBar from "../components/PaginationBar.vue";
+import MobileCapsule from "../components/MobileCapsule.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
 import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses } from "../api/admin";
 import { useToast } from "../composables/useToast";
+import { useDashboardShell } from "../composables/useDashboardShell";
 import { loadUser } from "../utils/userStorage";
 import { buildClassName } from "../utils/profile";
 
@@ -16,7 +18,16 @@ const ATTACHMENT_TYPE_OPTIONS = [
 ];
 
 const profile = reactive(loadUser());
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const activeSection = shallowRef("upload");
+
+const ADMIN_TABS = [
+  { key: "upload", label: "上传限制", shortLabel: "上传", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+  { key: "review", label: "审核策略", shortLabel: "审核", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+  { key: "users", label: "用户管理", shortLabel: "用户", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
+  { key: "backup", label: "备份与恢复", shortLabel: "备份", icon: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" },
+  { key: "other", label: "其他设置", shortLabel: "其他", icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" },
+];
 
 // Backup & Restore
 const backupForm = reactive({
@@ -736,13 +747,7 @@ watch([userSearch, userRoleFilter], () => {
     <!-- Category Tabs -->
     <nav class="admin-tabs" role="tablist" aria-label="管理功能分类">
       <button
-        v-for="tab in [
-          { key: 'upload', label: '上传限制', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-          { key: 'review', label: '审核策略', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-          { key: 'users', label: '用户管理', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-          { key: 'backup', label: '备份与恢复', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4' },
-          { key: 'other', label: '其他设置', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
-        ]"
+        v-for="tab in ADMIN_TABS"
         :key="tab.key"
         class="admin-tab"
         :class="{ active: activeSection === tab.key }"
@@ -1744,6 +1749,26 @@ watch([userSearch, userRoleFilter], () => {
         </div>
       </div>
     </Teleport>
+
+    <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template #right>
+        <button
+          v-for="tab in ADMIN_TABS"
+          :key="tab.key"
+          class="capsule-action"
+          :class="{ 'capsule-active': activeSection === tab.key }"
+          type="button"
+          :aria-label="tab.label"
+          @click="switchSection(tab.key)"
+        >
+          <span class="capsule-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="tab.icon" />
+            </svg>
+          </span>
+        </button>
+      </template>
+    </MobileCapsule>
   </main>
 </template>
 
@@ -1882,6 +1907,40 @@ watch([userSearch, userRoleFilter], () => {
   }
   .add-user-modal {
     width: 100% !important;
+  }
+}
+
+/* ── Admin Capsule Theme Overrides ────────────────────── */
+:deep(.capsule-left) {
+  padding: 10px 2px 10px 6px;
+}
+:deep(.capsule-right) {
+  padding: 10px 6px 10px 2px;
+}
+:deep(.capsule-divider) {
+  margin: 0 1px;
+}
+.capsule-action {
+  flex-shrink: 0;
+  color: var(--primary);
+  padding: 8px clamp(3px, 2.5vw, 10px);
+}
+.capsule-action .capsule-icon {
+  flex-shrink: 0;
+}
+
+.capsule-action:active {
+  background: rgba(100, 12, 114, 0.08);
+}
+
+.capsule-action.capsule-active {
+  color: #fff;
+  background: linear-gradient(135deg, #640c72 0%, #4a0a56 100%);
+}
+
+@media (max-width: 840px) {
+  .admin-shell {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
   }
 }
 </style>
