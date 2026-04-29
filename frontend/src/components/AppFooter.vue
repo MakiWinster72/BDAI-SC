@@ -85,6 +85,8 @@ const friendLinks = [
 
 <style scoped>
 .app-footer {
+  position: relative;
+  z-index: 0;
   margin-top: 40px;
   border-radius: 20px;
   border: 1px solid rgba(100, 12, 114, 0.12);
