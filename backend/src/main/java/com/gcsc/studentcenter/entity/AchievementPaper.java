@@ -38,6 +38,9 @@ public class AchievementPaper {
     @Column(name = "indexed", length = 128)
     private String indexed;
 
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -116,6 +119,14 @@ public class AchievementPaper {
 
     public void setIndexed(String indexed) {
         this.indexed = indexed;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getImageUrl() {

@@ -6,44 +6,50 @@ import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import { API_BASE } from "../api/request";
 import { useNotifications } from "../composables/useNotifications";
 import { searchStudentProfiles, getStudentProfileById } from "../api/profile";
+import { uploadMedia } from "../api/upload";
+import { useUploadProgress } from "../composables/useUploadProgress";
+import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { resolveMediaUrl } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
+import { useToast } from "../composables/useToast";
+import { useDashboardShell } from "../composables/useDashboardShell";
+import MobileCapsule from "../components/MobileCapsule.vue";
+
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
+const { error: toastError } = useToast();
+const { uploadWithProgress } = useUploadProgress();
+const { settings: uploadLimits } = useAchievementUploadSettings();
 
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, updateReviewRequestStatus, cancelReviewRequest } = useNotifications(profile);
+const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, classReviewEntries } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
-const rejectReason = ref(localStorage.getItem("gcsc_reject_draft") || "");
+const rejectReason = ref(localStorage.getItem("bdai_sc_reject_draft") || "");
 watch(rejectReason, (val) => {
-  if (val) localStorage.setItem("gcsc_reject_draft", val);
+  if (val) localStorage.setItem("bdai_sc_reject_draft", val);
 });
 const actionError = ref("");
-const selectedId = ref(null);
 
-const CATEGORIES = [
-  { key: "pending", label: "待处理", icon: "clock" },
-  { key: "approved", label: "已通过", icon: "check" },
-  { key: "rejected", label: "已驳回", icon: "x" },
-  { key: "system", label: "系统通知", icon: "bell" },
-];
+const isClassReviewsMode = computed(() => route.query.panel === "class-reviews");
 
 const activeCategory = computed(() => {
   const raw = route.query.category;
   return typeof raw === "string" && raw ? raw : "pending";
 });
+const entriesSource = computed(() => isClassReviewsMode.value ? classReviewEntries.value : inboxEntries.value);
 const filteredEntries = computed(() =>
-  inboxEntries.value.filter((entry) => entry.categoryKey === activeCategory.value),
+  entriesSource.value.filter((entry) => entry.categoryKey === activeCategory.value),
 );
 const selectedEntry = computed(
   () =>
-    filteredEntries.value.find((entry) => entry.id === selectedId.value) || null,
+    entriesSource.value.find((entry) => String(entry.id) === String(route.query.entry)) || null,
 );
 const canProcessSelected = computed(() => {
   if (!selectedEntry.value || selectedEntry.value.source !== "review-request") return false;
   if (selectedEntry.value.status !== "pending") return false;
-  if (!["TEACHER", "ADMIN"].includes(profile.role)) return false;
+  if (!["TEACHER", "ADMIN", "CADRE"].includes(profile.role)) return false;
   return selectedEntry.value.requester?.username !== profile.username;
 });
 const canCancelSelected = computed(() => {
@@ -53,7 +59,7 @@ const canCancelSelected = computed(() => {
 });
 const canViewStudentInfo = computed(() => {
   if (!selectedEntry.value) return false;
-  if (!["TEACHER", "ADMIN"].includes(profile.role)) return false;
+  if (!["TEACHER", "ADMIN", "CADRE"].includes(profile.role)) return false;
   return Boolean(selectedEntry.value.requester?.username);
 });
 
@@ -63,35 +69,55 @@ const studentDetailItem = ref(null);
 const cancelConfirmOpen = ref(false);
 const achievementReviewSnapshot = computed(() => resolveAchievementReviewPayload(selectedEntry.value));
 
-function setCategory(key) {
-  router.replace({ path: "/notifications", query: { category: key, entry: "" } });
-  selectedId.value = null;
-}
+const supportingDocsUploading = ref(false);
+const supportingDocsError = ref("");
+const newSupportingDocText = ref("");
+const supportingDocuments = computed(() => selectedEntry.value?.supportingDocuments || []);
 
-watch(
-  [filteredEntries, activeCategory],
-  ([list]) => {
-    if (!list?.length) return;
-    if (!selectedId.value) {
-      selectedId.value = list[0].id;
-    } else if (!list.find((e) => e.id === selectedId.value)) {
-      selectedId.value = list[0].id;
-    }
-  },
-  { immediate: true },
-);
-
-watch(selectedId, () => {
+watch(selectedEntry, (entry) => {
   rejectEditorOpen.value = false;
   actionError.value = "";
   cancelConfirmOpen.value = false;
+  supportingDocsError.value = "";
   closeStudentDetail();
+  if (!entry) return;
+  markEntryRead(entry.id);
+  if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
+    markProcessedEntryRead(entry.id);
+  }
 });
 
 function formatChangeValue(value) {
   if (value === null || value === undefined || value === "") return "-";
   if (Array.isArray(value)) return value.length ? value.join("、") : "-";
   return String(value);
+}
+
+function isAvatarChange(change) {
+  return change?.label === "头像";
+}
+
+function resolveAvatarUrlForChange(value) {
+  const url = formatChangeValue(value);
+  if (!url || url === "-") return null;
+  return resolveMediaUrl(url);
+}
+
+function resolveExtension(filename = "") {
+  const clean = String(filename).toLowerCase();
+  const idx = clean.lastIndexOf(".");
+  return idx >= 0 && idx < clean.length - 1 ? clean.substring(idx + 1) : "";
+}
+
+function supportingDocIcon(doc) {
+  const ext = resolveExtension(doc?.name || doc?.url || "");
+  if (ext === "pdf") return "/assets/icons/pdf.svg";
+  if (ext === "xls" || ext === "xlsx") return "/assets/icons/excel.svg";
+  if (ext === "ppt" || ext === "pptx") return "/assets/icons/ppt.svg";
+  if (["zip", "rar", "7z"].includes(ext)) return "/assets/icons/zip.svg";
+  if (["mp4", "mov", "webm"].includes(ext)) return "/assets/icons/video.svg";
+  if (["jpeg", "jpg", "png", "heif"].includes(ext)) return "/assets/icons/image.svg";
+  return "/assets/icons/doc.svg";
 }
 
 function isStructuredChangeValue(value) {
@@ -174,9 +200,10 @@ async function approveSelectedRequest() {
   if (!selectedEntry.value) return;
   actionError.value = "";
   try {
-    await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "approved", reviewer: profile });
+    await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "approved", reviewer: profile, resourceType: selectedEntry.value.resourceType });
+    router.replace({ path: "/notifications", query: { ...(isClassReviewsMode.value ? { panel: "class-reviews" } : {}), category: activeCategory.value, entry: "" } });
   } catch (error) {
-    actionError.value = error?.message || "处理失败，请稍后重试";
+    toastError("请尝试刷新页面,当前请求可能已经被他人更改");
   }
 }
 
@@ -184,12 +211,13 @@ async function rejectSelectedRequest() {
   if (!selectedEntry.value) return;
   actionError.value = "";
   try {
-    await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "rejected", reviewer: profile, reason: rejectReason.value });
+    await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "rejected", reviewer: profile, reason: rejectReason.value, resourceType: selectedEntry.value.resourceType });
     rejectEditorOpen.value = false;
     rejectReason.value = "";
-    localStorage.removeItem("gcsc_reject_draft");
+    localStorage.removeItem("bdai_sc_reject_draft");
+    router.replace({ path: "/notifications", query: { ...(isClassReviewsMode.value ? { panel: "class-reviews" } : {}), category: activeCategory.value, entry: "" } });
   } catch (error) {
-    actionError.value = error?.message || "处理失败，请稍后重试";
+    toastError("请尝试刷新页面,当前请求可能已经被他人更改");
   }
 }
 
@@ -204,10 +232,11 @@ function closeCancelConfirm() { cancelConfirmOpen.value = false; }
 async function confirmCancelRequest() {
   if (!selectedEntry.value) return;
   try {
-    await cancelReviewRequest({ requestId: selectedEntry.value.id });
+    await cancelReviewRequest({ requestId: selectedEntry.value.id, resourceType: selectedEntry.value.resourceType });
     cancelConfirmOpen.value = false;
+    router.replace({ path: "/notifications", query: { ...(isClassReviewsMode.value ? { panel: "class-reviews" } : {}), category: activeCategory.value, entry: "" } });
   } catch (error) {
-    actionError.value = error?.message || "取消失败，请稍后重试";
+    toastError("请尝试刷新页面,当前请求可能已经被他人更改");
   }
 }
 
@@ -233,182 +262,300 @@ function closeStudentDetail() {
   studentDetailOpen.value = false;
   setTimeout(() => { studentDetailItem.value = null; }, 450);
 }
+
+async function handleSupportingDocUpload(file) {
+  if (!file || !selectedEntry.value) return;
+  supportingDocsError.value = "";
+  const currentFileCount = supportingDocuments.value.filter(d => (d.type || "file") !== "text").length;
+  if (currentFileCount >= uploadLimits.supportingDocMaxCount) {
+    supportingDocsError.value = `最多上传 ${uploadLimits.supportingDocMaxCount} 个文件`;
+    return;
+  }
+  const maxBytes = uploadLimits.supportingDocMaxSizeMb * 1024 * 1024;
+  if (file.size > maxBytes) {
+    supportingDocsError.value = `文件大小不能超过 ${uploadLimits.supportingDocMaxSizeMb}MB`;
+    return;
+  }
+  supportingDocsUploading.value = true;
+  try {
+    const { data: uploaded } = await uploadWithProgress(file, uploadMedia, { context: "review-supporting" });
+    if (!uploaded?.success || !uploaded?.url) {
+      throw new Error("上传失败，请稍后重试");
+    }
+    const newDoc = {
+      url: uploaded.url,
+      name: uploaded.originalName || file.name,
+      mediaType: uploaded.mediaType || "",
+    };
+    const updated = [...supportingDocuments.value, newDoc];
+    await setSupportingDocuments({
+      requestId: selectedEntry.value.id,
+      documents: updated,
+      resourceType: selectedEntry.value.resourceType,
+    });
+  } catch (e) {
+    supportingDocsError.value = e?.response?.data?.message || e?.message || "上传失败";
+  } finally {
+    supportingDocsUploading.value = false;
+  }
+}
+
+async function handleAddSupportingText() {
+  const text = newSupportingDocText.value.trim();
+  if (!text || !selectedEntry.value) return;
+  supportingDocsError.value = "";
+  try {
+    const newDoc = { type: "text", content: text };
+    const updated = [...supportingDocuments.value, newDoc];
+    await setSupportingDocuments({
+      requestId: selectedEntry.value.id,
+      documents: updated,
+      resourceType: selectedEntry.value.resourceType,
+    });
+    newSupportingDocText.value = "";
+  } catch (e) {
+    supportingDocsError.value = e?.response?.data?.message || e?.message || "添加失败";
+  }
+}
+
+async function handleRemoveSupportingDoc(index) {
+  if (!selectedEntry.value) return;
+  supportingDocsError.value = "";
+  try {
+    const updated = supportingDocuments.value.filter((_, i) => i !== index);
+    await setSupportingDocuments({
+      requestId: selectedEntry.value.id,
+      documents: updated,
+      resourceType: selectedEntry.value.resourceType,
+    });
+  } catch (e) {
+    supportingDocsError.value = e?.response?.data?.message || e?.message || "删除失败";
+  }
+}
 </script>
 
 <template>
   <main class="dashboard-right notif-view">
     <header class="feed-header">
-      <h1 class="feed-title">通知详情</h1>
+      <h1 class="feed-title">{{ isClassReviewsMode ? '班级审核' : '通知详情' }}</h1>
     </header>
 
-    <!-- Category Tabs -->
-    <nav class="notif-tabs" role="tablist">
-      <button
-        v-for="cat in CATEGORIES"
-        :key="cat.key"
-        class="notif-tab"
-        :class="{ active: activeCategory === cat.key }"
-        role="tab"
-        :aria-selected="activeCategory === cat.key"
-        type="button"
-        @click="setCategory(cat.key)"
-      >
-        {{ cat.label }}
-        <span
-          v-if="inboxEntries.filter(e => e.categoryKey === cat.key).length"
-          class="notif-tab-count"
-        >
-          {{ inboxEntries.filter(e => e.categoryKey === cat.key).length }}
-        </span>
-      </button>
-    </nav>
-
-    <!-- Empty State -->
-    <div v-if="!filteredEntries.length" class="notif-empty">
+    <!-- Empty State: no entry selected -->
+    <div v-if="!selectedEntry" class="notif-empty">
       <div class="notif-empty-icon">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-10.999 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       </div>
-      <p class="notif-empty-title">暂无通知</p>
-      <p class="notif-empty-sub">当前分类下暂时没有可查看的通知</p>
+      <p class="notif-empty-title">{{ isClassReviewsMode ? '暂无待审' : '暂无通知' }}</p>
+      <p class="notif-empty-sub">{{ isClassReviewsMode ? '从左侧选择一条申请查看详情' : '从左侧选择一条通知查看详情' }}</p>
     </div>
 
-    <!-- Master-Detail Layout -->
-    <div v-else class="notif-master-detail">
-      <!-- Notification List -->
-      <aside class="notif-list" role="list">
-        <button
-          v-for="(entry, i) in filteredEntries"
-          :key="entry.id"
-          class="notif-item"
-          :class="{ active: selectedId === entry.id }"
-          role="listitem"
-          type="button"
-          :style="{ animationDelay: `${i * 35}ms` }"
-          @click="selectedId = entry.id"
-        >
-          <div class="notif-item-top">
-            <span class="notif-badge" :class="entry.badgeClass">{{ entry.badgeText }}</span>
-            <time class="notif-item-time">{{ entry.timeText }}</time>
+    <!-- Detail Panel -->
+    <section v-else class="notif-detail">
+      <Transition name="detail-fade" mode="out-in">
+        <div :key="selectedEntry.id" class="notif-detail-inner">
+
+          <!-- Top Bar -->
+          <div class="notif-detail-top">
+            <div class="notif-detail-badges">
+              <span class="notif-badge" :class="selectedEntry.badgeClass">{{ selectedEntry.badgeText }}</span>
+              <time class="notif-time">{{ selectedEntry.timeText }}</time>
+            </div>
+            <div class="notif-detail-actions">
+              <button v-if="canCancelSelected" class="notif-btn is-cancel" type="button" @click="openCancelConfirm">取消申请</button>
+              <button v-if="canViewStudentInfo" class="notif-btn is-info" type="button" @click="viewStudentInfo">学生信息</button>
+              <template v-if="canProcessSelected">
+                <button class="notif-btn is-approve" type="button" @click="approveSelectedRequest">通过</button>
+                <button class="notif-btn is-reject" type="button" @click="toggleRejectEditor">驳回</button>
+              </template>
+            </div>
           </div>
-          <p class="notif-item-title">{{ entry.title }}</p>
-          <p class="notif-item-content">{{ entry.content }}</p>
-        </button>
-      </aside>
 
-      <!-- Detail Panel -->
-      <section class="notif-detail">
-        <Transition name="detail-fade" mode="out-in">
-          <div v-if="selectedEntry" :key="selectedEntry.id" class="notif-detail-inner">
+          <!-- Title & Content -->
+          <h2 class="notif-title">{{ selectedEntry.title }}</h2>
+          <p class="notif-content">{{ selectedEntry.content }}</p>
 
-            <!-- Top Bar -->
-            <div class="notif-detail-top">
-              <div class="notif-detail-badges">
-                <span class="notif-badge" :class="selectedEntry.badgeClass">{{ selectedEntry.badgeText }}</span>
-                <time class="notif-time">{{ selectedEntry.timeText }}</time>
+          <!-- Rejection Reason -->
+          <div v-if="selectedEntry.reason" class="notif-reason">
+            <div class="notif-section-label">驳回理由</div>
+            <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
+          </div>
+
+          <!-- Supporting Documents -->
+          <section v-if="canCancelSelected || supportingDocuments.length" class="notif-changes notif-supporting-docs">
+            <div class="notif-section-label">证明资料</div>
+            <div v-if="canCancelSelected" class="supporting-docs-upload">
+              <div class="supporting-docs-add-row">
+                <input
+                  v-model="newSupportingDocText"
+                  class="supporting-docs-text-input"
+                  type="text"
+                  placeholder="输入文字说明..."
+                  maxlength="500"
+                  @keyup.enter="handleAddSupportingText"
+                />
+                <button
+                  class="supporting-docs-add-text-btn"
+                  type="button"
+                  :disabled="!newSupportingDocText.trim()"
+                  @click="handleAddSupportingText"
+                >
+                  添加文字
+                </button>
               </div>
-              <div class="notif-detail-actions">
-                <button v-if="canCancelSelected" class="notif-btn is-cancel" type="button" @click="openCancelConfirm">取消申请</button>
-                <button v-if="canViewStudentInfo" class="notif-btn is-info" type="button" @click="viewStudentInfo">学生信息</button>
-                <template v-if="canProcessSelected">
-                  <button class="notif-btn is-approve" type="button" @click="approveSelectedRequest">通过</button>
-                  <button class="notif-btn is-reject" type="button" @click="toggleRejectEditor">驳回</button>
+              <label class="supporting-docs-upload-btn" :class="{ 'is-uploading': supportingDocsUploading }">
+                <input
+                  type="file"
+                  class="supporting-docs-input"
+                  :disabled="supportingDocsUploading"
+                  @change="handleSupportingDocUpload($event.target.files[0])"
+                />
+                <span v-if="supportingDocsUploading">上传中...</span>
+                <span v-else>+ 上传文件</span>
+              </label>
+              <span v-if="supportingDocsError" class="supporting-docs-error">{{ supportingDocsError }}</span>
+            </div>
+            <div v-if="supportingDocuments.length" class="supporting-docs-list">
+              <div
+                v-for="(doc, idx) in supportingDocuments"
+                :key="`${doc.type || 'file'}-${doc.url || doc.content}-${idx}`"
+                :class="[(doc.type || 'file') === 'text' ? 'supporting-docs-text' : 'supporting-docs-file']"
+              >
+                <template v-if="(doc.type || 'file') === 'text'">
+                  <span class="supporting-docs-text-content">{{ doc.content }}</span>
+                  <div class="supporting-docs-text-actions">
+                    <button
+                      v-if="canCancelSelected"
+                      class="supporting-docs-remove"
+                      type="button"
+                      title="删除"
+                      @click.stop="handleRemoveSupportingDoc(idx)"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <img :src="supportingDocIcon(doc)" alt="" class="supporting-docs-file-icon" />
+                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="window.open(resolveMediaUrl(doc.url), '_blank')">{{ doc.name }}</span>
+                  <button
+                    v-if="canCancelSelected"
+                    class="supporting-docs-remove"
+                    type="button"
+                    title="删除"
+                    @click.stop="handleRemoveSupportingDoc(idx)"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
                 </template>
               </div>
             </div>
+            <p v-if="!supportingDocuments.length && !canCancelSelected" class="supporting-docs-empty">暂无证明资料</p>
+          </section>
 
-            <!-- Title & Content -->
-            <h2 class="notif-title">{{ selectedEntry.title }}</h2>
-            <p class="notif-content">{{ selectedEntry.content }}</p>
+          <!-- Achievement Review Snapshot -->
+          <Transition name="section-fade" mode="out-in">
+            <section v-if="achievementReviewSnapshot" key="achievement" class="notif-changes notif-achievement">
+              <div class="notif-section-label">成就审核</div>
+              <div class="notif-compare">
+                <AchievementReviewSnapshotCard
+                  :snapshot="achievementReviewSnapshot.before"
+                  :empty-text="selectedEntry.action === 'create' ? '新增前暂无记录' : '暂无原记录'"
+                />
+                <div class="notif-compare-arrow" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <AchievementReviewSnapshotCard
+                  :snapshot="achievementReviewSnapshot.after"
+                  empty-text="暂无提交内容"
+                />
+              </div>
+            </section>
 
-            <!-- Achievement Review Snapshot -->
-            <Transition name="section-fade" mode="out-in">
-              <section v-if="achievementReviewSnapshot" key="achievement" class="notif-changes notif-achievement">
-                <div class="notif-section-label">成就审核</div>
-                <div class="notif-compare">
-                  <AchievementReviewSnapshotCard
-                    :snapshot="achievementReviewSnapshot.before"
-                    :empty-text="selectedEntry.action === 'create' ? '新增前暂无记录' : '暂无原记录'"
-                  />
-                  <div class="notif-compare-arrow" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+            <!-- Structured Changes -->
+            <section v-else-if="selectedEntry.changes?.length" key="changes" class="notif-changes">
+              <div class="notif-section-label">变更内容</div>
+              <div class="notif-change-list">
+                <article
+                  v-for="change in selectedEntry.changes"
+                  :key="`${change.section || ''}-${change.label}-${change.after}`"
+                  class="notif-change-item"
+                >
+                  <div class="notif-change-head">
+                    <span class="notif-change-label">{{ change.label }}</span>
+                    <span v-if="change.section" class="notif-change-section">{{ change.section }}</span>
                   </div>
-                  <AchievementReviewSnapshotCard
-                    :snapshot="achievementReviewSnapshot.after"
-                    empty-text="暂无提交内容"
-                  />
-                </div>
-              </section>
-
-              <!-- Structured Changes -->
-              <section v-else-if="selectedEntry.changes?.length" key="changes" class="notif-changes">
-                <div class="notif-section-label">变更内容</div>
-                <div class="notif-change-list">
-                  <article
-                    v-for="change in selectedEntry.changes"
-                    :key="`${change.section || ''}-${change.label}-${change.after}`"
-                    class="notif-change-item"
-                  >
-                    <div class="notif-change-head">
-                      <span class="notif-change-label">{{ change.label }}</span>
-                      <span v-if="change.section" class="notif-change-section">{{ change.section }}</span>
+                  <div class="notif-change-values">
+                    <div class="notif-change-col">
+                      <div class="notif-change-cap">修改前</div>
+                      <template v-if="isAvatarChange(change)">
+                        <img
+                          v-if="resolveAvatarUrlForChange(change.before)"
+                          class="notif-change-avatar"
+                          :src="resolveAvatarUrlForChange(change.before)"
+                          alt="修改前头像"
+                        />
+                        <div v-else class="notif-change-val">-</div>
+                      </template>
+                      <template v-else-if="isStructuredChangeValue(change.before)">
+                        <article
+                          v-for="entry in parseStructuredChangeValue(change.before)"
+                          :key="entry.title"
+                          class="notif-change-entry"
+                        >
+                          <div class="notif-change-entry-title">{{ entry.title }}</div>
+                          <div
+                            v-for="detail in entry.details"
+                            :key="detail"
+                            class="notif-change-entry-line"
+                          >{{ detail }}</div>
+                        </article>
+                      </template>
+                      <div v-else class="notif-change-val">{{ formatChangeValue(change.before) }}</div>
                     </div>
-                    <div class="notif-change-values">
-                      <div class="notif-change-col">
-                        <div class="notif-change-cap">修改前</div>
-                        <template v-if="isStructuredChangeValue(change.before)">
-                          <article
-                            v-for="entry in parseStructuredChangeValue(change.before)"
-                            :key="entry.title"
-                            class="notif-change-entry"
-                          >
-                            <div class="notif-change-entry-title">{{ entry.title }}</div>
-                            <div
-                              v-for="detail in entry.details"
-                              :key="detail"
-                              class="notif-change-entry-line"
-                            >{{ detail }}</div>
-                          </article>
-                        </template>
-                        <div v-else class="notif-change-val">{{ formatChangeValue(change.before) }}</div>
-                      </div>
-                      <div class="notif-change-col is-next">
-                        <div class="notif-change-cap">修改后</div>
-                        <template v-if="isStructuredChangeValue(change.after)">
-                          <article
-                            v-for="entry in parseStructuredChangeValue(change.after)"
-                            :key="entry.title"
-                            class="notif-change-entry is-next"
-                          >
-                            <div class="notif-change-entry-title">{{ entry.title }}</div>
-                            <div
-                              v-for="detail in entry.details"
-                              :key="detail"
-                              class="notif-change-entry-line"
-                            >{{ detail }}</div>
-                          </article>
-                        </template>
-                        <div v-else class="notif-change-val is-next">{{ formatChangeValue(change.after) }}</div>
-                      </div>
+                    <div class="notif-change-col is-next">
+                      <div class="notif-change-cap">修改后</div>
+                      <template v-if="isAvatarChange(change)">
+                        <img
+                          v-if="resolveAvatarUrlForChange(change.after)"
+                          class="notif-change-avatar"
+                          :src="resolveAvatarUrlForChange(change.after)"
+                          alt="修改后头像"
+                        />
+                        <div v-else class="notif-change-val">-</div>
+                      </template>
+                      <template v-else-if="isStructuredChangeValue(change.after)">
+                        <article
+                          v-for="entry in parseStructuredChangeValue(change.after)"
+                          :key="entry.title"
+                          class="notif-change-entry is-next"
+                        >
+                          <div class="notif-change-entry-title">{{ entry.title }}</div>
+                          <div
+                            v-for="detail in entry.details"
+                            :key="detail"
+                            class="notif-change-entry-line"
+                          >{{ detail }}</div>
+                        </article>
+                      </template>
+                      <div v-else class="notif-change-val is-next">{{ formatChangeValue(change.after) }}</div>
                     </div>
-                  </article>
-                </div>
-              </section>
-            </Transition>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </Transition>
 
-            <!-- Rejection Reason -->
-            <div v-if="selectedEntry.reason" class="notif-reason">
-              <div class="notif-section-label">驳回理由</div>
-              <p class="notif-reason-text">{{ selectedEntry.reason }}</p>
-            </div>
-
-          </div>
-        </Transition>
-      </section>
-    </div>
+        </div>
+      </Transition>
+    </section>
 
     <!-- Reject Editor Modal -->
     <Teleport to="body">
@@ -496,6 +643,8 @@ function closeStudentDetail() {
         </div>
       </div>
     </Teleport>
+
+    <MobileCapsule @open-sidebar="openDashboardSidebar" />
   </main>
 </template>
 

@@ -6,7 +6,7 @@
  * - Global Elements: html, body, #app 基础样式
  * - Keyframe Animations: cardEnter, floatOrb, glowMove
  *
- * 注意: 全局底色为中性 #f7f4fa；登录/注册页的紫色渐变定义在 auth.css
+ * 注意: 全局底色为中性 #F5F5F5；登录/注册页的渐变定义在 auth.css
  */
 
 /* ── CSS Reset ─────────────────────────────────────────── */
@@ -22,15 +22,15 @@ html {
   /* 阻止 Safari 弹性过度滚动露出 */
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  /* 纯色中性底色；登录/注册页的紫色光晕由 auth-layout 自己承载 */
-  background-color: #f7f4fa;
+  /* 纯色中性底色；登录/注册页的光晕由 auth-layout 自己承载 */
+  background-color: #F5F5F5;
 }
 
 body {
   margin: 0;
   width: 100%;
   min-height: 100%;
-  font-family: "DM Sans", "SF Pro Display", "Segoe UI", -apple-system, sans-serif;
+  font-family: "SF Pro Display", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text-main);
 }
 

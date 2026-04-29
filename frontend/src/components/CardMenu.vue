@@ -1,23 +1,73 @@
 <template>
   <section class="menu-card">
-    <div class="menu-card-header">
-      <Transition name="menu-back-fade">
-        <button
-          v-if="isSubPanelVisible"
-          class="menu-card-back"
-          type="button"
-          @click="closeSubPanel"
-        >
-          &lt;返回
-        </button>
+    <!-- Header: title row + sticky notification tabs -->
+    <div class="menu-card-header" :class="{ 'has-notif-tabs': currentPanel === 'notifications' || currentPanel === 'class-reviews' }">
+      <div class="menu-card-header-top">
+        <Transition name="menu-back-fade">
+          <button
+            v-if="isSubPanelVisible"
+            class="menu-card-back"
+            type="button"
+            @click="closeSubPanel"
+          >
+            &lt;返回
+          </button>
+        </Transition>
+        <Transition :name="titleTransitionName" mode="out-in">
+          <div :key="currentPanel" class="menu-card-title">
+            {{ panelTitle }}
+            <button
+              v-if="currentPanel === 'notifications' && totalUnreadCount > 0"
+              class="menu-mark-all-read"
+              type="button"
+              @click="markAllRead"
+            >
+              全部已读
+            </button>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- Notification Tabs (sticky at top, only when in notifications panel) -->
+      <Transition name="tabs-slide">
+        <nav v-if="currentPanel === 'notifications'" class="admin-tabs" role="tablist">
+          <button
+            v-for="cat in notificationCategories"
+            :key="cat.key"
+            class="admin-tab"
+            :class="{ active: notificationActiveCategory === cat.key }"
+            role="tab"
+            type="button"
+            @click="selectNotificationCategory(cat.key)"
+          >
+            {{ cat.label }}
+            <span v-if="notificationUnreadCounts[cat.key]" class="tab-count tab-count-unread">
+              {{ notificationUnreadCounts[cat.key] }}
+            </span>
+          </button>
+        </nav>
       </Transition>
-      <Transition :name="titleTransitionName" mode="out-in">
-        <div :key="currentPanel" class="menu-card-title">
-          {{ panelTitle }}
-        </div>
+
+      <!-- Class Reviews Tabs -->
+      <Transition name="tabs-slide">
+        <nav v-if="currentPanel === 'class-reviews'" class="admin-tabs" role="tablist">
+          <button
+            v-for="cat in classReviewCategories"
+            :key="cat.key"
+            class="admin-tab"
+            :class="{ active: classReviewActiveCategory === cat.key }"
+            role="tab"
+            type="button"
+            @click="classReviewActiveCategory = cat.key"
+          >
+            {{ cat.label }}
+            <span v-if="classReviewCounts[cat.key]" class="tab-count">{{ classReviewCounts[cat.key] }}</span>
+          </button>
+        </nav>
       </Transition>
     </div>
 
+    <!-- Scrollable body -->
     <div
       ref="menuBodyRef"
       class="menu-card-body"
@@ -28,6 +78,7 @@
       @scroll="handleBodyScroll"
     >
       <Transition :name="panelTransitionName" mode="out-in">
+        <!-- Achievements Sub-Panel -->
         <div
           v-if="currentPanel === 'achievements'"
           key="achievement-panel"
@@ -45,6 +96,70 @@
           </button>
         </div>
 
+        <!-- Notifications Sub-Panel -->
+        <div
+          v-else-if="currentPanel === 'notifications'"
+          key="notifications-panel"
+          class="menu-panel menu-notification-list"
+        >
+          <button
+            v-for="entry in filteredNotificationEntries"
+            :key="entry.id"
+            class="menu-notification-item"
+            :class="{
+              active: String(notificationActiveEntry) === String(entry.id),
+              'is-read': readIds.has(String(entry.id)),
+            }"
+            type="button"
+            @click="selectNotificationEntry(entry.id)"
+          >
+            <div class="menu-notification-head">
+              <span class="menu-notification-badge" :class="entry.badgeClass">{{ entry.badgeText }}</span>
+              <time class="menu-notification-time">{{ entry.timeText }}</time>
+              <span
+                v-if="!readIds.has(String(entry.id))"
+                class="menu-notification-dot"
+                aria-label="未读"
+              />
+            </div>
+            <p class="menu-notification-title">{{ entry.title }}</p>
+            <p class="menu-notification-content">{{ entry.content }}</p>
+          </button>
+          <div v-if="!filteredNotificationEntries.length" class="menu-notification-empty">
+            暂无通知
+          </div>
+        </div>
+
+        <!-- Class Reviews Sub-Panel -->
+        <div
+          v-else-if="currentPanel === 'class-reviews'"
+          key="class-reviews-panel"
+          class="menu-panel menu-notification-list"
+        >
+          <button
+            v-for="item in filteredClassReviewEntries"
+            :key="item.id + '-' + item.resourceType"
+            class="menu-notification-item"
+            :class="{ active: String(classReviewsActiveEntry) === String(item.id) + '-' + item.resourceType }"
+            type="button"
+            @click="selectClassReviewEntry(item)"
+          >
+            <div class="menu-notification-head">
+              <span class="menu-notification-badge" :class="item.badgeClass">{{ item.badgeText }}</span>
+              <span class="menu-notification-badge is-type" :class="item.resourceType === 'achievement' ? 'is-achievement' : 'is-profile'">
+                {{ item.resourceType === 'achievement' ? '成就' : '信息' }}
+              </span>
+              <time class="menu-notification-time">{{ item.timeText }}</time>
+            </div>
+            <p class="menu-notification-title">{{ item.title }}</p>
+            <p class="menu-notification-content">{{ item.content }}</p>
+          </button>
+          <div v-if="!filteredClassReviewEntries.length" class="menu-notification-empty">
+            暂无{{ classReviewCategories.find(c => c.key === classReviewActiveCategory)?.label || '' }}申请
+          </div>
+        </div>
+
+        <!-- Main Menu -->
         <div v-else key="menu-panel" class="menu-panel menu-list menu-grid">
           <button
             v-for="item in menuItems"
@@ -57,12 +172,6 @@
           >
             <span class="menu-item-header">
               <span class="menu-item-label">{{ item.label }}</span>
-              <span
-                v-if="item.key === 'notifications' && pendingCount > 0"
-                class="menu-item-count"
-              >
-                {{ pendingCount }}
-              </span>
             </span>
             <span class="menu-item-meta">{{ menuMeta[item.key] }}</span>
           </button>
@@ -73,7 +182,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUpdated, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUpdated, ref, toRefs, watch } from "vue";
 import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
 import { useNotifications } from "../composables/useNotifications";
 
@@ -94,43 +203,128 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  notificationActiveCategory: {
+    type: String,
+    default: "pending",
+  },
+  notificationActiveEntry: {
+    type: String,
+    default: "",
+  },
+  classReviewsActiveCategory: {
+    type: String,
+    default: "all",
+  },
+  classReviewsActiveEntry: {
+    type: String,
+    default: "",
+  },
+  classReviewEntries: {
+    type: Array,
+    default: () => [],
+  },
 });
+
+// Destructure with toRefs to maintain reactivity
+const { notificationActiveCategory, notificationActiveEntry } = toRefs(props);
 
 const emit = defineEmits([
   "menu-click",
   "achievement-entry-click",
+  "notification-entry-click",
+  "class-reviews-entry-click",
+  "class-reviews-category-change",
 ]);
 
-const { pendingCount } = useNotifications(props.profile);
+const { inboxEntries, pendingCount, totalUnreadCount, unreadEntries, readIds, processedReadIds, markProcessedEntryRead, markEntryRead, markAllRead, classReviewEntries } = useNotifications(props.profile);
 
 const menuItems = computed(() => filterMenuItemsByRole(props.profile.role));
 
-const menuMeta = {
-  notifications: "待处理请求与结果通知",
-  achievements: "查看与维护成果",
-  "my-info": "编辑个人档案",
-  "student-info": "检索学生资料",
-  admin: "开关与系统设置",
-};
+const notificationUnreadCounts = computed(() => {
+  const counts = { unread: 0, pending: 0, delayed: 0, approved: 0, rejected: 0 };
+  inboxEntries.value.forEach((e) => {
+    const isUnread = !readIds.has(String(e.id));
+    if (isUnread) counts.unread++;
+    if (isUnread && counts[e.categoryKey] !== undefined) counts[e.categoryKey]++;
+  });
+  return counts;
+});
 
-const currentPanel = ref(
-  props.activeMenu === "achievements" ? "achievements" : "menu",
-);
-const panelDirection = ref(
-  props.activeMenu === "achievements" ? "forward" : "back",
-);
+const menuMeta = computed(() => {
+  const totalPending = classReviewEntries.value.filter(e => e.categoryKey === 'pending' || e.categoryKey === 'delayed').length;
+  return {
+    notifications: totalUnreadCount.value > 0
+      ? `待处理 ${pendingCount.value} | 未读 ${totalUnreadCount.value}`
+      : `待处理 ${pendingCount.value}`,
+    achievements: "查看与维护成果",
+    "my-info": "编辑个人档案",
+    "student-info": "检索学生资料",
+    admin: "开关与系统设置",
+    "class-reviews": totalPending > 0
+      ? `${totalPending} 条待审`
+      : "无待审申请",
+  };
+});
+
+const classReviewActiveCategory = ref("pending");
+
+const filteredClassReviewEntries = computed(() => {
+  const cat = classReviewActiveCategory.value;
+  return classReviewEntries.value.filter(entry => entry.categoryKey === cat);
+});
+
+const classReviewCategories = [
+  { key: "pending", label: "待处理" },
+  { key: "delayed", label: "已滞后" },
+  { key: "approved", label: "已通过" },
+  { key: "rejected", label: "已驳回" },
+];
+
+const classReviewCounts = computed(() => {
+  const counts = { pending: 0, delayed: 0, approved: 0, rejected: 0 };
+  classReviewEntries.value.forEach(entry => {
+    const key = entry.categoryKey || "pending";
+    if (counts[key] !== undefined) counts[key]++;
+  });
+  return counts;
+});
+
+const notificationCategories = [
+  { key: "unread", label: "未读" },
+  { key: "pending", label: "待处理" },
+  { key: "delayed", label: "已滞后" },
+  { key: "approved", label: "已通过" },
+  { key: "rejected", label: "已驳回" },
+];
+
+const filteredNotificationEntries = computed(() => {
+  const cat = notificationActiveCategory.value;
+  if (cat === "unread") {
+    return inboxEntries.value.filter((e) => !readIds.has(String(e.id)));
+  }
+  return inboxEntries.value.filter((e) => e.categoryKey === cat);
+});
+
+const currentPanel = ref("menu");
+const panelDirection = ref("back");
 const menuBodyRef = ref(null);
 const showBottomFade = ref(false);
-const isSubPanelVisible = computed(() => currentPanel.value === "achievements");
+
+const isSubPanelVisible = computed(() =>
+  currentPanel.value === "achievements" || currentPanel.value === "notifications" || currentPanel.value === "class-reviews",
+);
 const panelTransitionName = computed(() =>
   panelDirection.value === "forward" ? "menu-panel-forward" : "menu-panel-back",
 );
 const titleTransitionName = computed(() =>
   panelDirection.value === "forward" ? "menu-title-forward" : "menu-title-back",
 );
-const panelTitle = computed(() =>
-  currentPanel.value === "achievements" ? "个人成就" : "导航",
-);
+const panelTitle = computed(() => {
+  if (currentPanel.value === "achievements") return "个人成果";
+  if (currentPanel.value === "notifications") return "通知详情";
+  if (currentPanel.value === "class-reviews") return "班级审核";
+  return "导航";
+});
 
 const achievementEntries = [
   { key: "all", label: "全部" },
@@ -151,7 +345,13 @@ watch(
     if (activeMenu === "achievements" && previousMenu !== activeMenu) {
       panelDirection.value = "forward";
       currentPanel.value = "achievements";
-    } else if (activeMenu !== "achievements" && previousMenu === "achievements") {
+    } else if (activeMenu === "notifications" && previousMenu !== activeMenu) {
+      panelDirection.value = "forward";
+      currentPanel.value = "notifications";
+    } else if (activeMenu === "class-reviews" && previousMenu !== activeMenu) {
+      panelDirection.value = "forward";
+      currentPanel.value = "class-reviews";
+    } else if (previousMenu === "achievements" || previousMenu === "notifications" || previousMenu === "class-reviews") {
       panelDirection.value = "back";
       currentPanel.value = "menu";
     }
@@ -161,6 +361,17 @@ watch(
 
 onMounted(() => {
   updateBodyFadeState();
+  // Initialize panel from props on mount
+  if (props.activeMenu === "achievements") {
+    currentPanel.value = "achievements";
+    panelDirection.value = "forward";
+  } else if (props.activeMenu === "notifications") {
+    currentPanel.value = "notifications";
+    panelDirection.value = "forward";
+  } else if (props.activeMenu === "class-reviews") {
+    currentPanel.value = "class-reviews";
+    panelDirection.value = "forward";
+  }
 });
 
 onUpdated(() => {
@@ -171,6 +382,19 @@ function handleMenuClick(key) {
   if (key === "achievements" && props.showAchievementsDrawer) {
     panelDirection.value = "forward";
     currentPanel.value = "achievements";
+    nextTick(updateBodyFadeState);
+    return;
+  }
+  if (key === "notifications") {
+    panelDirection.value = "forward";
+    currentPanel.value = "notifications";
+    nextTick(updateBodyFadeState);
+    emit("menu-click", key);
+    return;
+  }
+  if (key === "class-reviews") {
+    panelDirection.value = "forward";
+    currentPanel.value = "class-reviews";
     nextTick(updateBodyFadeState);
     emit("menu-click", key);
     return;
@@ -186,6 +410,31 @@ function closeSubPanel() {
   nextTick(updateBodyFadeState);
 }
 
+function selectNotificationCategory(category) {
+  emit("notification-entry-click", { category, entryId: "" });
+}
+
+function selectNotificationEntry(entryId) {
+  const entry = filteredNotificationEntries.value.find((e) => String(e.id) === String(entryId));
+  if (entry) {
+    markEntryRead(String(entryId));
+    if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
+      markProcessedEntryRead(String(entryId));
+    }
+  }
+  emit("notification-entry-click", { category: notificationActiveCategory.value, entryId: String(entryId) });
+}
+
+function selectClassReviewEntry(item) {
+  emit("class-reviews-entry-click", { entry: item });
+}
+
+function formatClassReviewTime(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 function handleBodyScroll() {
   updateBodyFadeState();
 }
@@ -193,6 +442,9 @@ function handleBodyScroll() {
 function isItemActive(key) {
   if (key === "achievements") {
     return currentPanel.value === "achievements" || props.activeMenu === key;
+  }
+  if (key === "notifications") {
+    return currentPanel.value === "notifications" || props.activeMenu === key;
   }
   return currentPanel.value === "menu" && props.activeMenu === key;
 }

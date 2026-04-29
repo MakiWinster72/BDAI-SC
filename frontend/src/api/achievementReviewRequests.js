@@ -19,3 +19,7 @@ export function rejectAchievementReviewRequest(id, data) {
 export function cancelAchievementReviewRequest(id) {
   return request.delete(`/api/achievement-review-requests/${id}`);
 }
+
+export function setAchievementReviewRequestDocuments(id, documents) {
+  return request.put(`/api/achievement-review-requests/${id}/supporting-documents`, { documents });
+}

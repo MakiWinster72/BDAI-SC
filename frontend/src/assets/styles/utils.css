@@ -116,14 +116,21 @@
 
 /* ── Edit Dock ──────────────────────────────────────────── */
 .edit-dock {
-  position: sticky;
+  position: fixed;
   bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 45;
   display: flex;
   justify-content: center;
-  margin-top: 24px;
-  padding: 0 12px 6px;
-  overflow: hidden;
+  padding: 0 12px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: min(calc(100vw - 320px - 40px), 552px);
+}
+
+.edit-dock > * {
+  pointer-events: auto;
 }
 
 .edit-dock-inner {
@@ -133,11 +140,6 @@
   gap: 10px;
   padding: 10px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(16px);
-  box-shadow:
-    0 8px 32px rgba(100, 12, 114, 0.10),
-    0 2px 8px rgba(100, 12, 114, 0.06);
 }
 
 .edit-dock-inner .ghost-button,
@@ -146,39 +148,33 @@
   height: 44px;
   margin-top: 0;
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(100, 12, 114, 0.10);
 }
 
 .edit-dock-enter-active,
 .edit-dock-leave-active {
   transition:
     opacity 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    max-height 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    margin-top 300ms cubic-bezier(0.22, 1, 0.36, 1),
     padding-bottom 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .edit-dock-enter-from,
 .edit-dock-leave-to {
   opacity: 0;
-  max-height: 0;
-  margin-top: 0;
   padding-bottom: 0;
 }
 
 .edit-dock-enter-to,
 .edit-dock-leave-from {
   opacity: 1;
-  max-height: 120px;
-  margin-top: 24px;
-  padding-bottom: 6px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
 }
 
 .edit-dock-enter-active .edit-dock-inner,
 .edit-dock-leave-active .edit-dock-inner {
   transition:
     opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: center bottom;
 }
 
@@ -186,16 +182,12 @@
 .edit-dock-leave-to .edit-dock-inner {
   opacity: 0;
   transform: translateY(12px) scale(0.98);
-  box-shadow: none;
 }
 
 .edit-dock-enter-to .edit-dock-inner,
 .edit-dock-leave-from .edit-dock-inner {
   opacity: 1;
   transform: translateY(0) scale(1);
-  box-shadow:
-    0 8px 32px rgba(100, 12, 114, 0.10),
-    0 2px 8px rgba(100, 12, 114, 0.06);
 }
 
 /* ── Education Row Transitions ─────────────────────────── */
@@ -309,13 +301,18 @@
   .achievement-add {
     display: none;
   }
+
+  .edit-dock {
+    display: none;
+  }
 }
 
 @media (max-width: 720px) {
   .edit-dock {
     bottom: 12px;
-    margin-top: 18px;
-    padding: 0 6px 4px;
+    max-width: min(calc(100vw - 40px), 552px);
+    padding: 0 6px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
   }
 
   .edit-dock-inner {
@@ -327,7 +324,6 @@
 
   .edit-dock-enter-to,
   .edit-dock-leave-from {
-    margin-top: 18px;
-    padding-bottom: 4px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
   }
 }

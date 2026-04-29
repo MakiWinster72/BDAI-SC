@@ -25,6 +25,7 @@ public class AchievementReviewRequestService {
     private final AppUserRepository appUserRepository;
     private final AchievementService achievementService;
     private final ReviewSettingsService reviewSettingsService;
+    private final UserService userService;
     private final ObjectMapper objectMapper;
 
     public AchievementReviewRequestService(
@@ -32,12 +33,14 @@ public class AchievementReviewRequestService {
         AppUserRepository appUserRepository,
         AchievementService achievementService,
         ReviewSettingsService reviewSettingsService,
+        UserService userService,
         ObjectMapper objectMapper
     ) {
         this.achievementReviewRequestRepository = achievementReviewRequestRepository;
         this.appUserRepository = appUserRepository;
         this.achievementService = achievementService;
         this.reviewSettingsService = reviewSettingsService;
+        this.userService = userService;
         this.objectMapper = objectMapper;
     }
 
@@ -47,13 +50,51 @@ public class AchievementReviewRequestService {
         List<AchievementReviewRequest> requests = isReviewer(user)
             ? achievementReviewRequestRepository.findAllByOrderByUpdatedAtDesc()
             : achievementReviewRequestRepository.findAllByRequester_UsernameOrderByUpdatedAtDesc(username);
-        return requests.stream().map(this::toResponse).toList();
+        return requests.stream()
+            .filter(r -> {
+                if ("pending".equals(r.getStatus())) {
+                    // pending: requester can always see their own pending request
+                    if (r.getRequester().getUsername().equals(username)) return true;
+                    // pending: only reviewers (TEACHER/ADMIN/CADRE) can see, not regular students
+                    if (!isReviewer(user)) return false;
+                    // ADMIN can see all pending
+                    if (user.getRole() == UserRole.ADMIN) {
+                        return true;
+                    }
+                    // TEACHER can only see their assigned class students
+                    if (user.getRole() == UserRole.TEACHER) {
+                        return userService.isStudentInTeacherAssignedClass(user, r.getRequester());
+                    }
+                    // CADRE can only see their own class students
+                    if (user.getRole() == UserRole.CADRE) {
+                        return isStudentInCadreOwnClass(user, r.getRequester());
+                    }
+                    return true;
+                }
+                // processed: only requester or reviewer can see
+                return r.getRequester().getUsername().equals(username)
+                    || (r.getReviewer() != null && r.getReviewer().getUsername().equals(username));
+            })
+            .map(this::toResponse)
+            .toList();
+    }
+
+    private boolean isStudentInCadreOwnClass(AppUser cadre, AppUser student) {
+        String cadreClass = cadre.getClassName();
+        if (cadreClass == null || cadreClass.isBlank()) {
+            return false; // CADRE with no class set sees nothing
+        }
+        String studentClass = student.getClassName();
+        if (studentClass == null || studentClass.isBlank()) {
+            return false;
+        }
+        return cadreClass.trim().equals(studentClass.trim());
     }
 
     @Transactional
     public AchievementReviewRequestResponse submit(String username, AchievementReviewSubmitRequest request) {
         AppUser requester = loadUser(username);
-        if (requester.getRole() != UserRole.STUDENT) {
+        if (requester.getRole() != UserRole.STUDENT && requester.getRole() != UserRole.CADRE) {
             throw new IllegalArgumentException("仅学生可提交成就审核");
         }
         if (!reviewSettingsService.isAchievementReviewEnabled()) {
@@ -70,7 +111,7 @@ public class AchievementReviewRequestService {
             if (request.getRecordId() == null) {
                 throw new IllegalArgumentException("修改审核必须指定成就记录");
             }
-            achievementService.getById(username, category, request.getRecordId());
+            achievementService.getById(username, requester.getRole().name(), category, request.getRecordId());
         }
         validatePayload(payload);
 
@@ -101,7 +142,13 @@ public class AchievementReviewRequestService {
     public AchievementReviewRequestResponse approve(Long requestId, String reviewerUsername) {
         AppUser reviewer = loadReviewer(reviewerUsername);
         AchievementReviewRequest request = loadRequest(requestId);
-        ensurePending(request);
+        if ("approved".equals(request.getStatus())) {
+            throw new IllegalArgumentException("该审核请求已被其他人处理");
+        }
+        if (!"pending".equals(request.getStatus())) {
+            throw new IllegalArgumentException("该审核请求已处理");
+        }
+        ensureReviewerCanAccessRequest(reviewer, request);
         return toResponse(applyApprovedRequest(request, reviewer));
     }
 
@@ -109,7 +156,13 @@ public class AchievementReviewRequestService {
     public AchievementReviewRequestResponse reject(Long requestId, String reviewerUsername, String reason) {
         AppUser reviewer = loadReviewer(reviewerUsername);
         AchievementReviewRequest request = loadRequest(requestId);
-        ensurePending(request);
+        if ("rejected".equals(request.getStatus())) {
+            throw new IllegalArgumentException("该审核请求已被驳回");
+        }
+        if (!"pending".equals(request.getStatus())) {
+            throw new IllegalArgumentException("该审核请求已处理");
+        }
+        ensureReviewerCanAccessRequest(reviewer, request);
         String safeReason = requireText(reason, "驳回时必须填写理由");
 
         request.setStatus("rejected");
@@ -131,6 +184,34 @@ public class AchievementReviewRequestService {
         achievementReviewRequestRepository.delete(request);
     }
 
+    @Transactional
+    public AchievementReviewRequestResponse setSupportingDocuments(Long requestId, String username, List<Map<String, String>> documents) {
+        AchievementReviewRequest request = loadRequest(requestId);
+        if (!"pending".equals(request.getStatus())) {
+            throw new IllegalArgumentException("只有待审核状态才能上传证明资料");
+        }
+        if (!request.getRequester().getUsername().equals(username)) {
+            throw new IllegalArgumentException("只有申请人才能上传证明资料");
+        }
+        if (documents != null) {
+            for (Map<String, String> doc : documents) {
+                if ("text".equals(doc.get("type"))) {
+                    if (doc.get("content") == null || doc.get("content").isBlank()) {
+                        throw new IllegalArgumentException("证明资料文本内容不能为空");
+                    }
+                } else {
+                    if (doc.get("url") == null || doc.get("url").isBlank()) {
+                        throw new IllegalArgumentException("证明资料链接不能为空");
+                    }
+                }
+            }
+        }
+        String json = (documents == null || documents.isEmpty()) ? null : writeJson(documents);
+        request.setSupportingDocumentsJson(json);
+        request.setUpdatedAt(LocalDateTime.now());
+        return toResponse(achievementReviewRequestRepository.save(request));
+    }
+
     private AchievementReviewRequestResponse toResponse(AchievementReviewRequest request) {
         return new AchievementReviewRequestResponse(
             request.getId(),
@@ -148,6 +229,7 @@ public class AchievementReviewRequestService {
             nullToEmpty(request.getRejectionReason()),
             readJsonNode(request.getPayloadSnapshotJson()),
             readChanges(request.getChangesJson()),
+            readSupportingDocuments(request.getSupportingDocumentsJson()),
             request.getCreatedAt(),
             request.getUpdatedAt()
         );
@@ -158,7 +240,8 @@ public class AchievementReviewRequestService {
             user.getUsername(),
             user.getDisplayName(),
             user.getRole() == null ? "" : user.getRole().name(),
-            user.getStudentNo()
+            user.getStudentNo(),
+            user.getClassName()
         );
     }
 
@@ -176,7 +259,7 @@ public class AchievementReviewRequestService {
     }
 
     private boolean isReviewer(AppUser user) {
-        return user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.TEACHER;
+        return user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.TEACHER || user.getRole() == UserRole.CADRE;
     }
 
     private AchievementReviewRequest loadRequest(Long requestId) {
@@ -190,12 +273,34 @@ public class AchievementReviewRequestService {
         }
     }
 
+    private void ensureReviewerCanAccessRequest(AppUser reviewer, AchievementReviewRequest request) {
+        // ADMIN can handle any request
+        if (reviewer.getRole() == UserRole.ADMIN) {
+            return;
+        }
+        // TEACHER can only handle requests from their assigned class students
+        if (reviewer.getRole() == UserRole.TEACHER) {
+            if (userService.isStudentInTeacherAssignedClass(reviewer, request.getRequester())) {
+                return;
+            }
+            throw new IllegalArgumentException("无权处理该审核请求");
+        }
+        // CADRE can only handle requests from students in their own class
+        if (reviewer.getRole() == UserRole.CADRE) {
+            if (isStudentInCadreOwnClass(reviewer, request.getRequester())) {
+                return;
+            }
+            throw new IllegalArgumentException("无权处理该审核请求");
+        }
+    }
+
     private AchievementReviewRequest applyApprovedRequest(AchievementReviewRequest request, AppUser reviewer) {
         AchievementRecordRequest payload = readPayload(request.getPayloadJson());
         AchievementRecordResponse applied = "create".equals(request.getAction())
             ? achievementService.create(request.getRequester().getUsername(), request.getCategory(), payload)
             : achievementService.update(
                 request.getRequester().getUsername(),
+                request.getRequester().getRole().name(),
                 request.getCategory(),
                 request.getRecordId(),
                 payload
@@ -295,6 +400,17 @@ public class AchievementReviewRequestService {
     }
 
     private List<Map<String, Object>> readChanges(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (JsonProcessingException exception) {
+            return List.of();
+        }
+    }
+
+    private List<Map<String, Object>> readSupportingDocuments(String json) {
         if (json == null || json.isBlank()) {
             return List.of();
         }

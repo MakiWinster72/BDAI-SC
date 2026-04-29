@@ -1,26 +1,17 @@
 /**
- * Info Pages Styles - 信息页面样式 (设置页/个人信息页)
+ * Info Pages Styles — 信息页面样式 (设置页/个人信息页)
  *
- * 包含内容:
- * - Info Shell: 信息页面容器
- * - Settings Card: 设置项卡片
- * - Settings Actions: 设置操作按钮
- * - Info Hero: 信息页头部区域
- * - Avatar Square: 方形头像上传区
- * - Info Form Grid: 信息表单网格布局
- * - Education Record: 教育经历记录
- * - Cadre Record: 干部经历记录
- * - Education Period: 教育时间段
- * - Education Controls: 教育记录控制按钮
- * - Info Choice: 单选/多选选项
+ * Design: clean, refined — solid surfaces, subtle borders,
+ * precise spacing, no gradients. Think Linear / Stripe.
  */
 
 /* ── Info Shell ─────────────────────────────────────────── */
 .info-shell {
   display: grid;
-  gap: 18px;
-  padding: 18px;
-  border-radius: 24px;
+  gap: 28px;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .info-shell-editing {
@@ -33,13 +24,13 @@
 }
 
 .settings-card {
-  border-radius: 18px;
+  border-radius: 14px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.9);
+  background: #fff;
   box-shadow: var(--shadow-sm);
-  padding: 18px 20px;
+  padding: 22px 24px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .settings-row {
@@ -55,9 +46,10 @@
 }
 
 .settings-title {
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--primary-dark);
+  letter-spacing: -0.01em;
 }
 
 .settings-subtitle {
@@ -69,58 +61,61 @@
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .settings-action {
   border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.8);
+  background: #fff;
   color: var(--primary);
-  border-radius: 14px;
+  border-radius: 12px;
   height: 40px;
   padding: 0 18px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
   cursor: pointer;
   transition:
-    background 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    transform 120ms ease;
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
 }
 
 .settings-action:hover {
-  background: rgba(255, 255, 255, 0.95);
   border-color: var(--primary);
+  color: var(--primary-dark);
   transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.12);
 }
 
 .settings-action:active {
   transform: translateY(0);
+  box-shadow: none;
 }
 
 .settings-action.danger {
-  border-color: rgba(203, 53, 53, 0.5);
+  border-color: rgba(203, 53, 53, 0.35);
   color: var(--danger);
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .settings-action.danger:hover {
   border-color: var(--danger);
+  box-shadow: 0 4px 16px rgba(203, 53, 53, 0.12);
 }
 
 /* ── Info Hero ──────────────────────────────────────────── */
 .info-hero {
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-sm);
-  padding: 18px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 16px;
+  gap: 24px;
   align-items: center;
+  padding: 24px 28px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -129,16 +124,20 @@
 .avatar-square {
   width: 140px;
   height: 140px;
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1.5px dashed var(--line-strong);
-  background: rgba(255, 255, 255, 0.9);
+  background: #fff;
   overflow: hidden;
   color: var(--primary);
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   line-height: 1.4;
+  letter-spacing: -0.01em;
   transition:
     border-color 200ms ease,
     background 200ms ease,
@@ -148,9 +147,10 @@
 
 .avatar-square:hover:not(:disabled) {
   border-color: var(--primary);
-  background: rgba(255, 255, 255, 1);
+  border-style: solid;
+  background: #fafafa;
   transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(100, 12, 114, 0.14);
+  box-shadow: 0 8px 28px rgba(100, 12, 114, 0.14);
 }
 
 .avatar-square:active:not(:disabled) {
@@ -159,14 +159,15 @@
 
 .avatar-square:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .avatar-square img {
-  width: 100%;
-  height: 100%;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .info-hero-text {
@@ -177,65 +178,37 @@
 
 .info-hero-title {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary-dark);
-}
-
-.info-label {
-  color: var(--text-sub);
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.3px;
-}
-
-.info-hint {
-  font-size: 12px;
-  color: var(--text-sub);
-  font-style: italic;
-  line-height: 1.4;
-  margin-top: 4px;
+  letter-spacing: -0.02em;
 }
 
 .info-hero-subtitle {
   font-size: 13px;
   color: var(--text-sub);
+  line-height: 1.5;
 }
 
-/* ── Info Card ──────────────────────────────────────────── */
+/* ── Info Card (section container) ──────────────────────── */
 .info-card {
-  /* CSS var overrides: flat section card (no glass, no full border) */
-  --card-radius: 0;
-  --card-shadow: none;
-  --card-padding: 18px;
-
-  /* Remove card base border/shadow, use section divider only */
-  border: none;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-
-  /* Layout */
   display: grid;
-  gap: 12px;
+  gap: 18px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-
-  /* Section divider: bottom border between cards */
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-}
-
-.info-card:last-child {
-  border-bottom: none;
+  padding: 24px 28px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .info-section-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary-dark);
-  letter-spacing: 0.3px;
-  padding-left: 10px;
+  letter-spacing: -0.01em;
+  padding-left: 16px;
   position: relative;
 }
 
@@ -244,22 +217,35 @@
   position: absolute;
   left: 0;
   top: 50%;
-  width: 4px;
-  height: 16px;
   transform: translateY(-50%);
+  width: 4px;
+  height: 18px;
   border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    var(--primary) 0%,
-    var(--primary-light) 100%
-  );
+  background: var(--primary);
+}
+
+/* ── Labels & Hints ─────────────────────────────────────── */
+.info-label {
+  color: var(--text-sub);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.info-hint {
+  font-size: 12px;
+  color: var(--text-sub);
+  line-height: 1.5;
+  margin-top: 4px;
+  font-style: normal;
 }
 
 /* ── Info Form Grid ─────────────────────────────────────── */
 .info-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 18px;
+  gap: 16px;
 }
 
 .info-form-grid.three {
@@ -268,56 +254,58 @@
 
 .family-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
+  gap: 14px 16px;
 }
 
 .family-section-title {
   grid-column: 1 / -1;
   font-size: 13px;
   font-weight: 700;
-  color: var(--primary-dark);
-  letter-spacing: 0.3px;
-  padding: 8px 0 4px;
+  color: var(--primary);
+  letter-spacing: 0.02em;
+  padding: 6px 0 4px;
 }
 
+/* ── Field Card ─────────────────────────────────────────── */
 .field-card {
   display: grid;
   gap: 6px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.78);
+  padding: 0;
+  background: transparent;
+  border: none;
   min-width: 0;
-  transition: border-color 180ms ease, background 180ms ease;
 }
 
 .field-full {
   grid-column: 1 / -1;
 }
 
+/* ── Info Input ─────────────────────────────────────────── */
 .info-input {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  background-color: #faf9fb;
   color: var(--primary-dark);
-  border-radius: 12px;
-  height: 44px;
-  padding: 0 12px;
+  border-radius: 10px;
+  height: 42px;
+  padding: 0 14px;
+  font-size: 14px;
   outline: none;
   transition:
-    border-color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .info-input::placeholder {
   color: var(--text-sub);
+  opacity: 0.6;
 }
 
 .info-input:focus {
   border-color: var(--primary);
-  background: rgba(255, 255, 255, 1);
+  background-color: #fff;
   box-shadow: 0 0 0 3px var(--primary-surface);
 }
 
@@ -325,10 +313,32 @@
   outline: none;
 }
 
+.info-input:hover:not(:disabled):not(:focus) {
+  border-color: var(--line-strong);
+  background-color: #fff;
+}
+
 .info-input:disabled {
-  opacity: 0.65;
+  opacity: 0.55;
   cursor: not-allowed;
-  background: rgba(255, 255, 255, 0.6);
+  background-color: #f2f2f2;
+}
+
+/* ── Date Input Calendar Icon ─────────────────────────────── */
+input[type="date"].info-input {
+  background-image: url("/assets/icons/calendar.svg");
+  background-size: 18px;
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 38px;
+}
+
+/* Hide native webkit picker icon — our calendar icon shows through */
+input[type="date"].info-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }
 
 /* ── Info Inline ────────────────────────────────────────── */
@@ -340,7 +350,14 @@
 }
 
 .address-inline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   width: 100%;
+}
+
+.address-inline > .info-input:last-child {
+  grid-column: 1 / -1;
 }
 
 .address-detail {
@@ -358,40 +375,26 @@
   min-width: 180px;
 }
 
-/* ── Education Table ────────────────────────────────────── */
-.education-table-wrap {
-  overflow: visible;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), var(--shadow-sm);
-}
-
-/* ── Record List ────────────────────────────────────────── */
+/* ── Record List (education / cadre) ─────────────────────── */
 .record-list {
   display: grid;
-  gap: 12px;
-  padding: 12px;
+  gap: 0;
 }
 
-.record-card {
-  display: grid;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: var(--shadow-sm);
+/* Flat row: no card border, just a bottom separator */
+.record-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
   min-width: 0;
-  transition:
-    border-color 200ms ease,
-    box-shadow 200ms ease,
-    transform 200ms ease;
 }
 
-.record-card:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow);
+.record-row:first-child {
+  padding-top: 0;
+}
+
+.record-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .record-grid {
@@ -400,29 +403,18 @@
   align-items: start;
 }
 
-.record-grid-education {
+.record-grid-edu {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.record-grid-cadre {
+.record-grid-cdr {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .record-field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-}
-
-.record-field-time .education-period {
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.record-field-full {
-  grid-column: 1 / -1;
 }
 
 .record-field-time {
@@ -433,112 +425,93 @@
   grid-column: span 2;
 }
 
-.record-field-compact {
+.record-field-level,
+.record-field-witness {
   grid-column: span 1;
 }
 
-.record-field-department {
+.record-field-dept {
   grid-column: span 3;
 }
 
-.record-field-position {
+.record-field-pos {
   grid-column: span 1;
 }
 
-/* ── Education Period ───────────────────────────────────── */
-.education-period {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
+.record-field-desc {
+  grid-column: 1 / -1;
 }
 
-.education-period-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+.record-period {
+  display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-}
-
-.record-current {
-  margin-top: 4px;
-  align-self: flex-start;
-}
-
-.education-period-row .info-input {
-  width: 100%;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
-.education-sep {
+.record-period > .info-input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.record-sep {
   color: var(--text-sub);
   font-size: 12px;
   white-space: nowrap;
-  text-align: center;
+  flex-shrink: 0;
 }
 
-.record-card textarea.info-input {
+.record-field textarea.info-input {
   height: auto;
   min-height: 60px;
-  padding: 8px 12px;
-  line-height: 1.4;
+  padding: 10px 14px;
+  line-height: 1.5;
   font-size: 13px;
   resize: vertical;
-}
-
-/* ── Education Controls ─────────────────────────────────── */
-.education-controls-wrap {
-  border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.48);
-  border-bottom-left-radius: 18px;
-  border-bottom-right-radius: 18px;
-}
-
-.education-controls {
+}.record-controls {
   display: flex;
   justify-content: flex-start;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding-top: 12px;
 }
 
-.education-control {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--primary);
-  font-size: 18px;
-  line-height: 1;
+.record-ctl {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 13px;
   cursor: pointer;
   transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease,
-    box-shadow 160ms ease;
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease;
 }
 
-.education-control:hover:not(:disabled) {
-  transform: translateY(-1px);
+.record-ctl:hover:not(:disabled) {
   border-color: var(--primary);
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 4px 12px rgba(100, 12, 114, 0.12);
+  background: var(--primary-surface);
 }
 
-.education-control:active:not(:disabled) {
-  transform: scale(0.92);
+.record-ctl:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
-.education-control:disabled {
-  opacity: 0.45;
+.record-ctl:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
+.record-ctl-clear {
+  margin-left: auto;
+}
 /* ── Info Choice ────────────────────────────────────────── */
 .info-choice {
   display: inline-flex;
@@ -558,6 +531,7 @@
   gap: 8px;
   flex-wrap: wrap;
   width: 100%;
+  min-width: 0;
 }
 
 .id-type-inline {
@@ -565,6 +539,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
 }
 
 .id-type-inline select {
@@ -580,6 +555,7 @@
 .class-text {
   color: var(--text-sub);
   font-size: 13px;
+  font-weight: 500;
 }
 
 .class-num {
@@ -588,15 +564,10 @@
 
 /* ── Info Actions ──────────────────────────────────────── */
 .info-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  width: 100%;
-  min-width: 0;
-}
-
-.info-actions > * {
-  min-width: 0;
+  min-width: 140px;
 }
 
 .info-actions .action-button {
@@ -621,26 +592,26 @@
 }
 
 .stepper-button {
-  height: 44px;
-  width: 44px;
-  border-radius: 12px;
+  height: 42px;
+  width: 42px;
+  border-radius: 10px;
   border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.6);
+  background: #fff;
   color: var(--primary-dark);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.12s ease;
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 120ms ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .stepper-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.9);
+  background: #fafafa;
   border-color: var(--primary);
   transform: translateY(-1px);
 }
@@ -655,7 +626,7 @@
 }
 
 .stepper-button:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
@@ -670,13 +641,103 @@
   margin: 0;
 }
 
-/* ── Info Responsive ────────────────────────────────────── */
+/* ── Hint Button ───────────────────────────────────────── */
+.hint-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.hint-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: scale(1.08);
+}
+
+.hint-button:active {
+  transform: scale(0.94);
+}
+
+/* ── Dialog ─────────────────────────────────────────────── */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 26, 62, 0.25);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.dialog-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 48px));
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  z-index: 1010;
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.dialog-header {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  letter-spacing: -0.01em;
+}
+
+.dialog-body {
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.hint-item {
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.hint-label {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.hint-sep {
+  color: var(--line-strong);
+  margin: 0 6px;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 840px) {
   .info-hero {
     grid-template-columns: 100px 1fr;
     grid-template-rows: auto auto;
     align-items: start;
-    gap: 14px;
+    gap: 16px;
   }
 
   .avatar-square {
@@ -692,6 +753,7 @@
 
   .info-actions {
     grid-column: 1 / -1;
+    flex-direction: row;
   }
 
   .info-form-grid {
@@ -706,44 +768,29 @@
     grid-template-columns: 1fr;
   }
 
-  .record-grid-education {
+  .record-grid-edu,
+  .record-grid-cdr {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .record-grid-cadre {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .record-field-full {
-    grid-column: 1 / -1;
   }
 
   .record-field-time,
   .record-field-school,
-  .record-field-department {
+  .record-field-dept {
     grid-column: 1 / -1;
   }
 
-  .record-field-compact,
-  .record-field-position {
+  .record-field-level,
+  .record-field-witness,
+  .record-field-pos {
     grid-column: span 1;
   }
 
-  .record-list {
-    padding: 12px;
+  .record-row {
+    padding: 12px 0;
   }
 
-  .record-card {
-    padding: 14px;
-  }
-
-  .education-period-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .education-sep {
-    justify-self: center;
+  .record-period {
+    flex-wrap: wrap;
   }
 
   .info-inline-date {
@@ -753,44 +800,237 @@
   .info-inline-date .info-input {
     min-width: 0;
   }
+
+  /* ── Address inline: stack selects on tablet ─────────── */
+  .address-inline {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .address-inline > .info-input:last-child {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 720px) {
   .info-hero {
     grid-template-columns: 1fr;
     grid-template-rows: none;
+    padding: 18px 20px;
+    gap: 14px;
+    justify-items: center;
+    text-align: center;
   }
 
   .avatar-square {
     width: min(120px, 100%);
   }
 
+  .info-hero-text {
+    text-align: center;
+  }
+
   .info-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  /* ── Cards: reduce padding on phones ─────────────── */
+  .info-shell {
+    gap: 18px;
+  }
+
+  .info-card {
+    padding: 18px 20px;
+  }
+
+  /* ── Form grids: single column for dates/selects ─── */
+  .info-form-grid {
     grid-template-columns: 1fr;
   }
 
-  .record-grid-education,
-  .record-grid-cadre {
+  .info-form-grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  .family-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Inline fields: keep single row, squeeze on phones ── */
+  .class-inline {
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .class-inline .info-input:first-child {
+    flex: 2 1 0;
+    min-width: 0;
+  }
+
+  .class-num {
+    flex: 0 0 auto;
+    width: 56px;
+    min-width: 44px;
+  }
+
+  .id-type-inline {
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .id-type-inline select {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .id-type-inline input {
+    flex: 2 1 0;
+    min-width: 0;
+  }
+
+  /* ── Education / Cadre records ───────────────────── */
+  .record-grid-edu,
+  .record-grid-cdr {
     grid-template-columns: 1fr;
   }
 
   .record-field-time,
   .record-field-school,
-  .record-field-compact,
-  .record-field-department,
-  .record-field-position {
+  .record-field-level,
+  .record-field-witness,
+  .record-field-dept,
+  .record-field-pos {
     grid-column: 1 / -1;
   }
 
-  .record-list {
-    padding: 10px;
-  }
-
-  .record-card {
-    padding: 12px;
+  .record-row {
+    padding: 10px 0;
   }
 
   .info-shell-editing {
     padding-bottom: 20px;
+  }
+
+  /* ── Section title ───────────────────────────────── */
+  .info-section-title {
+    font-size: 14px;
+  }
+
+  /* ── Dialog: bottom sheet ────────────────────────── */
+  .dialog-card {
+    width: calc(100vw - 32px);
+    padding: 20px;
+    border-radius: 14px;
+    top: auto;
+    bottom: 0;
+    transform: translate(-50%, 0);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-hero {
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .avatar-square {
+    width: min(96px, 100%);
+    height: auto;
+    aspect-ratio: 3 / 4;
+  }
+
+  .info-hero-title {
+    font-size: 18px;
+  }
+
+  .info-hero-subtitle {
+    font-size: 12px;
+  }
+
+  .info-shell {
+    gap: 14px;
+  }
+
+  .info-card {
+    padding: 14px 14px;
+    gap: 14px;
+    border-radius: 12px;
+  }
+
+  .info-form-grid {
+    gap: 12px;
+  }
+
+  /* ── Touch-friendly inputs ──────────────────────── */
+  .info-input {
+    height: 44px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
+  select.info-input {
+    font-size: 14px;
+  }
+
+  /* ── Labels on small screens ────────────────────── */
+  .info-label {
+    font-size: 11px;
+  }
+
+  .info-section-title {
+    font-size: 13px;
+    padding-left: 12px;
+  }
+
+  .info-section-title::before {
+    width: 3px;
+    height: 14px;
+  }
+
+  /* ── Record cards ───────────────────────────────── */
+  .record-row {
+    padding: 10px 0;
+  }
+
+  .record-grid {
+    gap: 10px;
+  }
+
+  .record-controls {
+    padding-top: 10px;
+    gap: 6px;
+  }
+
+  .record-ctl {
+    height: 36px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  /* ── Dialog card ────────────────────────────────── */
+  .dialog-card {
+    width: calc(100vw - 24px);
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .dialog-header {
+    font-size: 15px;
+  }
+
+  /* ── Ghost / action buttons in info-actions ─────── */
+  .info-actions .ghost-button,
+  .info-actions .action-button {
+    height: 42px;
+    font-size: 14px;
+  }
+
+  .info-shell-editing {
+    padding-bottom: 16px;
   }
 }

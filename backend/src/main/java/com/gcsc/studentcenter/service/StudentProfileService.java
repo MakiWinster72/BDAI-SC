@@ -135,7 +135,9 @@ public class StudentProfileService {
         profile.setFullMemberDeveloping(request.getFullMemberDeveloping());
         profile.setEmergencyPhone(normalize(request.getEmergencyPhone()));
         profile.setEmergencyRelation(normalize(request.getEmergencyRelation()));
-        profile.setHkMoTw(request.getHkMoTw());
+        profile.setIsHk(request.getIsHk());
+        profile.setIsMo(request.getIsMo());
+        profile.setIsTw(request.getIsTw());
         profile.setSpecialStudent(request.getSpecialStudent());
         profile.setFatherName(normalize(request.getFatherName()));
         profile.setFatherPhone(normalize(request.getFatherPhone()));
@@ -145,6 +147,8 @@ public class StudentProfileService {
         profile.setMotherPhone(normalize(request.getMotherPhone()));
         profile.setMotherWorkUnit(normalize(request.getMotherWorkUnit()));
         profile.setMotherTitle(normalize(request.getMotherTitle()));
+        profile.setSpecialStudentType(normalize(request.getSpecialStudentType()));
+        profile.setSpecialStudentRemark(normalize(request.getSpecialStudentRemark()));
         syncEducationExperiences(profile, request.getEducationExperiences());
         syncCadreExperiences(profile, request.getCadreExperiences());
 
@@ -160,12 +164,16 @@ public class StudentProfileService {
         String classNo,
         String college,
         String major,
-        Boolean hkMoTw,
+        Boolean isHk,
+        Boolean isMo,
+        Boolean isTw,
         Boolean specialStudent,
+        String specialStudentType,
         String studentCategory,
         String keyword,
         int page,
-        int size
+        int size,
+        List<String> allowedClassNames
     ) {
         int pageIndex = Math.max(page - 1, 0);
         int pageSize = Math.max(size, 1);
@@ -174,10 +182,14 @@ public class StudentProfileService {
             normalize(classNo),
             normalize(college),
             normalize(major),
-            hkMoTw,
+            isHk,
+            isMo,
+            isTw,
             specialStudent,
+            normalize(specialStudentType),
             normalize(studentCategory),
             normalize(keyword),
+            allowedClassNames,
             PageRequest.of(pageIndex, pageSize)
         );
         return new StudentSearchResponse(
@@ -251,7 +263,9 @@ public class StudentProfileService {
             profile != null ? profile.getFullMemberDeveloping() : null,
             profile != null ? profile.getEmergencyPhone() : null,
             profile != null ? profile.getEmergencyRelation() : null,
-            profile != null ? profile.getHkMoTw() : null,
+            profile != null ? profile.getIsHk() : null,
+            profile != null ? profile.getIsMo() : null,
+            profile != null ? profile.getIsTw() : null,
             profile != null ? profile.getSpecialStudent() : null,
             profile != null ? profile.getFatherName() : null,
             profile != null ? profile.getFatherPhone() : null,
@@ -261,6 +275,8 @@ public class StudentProfileService {
             profile != null ? profile.getMotherPhone() : null,
             profile != null ? profile.getMotherWorkUnit() : null,
             profile != null ? profile.getMotherTitle() : null,
+            profile != null ? profile.getSpecialStudentType() : null,
+            profile != null ? profile.getSpecialStudentRemark() : null,
             toEducationItems(profile != null ? profile.getEducationExperiences() : null),
             toCadreItems(profile != null ? profile.getCadreExperiences() : null)
         );

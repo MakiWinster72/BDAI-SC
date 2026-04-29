@@ -1,11 +1,14 @@
 <script setup>
-import { computed, onMounted, reactive, shallowRef, watch } from "vue";
+import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
 import PaginationBar from "../components/PaginationBar.vue";
+import MobileCapsule from "../components/MobileCapsule.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
-import { getUserList, updateUser, deleteUser, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments } from "../api/admin";
+import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses } from "../api/admin";
 import { useToast } from "../composables/useToast";
+import { useDashboardShell } from "../composables/useDashboardShell";
 import { loadUser } from "../utils/userStorage";
+import { buildClassName } from "../utils/profile";
 
 const ATTACHMENT_TYPE_OPTIONS = [
   { key: "document", label: "文档", icon: "/assets/icons/doc.svg" },
@@ -15,7 +18,16 @@ const ATTACHMENT_TYPE_OPTIONS = [
 ];
 
 const profile = reactive(loadUser());
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const activeSection = shallowRef("upload");
+
+const ADMIN_TABS = [
+  { key: "upload", label: "上传限制", shortLabel: "媒体", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+  { key: "review", label: "审核策略", shortLabel: "审核", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+  { key: "users", label: "用户管理", shortLabel: "用户", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
+  { key: "backup", label: "备份与恢复", shortLabel: "数据", icon: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" },
+  { key: "other", label: "其他设置", shortLabel: "其他", icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" },
+];
 
 // Backup & Restore
 const backupForm = reactive({
@@ -36,7 +48,7 @@ async function handleBackupDb() {
       return;
     }
     const blob = await res.blob();
-    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "gcsc_backup.sql";
+    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "bdai_sc_backup.sql";
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -61,7 +73,7 @@ async function handleBackupZip() {
       return;
     }
     const blob = await res.blob();
-    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "gcsc_attachments.zip";
+    const filename = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "bdai_sc_attachments.zip";
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -156,6 +168,84 @@ const userCurrentPage = shallowRef(1);
 const userPageSize = shallowRef(20);
 const userTotal = shallowRef(0);
 const userPages = computed(() => Math.ceil(userTotal.value / userPageSize.value));
+const selectedUserIds = shallowRef(new Set());
+const allFilteredSelected = shallowRef(false);
+const someSelected = computed(() => selectedUserIds.value.size > 0);
+const allPageSelected = computed(() => users.value.length > 0 && selectedUserIds.value.size === users.value.length);
+
+const systemSettings = reactive({ allowRegistration: true, delayedThresholdDays: 2 });
+const systemSettingsMsg = shallowRef("");
+
+async function fetchSystemSettings() {
+  try {
+    const res = await getSystemSettings();
+    systemSettings.allowRegistration = res.data.allowRegistration !== false;
+    systemSettings.delayedThresholdDays = res.data.delayedThresholdDays || 2;
+  } catch (e) {
+    // ignore
+  }
+}
+
+function stepThreshold(delta) {
+  const next = (systemSettings.delayedThresholdDays || 2) + delta;
+  if (next >= 1 && next <= 30) {
+    systemSettings.delayedThresholdDays = next;
+    handleSaveSystemSettings();
+  }
+}
+
+async function handleSaveSystemSettings() {
+  systemSettingsMsg.value = "";
+  try {
+    await updateSystemSettings({ allowRegistration: systemSettings.allowRegistration, delayedThresholdDays: Number(systemSettings.delayedThresholdDays) });
+    systemSettingsMsg.value = "设置已保存";
+    setTimeout(() => { systemSettingsMsg.value = ""; }, 2000);
+  } catch (e) {
+    error("保存失败");
+  }
+}
+
+function toggleUserSelect(id) {
+  const s = new Set(selectedUserIds.value);
+  if (s.has(id)) s.delete(id);
+  else s.add(id);
+  selectedUserIds.value = s;
+  allFilteredSelected.value = false;
+}
+
+function selectAllPage() {
+  selectedUserIds.value = new Set(users.value.map(u => u.id));
+  allFilteredSelected.value = false;
+}
+
+async function selectAllFiltered() {
+  try {
+    const res = await getAllUserIds({
+      search: userSearch.value.trim() || undefined,
+      role: userRoleFilter.value || undefined,
+    });
+    selectedUserIds.value = new Set(res.data || []);
+    allFilteredSelected.value = true;
+  } catch (e) {
+    error("获取用户列表失败");
+  }
+}
+
+async function handleDeleteSelectedUsers() {
+  if (selectedUserIds.value.size === 0) return;
+  if (!confirm(`确定要删除选中的 ${selectedUserIds.value.size} 个用户吗？此操作不可恢复。`)) return;
+  try {
+    for (const id of selectedUserIds.value) {
+      await deleteUser(id);
+    }
+    selectedUserIds.value = new Set();
+    allFilteredSelected.value = false;
+    await loadUsers(userCurrentPage.value);
+    success("已删除选中的用户");
+  } catch (e) {
+    error(e?.response?.data?.message || "删除失败");
+  }
+}
 const {
   settings,
   loading: uploadLoading,
@@ -182,6 +272,8 @@ const form = reactive({
   attachmentVideoExts: settings.attachmentVideoExts,
   attachmentImageExts: settings.attachmentImageExts,
   attachmentArchiveExts: settings.attachmentArchiveExts,
+  supportingDocMaxCount: settings.supportingDocMaxCount,
+  supportingDocMaxSizeMb: settings.supportingDocMaxSizeMb,
 });
 const reviewForm = reactive({
   profileReviewEnabled: reviewSettings.profileReviewEnabled,
@@ -195,6 +287,9 @@ const imageSubtitle = computed(
 );
 const attachmentSubtitle = computed(
   () => `最多 ${form.attachmentMaxCount} 个 · 单个不超过 ${form.attachmentMaxSizeMb}MB`,
+);
+const supportingDocSubtitle = computed(
+  () => `最多 ${form.supportingDocMaxCount} 个 · 单个不超过 ${form.supportingDocMaxSizeMb}MB`,
 );
 const enabledPreviewTypes = computed(() =>
   ATTACHMENT_TYPE_OPTIONS.map((item) => ({
@@ -234,7 +329,7 @@ function parseExts(value) {
 }
 
 async function loadPage() {
-  await Promise.all([fetchUploadSettings(), fetchReviewSettings()]);
+  await Promise.all([fetchUploadSettings(), fetchReviewSettings(), fetchSystemSettings()]);
   syncFormFromSettings();
   syncReviewFormFromSettings();
 }
@@ -248,6 +343,8 @@ function syncFormFromSettings() {
   form.attachmentVideoExts = settings.attachmentVideoExts;
   form.attachmentImageExts = settings.attachmentImageExts;
   form.attachmentArchiveExts = settings.attachmentArchiveExts;
+  form.supportingDocMaxCount = settings.supportingDocMaxCount;
+  form.supportingDocMaxSizeMb = settings.supportingDocMaxSizeMb;
 }
 
 function syncReviewFormFromSettings() {
@@ -269,6 +366,8 @@ async function handleSubmit() {
     attachmentVideoExts: form.attachmentVideoExts,
     attachmentImageExts: form.attachmentImageExts,
     attachmentArchiveExts: form.attachmentArchiveExts,
+    supportingDocMaxCount: Number(form.supportingDocMaxCount),
+    supportingDocMaxSizeMb: Number(form.supportingDocMaxSizeMb),
   });
   if (result.success) {
     saveMessage.value = "上传限制已更新，成就页面会同步显示。";
@@ -306,20 +405,52 @@ const ROLE_LABELS = {
   ADMIN: "管理员",
   TEACHER: "教师",
   STUDENT: "学生",
+  CADRE: "班干部",
 };
 const ROLE_OPTIONS = [
   { value: "STUDENT", label: "学生" },
+  { value: "CADRE", label: "班干部" },
   { value: "TEACHER", label: "教师" },
   { value: "ADMIN", label: "管理员" },
 ];
+
+const STUDENT_CATEGORY_OPTIONS = ["本科生", "研究生"];
+const MAJOR_OPTIONS_BY_CATEGORY = {
+  本科生: [
+    "计算机科学与技术",
+    "计算机科学与技术（实验区）",
+    "计算机科学与技术(中外联合培养项目班)",
+    "2025计算机科学与技术（中外联合培养项目班未赴国外学习）",
+    "软件工程",
+    "人工智能",
+    "电子商务",
+    "电子商务（大数据决策分析）",
+    "大数据管理与应用",
+    "大数据管理与应用（佛山校区全学段）",
+    "大数据管理与应用（数字治理）",
+  ],
+  研究生: [
+    "管理科学与工程",
+    "技术经济及管理",
+    "智能科学与技术",
+    "计算机技术",
+    "图书情报",
+  ],
+};
 
 function getRoleLabel(role) {
   return ROLE_LABELS[role] || role;
 }
 
+const currentMajorOptions = computed(() => {
+  return MAJOR_OPTIONS_BY_CATEGORY[editModal.form.newClassCategory] || [];
+});
+
 async function loadUsers(page = userCurrentPage.value) {
   usersLoading.value = true;
   usersError.value = "";
+  selectedUserIds.value = new Set();
+  allFilteredSelected.value = false;
   try {
     const res = await getUserList({
       page,
@@ -347,14 +478,173 @@ const editModal = reactive({
     username: "",
     password: "",
     role: "",
+    // Teacher assigned classes: list of full class name strings
+    assignedClasses: [],
+    // New class entry fields
+    newClassYear: 2024,
+    newClassCategory: "本科生",
+    newClassMajor: "",
+    newClassNo: 1,
+    remark: "",
   },
 });
 
-function openEditModal(user) {
-  editModal.user = user;
-  editModal.form.username = user.username;
+const addUserModal = reactive({
+  visible: false,
+  saving: false,
+  error: "",
+  textarea: "",
+});
+
+const importFileRef = ref(null);
+
+function openAddUserModal() {
+  addUserModal.textarea = "";
+  addUserModal.error = "";
+  addUserModal.visible = true;
+}
+
+function closeAddUserModal() {
+  addUserModal.visible = false;
+}
+
+async function handleCreateUser() {
+  const lines = addUserModal.textarea.trim().split("\n").filter(l => l.trim());
+  if (lines.length === 0) {
+    addUserModal.error = "请输入用户信息";
+    return;
+  }
+  // Parse and validate all lines first
+  const parsedUsers = [];
+  const errors = [];
+  const seenUsernames = new Set();
+
+  for (let i = 0; i < lines.length; i++) {
+    const parts = lines[i].split(",").map(p => p.trim());
+    if (parts.length < 3) {
+      errors.push(`第 ${i + 1} 行：${parts[0] || '空'}，${parts[1] || '空'}，字段不足`);
+      continue;
+    }
+    const [displayName, username, password] = parts;
+    if (seenUsernames.has(username)) {
+      errors.push(`第 ${i + 1} 行：${displayName}，${username}，重复`);
+      continue;
+    }
+    seenUsernames.add(username);
+    parsedUsers.push({ displayName, username, password, line: i + 1 });
+  }
+
+  if (errors.length > 0) {
+    addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    return;
+  }
+
+  if (parsedUsers.length === 0) {
+    addUserModal.error = "没有有效用户数据";
+    return;
+  }
+
+  addUserModal.saving = true;
+  addUserModal.error = "";
+  const created = [];
+  const failed = [];
+  try {
+    for (const user of parsedUsers) {
+      try {
+        await createUser(user);
+        created.push(user.username);
+      } catch (e) {
+        const msg = e?.response?.data?.message || "失败";
+        failed.push(`${user.displayName}，${user.username}，${msg}`);
+      }
+    }
+    await loadUsers(1);
+    closeAddUserModal();
+    if (failed.length > 0) {
+      addUserModal.error = `已创建 ${created.length} 个用户，失败 ${failed.length} 个：${failed.slice(0, 3).join("；")}${failed.length > 3 ? "…" : ""}`;
+    } else {
+      success(`已创建 ${created.length} 个用户`);
+    }
+  } catch (e) {
+    addUserModal.error = e?.response?.data?.message || "创建失败";
+  } finally {
+    addUserModal.saving = false;
+  }
+}
+
+async function handleImportFile(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const name = file.name.toLowerCase();
+  try {
+    let rawLines = [];
+    if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+      const XLSX = await import("xlsx");
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      rawLines = data.filter(r => r && r.length >= 3);
+    } else if (name.endsWith(".csv") || name.endsWith(".txt")) {
+      const text = await file.text();
+      rawLines = text.trim().split("\n").filter(l => l.trim());
+    } else {
+      addUserModal.error = "不支持的文件格式，请上传 xlsx、csv 或 txt 文件";
+      e.target.value = "";
+      return;
+    }
+
+    // Validate and find issues
+    const errors = [];
+    const seenUsernames = new Set();
+    rawLines.forEach((row, idx) => {
+      const parts = Array.isArray(row) ? row.map(p => String(p).trim()) : String(row).split(",").map(p => p.trim());
+      const displayName = parts[0] || '空';
+      const username = parts[1] || '空';
+      if (parts.length < 3) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，字段不足`);
+        return;
+      }
+      if (seenUsernames.has(username)) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，重复`);
+      }
+      seenUsernames.add(username);
+    });
+
+    const validRows = rawLines.map(r => {
+      const parts = Array.isArray(r) ? r.map(p => String(p).trim()) : String(r).split(",").map(p => p.trim());
+      return parts.slice(0, 3).join(",");
+    });
+    addUserModal.textarea = validRows.join("\n");
+
+    if (errors.length > 0) {
+      addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    } else {
+      addUserModal.error = "";
+    }
+  } catch (err) {
+    addUserModal.error = "文件解析失败";
+  }
+  e.target.value = "";
+}
+
+async function openEditModal(user) {
+  // Always get fresh user data from users array to avoid stale reference
+  const freshUser = users.value.find(u => u.id === user.id) || user;
+  editModal.user = freshUser;
+  editModal.form.username = freshUser.username;
   editModal.form.password = "";
-  editModal.form.role = user.role;
+  editModal.form.role = freshUser.role;
+  editModal.form.remark = freshUser.remark || "";
+  // Load existing assigned classes for teachers
+  const existingAssigned = freshUser.assignedClasses
+    ? freshUser.assignedClasses.split(",").map(c => c.trim()).filter(Boolean)
+    : [];
+  editModal.form.assignedClasses = existingAssigned;
+  editModal.form.newClassYear = 2024;
+  editModal.form.newClassCategory = "本科生";
+  editModal.form.newClassMajor = "";
+  editModal.form.newClassNo = 1;
   editModal.error = "";
   editModal.visible = true;
 }
@@ -362,6 +652,32 @@ function openEditModal(user) {
 function closeEditModal() {
   editModal.visible = false;
   editModal.user = null;
+}
+
+function addTeacherAssignedClass() {
+  const { newClassYear, newClassMajor, newClassNo } = editModal.form;
+  if (!newClassYear || !newClassMajor) {
+    editModal.error = "请填写完整的班级信息";
+    return;
+  }
+  const className = buildClassName(newClassYear, newClassMajor, newClassNo, "");
+  if (!className) {
+    editModal.error = "班级信息不完整";
+    return;
+  }
+  if (editModal.form.assignedClasses.includes(className)) {
+    editModal.error = "该班级已在列表中";
+    return;
+  }
+  editModal.form.assignedClasses.push(className);
+  editModal.form.newClassYear = 2024;
+  editModal.form.newClassMajor = "";
+  editModal.form.newClassNo = 1;
+  editModal.error = "";
+}
+
+function removeTeacherAssignedClass(className) {
+  editModal.form.assignedClasses = editModal.form.assignedClasses.filter(c => c !== className);
 }
 
 async function handleUpdateUser() {
@@ -378,14 +694,20 @@ async function handleUpdateUser() {
     if (editModal.form.role !== editModal.user.role) {
       data.role = editModal.form.role;
     }
-    if (Object.keys(data).length === 0) {
-      closeEditModal();
-      return;
+    if (editModal.form.remark !== (editModal.user.remark || "")) {
+      data.remark = editModal.form.remark;
     }
-    const res = await updateUser(editModal.user.id, data);
-    if (res.data.success === false) {
-      editModal.error = res.data.message || "更新失败";
-      return;
+    const currentRole = editModal.form.role || editModal.user.role;
+    if (currentRole === "TEACHER" || currentRole === "ADMIN") {
+      data.assignedClasses = editModal.form.assignedClasses.join(",");
+    }
+    if (Object.keys(data).length > 0) {
+      const res = await updateUser(editModal.user.id, data);
+      if (res.data.success === false) {
+        editModal.error = res.data.message || "更新失败";
+        editModal.saving = false;
+        return;
+      }
     }
     await loadUsers(userCurrentPage.value);
     closeEditModal();
@@ -433,12 +755,7 @@ watch([userSearch, userRoleFilter], () => {
     <!-- Category Tabs -->
     <nav class="admin-tabs" role="tablist" aria-label="管理功能分类">
       <button
-        v-for="tab in [
-          { key: 'upload', label: '上传限制', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-          { key: 'review', label: '审核策略', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-          { key: 'users', label: '用户管理', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-          { key: 'backup', label: '备份与恢复', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4' },
-        ]"
+        v-for="tab in ADMIN_TABS"
         :key="tab.key"
         class="admin-tab"
         :class="{ active: activeSection === tab.key }"
@@ -588,6 +905,46 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
               </div>
 
+              <!-- Supporting Docs Block -->
+              <div class="setting-group">
+                <div class="setting-group-label">
+                  <span class="group-index">03</span>
+                  <span class="group-title">证明资料</span>
+                </div>
+                <div class="field-row">
+                  <div class="field-cell">
+                    <label class="field-label" for="sd-count">最多上传数量</label>
+                    <div class="input-wrap">
+                      <input
+                        id="sd-count"
+                        v-model.number="form.supportingDocMaxCount"
+                        class="text-input"
+                        type="number"
+                        min="1"
+                        max="20"
+                        aria-label="证明资料最多上传数量"
+                      />
+                      <span class="input-unit">个</span>
+                    </div>
+                  </div>
+                  <div class="field-cell">
+                    <label class="field-label" for="sd-size">单个文件最大大小</label>
+                    <div class="input-wrap">
+                      <input
+                        id="sd-size"
+                        v-model.number="form.supportingDocMaxSizeMb"
+                        class="text-input"
+                        type="number"
+                        min="1"
+                        max="200"
+                        aria-label="证明资料单个文件最大大小 MB"
+                      />
+                      <span class="input-unit">MB</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Feedback -->
               <Transition name="msg-fade">
                 <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
@@ -676,6 +1033,17 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
                 <div class="preview-tip">
                   {{ attachmentTypeSummary || "暂无可用附件类型" }} · 单个不超过 {{ form.attachmentMaxSizeMb }}MB
+                </div>
+              </div>
+              <!-- Supporting Docs Preview -->
+              <div class="preview-box" aria-hidden="true">
+                <div class="preview-box-header">
+                  <span class="preview-box-title">证明资料</span>
+                  <span class="preview-box-sub">{{ supportingDocSubtitle }}</span>
+                </div>
+                <div class="preview-empty">
+                  <div class="preview-add-btn">+</div>
+                  <span class="preview-empty-text">学生在审核通知中上传证明资料</span>
                 </div>
               </div>
             </div>
@@ -845,6 +1213,16 @@ watch([userSearch, userRoleFilter], () => {
                 <span class="count-num">{{ userTotal }}</span>
                 <span class="count-label">位用户</span>
               </div>
+              <button
+                class="btn btn-primary"
+                type="button"
+                @click="openAddUserModal"
+              >
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                添加用户
+              </button>
             </div>
 
             <!-- Toolbar -->
@@ -866,6 +1244,28 @@ watch([userSearch, userRoleFilter], () => {
                 <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </div>
+
+            <!-- Selection Actions -->
+            <Transition name="msg-fade">
+              <div v-show="someSelected" class="users-selection-bar">
+                <span class="selection-count">已选择 {{ selectedUserIds.size }} 个用户</span>
+                <button class="btn btn-ghost" type="button" @click="selectAllPage">
+                  本页
+                </button>
+                <button class="btn btn-ghost" type="button" @click="selectAllFiltered">
+                  全部
+                </button>
+                <button class="btn btn-ghost" type="button" @click="selectedUserIds = new Set()">
+                  取消
+                </button>
+                <button class="btn btn-danger-ghost" type="button" @click="handleDeleteSelectedUsers">
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  删除
+                </button>
+              </div>
+            </Transition>
 
             <!-- Table or States -->
             <div class="users-content">
@@ -891,16 +1291,34 @@ watch([userSearch, userRoleFilter], () => {
                 <table class="users-table" aria-label="用户列表">
                   <thead>
                     <tr>
-                      <th scope="col">用户名</th>
-                      <th scope="col">显示名称</th>
-                      <th scope="col">角色</th>
-                      <th scope="col">学号</th>
+                      <th scope="col" class="col-checkbox">
+                        <input
+                          type="checkbox"
+                          :checked="allFilteredSelected"
+                          :indeterminate="someSelected && !allFilteredSelected"
+                          aria-label="全选"
+                          @change="selectAllPage"
+                        />
+                      </th>
+                      <th scope="col" style="width: 130px;">用户名</th>
+                      <th scope="col" style="width: 100px;">显示名称</th>
+                      <th scope="col" style="width: 80px;">角色</th>
+                      <th scope="col" style="width: 120px;">学号</th>
                       <th scope="col">班级</th>
+                      <th scope="col" style="width: 120px;">备注</th>
                       <th scope="col" class="col-action"></th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="user in users" :key="user.id" class="user-row">
+                      <td class="col-checkbox">
+                        <input
+                          type="checkbox"
+                          :checked="selectedUserIds.has(user.id)"
+                          :aria-label="`选择 ${user.displayName}`"
+                          @change="toggleUserSelect(user.id)"
+                        />
+                      </td>
                       <td class="td-mono">{{ user.username }}</td>
                       <td>{{ user.displayName }}</td>
                       <td>
@@ -910,6 +1328,7 @@ watch([userSearch, userRoleFilter], () => {
                       </td>
                       <td class="td-mono">{{ user.studentNo || '—' }}</td>
                       <td>{{ user.className || '—' }}</td>
+                      <td class="td-remark">{{ user.remark || '—' }}</td>
                       <td class="td-action">
                         <button class="icon-btn" @click.stop="openEditModal(user)" aria-label="编辑用户">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -1077,6 +1496,84 @@ watch([userSearch, userRoleFilter], () => {
           </div>
         </div>
 
+        <!-- Other Section -->
+        <div v-else-if="activeSection === 'other'" class="admin-panel-single">
+          <div class="card admin-card">
+            <div class="card-header">
+              <div class="card-header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+              </div>
+              <div>
+                <div class="card-kicker">系统</div>
+                <h2 class="card-title">其他设置</h2>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="toggle-section">
+                <div class="toggle-row">
+                  <div class="toggle-copy">
+                    <span class="toggle-title">开放注册</span>
+                    <span class="toggle-hint">关闭后，用户将无法自行注册账号</span>
+                  </div>
+                  <label class="toggle-switch" :aria-label="`开放注册: ${systemSettings.allowRegistration ? '已开启' : '已关闭'}`">
+                    <input
+                      v-model="systemSettings.allowRegistration"
+                      type="checkbox"
+                      role="switch"
+                      :aria-checked="systemSettings.allowRegistration"
+                      @change="handleSaveSystemSettings"
+                    />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                  </label>
+                </div>
+                <div class="toggle-row">
+                  <div class="toggle-copy">
+                    <span class="toggle-title">待处理自动滞后</span>
+                    <span class="toggle-hint">超过指定天数未处理的请求自动移入已滞后标签</span>
+                  </div>
+                  <div class="stepper-wrap">
+                    <button
+                      class="stepper-btn"
+                      type="button"
+                      aria-label="减少天数"
+                      :disabled="systemSettings.delayedThresholdDays <= 1"
+                      @click="stepThreshold(-1)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14" /></svg>
+                    </button>
+                    <input
+                      v-model.number="systemSettings.delayedThresholdDays"
+                      class="stepper-input"
+                      type="number"
+                      min="1"
+                      max="30"
+                      aria-label="待处理自动滞后天数"
+                      @change="handleSaveSystemSettings"
+                    />
+                    <button
+                      class="stepper-btn"
+                      type="button"
+                      aria-label="增加天数"
+                      :disabled="systemSettings.delayedThresholdDays >= 30"
+                      @click="stepThreshold(1)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                    <span class="stepper-unit">天</span>
+                  </div>
+                </div>
+              </div>
+              <Transition name="msg-fade">
+                <div v-if="systemSettingsMsg" :class="['msg-banner', 'success']" role="status">{{ systemSettingsMsg }}</div>
+              </Transition>
+            </div>
+          </div>
+        </div>
+
       </div>
     </Transition>
 
@@ -1123,6 +1620,56 @@ watch([userSearch, userRoleFilter], () => {
                 <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </div>
+            <div class="modal-field">
+              <label class="modal-label" for="edit-remark">备注</label>
+              <input
+                id="edit-remark"
+                v-model="editModal.form.remark"
+                class="modal-input"
+                type="text"
+                placeholder="如：班主任、班长、团支书等"
+              />
+            </div>
+            <Transition name="msg-fade">
+              <div v-if="editModal.form.role === 'TEACHER'" class="modal-field">
+                <label class="modal-label">负责班级</label>
+                <div class="class-select-hint">添加该教师负责的班级</div>
+                <!-- Assigned classes list -->
+                <div v-if="editModal.form.assignedClasses.length > 0" class="assigned-classes-list">
+                  <div v-for="cls in editModal.form.assignedClasses" :key="cls" class="assigned-class-item">
+                    <span>{{ cls }}</span>
+                    <button type="button" class="remove-class-btn" @click="removeTeacherAssignedClass(cls)">×</button>
+                  </div>
+                </div>
+                <!-- Add new class form -->
+                <div class="add-class-form">
+                  <input
+                    v-model.number="editModal.form.newClassYear"
+                    class="modal-input class-year-input"
+                    type="number"
+                    min="2000"
+                    max="2100"
+                    placeholder="年级"
+                  />
+                  <select v-model="editModal.form.newClassCategory" class="modal-select class-category-select">
+                    <option v-for="cat in STUDENT_CATEGORY_OPTIONS" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
+                  <select v-model="editModal.form.newClassMajor" class="modal-select class-major-select">
+                    <option value="">选择专业</option>
+                    <option v-for="major in currentMajorOptions" :key="major" :value="major">{{ major }}</option>
+                  </select>
+                  <input
+                    v-model.number="editModal.form.newClassNo"
+                    class="modal-input class-no-input"
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="班号"
+                  />
+                  <button type="button" class="add-class-btn" @click="addTeacherAssignedClass">添加</button>
+                </div>
+              </div>
+            </Transition>
             <Transition name="msg-fade">
               <div v-if="editModal.error" class="msg-banner error modal-error" role="alert">{{ editModal.error }}</div>
             </Transition>
@@ -1140,9 +1687,297 @@ watch([userSearch, userRoleFilter], () => {
         </div>
       </div>
     </Teleport>
+
+    <!-- Add User Modal -->
+    <Teleport to="body">
+      <div :class="['sheet-overlay', { open: addUserModal.visible }]" @click.self="closeAddUserModal" role="dialog" aria-modal="true" aria-label="添加用户">
+        <div class="add-user-layout" @click.stop>
+          <div class="sheet-modal user-edit-modal add-user-modal">
+            <div class="modal-top-bar">
+              <div class="modal-title-group">
+                <h3 class="modal-title">添加用户</h3>
+                <p class="modal-subtitle">默认角色为学生</p>
+              </div>
+              <button class="modal-close-btn" type="button" aria-label="关闭" @click="closeAddUserModal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="modal-body">
+              <div class="modal-field">
+                <label class="modal-label" for="add-users-textarea">用户信息</label>
+                <textarea
+                  id="add-users-textarea"
+                  v-model="addUserModal.textarea"
+                  class="modal-textarea"
+                  rows="8"
+                  placeholder="每行一个用户：显示名称,学号(用于登录),密码&#10;示例：&#10;张三,2024001,password123&#10;李四,2024002,password456"
+                ></textarea>
+                <div class="field-hint" style="margin-top: 8px;">
+                  <strong>注意：使用英文逗号，前后不要有空格</strong>
+                </div>
+                <div class="modal-field" style="margin-top: 12px;">
+                  <input
+                    id="import-file"
+                    ref="importFileRef"
+                    type="file"
+                    accept=".xlsx,.xls,.csv,.txt"
+                    class="file-input"
+                    style="display: none;"
+                    @change="handleImportFile"
+                  />
+                  <button
+                    class="btn btn-ghost"
+                    type="button"
+                    @click="importFileRef.click()"
+                  >
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    从文件导入
+                  </button>
+                  <span class="field-hint" style="margin-left: 8px;">支持格式：xlsx、csv、txt</span>
+                </div>
+              </div>
+              <Transition name="msg-fade">
+                <div v-if="addUserModal.error" class="msg-banner error modal-error" role="alert">{{ addUserModal.error }}</div>
+              </Transition>
+            </div>
+
+            <div class="modal-footer">
+              <div class="modal-footer-btns" style="margin-left: auto;">
+                <button class="btn btn-ghost" type="button" @click="closeAddUserModal">取消</button>
+                <button class="btn btn-primary" type="button" :disabled="addUserModal.saving" @click="handleCreateUser">
+                  {{ addUserModal.saving ? "创建中…" : "创建用户" }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="add-user-example-panel">
+            <div class="example-image-item">
+              <span class="example-image-label">xlsx 格式示例</span>
+              <img
+                src="https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-04-26%2FMiniMax-M2.7%2F2035402385077047958%2F19dc31f5b60a75cfc31c26d9326c4ae3e983b11abf35e53eec1b66827cb9f233..png?Expires=1777278678&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=s73CeKoLgCEsSamacaRtMvhFGa0%3D"
+                alt="xlsx 格式示例"
+              />
+            </div>
+            <div class="example-image-item">
+              <span class="example-image-label">csv/txt 格式示例</span>
+              <img
+                src="https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-04-26%2FMiniMax-M2.7%2F2035402385077047958%2F8eed82b4e7e942cbb4a0f56e3ba15ac98e97fca84dcba98f7cbb41bc6a448ccd..png?Expires=1777278679&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=YYfccG4eUdYEQyiFclPCu7VrXCQ%3D"
+                alt="csv/txt 格式示例"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template #right>
+        <button
+          v-for="tab in ADMIN_TABS"
+          :key="tab.key"
+          class="capsule-action admin-capsule-btn"
+          :class="{ 'capsule-active': activeSection === tab.key }"
+          type="button"
+          :aria-label="tab.label"
+          @click="switchSection(tab.key)"
+        >
+          <span class="capsule-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="tab.icon" />
+            </svg>
+          </span>
+          <span class="admin-capsule-label">{{ tab.shortLabel }}</span>
+        </button>
+      </template>
+    </MobileCapsule>
   </main>
 </template>
 
 <style scoped>
 @import '../assets/styles/admin-view.css';
+
+.add-user-layout {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  z-index: 1011;
+}
+
+.add-user-modal {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 480px;
+}
+
+.add-user-example-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 280px;
+  padding-top: 4px;
+}
+
+.example-image-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.example-image-label {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-weight: 600;
+}
+
+.example-image-item img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.class-select-hint {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+}
+
+.assigned-classes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.assigned-class-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.remove-class-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-sub);
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.remove-class-btn:hover {
+  color: var(--danger);
+}
+
+.add-class-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.class-year-input {
+  width: 90px;
+}
+
+.class-category-select {
+  width: 100px;
+}
+
+.class-major-select {
+  flex: 1;
+  min-width: 160px;
+}
+
+.class-no-input {
+  width: 70px;
+}
+
+.add-class-btn {
+  padding: 6px 12px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.add-class-btn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .add-user-layout {
+    width: calc(100vw - 32px);
+    max-width: 480px;
+  }
+  .add-user-example-panel {
+    display: none;
+  }
+  .add-user-modal {
+    width: 100% !important;
+  }
+}
+
+/* ── Admin Capsule Theme Overrides ────────────────────── */
+:deep(.capsule-left) {
+  padding: 10px 2px 10px 6px;
+}
+:deep(.capsule-right) {
+  flex: 1;
+  justify-content: space-evenly;
+  padding: 10px 6px 10px 2px;
+}
+
+.admin-capsule-btn {
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--primary);
+  padding: 6px clamp(3px, 2.2vw, 10px);
+  border: 1px solid rgba(100, 12, 114, 0.12);
+}
+.admin-capsule-btn .capsule-icon {
+  flex-shrink: 0;
+}
+
+.admin-capsule-label {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.capsule-action:active {
+  background: rgba(100, 12, 114, 0.08);
+}
+
+.capsule-action.capsule-active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+@media (max-width: 840px) {
+  .admin-shell {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  }
+}
 </style>

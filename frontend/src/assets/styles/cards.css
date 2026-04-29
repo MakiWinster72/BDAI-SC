@@ -90,19 +90,36 @@
   min-height: 26px;
   margin-bottom: 0;
   margin-top: 5px;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   justify-content: center;
+  flex-direction: column;
+}
+
+.menu-card-header.has-notif-tabs {
+  gap: 0;
+}
+
+.menu-card-header-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  min-height: 26px;
+  position: relative;
 }
 
 .menu-card-back {
   position: absolute;
   left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   min-height: 24px;
   padding: 0 9px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.5);
   color: var(--primary);
   font-size: 12px;
   font-weight: 700;
@@ -114,15 +131,16 @@
 }
 
 .menu-card-back:hover {
-  background: rgba(255, 255, 255, 0.68);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
 }
 
 .menu-card-title {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 24px;
   padding: 0 10px;
   border-radius: 999px;
@@ -134,6 +152,29 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transform-origin: left center;
+  box-shadow: 0 2px 8px rgba(100, 12, 114, 0.06);
+}
+
+.menu-mark-all-read {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(100, 12, 114, 0.12);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.menu-mark-all-read:hover {
+  background: var(--primary);
+  color: #fff;
 }
 
 .menu-card-body {
@@ -258,6 +299,7 @@
     background-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
     color 180ms ease,
     border-color 160ms ease,
+    box-shadow 160ms ease,
     transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
@@ -285,15 +327,15 @@
 }
 
 .menu-item:hover:not(.disabled):not(.active) {
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.88);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(100, 12, 114, 0.08);
 }
 
 .menu-item.active {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: #fff;
   border-color: transparent;
-  animation: itemActivePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .menu-item-label {
@@ -376,6 +418,12 @@
 }
 
 /* ── Notification Menu ──────────────────────────────────── */
+.menu-notification-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .menu-notification-list {
   gap: 10px;
 }
@@ -458,15 +506,17 @@
 
 .menu-notification-item {
   display: grid;
-  gap: 7px;
+  gap: 3px;
   border: 1.5px solid transparent;
-  border-radius: 16px;
-  padding: 13px;
+  border-radius: 14px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.5);
   cursor: pointer;
+  text-align: left;
   transition:
     background-color 180ms ease,
     border-color 160ms ease,
+    box-shadow 160ms ease,
     transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
@@ -481,30 +531,49 @@
 }
 
 .menu-notification-item:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.82);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(100, 12, 114, 0.08);
 }
 
 .menu-notification-item.active {
   background: rgba(100, 12, 114, 0.07);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(100, 12, 114, 0.12);
 }
 
 .menu-notification-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 6px;
+}
+
+.menu-notification-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e53e3e;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+}
+
+.menu-notification-item.is-read {
+  opacity: 0.6;
+}
+
+.menu-notification-item.is-read:hover {
+  opacity: 0.85;
 }
 
 .menu-notification-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 22px;
-  padding: 0 10px;
+  min-height: 18px;
+  padding: 0 6px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -530,23 +599,23 @@
 }
 
 .menu-notification-time {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-sub);
 }
 
 .menu-notification-title {
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .menu-notification-content,
 .menu-notification-meta,
 .menu-notification-reason {
   color: #4f6d76;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .menu-notification-detail {
@@ -717,11 +786,105 @@
 
 /* itemActivePop 已在首次定义处统一（line 274），此处不再重复 */
 
+/* ── Admin Tabs (reused in CardMenu notifications panel) ── */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 18px;
+  background: rgba(100, 12, 114, 0.04);
+  border: 1px solid rgba(100, 12, 114, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.menu-card-header.has-notif-tabs .admin-tabs {
+  margin-top: 8px;
+}
+
+.admin-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 6px;
+  border-radius: 13px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  justify-content: center;
+  transition:
+    background 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+  white-space: nowrap;
+}
+
+.tab-icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.75;
+  transition: opacity 200ms ease;
+}
+
+.admin-tab:hover:not(.active) {
+  background: rgba(100, 12, 114, 0.06);
+  color: var(--primary);
+  border-color: rgba(100, 12, 114, 0.1);
+}
+
+.admin-tab:hover:not(.active) .tab-icon {
+  opacity: 1;
+}
+
+.admin-tab.active {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--primary-dark);
+  font-weight: 700;
+  border-color: rgba(100, 12, 114, 0.15);
+  box-shadow: 0 2px 8px rgba(100, 12, 114, 0.08);
+}
+
+.admin-tab.active .tab-icon {
+  opacity: 1;
+  color: var(--primary);
+}
+
+.admin-tab:active {
+  transform: scale(0.97);
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.1);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.admin-tab.active .tab-count {
+  background: var(--primary);
+  color: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .menu-item,
   .menu-subitem,
   .menu-notification-tab,
   .menu-notification-item,
+  .admin-tab,
   .menu-panel-forward-enter-active,
   .menu-panel-forward-leave-active,
   .menu-panel-back-enter-active,

@@ -143,7 +143,7 @@
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: #0d515a;
+  color: var(--primary);
 }
 
 .toolbar-button .icon {
@@ -212,7 +212,7 @@
   height: 30px;
   padding: 0;
   cursor: pointer;
-  color: #0d515a;
+  color: var(--primary);
   font-weight: 700;
   text-align: center;
   line-height: 30px;
@@ -228,7 +228,7 @@
   resize: vertical;
   padding: 12px;
   background: rgba(255, 255, 255, 0.38);
-  color: #0f4c54;
+  color: var(--primary);
   font-size: 14px;
   line-height: 1.7;
   min-height: 60px;
@@ -337,7 +337,7 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  color: #0d515a;
+  color: var(--primary);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
@@ -405,7 +405,7 @@
   height: 30px;
   padding: 0 10px;
   cursor: pointer;
-  color: #0d515a;
+  color: var(--primary);
   font-size: 13px;
 }
 
@@ -421,7 +421,7 @@
   min-height: 92px;
   padding: 10px 12px;
   resize: vertical;
-  color: #135a63;
+  color: var(--primary);
   background: rgba(255, 255, 255, 0.5);
 }
 
@@ -486,7 +486,7 @@
 .post-content h5,
 .post-content h6 {
   margin: 10px 0 6px;
-  color: #0b3f47;
+  color: var(--primary-dark);
 }
 
 .post-content .md-quote {

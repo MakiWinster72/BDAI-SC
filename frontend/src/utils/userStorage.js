@@ -4,7 +4,7 @@
  * loadUser / saveUser 在多个视图和组件中重复定义，统一管理。
  */
 
-const STORAGE_KEY = 'gcsc_user';
+const STORAGE_KEY = 'bdai_sc_user';
 
 /**
  * 从 localStorage 加载当前用户信息

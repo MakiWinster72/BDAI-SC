@@ -2,7 +2,7 @@
   <div class="auth-layout">
     <div class="auth-card">
       <h1 class="auth-title">创建账号</h1>
-      <p class="auth-subtitle">注册后即可登录 GCSC 学生中心</p>
+      <p class="auth-subtitle">注册后即可登录 BDAI_SC 学生中心</p>
 
       <form @submit.prevent="handleRegister">
         <div class="form-row">
@@ -87,27 +87,17 @@ async function handleRegister() {
   feedback.type = "";
   isSubmitting.value = true;
 
+  localStorage.removeItem("bdai_sc_user");
+  localStorage.removeItem("bdai_sc_token");
+
   try {
     const { data } = await register(form);
-    feedback.text = data.message || "注册成功";
+    feedback.text = data.message || "注册成功，请登录";
     feedback.type = "success";
-    localStorage.setItem(
-      "gcsc_user",
-      JSON.stringify({
-        username: data.username,
-        displayName: data.displayName,
-        avatarUrl: data.avatarUrl || "",
-        role: data.role,
-        studentNo: data.studentNo,
-        className: data.className,
-        college: data.college,
-      }),
-    );
-    localStorage.setItem("gcsc_token", data.token || "");
 
     setTimeout(() => {
-      router.push("/myinfos");
-    }, 600);
+      router.push("/login");
+    }, 1200);
   } catch (error) {
     feedback.text = parseError(error);
     feedback.type = "error";

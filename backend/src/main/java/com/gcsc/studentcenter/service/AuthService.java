@@ -2,14 +2,18 @@ package com.gcsc.studentcenter.service;
 
 import com.gcsc.studentcenter.dto.AuthResponse;
 import com.gcsc.studentcenter.dto.ChangePasswordRequest;
+import com.gcsc.studentcenter.dto.LastLoginInfo;
 import com.gcsc.studentcenter.dto.LoginRequest;
 import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
 import com.gcsc.studentcenter.entity.AppUser;
+import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
+import com.gcsc.studentcenter.repository.StudentProfileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -20,22 +24,26 @@ public class AuthService {
     private static final String FIXED_COLLEGE = "大数据与人工智能学院";
 
     private final AppUserRepository appUserRepository;
+    private final StudentProfileRepository studentProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final LoginHistoryService loginHistoryService;
 
     public AuthService(
         AppUserRepository appUserRepository,
+        StudentProfileRepository studentProfileRepository,
         PasswordEncoder passwordEncoder,
         JwtService jwtService,
         LoginHistoryService loginHistoryService
     ) {
         this.appUserRepository = appUserRepository;
+        this.studentProfileRepository = studentProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.loginHistoryService = loginHistoryService;
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         String displayName = request.getDisplayName().trim();
         if (displayName.isEmpty()) {
@@ -60,11 +68,19 @@ public class AuthService {
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
-        user.setStudentNo(normalizeOptional(request.getStudentNo()));
+        user.setStudentNo(username);
         user.setClassName(normalizeOptional(request.getClassName()));
         user.setCollege(FIXED_COLLEGE);
         user.setCreatedAt(LocalDateTime.now());
         AppUser savedUser = appUserRepository.save(user);
+
+        StudentProfile profile = new StudentProfile();
+        profile.setUser(savedUser);
+        profile.setFullName(displayName);
+        profile.setStudentNo(username);
+        profile.setClassName(normalizeOptional(request.getClassName()));
+        studentProfileRepository.save(profile);
+
         String token = jwtService.generateToken(
             savedUser.getUsername(),
             savedUser.getDisplayName(),
@@ -81,7 +97,8 @@ public class AuthService {
             savedUser.getClassName(),
             savedUser.getCollege(),
             resolveAvatarUrl(savedUser),
-            token
+            token,
+            null
         );
     }
 
@@ -104,6 +121,7 @@ public class AuthService {
         String token = jwtService.generateToken(user.getUsername(), user.getDisplayName(), role.name());
         String avatarUrl = resolveAvatarUrl(user);
 
+        LastLoginInfo lastLoginInfo = loginHistoryService.getPreviousLogin(username).orElse(null);
         loginHistoryService.recordLogin(username, ipAddress, userAgent);
 
         return new AuthResponse(
@@ -116,7 +134,8 @@ public class AuthService {
             user.getClassName(),
             user.getCollege(),
             avatarUrl,
-            token
+            token,
+            lastLoginInfo
         );
     }
 

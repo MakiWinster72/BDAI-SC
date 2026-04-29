@@ -70,7 +70,7 @@ export const categoryHints = {
     "影响范围：指全国（含国际）、区域、省内。",
   ],
   doubleHundred: ["请填写双百工程的具体参与内容"],
-  ieerTraining: ["请填写项目名称和项目级别", "请说明在项目中的具体工作"],
+  ieerTraining: ["请填写大学生创新创业训练计划项目的具体内容"],
 };
 
 export const categoryFieldMap = {
@@ -179,11 +179,17 @@ export const categoryFieldMap = {
       },
       {
         key: "authorOrder",
-        label: "作者顺序",
+        label: "作者排序",
         kind: "input",
         placeholder: "如：1/2/3…",
       },
       { key: "publishDate", label: "发表时间", kind: "input", type: "date" },
+      {
+        key: "indexed",
+        label: "收录情况",
+        kind: "input",
+        placeholder: "SCI/EI/核心期刊等",
+      },
       {
         key: "remark",
         label: "备注",
@@ -193,7 +199,7 @@ export const categoryFieldMap = {
     ],
   },
   journal: {
-    titleKey: "publicationName",
+    titleKey: "workTitle",
     dateKey: "publishDate",
     fields: [
       {
@@ -209,17 +215,17 @@ export const categoryFieldMap = {
         placeholder: "请输入学生姓名",
       },
       {
-        key: "publicationName",
+        key: "workTitle",
         label: "作品名称",
         kind: "input",
         placeholder: "请输入作品名称",
       },
       { key: "publishDate", label: "发表时间", kind: "input", type: "date" },
       {
-        key: "remark",
-        label: "备注",
+        key: "publicationName",
+        label: "刊物名称",
         kind: "input",
-        placeholder: "请输入备注",
+        placeholder: "请输入刊物名称",
       },
     ],
   },
@@ -371,7 +377,7 @@ export const categoryFieldMap = {
     ],
   },
   works: {
-    titleKey: "workTitle",
+    titleKey: "workName",
     dateKey: "publishDate",
     fields: [
       {
@@ -387,7 +393,7 @@ export const categoryFieldMap = {
         placeholder: "请输入学生姓名",
       },
       {
-        key: "workTitle",
+        key: "workName",
         label: "作品名称",
         kind: "input",
         placeholder: "请输入作品名称",
@@ -412,7 +418,7 @@ export const categoryFieldMap = {
         placeholder: "请输入主办单位",
       },
       {
-        key: "remark",
+        key: "note",
         label: "备注",
         kind: "input",
         placeholder: "请输入备注",
@@ -420,43 +426,6 @@ export const categoryFieldMap = {
     ],
   },
   doubleHundred: {
-    titleKey: "activityName",
-    dateKey: "activityDate",
-    fields: [
-      {
-        key: "studentNo",
-        label: "学号",
-        kind: "input",
-        placeholder: "请输入学号",
-      },
-      {
-        key: "studentName",
-        label: "学生姓名",
-        kind: "input",
-        placeholder: "请输入学生姓名",
-      },
-      {
-        key: "activityName",
-        label: "活动名称",
-        kind: "input",
-        placeholder: "请输入活动名称",
-      },
-      { key: "activityDate", label: "参与时间", kind: "input", type: "date" },
-      {
-        key: "organizer",
-        label: "主办单位",
-        kind: "input",
-        placeholder: "请输入主办单位",
-      },
-      {
-        key: "remark",
-        label: "备注",
-        kind: "input",
-        placeholder: "请输入备注",
-      },
-    ],
-  },
-  ieerTraining: {
     titleKey: "projectName",
     dateKey: "projectStartDate",
     fields: [
@@ -473,30 +442,143 @@ export const categoryFieldMap = {
         placeholder: "请输入学生姓名",
       },
       {
+        key: "projectCategory",
+        label: "项目类别",
+        kind: "input",
+        placeholder: "请输入项目类别",
+      },
+      {
+        key: "projectDomain",
+        label: "项目所属领域",
+        kind: "input",
+        placeholder: "请输入项目所属领域",
+      },
+      {
+        key: "projectName",
+        label: "申报作品名",
+        kind: "input",
+        placeholder: "请输入申报作品名",
+      },
+      {
+        key: "projectLeader",
+        label: "项目负责人",
+        kind: "input",
+        placeholder: "请输入项目负责人",
+      },
+      {
+        key: "leaderStudentNo",
+        label: "负责人学号",
+        kind: "input",
+        placeholder: "请输入负责人学号",
+      },
+      {
+        key: "educationLevel",
+        label: "本科/研究生",
+        kind: "radio",
+        options: [
+          { label: "本科", value: "本科" },
+          { label: "研究生", value: "研究生" },
+        ],
+      },
+      {
+        key: "teamMembers",
+        label: "项目其他成员",
+        kind: "input",
+        placeholder: "请输入项目其他成员",
+      },
+      {
+        key: "instructors",
+        label: "指导老师（全体）",
+        kind: "input",
+        placeholder: "请输入指导老师",
+      },
+      {
+        key: "teamSize",
+        label: "项目人数",
+        kind: "input",
+        placeholder: "请输入项目人数",
+      },
+      {
+        key: "plannedLevel",
+        label: "拟立项等级",
+        kind: "input",
+        placeholder: "请输入拟立项等级",
+      },
+      {
+        key: "college",
+        label: "学院",
+        kind: "input",
+        placeholder: "请输入学院",
+      },
+      {
+        key: "finalLevel",
+        label: "结项等级",
+        kind: "input",
+        placeholder: "未结项/优秀/良好/合格/不合格",
+      },
+      {
+        key: "remark",
+        label: "备注",
+        kind: "input",
+        placeholder: "请输入备注",
+      },
+    ],
+  },
+  ieerTraining: {
+    titleKey: "projectName",
+    dateKey: "projectStartDate",
+    fields: [
+      {
+        key: "collegeName",
+        label: "学院名称",
+        kind: "input",
+        placeholder: "请输入学院名称",
+      },
+      {
         key: "projectName",
         label: "项目名称",
         kind: "input",
         placeholder: "请输入项目名称",
       },
       {
-        key: "projectLevel",
-        label: "项目级别",
+        key: "projectType",
+        label: "项目类型",
+        kind: "input",
+        placeholder: "创新训练/创业训练/创业实践",
+      },
+      {
+        key: "projectLeader",
+        label: "项目负责人姓名",
+        kind: "input",
+        placeholder: "请输入项目负责人姓名",
+      },
+      {
+        key: "instructorName",
+        label: "指导教师姓名",
+        kind: "input",
+        placeholder: "请输入指导教师姓名",
+      },
+      {
+        key: "recommendedLevel",
+        label: "推荐项目级别",
         kind: "input",
         placeholder: "国家级/省级/校级",
       },
       {
-        key: "projectRole",
-        label: "项目角色",
-        kind: "input",
-        placeholder: "项目负责人/核心成员",
+        key: "isKeyArea",
+        label: "是否推荐为重点领域支持项目",
+        kind: "radio",
+        options: [
+          { label: "是", value: "是" },
+          { label: "否", value: "否" },
+        ],
       },
       {
-        key: "projectStartDate",
-        label: "开始时间",
+        key: "finalStatus",
+        label: "结项情况",
         kind: "input",
-        type: "date",
+        placeholder: "优秀/通过/延期结项/终止项目",
       },
-      { key: "projectEndDate", label: "结束时间", kind: "input", type: "date" },
       {
         key: "remark",
         label: "备注",

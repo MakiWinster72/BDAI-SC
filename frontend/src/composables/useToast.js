@@ -5,10 +5,10 @@ let nextId = 1
 const DURATION = 4500
 
 export function useToast() {
-  function addToast({ type = 'info', message, duration = DURATION }) {
+  function addToast({ type = 'info', message, duration = DURATION, progress = null }) {
     const id = nextId++
-    toasts.push({ id, type, message })
-    if (duration > 0) {
+    toasts.push({ id, type, message, progress })
+    if (progress === null && duration > 0) {
       setTimeout(() => removeToast(id), duration)
     }
     return id
@@ -17,6 +17,11 @@ export function useToast() {
   function removeToast(id) {
     const idx = toasts.findIndex((t) => t.id === id)
     if (idx !== -1) toasts.splice(idx, 1)
+  }
+
+  function updateToast(id, patch) {
+    const item = toasts.find((t) => t.id === id)
+    if (item) Object.assign(item, patch)
   }
 
   function success(message, duration) {
@@ -35,6 +40,10 @@ export function useToast() {
     return addToast({ type: 'warn', message, duration })
   }
 
+  function progress(message) {
+    return addToast({ type: 'progress', message, duration: 0, progress: 0 })
+  }
+
   // Global toast function attached to window for cross-component usage
   function toast({ type = 'info', message, duration } = {}) {
     if (typeof type === 'string' && !message) {
@@ -48,10 +57,12 @@ export function useToast() {
     toasts: readonly(toasts),
     addToast,
     removeToast,
+    updateToast,
     success,
     error,
     info,
     warn,
+    progress,
     toast,
   }
 }

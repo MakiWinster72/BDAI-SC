@@ -43,10 +43,6 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
   placeholder: {
     type: String,
     default: '全部',
@@ -58,11 +54,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-
-const model = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val),
-})
 
 const current = computed(() => {
   const v = props.modelValue
@@ -106,105 +97,105 @@ function increment() {
 </script>
 
 <template>
-  <div class="stepper-input-root">
+  <div class="stepper" :class="{ 'is-disabled': disabled }">
     <button
-      class="stepper-btn stepper-btn--dec"
+      class="stepper__btn stepper__btn--dec"
       type="button"
+      tabindex="-1"
       :disabled="!canDecrement"
       aria-label="减少"
       @click="decrement"
     >
-      −
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M2 6h8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
     </button>
-    <input
-      v-model="model"
-      class="stepper-value"
-      type="number"
-      :step="step"
-      :min="min"
-      :max="max"
-      :disabled="disabled"
-      :readonly="readonly"
-      :placeholder="placeholder"
-      aria-label="数值"
-    />
+    <span class="stepper__value" :aria-label="String(current ?? placeholder)">
+      {{ current ?? placeholder }}
+    </span>
     <button
-      class="stepper-btn stepper-btn--inc"
+      class="stepper__btn stepper__btn--inc"
       type="button"
+      tabindex="-1"
       :disabled="!canIncrement"
       aria-label="增加"
       @click="increment"
     >
-      +
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
     </button>
   </div>
 </template>
 
 <style scoped>
-.stepper-input-root {
-  display: inline-flex;
+.stepper {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
   align-items: center;
-  border: 1.5px solid var(--line-strong, #d0cfce);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.88);
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong, #d0cfce);
+  background: rgba(255, 255, 255, 0.96);
   overflow: hidden;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.stepper-input-root:focus-within {
-  border-color: var(--primary, #640c72);
-  box-shadow: 0 0 0 3px var(--primary-surface, rgba(100, 12, 114, 0.08));
+.stepper.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
-.stepper-btn {
-  display: inline-flex;
+/* ── Buttons ── */
+.stepper__btn {
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 100%;
+  height: 100%;
   border: none;
   background: transparent;
-  color: var(--primary-dark, #4a084f);
-  font-size: 18px;
-  font-weight: 700;
+  color: var(--primary, var(--primary));
   cursor: pointer;
-  flex-shrink: 0;
+  outline: none;
+  padding: 0;
   transition: background 150ms ease, color 150ms ease;
-  line-height: 1;
 }
 
-.stepper-btn:hover:not(:disabled) {
+.stepper__btn:hover:not(:disabled) {
   background: var(--primary-surface, rgba(100, 12, 114, 0.08));
-  color: var(--primary, #640c72);
 }
 
-.stepper-btn:active:not(:disabled) {
-  transform: scale(0.92);
+.stepper__btn:active:not(:disabled) {
+  background: var(--primary-dark, rgba(100, 12, 114, 0.14));
 }
 
-.stepper-btn:disabled {
-  opacity: 0.35;
+.stepper__btn:disabled {
+  color: var(--text-sub, #aaa);
   cursor: not-allowed;
 }
 
-.stepper-value {
-  width: 52px;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-main, #2d1a3e);
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-  outline: none;
-  -moz-appearance: textfield;
-  padding: 0 2px;
-  font-variant-numeric: tabular-nums;
+.stepper__btn--dec {
+  border-right: 1px solid var(--line, rgba(0, 0, 0, 0.06));
 }
 
-.stepper-value::-webkit-outer-spin-button,
-.stepper-value::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.stepper__btn--inc {
+  border-left: 1px solid var(--line, rgba(0, 0, 0, 0.06));
+}
+
+/* ── Value Display ── */
+.stepper__value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--primary-dark, #2d1a3e);
+  font-size: 13px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  padding: 0 4px;
+  box-sizing: border-box;
+  user-select: none;
 }
 </style>

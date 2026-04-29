@@ -57,7 +57,9 @@ export const exportGroups = [
       { key: "motherPhone", label: "母亲电话" },
       { key: "motherWorkUnit", label: "母亲工作单位" },
       { key: "motherTitle", label: "母亲职务" },
-      { key: "hkMoTw", label: "港澳台" },
+      { key: "isHk", label: "香港" },
+      { key: "isMo", label: "澳门" },
+      { key: "isTw", label: "台湾" },
       { key: "specialStudent", label: "特殊学生" },
     ],
   },
@@ -124,7 +126,7 @@ export const familyRows = (() => {
     ["motherName", "motherPhone", "motherWorkUnit", "motherTitle"]
       .map((key) => byKey[key])
       .filter(Boolean),
-    ["hkMoTw", "specialStudent"].map((key) => byKey[key]).filter(Boolean),
+    ["isHk", "isMo", "isTw", "specialStudent"].map((key) => byKey[key]).filter(Boolean),
   ];
 })();
 
@@ -172,7 +174,9 @@ const MAIN_FIELD_ORDER = [
   "motherPhone",
   "motherWorkUnit",
   "motherTitle",
-  "hkMoTw",
+  "isHk",
+  "isMo",
+  "isTw",
   "specialStudent",
   "emergencyPhone",
   "emergencyRelation",
@@ -219,7 +223,9 @@ const MAIN_FIELD_META = {
     getter: (item) => item.dormBuilding || "",
   },
   dormRoom: { label: "住宿房间", getter: (item) => item.dormRoom || "" },
-  hkMoTw: { label: "港澳台", getter: (item) => (item.hkMoTw ? "是" : "否") },
+  isHk: { label: "香港", getter: (item) => (item.isHk ? "是" : "否") },
+  isMo: { label: "澳门", getter: (item) => (item.isMo ? "是" : "否") },
+  isTw: { label: "台湾", getter: (item) => (item.isTw ? "是" : "否") },
   specialStudent: {
     label: "特殊学生",
     getter: (item) => (item.specialStudent ? "是" : "否"),

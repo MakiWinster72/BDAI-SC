@@ -19,3 +19,7 @@ export function rejectProfileReviewRequest(id, data) {
 export function cancelProfileReviewRequest(id) {
   return request.delete(`/api/profile-review-requests/${id}`);
 }
+
+export function setProfileReviewRequestDocuments(id, documents) {
+  return request.put(`/api/profile-review-requests/${id}/supporting-documents`, { documents });
+}

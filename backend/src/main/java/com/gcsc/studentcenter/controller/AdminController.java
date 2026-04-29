@@ -1,5 +1,6 @@
 package com.gcsc.studentcenter.controller;
 
+import com.gcsc.studentcenter.dto.CreateUserRequest;
 import com.gcsc.studentcenter.dto.UpdateUserRequest;
 import com.gcsc.studentcenter.dto.UserListItemResponse;
 import com.gcsc.studentcenter.service.BackupService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -45,6 +47,34 @@ public class AdminController {
         }
     }
 
+    private String extractUsername(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        try {
+            Claims claims = jwtService.parseToken(authHeader.substring(7));
+            return claims.getSubject();
+        } catch (JwtException ex) {
+            return null;
+        }
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<?> createUser(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestBody CreateUserRequest request
+    ) {
+        if (!isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            var user = userService.createUser(request);
+            return ResponseEntity.ok(new UserListItemResponse(user));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
     @GetMapping("/users")
     public ResponseEntity<?> listUsers(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
@@ -57,7 +87,22 @@ public class AdminController {
         if (!isAdmin(authHeader)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(userService.listUsersPaginated(page, size, search, role, className));
+        String currentUsername = extractUsername(authHeader);
+        return ResponseEntity.ok(userService.listUsersPaginated(page, size, search, role, className, currentUsername));
+    }
+
+    @GetMapping("/users/ids")
+    public ResponseEntity<?> listAllUserIds(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String className
+    ) {
+        if (!isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        String currentUsername = extractUsername(authHeader);
+        return ResponseEntity.ok(userService.listAllUserIds(search, role, className, currentUsername));
     }
 
     @PutMapping("/users/{id}")
@@ -71,7 +116,7 @@ public class AdminController {
         }
         try {
             var user = userService.updateUser(id, request);
-            return ResponseEntity.ok(new UserListItemResponse(user));
+            return ResponseEntity.ok(Map.of("success", true, "data", new UserListItemResponse(user)));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
@@ -88,6 +133,51 @@ public class AdminController {
         try {
             userService.deleteUser(id);
             return ResponseEntity.ok(Map.of("success", true));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/classes")
+    public ResponseEntity<?> listClasses(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
+    ) {
+        if (!isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        List<String> classes = userService.getDistinctStudentClasses();
+        return ResponseEntity.ok(Map.of("data", classes));
+    }
+
+    @PutMapping("/teachers/{id}/assigned-classes")
+    public ResponseEntity<?> updateTeacherAssignedClasses(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request
+    ) {
+        if (!isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            String assignedClasses = request.get("assignedClasses");
+            var user = userService.setTeacherAssignedClasses(id, assignedClasses);
+            return ResponseEntity.ok(Map.of("success", true, "assignedClasses", user.getAssignedClasses()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/teachers/{id}/assigned-classes")
+    public ResponseEntity<?> getTeacherAssignedClasses(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @PathVariable Long id
+    ) {
+        if (!isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            String assignedClasses = userService.getTeacherAssignedClasses(id);
+            return ResponseEntity.ok(Map.of("assignedClasses", assignedClasses));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }

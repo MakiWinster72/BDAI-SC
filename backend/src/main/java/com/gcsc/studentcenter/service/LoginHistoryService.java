@@ -1,5 +1,6 @@
 package com.gcsc.studentcenter.service;
 
+import com.gcsc.studentcenter.dto.LastLoginInfo;
 import com.gcsc.studentcenter.dto.LoginHistoryResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.LoginHistory;
@@ -15,11 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LoginHistoryService {
 
     private static final int RETENTION_DAYS = 30;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final LoginHistoryRepository loginHistoryRepository;
     private final AppUserRepository appUserRepository;
@@ -32,11 +35,11 @@ public class LoginHistoryService {
         this.appUserRepository = appUserRepository;
     }
 
-    public void recordLogin(String username, String ipAddress, String userAgent) {
+    public LoginHistory recordLogin(String username, String ipAddress, String userAgent) {
         AppUser user = appUserRepository.findByUsername(username)
             .orElse(null);
         if (user == null) {
-            return;
+            return null;
         }
 
         LoginHistory history = new LoginHistory();
@@ -45,15 +48,37 @@ public class LoginHistoryService {
         history.setUserAgent(userAgent);
         history.setDeviceName(parseDeviceName(userAgent));
         history.setLoginTime(LocalDateTime.now());
-        loginHistoryRepository.save(history);
+        return loginHistoryRepository.save(history);
+    }
+
+    public Optional<LastLoginInfo> getPreviousLogin(String username) {
+        AppUser user = appUserRepository.findByUsername(username)
+            .orElse(null);
+        if (user == null) {
+            return Optional.empty();
+        }
+        Optional<LoginHistory> prev = loginHistoryRepository
+            .findFirstByUserIdOrderByLoginTimeDesc(user.getId());
+        if (prev.isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<LoginHistory> secondLast = loginHistoryRepository
+            .findFirstByUserIdAndIdNotOrderByLoginTimeDesc(user.getId(), prev.get().getId());
+        if (secondLast.isEmpty()) {
+            return Optional.empty();
+        }
+        LoginHistory lh = secondLast.get();
+        return Optional.of(new LastLoginInfo(lh.getIpAddress(), lh.getDeviceName(), lh.getLoginTime()));
     }
 
     public Page<LoginHistoryResponse> getLoginHistory(String username, int page, int size) {
         AppUser user = appUserRepository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
-        Pageable pageable = PageRequest.of(page, size);
+        int cappedSize = Math.min(size, MAX_PAGE_SIZE);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), cappedSize);
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(RETENTION_DAYS);
         Page<LoginHistory> historyPage = loginHistoryRepository
-            .findAllByUserIdOrderByLoginTimeDesc(user.getId(), pageable);
+            .findByUserIdAndLoginTimeAfterOrderByLoginTimeDesc(user.getId(), cutoff, pageable);
         return historyPage.map(this::toResponse);
     }
 
@@ -65,9 +90,12 @@ public class LoginHistoryService {
     }
 
     private LoginHistoryResponse toResponse(LoginHistory history) {
+        String ua = history.getUserAgent();
         return new LoginHistoryResponse(
             history.getIpAddress(),
             history.getDeviceName(),
+            parseBrowser(ua),
+            parseOs(ua),
             history.getLoginTime()
         );
     }

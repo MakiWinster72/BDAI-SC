@@ -390,8 +390,14 @@ export function useStudentPdfExport() {
         ["母亲工作单位", student.motherWorkUnit || ""],
         ["母亲职务", student.motherTitle || ""],
       ];
-      if (student.hkMoTw !== undefined) {
-        familyRows.push(["港澳台", formatYesNo(student.hkMoTw)]);
+      if (student.isHk) {
+        familyRows.push(["香港", "是"]);
+      }
+      if (student.isMo) {
+        familyRows.push(["澳门", "是"]);
+      }
+      if (student.isTw) {
+        familyRows.push(["台湾", "是"]);
       }
       if (student.specialStudent !== undefined) {
         familyRows.push(["特殊学生", formatYesNo(student.specialStudent)]);
@@ -608,6 +614,39 @@ export function useStudentPdfExport() {
       } else {
         doc.setFontSize(10);
         doc.text("暂无教育经历", marginX, currentY + 12);
+        currentY += 20;
+      }
+
+      const cadreExperiences = student.cadreExperiences || [];
+
+      addSectionTitle("学生干部经历");
+      if (Array.isArray(cadreExperiences) && cadreExperiences.length) {
+        autoTable(doc, {
+          head: [["起始时间", "结束时间", "班级/社团部门", "职位", "职责说明"]],
+          body: cadreExperiences.map((item) => {
+            const start = item.startDate || "";
+            const end = item.isCurrent ? "至今" : item.endDate || "";
+            return [
+              start,
+              end,
+              item.department || "",
+              item.position || "",
+              item.description || "",
+            ];
+          }),
+          startY: currentY + 6,
+          styles: { fontSize: 9, cellPadding: 4, font: PDF_FONT_NAME },
+          headStyles: {
+            font: PDF_FONT_BLACK,
+            fillColor: [31, 79, 87],
+            textColor: 255,
+          },
+          theme: "grid",
+        });
+        currentY = doc.lastAutoTable.finalY + 14;
+      } else {
+        doc.setFontSize(10);
+        doc.text("暂无干部经历", marginX, currentY + 12);
         currentY += 20;
       }
 

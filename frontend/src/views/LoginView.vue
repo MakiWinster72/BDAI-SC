@@ -111,9 +111,9 @@
             <path d="M40,40 L10,30 A30,30 0 0,1 40,10 Z" class="pie-slice-4"/>
           </svg>
           <div class="pie-legend">
-            <div class="pie-legend-item"><span class="pie-dot" style="background:#d49c3b"></span>竞赛</div>
-            <div class="pie-legend-item"><span class="pie-dot" style="background:#9b59b6"></span>科研</div>
-            <div class="pie-legend-item"><span class="pie-dot" style="background:#640c72"></span>论文</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:#FF85BB"></span>竞赛</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:#FFCEE3"></span>科研</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:var(--primary)"></span>论文</div>
             <div class="pie-legend-item"><span class="pie-dot" style="background:rgba(255,255,255,0.25)"></span>其他</div>
           </div>
         </div>
@@ -227,7 +227,7 @@
             </div>
           </Transition>
 
-          <div class="switch-line">
+          <div v-if="allowRegistration" class="switch-line">
             还没有账号？
             <RouterLink class="switch-link" to="/register">去注册</RouterLink>
           </div>
@@ -242,9 +242,12 @@
 import { reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { login } from "../api/auth";
+import { getSystemSettings } from "../api/admin";
+import { useToast } from "../composables/useToast";
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 
 const form = reactive({
   username: route.query.username ? String(route.query.username) : "",
@@ -255,6 +258,19 @@ const isSubmitting = ref(false);
 const feedback = reactive({ text: "", type: "" });
 const showPassword = ref(false);
 const usernameError = ref("");
+const allowRegistration = ref(true);
+
+async function fetchSystemSettings() {
+  try {
+    const res = await getSystemSettings();
+    allowRegistration.value = res.data.allowRegistration !== false;
+    localStorage.setItem('gcsc_allowRegistration', allowRegistration.value ? '1' : '0');
+  } catch (e) {
+    allowRegistration.value = true;
+    localStorage.setItem('gcsc_allowRegistration', '1');
+  }
+}
+fetchSystemSettings();
 
 function parseError(error) {
   if (error?.response?.data?.message) {
@@ -279,8 +295,16 @@ async function handleLogin() {
     feedback.text = data.message || "登录成功";
     feedback.type = "success";
 
+    if (data.lastLoginInfo) {
+      const { ipAddress, deviceName, loginTime } = data.lastLoginInfo;
+      const time = loginTime ? new Date(loginTime).toLocaleString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "未知";
+      toast.info(`上次登录：${deviceName || "未知设备"} · ${ipAddress || "未知IP"} · ${time}`);
+    } else {
+      toast.info("欢迎使用！请先去「个人信息」填写你的个人资料～");
+    }
+
     localStorage.setItem(
-      "gcsc_user",
+      "bdai_sc_user",
       JSON.stringify({
         username: data.username,
         displayName: data.displayName,
@@ -291,7 +315,7 @@ async function handleLogin() {
         college: data.college,
       }),
     );
-    localStorage.setItem("gcsc_token", data.token || "");
+    localStorage.setItem("bdai_sc_token", data.token || "");
     router.push("/myinfos");
   } catch (error) {
     feedback.text = parseError(error);

@@ -611,18 +611,18 @@
 .chip-btn--primary {
   height: 36px;
   padding: 0 14px;
-  background: linear-gradient(135deg, #d49a3b 0%, #c8892a 100%);
+  background: linear-gradient(135deg, #FF85BB 0%, #e875a8 100%);
   color: #fff;
   font-size: 13px;
   box-shadow:
-    0 2px 8px rgba(212, 156, 59, 0.35),
+    0 2px 8px rgba(255, 133, 187, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .chip-btn--primary:hover {
-  background: linear-gradient(135deg, #e0a844 0%, #d49a3b 100%);
+  background: linear-gradient(135deg, #ff9ac7 0%, #FF85BB 100%);
   box-shadow:
-    0 4px 12px rgba(212, 156, 59, 0.45),
+    0 4px 12px rgba(255, 133, 187, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
 }

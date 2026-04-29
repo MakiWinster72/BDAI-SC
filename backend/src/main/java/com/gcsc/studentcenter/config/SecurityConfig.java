@@ -33,7 +33,7 @@ public class SecurityConfig {
             }))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/uploads/**", "/api/achievements/**").permitAll()
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/settings/system", "/uploads/**", "/api/achievements/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

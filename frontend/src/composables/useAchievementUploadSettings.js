@@ -4,13 +4,15 @@ import {
   updateAchievementUploadSettings,
 } from "../api/achievementUploadSettings";
 
-const STORAGE_KEY = "gcsc_achievement_upload_settings";
+const STORAGE_KEY = "bdai_sc_achievement_upload_settings";
 
 const DEFAULT_SETTINGS = Object.freeze({
   imageMaxCount: 3,
   imageMaxSizeMb: 10,
   attachmentMaxCount: 10,
   attachmentMaxSizeMb: 50,
+  supportingDocMaxCount: 10,
+  supportingDocMaxSizeMb: 50,
   attachmentDocumentExts: "docx,doc,pdf,xls,xlsx,pptx,ppt",
   attachmentVideoExts: "mp4,mov",
   attachmentImageExts: "jpeg,jpg,png,heif",
@@ -34,6 +36,8 @@ function normalizeSettings(raw = {}) {
   const imageMaxSizeMb = Number(raw.imageMaxSizeMb);
   const attachmentMaxCount = Number(raw.attachmentMaxCount);
   const attachmentMaxSizeMb = Number(raw.attachmentMaxSizeMb);
+  const supportingDocMaxCount = Number(raw.supportingDocMaxCount);
+  const supportingDocMaxSizeMb = Number(raw.supportingDocMaxSizeMb);
 
   return {
     imageMaxCount: Number.isFinite(imageMaxCount) && imageMaxCount > 0
@@ -50,6 +54,14 @@ function normalizeSettings(raw = {}) {
       Number.isFinite(attachmentMaxSizeMb) && attachmentMaxSizeMb > 0
         ? attachmentMaxSizeMb
         : DEFAULT_SETTINGS.attachmentMaxSizeMb,
+    supportingDocMaxCount:
+      Number.isFinite(supportingDocMaxCount) && supportingDocMaxCount > 0
+        ? supportingDocMaxCount
+        : DEFAULT_SETTINGS.supportingDocMaxCount,
+    supportingDocMaxSizeMb:
+      Number.isFinite(supportingDocMaxSizeMb) && supportingDocMaxSizeMb > 0
+        ? supportingDocMaxSizeMb
+        : DEFAULT_SETTINGS.supportingDocMaxSizeMb,
     attachmentDocumentExts: normalizeExtText(
       raw.attachmentDocumentExts,
       DEFAULT_SETTINGS.attachmentDocumentExts,
@@ -137,6 +149,8 @@ export function useAchievementUploadSettings() {
     settings.imageMaxSizeMb = normalized.imageMaxSizeMb;
     settings.attachmentMaxCount = normalized.attachmentMaxCount;
     settings.attachmentMaxSizeMb = normalized.attachmentMaxSizeMb;
+    settings.supportingDocMaxCount = normalized.supportingDocMaxCount;
+    settings.supportingDocMaxSizeMb = normalized.supportingDocMaxSizeMb;
     settings.attachmentDocumentExts = normalized.attachmentDocumentExts;
     settings.attachmentVideoExts = normalized.attachmentVideoExts;
     settings.attachmentImageExts = normalized.attachmentImageExts;

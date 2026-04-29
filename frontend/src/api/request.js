@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8080`
+const backendPort = import.meta.env.VITE_BACKEND_PORT || '8080'
+const apiBaseFromEnv = import.meta.env.VITE_API_BASE?.trim()
+const API_BASE = apiBaseFromEnv || (import.meta.env.DEV ? '' : `http://${window.location.hostname}:${backendPort}`)
 
 const request = axios.create({
   baseURL: API_BASE,
@@ -9,7 +10,7 @@ const request = axios.create({
 })
 
 request.interceptors.request.use((config) => {
-  const token = localStorage.getItem('gcsc_token')
+  const token = localStorage.getItem('bdai_sc_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -20,8 +21,8 @@ request.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      localStorage.removeItem('gcsc_token')
-      localStorage.removeItem('gcsc_user')
+      localStorage.removeItem('bdai_sc_token')
+      localStorage.removeItem('bdai_sc_user')
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }

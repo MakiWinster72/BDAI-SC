@@ -31,6 +31,9 @@ public class AchievementResearch {
     @Column(name = "project_leader", length = 64)
     private String projectLeader;
 
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -93,6 +96,14 @@ public class AchievementResearch {
 
     public void setProjectLeader(String projectLeader) {
         this.projectLeader = projectLeader;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getImageUrl() {

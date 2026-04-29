@@ -8,10 +8,12 @@ import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
 import com.gcsc.studentcenter.service.AuthService;
 import com.gcsc.studentcenter.service.LoginHistoryService;
+import com.gcsc.studentcenter.service.SystemSettingsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,20 +22,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
     private final LoginHistoryService loginHistoryService;
+    private final SystemSettingsService systemSettingsService;
 
-    public AuthController(AuthService authService, LoginHistoryService loginHistoryService) {
+    public AuthController(AuthService authService, LoginHistoryService loginHistoryService, SystemSettingsService systemSettingsService) {
         this.authService = authService;
         this.loginHistoryService = loginHistoryService;
+        this.systemSettingsService = systemSettingsService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        if (!systemSettingsService.isRegistrationAllowed()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "当前未开放注册"));
+        }
         return ResponseEntity.ok(authService.register(request));
     }
 

@@ -5,7 +5,12 @@ backend/target/
 backend/*.log
 backend/uploads/
 
-# IDE
+# frontend
+**/node_modules/
+**/dist/
+**/cache/
+
+# ide
 .idea/
 .vscode/
 *.iml
@@ -82,7 +87,13 @@ coverage/
 *.lcov
 .nyc_output/
 
-# Python
+# env
+.env
+backend/.env
+frontend/.env
+!.env.example
+
+# python
 __pycache__/
 *.pyc
 *.pyo

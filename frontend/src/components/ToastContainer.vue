@@ -9,6 +9,7 @@ const ICONS = {
   error: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />`,
   warn: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />`,
   info: `<path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`,
+  progress: `<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />`,
 }
 </script>
 
@@ -32,6 +33,9 @@ const ICONS = {
             v-html="ICONS[item.type] || ICONS.info"
           />
           <span class="toast-msg">{{ item.message }}</span>
+          <div v-if="item.progress !== null && item.progress !== undefined" class="toast-progress-wrap">
+            <div class="toast-progress-bar" :style="{ width: Math.max(0, Math.min(100, item.progress)) + '%' }"></div>
+          </div>
           <button
             class="toast-close"
             type="button"
@@ -62,6 +66,8 @@ const ICONS = {
 }
 
 .toast {
+  position: static;
+  transform: none;
   display: flex;
   align-items: flex-start;
   gap: 9px;
@@ -141,6 +147,30 @@ const ICONS = {
   height: 12px;
 }
 
+.toast-progress-wrap {
+  margin-top: 8px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(100, 12, 114, 0.1);
+  overflow: hidden;
+}
+
+.toast-progress .toast-progress-wrap {
+  background: rgba(100, 12, 114, 0.12);
+}
+
+.toast-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary, var(--primary));
+  transition: width 180ms linear;
+}
+
+.toast-progress {
+  background: rgba(248, 245, 253, 0.95);
+  border-color: rgba(100, 12, 114, 0.18);
+}
+
 /* Transition */
 .toast-anim-enter-active {
   transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -162,9 +192,14 @@ const ICONS = {
 @media (max-width: 840px) {
   .toast-container {
     top: 16px;
-    right: 12px;
-    left: 12px;
-    max-width: 100%;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    max-width: 80%;
+  }
+  .toast {
+    font-size: 12px;
+    padding: 8px 10px;
   }
 }
 .toast-anim-move {

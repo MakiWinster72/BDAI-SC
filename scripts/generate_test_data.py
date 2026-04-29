@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GCSC 测试数据生成器 - 基于 DB schema 精确列顺序
+BDAI_SC 测试数据生成器 - 基于 DB schema 精确列顺序
 用法: python generate_test_data.py --users 20 --achievements 50 -o test_data.sql
 """
 
@@ -290,13 +290,13 @@ def gen_login(n=20):
 
 # -------- main --------
 def main():
-    ap = argparse.ArgumentParser(description="GCSC 测试数据生成器")
+    ap = argparse.ArgumentParser(description="BDAI_SC 测试数据生成器")
     ap.add_argument("--users", type=int, default=20)
     ap.add_argument("-o", "--outfile", type=str)
     args = ap.parse_args()
     nu = args.users
 
-    sql = ["-- GCSC 测试数据", f"-- {datetime.now()}", ""]
+    sql = ["-- BDAI_SC 测试数据", f"-- {datetime.now()}", ""]
     sql.append("SET FOREIGN_KEY_CHECKS=0;")
     for t in ["login_histories", "cadre_experiences", "education_experiences",
               "student_profiles", "post_media", "posts", "contacts", "users"]:
