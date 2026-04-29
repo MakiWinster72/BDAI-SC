@@ -316,6 +316,31 @@ const roleLabel = computed(() => {
   flex-shrink: 0;
   position: relative;
   z-index: 2;
+  padding: 10px 18px;
+}
+
+.brand-logo-group::before {
+  content: "";
+  position: absolute;
+  inset: -80px -120px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  mask-image: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.7) 25%,
+    rgba(0, 0, 0, 0.25) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.7) 25%,
+    rgba(0, 0, 0, 0.25) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  z-index: -1;
+  pointer-events: none;
 }
 
 .brand-logo-icon {
