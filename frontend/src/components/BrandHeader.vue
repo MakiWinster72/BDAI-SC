@@ -423,6 +423,7 @@ const roleLabel = computed(() => {
   height: 43px;
   flex-shrink: 0;
   opacity: 0.65;
+  filter: invert(var(--chip-icon-invert, 1));
 }
 
 /* ── Chip content swap transition ─────────────────────── */
