@@ -2,6 +2,10 @@
   <main class="dashboard-right">
     <MobileCapsule @open-sidebar="openDashboardSidebar">
       <template #right>
+        <button class="capsule-action is-filter" type="button" @click="openMobileFilter">
+          筛选
+          <span v-if="hasActiveFilters" class="capsule-filter-dot"></span>
+        </button>
         <button class="capsule-action" type="button" @click="toggleGridView">
           {{ gridViewOpen ? "列表" : "表格" }}
         </button>
@@ -352,6 +356,135 @@
       </div>
     </OverlayPanel>
 
+    <!-- Mobile Filter Sheet -->
+    <Teleport to="body">
+      <div v-if="mobileFilterOpen" class="sheet-overlay open" @click.self="closeMobileFilter">
+        <div class="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="筛选">
+          <div class="mobile-filter-handle"></div>
+          <header class="mobile-filter-header">
+            <h2 class="mobile-filter-title">筛选学生</h2>
+            <button class="mobile-filter-close" type="button" @click="closeMobileFilter">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </header>
+          <div class="mobile-filter-body">
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">关键词搜索</label>
+              <div class="mobile-filter-search">
+                <svg class="mobile-filter-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  v-model="filters.keyword"
+                  class="mobile-filter-input"
+                  type="text"
+                  placeholder="姓名、学号、班级..."
+                />
+              </div>
+            </div>
+
+            <div class="mobile-filter-row">
+              <div class="mobile-filter-section half">
+                <label class="mobile-filter-label">年级</label>
+                <div class="mobile-filter-select-wrap">
+                  <select v-model="filters.classYear" class="mobile-filter-select">
+                    <option value="">全部年级</option>
+                    <option v-for="year in classYearOptions" :key="year" :value="String(year)">{{ year }}级</option>
+                  </select>
+                  <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="mobile-filter-section half">
+                <label class="mobile-filter-label">班级</label>
+                <div class="mobile-filter-select-wrap">
+                  <select v-model="filters.classNo" class="mobile-filter-select">
+                    <option value="">全部班级</option>
+                    <option v-for="n in 10" :key="n" :value="String(n)">{{ n }}班</option>
+                  </select>
+                  <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">学生类型</label>
+              <div class="mobile-filter-select-wrap">
+                <select v-model="filters.studentCategory" class="mobile-filter-select">
+                  <option value="">全部类型</option>
+                  <option v-for="cat in studentCategoryOptions" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
+                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">专业</label>
+              <div class="mobile-filter-select-wrap">
+                <select v-model="filters.major" class="mobile-filter-select" :disabled="!filters.studentCategory">
+                  <option value="">全部专业</option>
+                  <option v-for="major in availableMajors" :key="major" :value="major">{{ major }}</option>
+                </select>
+                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">港澳台学生</label>
+              <div class="mobile-filter-chips">
+                <label class="mobile-filter-chip" :class="{ active: filters.isHk }">
+                  <input v-model="filters.isHk" type="checkbox" hidden />
+                  <span>香港</span>
+                </label>
+                <label class="mobile-filter-chip" :class="{ active: filters.isMo }">
+                  <input v-model="filters.isMo" type="checkbox" hidden />
+                  <span>澳门</span>
+                </label>
+                <label class="mobile-filter-chip" :class="{ active: filters.isTw }">
+                  <input v-model="filters.isTw" type="checkbox" hidden />
+                  <span>台湾</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">特殊学生</label>
+              <div class="mobile-filter-select-wrap">
+                <select v-model="filters.specialStudentType" class="mobile-filter-select">
+                  <option value="">无</option>
+                  <option v-for="opt in specialStudentTypeOptions.slice(1)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="mobile-filter-footer">
+            <button class="mobile-filter-reset" type="button" @click="resetFilters">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              重置
+            </button>
+            <button class="mobile-filter-apply" type="button" @click="closeMobileFilter">
+              应用筛选
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <transition name="publisher-backdrop">
       <div
         v-if="viewOpen"
@@ -513,6 +646,15 @@ const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
 const sidebarOpen = ref(false);
 const activeCategory = ref("all");
+const mobileFilterOpen = ref(false);
+
+function openMobileFilter() {
+  mobileFilterOpen.value = true;
+}
+
+function closeMobileFilter() {
+  mobileFilterOpen.value = false;
+}
 
 const classYearOptions = Array.from({ length: 11 }, (_, index) => 2020 + index);
 const majorOptions = [
@@ -2062,4 +2204,270 @@ function goToSettings() {
 
 <style scoped>
 @import '../assets/styles/student-info-view.css';
+
+/* Mobile filter capsule button */
+.capsule-action.is-filter {
+  position: relative;
+}
+
+.capsule-filter-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary, #e74c3c);
+}
+
+/* Mobile filter sheet - bottom sheet style */
+.mobile-filter-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: auto;
+  max-width: 100%;
+  max-height: 90vh;
+  background: var(--card, #fff);
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  animation: sheet-slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.mobile-filter-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--line, #ddd);
+  border-radius: 2px;
+  margin: 12px auto;
+  flex-shrink: 0;
+}
+
+.mobile-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 16px;
+  border-bottom: 1px solid var(--line, #f0f0f0);
+  flex-shrink: 0;
+}
+
+.mobile-filter-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text, #1a1a1a);
+  margin: 0;
+}
+
+.mobile-filter-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-secondary, #f5f5f5);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+}
+
+.mobile-filter-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.mobile-filter-row {
+  display: flex;
+  gap: 12px;
+}
+
+.mobile-filter-section {
+  margin-bottom: 20px;
+}
+
+.mobile-filter-section.half {
+  flex: 1;
+}
+
+.mobile-filter-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #888);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.mobile-filter-search {
+  position: relative;
+}
+
+.mobile-filter-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary, #aaa);
+}
+
+.mobile-filter-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 12px;
+  font-size: 15px;
+  background: var(--bg-secondary, #f8f8f8);
+  color: var(--text, #1a1a1a);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mobile-filter-input:focus {
+  outline: none;
+  border-color: var(--primary, #640c72);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
+  background: var(--card, #fff);
+}
+
+.mobile-filter-select-wrap {
+  position: relative;
+}
+
+.mobile-filter-select {
+  width: 100%;
+  height: 44px;
+  padding: 0 36px 0 14px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 12px;
+  font-size: 15px;
+  background: var(--bg-secondary, #f8f8f8);
+  color: var(--text, #1a1a1a);
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mobile-filter-select:focus {
+  outline: none;
+  border-color: var(--primary, #640c72);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
+  background: var(--card, #fff);
+}
+
+.mobile-filter-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-filter-select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary, #aaa);
+  pointer-events: none;
+}
+
+.mobile-filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mobile-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-secondary, #f0f0f0);
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.mobile-filter-chip:hover {
+  background: var(--bg-secondary, #e8e8e8);
+}
+
+.mobile-filter-chip.active {
+  background: var(--primary, #640c72);
+  color: #fff;
+}
+
+.mobile-filter-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line, #f0f0f0);
+  flex-shrink: 0;
+  background: var(--card, #fff);
+}
+
+.mobile-filter-reset {
+  flex: 0 0 auto;
+  height: 46px;
+  padding: 0 20px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 23px;
+  background: var(--card, #fff);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.mobile-filter-reset:hover {
+  border-color: var(--text-secondary, #999);
+  color: var(--text, #333);
+}
+
+.mobile-filter-apply {
+  flex: 1;
+  height: 46px;
+  border: none;
+  border-radius: 23px;
+  background: linear-gradient(135deg, var(--primary, #640c72) 0%, var(--primary-dark, #4a0956) 100%);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(100, 12, 114, 0.3);
+}
+
+.mobile-filter-apply:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(100, 12, 114, 0.4);
+}
+
+.mobile-filter-apply:active {
+  transform: translateY(0);
+}
+
+/* Hide desktop filter on mobile */
+@media (max-width: 768px) {
+  .student-filter-card {
+    display: none;
+  }
+}
 </style>
