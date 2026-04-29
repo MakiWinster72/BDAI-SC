@@ -12,7 +12,10 @@ import { useAchievementUploadSettings } from "../composables/useAchievementUploa
 import { resolveMediaUrl } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
 import { useToast } from "../composables/useToast";
+import { useDashboardShell } from "../composables/useDashboardShell";
+import MobileCapsule from "../components/MobileCapsule.vue";
 
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const { error: toastError } = useToast();
 const { uploadWithProgress } = useUploadProgress();
 const { settings: uploadLimits } = useAchievementUploadSettings();
@@ -640,6 +643,8 @@ async function handleRemoveSupportingDoc(index) {
         </div>
       </div>
     </Teleport>
+
+    <MobileCapsule @open-sidebar="openDashboardSidebar" />
   </main>
 </template>
 
