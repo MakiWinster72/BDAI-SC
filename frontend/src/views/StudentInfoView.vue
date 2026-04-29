@@ -30,9 +30,6 @@
         <div class="student-filter-toolbar">
           <div class="student-filter-intro">
             <div class="info-section-title">搜索与筛选</div>
-            <div class="student-filter-caption">
-              {{ hasActiveFilters ? "已应用筛选条件" : "按姓名、学号、班级快速定位学生" }}
-            </div>
           </div>
           <div class="student-filter-search-wrap">
             <input
