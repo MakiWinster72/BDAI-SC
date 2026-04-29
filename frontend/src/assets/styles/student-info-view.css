@@ -1082,6 +1082,99 @@
     grid-template-columns: 1fr;
   }
 
+  .student-results-card {
+    --card-padding: 12px;
+    gap: 12px;
+  }
+
+  .student-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto auto;
+    gap: 0;
+    padding: 10px 12px;
+    border-radius: 14px;
+    align-items: start;
+  }
+
+  .student-avatar {
+    grid-row: 1 / 4;
+    grid-column: 1;
+    width: 44px;
+    min-height: 72px;
+    height: auto;
+    font-size: 16px;
+    border-radius: 10px;
+    margin: 0 10px 0 0;
+    flex-shrink: 0;
+    align-self: stretch;
+  }
+
+  .student-main {
+    grid-row: 1 / 4;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 0;
+    min-width: 0;
+    overflow: hidden;
+    justify-content: center;
+  }
+
+  .student-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+  }
+
+  .student-name {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline;
+  }
+
+  .student-no-inline {
+    font-size: 12px;
+    color: var(--text-sub);
+    white-space: nowrap;
+    margin-left: 8px;
+    flex-shrink: 0;
+    display: inline;
+  }
+
+  .student-meta {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .student-meta::before {
+    display: none;
+  }
+
+  .student-hkmo-badge,
+  .student-special-badge {
+    font-size: 10px;
+    padding: 1px 7px;
+    margin-top: 2px;
+    width: fit-content;
+  }
+
+  .student-row input[type="checkbox"] {
+    grid-row: 1;
+    grid-column: 3;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+    align-self: start;
+  }
+
   .student-results-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1158,7 +1251,50 @@
   }
 }
 
-@media (max-width: 840px) {
+@media (max-width: 480px) {
+  .student-row {
+    grid-template-columns: auto 1fr auto;
+    padding: 8px 10px;
+  }
+
+  .student-avatar {
+    width: 36px;
+    min-height: 56px;
+    font-size: 13px;
+    margin: 0 8px 0 0;
+    align-self: stretch;
+  }
+
+  .student-main {
+    padding: 0;
+  }
+
+  .student-name {
+    font-size: 13px;
+  }
+
+  .student-no-inline {
+    font-size: 11px;
+    margin-left: 6px;
+  }
+
+  .student-meta {
+    font-size: 11px;
+  }
+
+  .student-row input[type="checkbox"] {
+    grid-row: 1;
+    grid-column: 3;
+    width: 18px;
+    height: 18px;
+  }
+
+  .student-hkmo-badge,
+  .student-special-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+
   .student-right-stack {
     padding-bottom: 96px;
   }
@@ -1190,7 +1326,7 @@
   }
 
   .student-filter-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .student-filter-field-year,
@@ -1213,62 +1349,32 @@
     align-items: flex-start;
   }
 
-  .student-row {
-    grid-template-columns: auto 1fr auto;
-    gap: 10px;
-    padding: 12px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.85);
-  }
-
-  .student-row input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--primary);
-  }
-
   .student-name {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .student-meta {
-    font-size: 11.5px;
-    word-break: break-all;
-  }
-
-  .student-row .ghost-button {
-    padding: 7px 14px;
-    font-size: 12px;
-    border-radius: 50px;
-    white-space: nowrap;
-    flex-shrink: 0;
+    font-size: 11px;
   }
 
   .student-results-card {
-    gap: 12px;
-    padding: 14px;
+    --card-padding: 12px;
+    gap: 10px;
   }
 
   .student-results-header {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: nowrap;
-    overflow: hidden;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .student-results-actions {
-    flex-shrink: 0;
+    width: 100%;
     gap: 6px;
   }
 
-  .student-results-actions .ghost-button {
-    padding: 5px 10px;
-    font-size: 11px;
-    border-radius: 50px;
-  }
-
   .student-grid {
-    height: 360px;
+    height: 280px;
   }
 
   .student-grid-tabs {

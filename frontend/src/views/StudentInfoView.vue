@@ -226,14 +226,17 @@
             :key="item.id"
             class="student-row"
             :class="{ selected: selectedIds.includes(item.id) }"
+            @click="openDetail(item)"
           >
-            <input v-model="selectedIds" type="checkbox" :value="item.id" />
+            <input v-model="selectedIds" type="checkbox" :value="item.id" @click.stop />
             <div class="student-avatar">{{ (item.name || '?')[0] }}</div>
             <div class="student-main">
-              <div class="student-name">{{ item.name }}</div>
+              <div class="student-name-row">
+                <span class="student-name">{{ item.name }}</span>
+                <span class="student-no-inline">{{ item.studentNo }}</span>
+              </div>
               <div class="student-meta">
                 {{ item.gradeYear }}级 {{ item.major }}{{ item.classNo }}班
-                {{ item.studentNo }}
               </div>
               <div v-if="item.isHk || item.isMo || item.isTw" class="student-hkmo-badge">
                 {{ getHkMoTwLabel(item) }}
@@ -242,13 +245,6 @@
                 {{ getSpecialStudentTypeLabel(item.specialStudentType) }}
               </div>
             </div>
-            <button
-              class="ghost-button"
-              type="button"
-              @click="openDetail(item)"
-            >
-              详情
-            </button>
           </div>
         </div>
         <div v-else class="empty-tip">没有匹配的学生。</div>
