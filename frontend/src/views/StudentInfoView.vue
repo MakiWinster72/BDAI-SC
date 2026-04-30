@@ -490,16 +490,16 @@
             <div class="mobile-filter-section">
               <label class="mobile-filter-label">港澳台学生</label>
               <div class="mobile-filter-chips">
-                <label class="mobile-filter-chip" :class="{ active: filters.isHk }">
-                  <input v-model="filters.isHk" type="radio" name="hkmo" value="true" hidden />
+                <label class="mobile-filter-chip" :class="{ active: filters.isHk }" @click.prevent="filters.isHk = !filters.isHk">
+                  <input :checked="filters.isHk" type="radio" name="hkmo" hidden />
                   <span>香港</span>
                 </label>
-                <label class="mobile-filter-chip" :class="{ active: filters.isMo }">
-                  <input v-model="filters.isMo" type="radio" name="hkmo" value="true" hidden />
+                <label class="mobile-filter-chip" :class="{ active: filters.isMo }" @click.prevent="filters.isMo = !filters.isMo">
+                  <input :checked="filters.isMo" type="radio" name="hkmo" hidden />
                   <span>澳门</span>
                 </label>
-                <label class="mobile-filter-chip" :class="{ active: filters.isTw }">
-                  <input v-model="filters.isTw" type="radio" name="hkmo" value="true" hidden />
+                <label class="mobile-filter-chip" :class="{ active: filters.isTw }" @click.prevent="filters.isTw = !filters.isTw">
+                  <input :checked="filters.isTw" type="radio" name="hkmo" hidden />
                   <span>台湾</span>
                 </label>
               </div>
