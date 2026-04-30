@@ -1671,6 +1671,143 @@
   text-overflow: ellipsis;
 }
 
+/* ── Storage Analysis ──────────────────────────────────── */
+.storage-card .storage-refresh-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.storage-card-body {
+  padding: 16px 24px 24px;
+}
+
+.storage-summary {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.storage-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.storage-summary-label {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-weight: 500;
+}
+
+.storage-summary-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.storage-center-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 0;
+  color: var(--text-sub);
+  font-size: 14px;
+}
+
+.storage-center-state .loading-spinner {
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+  animation: spin 1.2s linear infinite;
+}
+
+.storage-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.storage-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+}
+
+.storage-bar-row--odd {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.storage-bar-label {
+  width: 140px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.storage-bar-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.storage-bar-displayname {
+  font-size: 11px;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.storage-bar-track-wrap {
+  flex: 1;
+  height: 22px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.storage-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  border-radius: 4px;
+  min-width: 2px;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.storage-bar-size {
+  width: 72px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .storage-bar-label {
+    width: 100px;
+  }
+  .storage-bar-size {
+    width: 56px;
+    font-size: 11px;
+  }
+  .storage-bar-row {
+    gap: 8px;
+  }
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 640px) {
   .admin-shell {

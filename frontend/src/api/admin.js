@@ -90,3 +90,8 @@ export function getTeacherAssignedClasses(teacherId) {
 export function updateTeacherAssignedClasses(teacherId, assignedClasses) {
   return request.put(`/api/admin/teachers/${teacherId}/assigned-classes`, { assignedClasses })
 }
+
+// Get per-user folder storage analysis
+export function getStorageAnalysis() {
+  return request.get('/api/admin/storage-analysis')
+}

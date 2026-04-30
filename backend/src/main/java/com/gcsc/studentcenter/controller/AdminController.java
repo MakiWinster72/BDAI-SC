@@ -3,6 +3,7 @@ package com.gcsc.studentcenter.controller;
 import com.gcsc.studentcenter.dto.CreateUserRequest;
 import com.gcsc.studentcenter.dto.UpdateUserRequest;
 import com.gcsc.studentcenter.dto.UserListItemResponse;
+import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.service.BackupService;
@@ -10,6 +11,7 @@ import com.gcsc.studentcenter.service.JwtService;
 import com.gcsc.studentcenter.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,8 +21,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -30,6 +35,9 @@ public class AdminController {
     private final JwtService jwtService;
     private final BackupService backupService;
     private final AppUserRepository appUserRepository;
+
+    @Value("${app.upload-dir:./uploads}")
+    private String uploadDir;
 
     public AdminController(UserService userService, JwtService jwtService, BackupService backupService, AppUserRepository appUserRepository) {
         this.userService = userService;
@@ -273,33 +281,72 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/restore/attachments")
-    public ResponseEntity<?> restoreAttachments(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @RequestParam("file") MultipartFile file
+    @GetMapping("/storage-analysis")
+    public ResponseEntity<?> storageAnalysis(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
     ) {
         if (!isAdmin(authHeader)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "请上传附件压缩包"));
-        }
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".zip")) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "请上传 .zip 格式的压缩包"));
-        }
         try {
-            byte[] zipContent = file.getBytes();
-            backupService.restoreAttachments(zipContent);
-            return ResponseEntity.ok(Map.of("success", true, "message", "附件恢复成功"));
-        } catch (RuntimeException e) {
+            Path uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
+            List<Map<String, Object>> entries = new ArrayList<>();
+            long totalBytes = 0;
+
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(uploadRoot)) {
+                for (Path entry : stream) {
+                    if (!Files.isDirectory(entry)) continue;
+                    String name = entry.getFileName().toString();
+                    if (!name.matches("\\d+")) continue;
+
+                    long userId = Long.parseLong(name);
+                    long size = folderSize(entry);
+                    totalBytes += size;
+
+                    var userOpt = appUserRepository.findById(userId);
+                    String username = userOpt.map(AppUser::getUsername).orElse("(已删除)");
+                    String displayName = userOpt.map(AppUser::getDisplayName).orElse("");
+
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("userId", userId);
+                    item.put("username", username);
+                    item.put("displayName", displayName);
+                    item.put("sizeBytes", size);
+                    item.put("sizeFormatted", formatSize(size));
+                    entries.add(item);
+                }
+            }
+
+            entries.sort((a, b) -> Long.compare((Long) b.get("sizeBytes"), (Long) a.get("sizeBytes")));
+            List<Map<String, Object>> top30 = entries.size() > 30 ? entries.subList(0, 30) : entries;
+
+            return ResponseEntity.ok(Map.of(
+                "entries", top30,
+                "totalBytes", totalBytes,
+                "totalFormatted", formatSize(totalBytes),
+                "totalUsers", entries.size()
+            ));
+        } catch (IOException e) {
             return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "恢复失败: " + e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "恢复失败: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "扫描失败: " + e.getMessage()));
         }
+    }
+
+    private long folderSize(Path folder) throws IOException {
+        try (var files = Files.walk(folder)) {
+            return files
+                .filter(Files::isRegularFile)
+                .mapToLong(p -> {
+                    try { return Files.size(p); } catch (IOException e) { return 0L; }
+                })
+                .sum();
+        }
+    }
+
+    private String formatSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024));
+        return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
     }
 }

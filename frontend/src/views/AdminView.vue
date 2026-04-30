@@ -4,7 +4,7 @@ import PaginationBar from "../components/PaginationBar.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
-import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses } from "../api/admin";
+import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses, getStorageAnalysis } from "../api/admin";
 import { useToast } from "../composables/useToast";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { loadUser } from "../utils/userStorage";
@@ -36,6 +36,30 @@ const backupForm = reactive({
 });
 const backupLoading = shallowRef(false);
 const restoreLoading = shallowRef(false);
+
+// Storage analysis
+const storageData = shallowRef(null);
+const storageLoading = shallowRef(false);
+const storageError = shallowRef("");
+
+async function fetchStorageAnalysis() {
+  storageLoading.value = true;
+  storageError.value = "";
+  try {
+    const res = await getStorageAnalysis();
+    storageData.value = res.data;
+  } catch (e) {
+    storageError.value = "存储分析加载失败";
+  } finally {
+    storageLoading.value = false;
+  }
+}
+
+function barWidth(size, max) {
+  if (!max || max === 0) return "0%";
+  return Math.max(1, (size / max) * 100) + "%";
+}
+
 const { success, error } = useToast();
 
 async function handleBackupDb() {
@@ -1498,6 +1522,89 @@ watch([userSearch, userRoleFilter], () => {
                       {{ restoreLoading ? "恢复中…" : "恢复" }}
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Storage Analysis Card -->
+          <div class="admin-card storage-card">
+            <div class="card-header">
+              <div class="card-header-icon storage-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v1m3-2v2m3-3v3" />
+                </svg>
+              </div>
+              <div>
+                <div class="card-kicker">存储分析</div>
+                <h2 class="card-title">用户附件占用</h2>
+              </div>
+              <button
+                class="btn btn-ghost storage-refresh-btn"
+                type="button"
+                :disabled="storageLoading"
+                @click="fetchStorageAnalysis"
+              >
+                <svg v-if="storageLoading" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
+                </svg>
+                <svg v-else class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                刷新
+              </button>
+            </div>
+            <div class="card-body storage-card-body">
+              <!-- Summary -->
+              <div v-if="storageData" class="storage-summary">
+                <div class="storage-summary-item">
+                  <span class="storage-summary-label">总占用</span>
+                  <span class="storage-summary-value">{{ storageData.totalFormatted }}</span>
+                </div>
+                <div class="storage-summary-item">
+                  <span class="storage-summary-label">用户数</span>
+                  <span class="storage-summary-value">{{ storageData.totalUsers }} 个</span>
+                </div>
+              </div>
+
+              <!-- Loading -->
+              <div v-if="storageLoading" class="storage-center-state">
+                <svg class="loading-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
+                </svg>
+                <span>扫描中…</span>
+              </div>
+
+              <!-- Error -->
+              <div v-else-if="storageError" class="storage-center-state">
+                <span>{{ storageError }}</span>
+              </div>
+
+              <!-- Empty -->
+              <div v-else-if="!storageData || !storageData.entries.length" class="storage-center-state">
+                <span>暂无数据，点击"刷新"开始扫描</span>
+              </div>
+
+              <!-- Bar Chart -->
+              <div v-else class="storage-chart">
+                <div
+                  v-for="(item, idx) in storageData.entries"
+                  :key="item.userId"
+                  class="storage-bar-row"
+                  :class="{ 'storage-bar-row--odd': idx % 2 === 1 }"
+                >
+                  <div class="storage-bar-label">
+                    <span class="storage-bar-username">{{ item.username }}</span>
+                    <span v-if="item.displayName" class="storage-bar-displayname">{{ item.displayName }}</span>
+                  </div>
+                  <div class="storage-bar-track-wrap">
+                    <div
+                      class="storage-bar-fill"
+                      :style="{ width: barWidth(item.sizeBytes, storageData.entries[0].sizeBytes) }"
+                    ></div>
+                  </div>
+                  <span class="storage-bar-size">{{ item.sizeFormatted }}</span>
                 </div>
               </div>
             </div>
