@@ -54,6 +54,20 @@ export default defineConfig({
         ],
       },
       {
+        text: "使用手册",
+        items: [
+          { text: "手册首页", link: "/manual/" },
+          { text: "登录与注册", link: "/manual/01-login" },
+          { text: "我的信息", link: "/manual/02-myinfo" },
+          { text: "个人成果", link: "/manual/03-achievements" },
+          { text: "通知中心", link: "/manual/04-notifications" },
+          { text: "学生信息管理", link: "/manual/05-student-info" },
+          { text: "班级审核", link: "/manual/06-class-reviews" },
+          { text: "后台管理", link: "/manual/07-admin" },
+          { text: "账号设置", link: "/manual/08-settings" },
+        ],
+      },
+      {
         text: "详细设计",
         items: [
           {
@@ -163,6 +177,23 @@ export default defineConfig({
             { text: "配置参考", link: "/design/config-reference" },
             { text: "项目结构", link: "/design/project-structure" },
             { text: "快速开始", link: "/design/quick-start" },
+          ],
+        },
+      ],
+
+      "/manual/": [
+        {
+          text: "使用手册",
+          items: [
+            { text: "手册首页", link: "/manual/" },
+            { text: "登录与注册", link: "/manual/01-login" },
+            { text: "我的信息", link: "/manual/02-myinfo" },
+            { text: "个人成果", link: "/manual/03-achievements" },
+            { text: "通知中心", link: "/manual/04-notifications" },
+            { text: "学生信息管理", link: "/manual/05-student-info" },
+            { text: "班级审核", link: "/manual/06-class-reviews" },
+            { text: "后台管理", link: "/manual/07-admin" },
+            { text: "账号设置", link: "/manual/08-settings" },
           ],
         },
       ],
