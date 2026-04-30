@@ -1,971 +1,981 @@
 <template>
   <main class="dashboard-right">
-      <header class="feed-header">
-        <h1 class="feed-title">我的信息</h1>
-      </header>
+    <header class="feed-header">
+      <h1 class="feed-title">我的信息</h1>
+    </header>
 
-      <section class="info-shell" :class="{ 'info-shell-editing': isEditing }">
-        <div class="info-hero">
+    <section class="info-shell" :class="{ 'info-shell-editing': isEditing }">
+      <div class="info-hero">
+        <button
+          class="avatar-square"
+          type="button"
+          :disabled="!isEditing"
+          @click="triggerAvatarUpload"
+        >
+          <img
+            v-if="info.avatarUrl"
+            :src="resolveMediaUrl(info.avatarUrl)"
+            alt="头像"
+          />
+          <span v-else>点击设置头像</span>
+          <input
+            ref="avatarInput"
+            type="file"
+            accept="image/*"
+            hidden
+            @change="onAvatarChange"
+          />
+        </button>
+        <div class="info-hero-text">
+          <div class="info-hero-title">基础信息</div>
+          <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
+        </div>
+        <div class="info-actions">
+          <ExportPdfButton
+            :disabled="isEditing"
+            :get-student="buildPdfStudentSnapshot"
+            :resolve-media-url="resolveMediaUrl"
+            button-class="ghost-button"
+            @export-complete="toastSuccess('PDF 导出成功！')"
+            @export-error="toastError('PDF 导出失败')"
+          />
           <button
-            class="avatar-square"
+            class="action-button"
             type="button"
-            :disabled="!isEditing"
-            @click="triggerAvatarUpload"
+            :disabled="isEditing"
+            @click="enterEdit"
           >
-            <img
-              v-if="info.avatarUrl"
-              :src="resolveMediaUrl(info.avatarUrl)"
-              alt="头像"
-            />
-            <span v-else>点击设置头像</span>
-            <input
-              ref="avatarInput"
-              type="file"
-              accept="image/*"
-              hidden
-              @change="onAvatarChange"
-            />
+            编辑
           </button>
-          <div class="info-hero-text">
-            <div class="info-hero-title">基础信息</div>
-            <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
-          </div>
-          <div class="info-actions">
-            <ExportPdfButton
-              v-if="!isEditing"
-              :get-student="buildPdfStudentSnapshot"
-              :resolve-media-url="resolveMediaUrl"
-              button-class="ghost-button"
-              @export-complete="toastSuccess('PDF 导出成功！')"
-              @export-error="toastError('PDF 导出失败')"
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <div class="info-section-title">学籍信息</div>
+        <div class="info-form-grid">
+          <label class="field-card">
+            <span class="info-label">名字</span>
+            <input
+              v-model="info.name"
+              class="info-input"
+              type="text"
+              placeholder="请输入名字"
+              :disabled="!isEditing"
             />
-            <button
-              v-if="!isEditing"
-              class="ghost-button"
-              type="button"
-              @click="enterEdit"
+          </label>
+          <label class="field-card">
+            <span class="info-label">学号</span>
+            <input
+              v-model="info.studentNo"
+              class="info-input"
+              type="text"
+              placeholder="请输入学号"
+              disabled
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">年级</span>
+            <YearPicker
+              v-model="info.classYear"
+              placeholder="今年"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">学生类别</span>
+            <select
+              v-model="info.studentCategory"
+              class="info-input"
+              :disabled="!isEditing"
             >
-              编辑
-            </button>
-          </div>
-        </div>
-
-        <div class="card info-card">
-          <div class="info-section-title">学籍信息</div>
-          <div class="info-form-grid">
-            <label class="field-card">
-              <span class="info-label">名字</span>
-              <input
-                v-model="info.name"
-                class="info-input"
-                type="text"
-                placeholder="请输入名字"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">学号</span>
-              <input
-                v-model="info.studentNo"
-                class="info-input"
-                type="text"
-                placeholder="请输入学号"
-                disabled
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">年级</span>
-              <StepperInput
-                v-model="info.classYear"
-                :min="2000"
-                :max="2100"
-                :disabled="!isEditing"
-                placeholder="今年"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">学生类别</span>
-              <select
-                v-model="info.studentCategory"
-                class="info-input"
-                :disabled="!isEditing"
+              <option disabled value="">选择学生类别</option>
+              <option
+                v-for="item in studentCategoryOptions"
+                :key="item"
+                :value="item"
               >
-                <option disabled value="">选择学生类别</option>
+                {{ item }}
+              </option>
+            </select>
+          </label>
+          <label class="field-card field-full">
+            <span class="info-label">班级</span>
+            <div class="class-inline">
+              <select
+                v-model="info.classMajor"
+                class="info-input"
+                :disabled="
+                  !isEditing ||
+                  !info.college ||
+                  !info.studentCategory ||
+                  !classMajorOptions.length
+                "
+              >
+                <option disabled value="">选择专业</option>
                 <option
-                  v-for="item in studentCategoryOptions"
-                  :key="item"
-                  :value="item"
+                  v-for="major in classMajorOptions"
+                  :key="major"
+                  :value="major"
                 >
-                  {{ item }}
+                  {{ major }}
                 </option>
               </select>
-            </label>
-            <label class="field-card field-full">
-              <span class="info-label">班级</span>
-              <div class="class-inline">
-                <select
-                  v-model="info.classMajor"
-                  class="info-input"
-                  :disabled="
-                    !isEditing ||
-                    !info.college ||
-                    !info.studentCategory ||
-                    !classMajorOptions.length
-                  "
-                >
-                  <option disabled value="">选择专业</option>
-                  <option
-                    v-for="major in classMajorOptions"
-                    :key="major"
-                    :value="major"
-                  >
-                    {{ major }}
-                  </option>
-                </select>
-                <input
-                  v-model.number="info.classNo"
-                  class="info-input class-num"
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="1"
-                  placeholder="数字"
-                  :disabled="!isEditing || info.studentCategory === '研究生'"
-                />
-                <span class="class-text">班</span>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">班主任</span>
-              <input
-                v-model="info.classTeacher"
-                class="info-input"
-                type="text"
-                placeholder="请输入班主任"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">辅导员</span>
-              <input
-                v-model="info.counselor"
-                class="info-input"
-                type="text"
-                placeholder="请输入辅导员"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card field-full">
-              <span class="info-label">入学时间</span>
-              <input
-                v-model="info.enrollmentDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="!isEditing"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="card info-card">
-          <div class="info-section-title">个人证件与联系方式</div>
-          <div class="info-form-grid">
-            <label class="field-card">
-              <span class="info-label">民族</span>
-              <div class="class-inline">
-                <input
-                  v-model="info.ethnicity"
-                  class="info-input"
-                  type="text"
-                  placeholder="请输入民族"
-                  :disabled="!isEditing"
-                />
-                <span class="class-text">族</span>
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">政治面貌</span>
               <select
-                v-model="info.politicalStatus"
-                class="info-input"
-                :disabled="!isEditing"
+                v-model.number="info.classNo"
+                class="info-input class-num"
+                :disabled="!isEditing || info.studentCategory === '研究生'"
               >
-                <option disabled value="">选择政治面貌</option>
-                <option
-                  v-for="item in politicalStatusOptions"
-                  :key="item"
-                  :value="item"
-                >
-                  {{ item }}
+                <option disabled value="">班</option>
+                <option v-for="n in 10" :key="n" :value="n">
+                  {{ n }}
                 </option>
               </select>
-            </label>
-            <label class="field-card field-full">
-              <span class="info-label">手机号码 / 备用联系方式</span>
-              <div class="class-inline">
-                <input
-                  v-model="info.phone"
-                  class="info-input"
-                  type="tel"
-                  placeholder="手机号"
-                  maxlength="11"
-                  inputmode="numeric"
-                  @input="handleDigitsInput('phone', 11, $event)"
-                  :disabled="!isEditing"
-                />
-                <span class="class-text">/</span>
-                <input
-                  v-model="info.backupContact"
-                  class="info-input"
-                  type="text"
-                  placeholder="微信/QQ/邮箱"
-                  :disabled="!isEditing"
-                />
-              </div>
-            </label>
-            <label class="field-card field-full">
-              <span class="info-label">证件类型 / 证件号码</span>
-              <div class="class-inline id-type-inline">
-                <select
-                  v-model="info.idType"
-                  class="info-input"
-                  :disabled="!isEditing"
-                >
-                  <option
-                    v-for="item in idTypeOptions"
-                    :key="item"
-                    :value="item"
-                  >
-                    {{ item }}
-                  </option>
-                </select>
-                <input
-                  v-model="info.idNo"
-                  class="info-input"
-                  type="text"
-                  placeholder="证件号码"
-                  :maxlength="idNoMaxLength"
-                  inputmode="text"
-                  @input="handleIdNoInput"
-                  :disabled="!isEditing"
-                />
-              </div>
-            </label>
-            <label class="field-card">
-              <span class="info-label">出生年月</span>
-              <input
-                v-model="info.birthDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
-                :max="today"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <!-- TODO: 做地址选择器 -->
-              <span class="info-label">籍贯</span>
-              <input
-                v-model="info.nativePlace"
-                class="info-input"
-                type="text"
-                placeholder="例：广东广州"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card field-full">
-              <!-- TODO: 做地址选择器 -->
-              <span class="info-label">住址</span>
-              <div class="info-inline address-inline">
-                <select
-                  v-model="info.addressProvince"
-                  class="info-input"
-                  :disabled="!isEditing"
-                >
-                  <option disabled value="">选择省份</option>
-                  <option
-                    v-for="item in addressProvinceOptions"
-                    :key="item.value"
-                    :value="item.value"
-                  >
-                    {{ item.label }}
-                  </option>
-                </select>
-                <select
-                  v-model="info.addressCity"
-                  class="info-input"
-                  :disabled="!isEditing || !addressCityOptions.length"
-                >
-                  <option disabled value="">选择城市</option>
-                  <option
-                    v-for="item in addressCityOptions"
-                    :key="item.value"
-                    :value="item.value"
-                  >
-                    {{ item.label }}
-                  </option>
-                </select>
-                <select
-                  v-model="info.addressCounty"
-                  class="info-input"
-                  :disabled="!isEditing || !addressCountyOptions.length"
-                >
-                  <option disabled value="">选择区县</option>
-                  <option
-                    v-for="item in addressCountyOptions"
-                    :key="item.value"
-                    :value="item.value"
-                  >
-                    {{ item.label }}
-                  </option>
-                </select>
-              </div>
-              <input
-                v-model="info.addressDetail"
-                class="info-input address-detail"
-                type="text"
-                placeholder="请输入详细地址，精确到门牌号"
-                :disabled="!isEditing"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="card info-card">
-          <div class="info-section-title">住宿信息</div>
-          <div class="info-form-grid">
-            <div class="field-card field-full">
-              <span class="info-label">是否在外居住</span>
-              <div class="info-inline">
-                <label class="info-choice">
-                  <input
-                    v-model="info.offCampusLiving"
-                    type="radio"
-                    :value="true"
-                    :disabled="!isEditing"
-                  />
-                  是
-                </label>
-                <label class="info-choice">
-                  <input
-                    v-model="info.offCampusLiving"
-                    type="radio"
-                    :value="false"
-                    :disabled="!isEditing"
-                  />
-                  否
-                </label>
-              </div>
+              <span class="class-text">班</span>
             </div>
-            <label class="field-card field-full" v-if="info.offCampusLiving">
-              <span class="info-label">外居住详细地址</span>
-              <div class="info-inline address-inline">
-                <select
-                  v-model="info.offCampusProvince"
-                  class="info-input"
-                  :disabled="!isEditing"
-                >
-                  <option disabled value="">选择省份</option>
-                  <option
-                    v-for="item in addressProvinceOptions"
-                    :key="item.value"
-                    :value="item.value"
-                  >
-                    {{ item.label }}
-                  </option>
-                </select>
-                <select
-                  v-model="info.offCampusCity"
-                  class="info-input"
-                  :disabled="!isEditing || !offCampusCityOptions.length"
-                >
-                  <option disabled value="">选择城市</option>
-                  <option
-                    v-for="item in offCampusCityOptions"
-                    :key="item.value"
-                    :value="item.value"
-                  >
-                    {{ item.label }}
-                  </option>
-                </select>
-                <select
-                  v-model="info.offCampusCounty"
-                  class="info-input"
-                  :disabled="!isEditing || !offCampusCountyOptions.length"
-                >
-                  <option disabled value="">选择区县</option>
-                  <option
-                    v-for="item in offCampusCountyOptions"
-                    :key="item.value"
-                    :value="item.value"
-                  >
-                    {{ item.label }}
-                  </option>
-                </select>
-              </div>
+          </label>
+          <label class="field-card">
+            <span class="info-label">班主任</span>
+            <input
+              v-model="info.classTeacher"
+              class="info-input"
+              type="text"
+              placeholder="请输入班主任"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">辅导员</span>
+            <input
+              v-model="info.counselor"
+              class="info-input"
+              type="text"
+              placeholder="请输入辅导员"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card field-full">
+            <span class="info-label">入学时间</span>
+            <input
+              v-model="info.enrollmentDate"
+              class="info-input"
+              type="date"
+              lang="zh-CN"
+              :max="today"
+              :disabled="!isEditing"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <div class="info-section-title">个人证件与联系方式</div>
+        <div class="info-form-grid">
+          <label class="field-card">
+            <span class="info-label">民族</span>
+            <div class="class-inline">
               <input
-                v-model="info.offCampusDetail"
-                class="info-input address-detail"
+                v-model="info.ethnicity"
+                class="info-input"
                 type="text"
-                placeholder="请输入详细地址，精确到门牌号"
+                placeholder="请输入民族"
                 :disabled="!isEditing"
               />
-            </label>
-            <label class="field-card" v-if="!info.offCampusLiving">
-              <span class="info-label">住宿校区</span>
-              <select
-                v-model="info.dormCampus"
-                class="info-input"
-                :disabled="!isEditing || info.offCampusLiving"
+              <span class="class-text">族</span>
+            </div>
+          </label>
+          <label class="field-card">
+            <span class="info-label">政治面貌</span>
+            <select
+              v-model="info.politicalStatus"
+              class="info-input"
+              :disabled="!isEditing"
+            >
+              <option disabled value="">选择政治面貌</option>
+              <option
+                v-for="item in politicalStatusOptions"
+                :key="item"
+                :value="item"
               >
-                <option disabled value="">选择住宿校区</option>
-                <option
-                  v-for="item in dormCampusOptions"
-                  :key="item"
-                  :value="item"
-                >
+                {{ item }}
+              </option>
+            </select>
+          </label>
+          <label class="field-card field-full">
+            <span class="info-label">手机号码 / 备用联系方式</span>
+            <div class="class-inline">
+              <input
+                v-model="info.phone"
+                class="info-input"
+                type="tel"
+                placeholder="手机号"
+                maxlength="11"
+                inputmode="numeric"
+                @input="handleDigitsInput('phone', 11, $event)"
+                :disabled="!isEditing"
+              />
+              <span class="class-text">/</span>
+              <input
+                v-model="info.backupContact"
+                class="info-input"
+                type="text"
+                placeholder="微信/QQ/邮箱"
+                :disabled="!isEditing"
+              />
+            </div>
+          </label>
+          <label class="field-card field-full">
+            <span class="info-label">证件类型 / 证件号码</span>
+            <div class="class-inline id-type-inline">
+              <select
+                v-model="info.idType"
+                class="info-input"
+                :disabled="!isEditing"
+              >
+                <option v-for="item in idTypeOptions" :key="item" :value="item">
                   {{ item }}
                 </option>
               </select>
-            </label>
-            <label class="field-card" v-if="!info.offCampusLiving">
-              <!-- TODO: 等待佩佩姐发文件 -->
-              <span class="info-label">住宿楼栋</span>
-              <select
-                v-model="info.dormBuilding"
+              <input
+                v-model="info.idNo"
                 class="info-input"
-                :disabled="dormBuildingDisabled"
+                type="text"
+                placeholder="证件号码"
+                :maxlength="idNoMaxLength"
+                inputmode="text"
+                @input="handleIdNoInput"
+                :disabled="!isEditing"
+              />
+            </div>
+            <div v-if="idNoHint" class="info-hint">
+              {{ idNoHint }}，如与真实证件不符请联系管理员
+            </div>
+          </label>
+          <label class="field-card">
+            <span class="info-label">出生年月</span>
+            <input
+              v-model="info.birthDate"
+              class="info-input"
+              type="date"
+              lang="zh-CN"
+              :max="today"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <!-- TODO: 做地址选择器 -->
+            <span class="info-label">籍贯</span>
+            <input
+              v-model="info.nativePlace"
+              class="info-input"
+              type="text"
+              placeholder="例：广东广州"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card field-full">
+            <!-- TODO: 做地址选择器 -->
+            <span class="info-label">住址</span>
+            <div class="info-inline address-inline">
+              <select
+                v-model="info.addressProvince"
+                class="info-input"
+                :disabled="!isEditing"
               >
-                <option disabled value="">选择住宿楼栋</option>
+                <option disabled value="">选择省份</option>
                 <option
-                  v-for="item in dormBuildingOptions"
+                  v-for="item in addressProvinceOptions"
                   :key="item.value"
                   :value="item.value"
-                  :disabled="item.disabled"
                 >
                   {{ item.label }}
                 </option>
               </select>
-            </label>
-            <label class="field-card field-full" v-if="!info.offCampusLiving">
-              <span class="info-label">住宿房间</span>
-              <div class="class-inline">
-                <input
-                  v-model="info.dormFloor"
-                  class="info-input class-num"
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="楼层"
-                  :disabled="dormRoomDisabled"
-                />
-                <span class="class-text">层</span>
-                <input
-                  v-model="info.dormRoomNo"
-                  class="info-input"
-                  type="text"
-                  placeholder="房间号"
-                  :disabled="dormRoomDisabled"
-                />
-                <span class="class-text">号</span>
-              </div>
-              <div class="info-hint">如：223 -> 2 层 23 号</div>
-            </label>
-          </div>
+              <select
+                v-model="info.addressCity"
+                class="info-input"
+                :disabled="!isEditing || !addressCityOptions.length"
+              >
+                <option disabled value="">选择城市</option>
+                <option
+                  v-for="item in addressCityOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </option>
+              </select>
+              <select
+                v-model="info.addressCounty"
+                class="info-input"
+                :disabled="!isEditing || !addressCountyOptions.length"
+              >
+                <option disabled value="">选择区县</option>
+                <option
+                  v-for="item in addressCountyOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </option>
+              </select>
+            </div>
+            <input
+              v-model="info.addressDetail"
+              class="info-input address-detail"
+              type="text"
+              placeholder="请输入详细地址，精确到门牌号"
+              :disabled="!isEditing"
+            />
+          </label>
         </div>
+      </div>
 
-        <div class="card info-card">
-          <div class="info-section-title">团组织与入党信息</div>
-          <div class="info-form-grid three">
+      <div class="card info-card">
+        <div class="info-section-title">住宿信息</div>
+        <div class="info-form-grid">
+          <div class="field-card field-full">
+            <span class="info-label">是否在外居住</span>
+            <div class="info-inline">
+              <label class="info-choice">
+                <input
+                  v-model="info.offCampusLiving"
+                  type="radio"
+                  :value="true"
+                  :disabled="!isEditing"
+                />
+                是
+              </label>
+              <label class="info-choice">
+                <input
+                  v-model="info.offCampusLiving"
+                  type="radio"
+                  :value="false"
+                  :disabled="!isEditing"
+                />
+                否
+              </label>
+            </div>
+          </div>
+          <label class="field-card field-full" v-if="info.offCampusLiving">
+            <span class="info-label">外居住详细地址</span>
+            <div class="info-inline address-inline">
+              <select
+                v-model="info.offCampusProvince"
+                class="info-input"
+                :disabled="!isEditing"
+              >
+                <option disabled value="">选择省份</option>
+                <option
+                  v-for="item in addressProvinceOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </option>
+              </select>
+              <select
+                v-model="info.offCampusCity"
+                class="info-input"
+                :disabled="!isEditing || !offCampusCityOptions.length"
+              >
+                <option disabled value="">选择城市</option>
+                <option
+                  v-for="item in offCampusCityOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </option>
+              </select>
+              <select
+                v-model="info.offCampusCounty"
+                class="info-input"
+                :disabled="!isEditing || !offCampusCountyOptions.length"
+              >
+                <option disabled value="">选择区县</option>
+                <option
+                  v-for="item in offCampusCountyOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </option>
+              </select>
+            </div>
+            <input
+              v-model="info.offCampusDetail"
+              class="info-input address-detail"
+              type="text"
+              placeholder="请输入详细地址，精确到门牌号"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card" v-if="!info.offCampusLiving">
+            <span class="info-label">住宿校区</span>
+            <select
+              v-model="info.dormCampus"
+              class="info-input"
+              :disabled="!isEditing || info.offCampusLiving"
+            >
+              <option disabled value="">选择住宿校区</option>
+              <option
+                v-for="item in dormCampusOptions"
+                :key="item"
+                :value="item"
+              >
+                {{ item }}
+              </option>
+            </select>
+          </label>
+          <label class="field-card" v-if="!info.offCampusLiving">
+            <!-- TODO: 等待佩佩姐发文件 -->
+            <span class="info-label">住宿楼栋</span>
+            <select
+              v-model="info.dormBuilding"
+              class="info-input"
+              :disabled="dormBuildingDisabled"
+            >
+              <option disabled value="">选择住宿楼栋</option>
+              <option
+                v-for="item in dormBuildingOptions"
+                :key="item.value"
+                :value="item.value"
+                :disabled="item.disabled"
+              >
+                {{ item.label }}
+              </option>
+            </select>
+          </label>
+          <label class="field-card field-full" v-if="!info.offCampusLiving">
+            <span class="info-label">住宿房间</span>
+            <div class="class-inline">
+              <input
+                v-model="info.dormFloor"
+                class="info-input class-num"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="楼层"
+                :disabled="dormRoomDisabled"
+              />
+              <span class="class-text">层</span>
+              <input
+                v-model="info.dormRoomNo"
+                class="info-input"
+                type="text"
+                placeholder="房间号"
+                :disabled="dormRoomDisabled"
+              />
+              <span class="class-text">号</span>
+            </div>
+            <div class="info-hint">如：223 -> 2 层 23 号</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <div class="info-section-title">团组织与入党信息</div>
+        <div class="info-form-grid three">
+          <div class="field-card field-full">
+            <span class="info-label">是否入团</span>
+            <div class="info-inline">
+              <label class="info-choice">
+                <input
+                  v-model="info.leagueJoined"
+                  type="radio"
+                  :value="true"
+                  :disabled="!isEditing"
+                />
+                是
+              </label>
+              <label class="info-choice">
+                <input
+                  v-model="info.leagueJoined"
+                  type="radio"
+                  :value="false"
+                  :disabled="!isEditing"
+                />
+                否
+              </label>
+            </div>
+          </div>
+          <template v-if="info.leagueJoined">
+            <label class="field-card field-full">
+              <span class="info-label">提交入团申请书时间</span>
+              <input
+                v-model="info.leagueApplicationDate"
+                class="info-input"
+                type="date"
+                lang="zh-CN"
+                :max="today"
+                :disabled="leagueApplicationDisabled"
+              />
+            </label>
+            <label class="field-card field-full">
+              <span class="info-label">入团时间</span>
+              <div class="info-inline">
+                <input
+                  v-model="info.leagueJoinDate"
+                  class="info-input"
+                  type="date"
+                  lang="zh-CN"
+                  :max="today"
+                  :disabled="leagueJoinDisabled"
+                />
+                <label class="info-choice info-choice-muted">
+                  <input
+                    v-model="info.leagueDeveloping"
+                    type="checkbox"
+                    :disabled="leagueApplicationDisabled"
+                  />
+                  正在发展
+                </label>
+              </div>
+            </label>
+            <label class="field-card field-full">
+              <span class="info-label">团号</span>
+              <input
+                v-model="info.leagueNo"
+                class="info-input"
+                type="text"
+                placeholder="请输入团号"
+                :disabled="leagueNoDisabled"
+              />
+            </label>
             <div class="field-card field-full">
-              <span class="info-label">是否入团</span>
+              <span class="info-label">是否申请入党</span>
               <div class="info-inline">
                 <label class="info-choice">
                   <input
-                    v-model="info.leagueJoined"
+                    v-model="info.partyApplied"
                     type="radio"
                     :value="true"
-                    :disabled="!isEditing"
+                    :disabled="partyAppliedDisabled"
                   />
                   是
                 </label>
                 <label class="info-choice">
                   <input
-                    v-model="info.leagueJoined"
+                    v-model="info.partyApplied"
                     type="radio"
                     :value="false"
-                    :disabled="!isEditing"
+                    :disabled="partyAppliedDisabled"
                   />
                   否
                 </label>
               </div>
             </div>
-            <template v-if="info.leagueJoined">
+            <template v-if="info.partyApplied">
               <label class="field-card field-full">
-                <span class="info-label">提交入团申请书时间</span>
+                <span class="info-label">提交入党申请书时间</span>
                 <input
-                  v-model="info.leagueApplicationDate"
+                  v-model="info.applicationDate"
                   class="info-input"
                   type="date"
                   lang="zh-CN"
                   :max="today"
-                  :disabled="leagueApplicationDisabled"
+                  :disabled="applicationDateDisabled"
                 />
               </label>
               <label class="field-card field-full">
-                <span class="info-label">入团时间</span>
+                <span class="info-label">确定积极分子时间</span>
                 <div class="info-inline">
                   <input
-                    v-model="info.leagueJoinDate"
+                    v-model="info.activistDate"
                     class="info-input"
                     type="date"
                     lang="zh-CN"
                     :max="today"
-                    :disabled="leagueJoinDisabled"
+                    :disabled="activistDateDisabled"
                   />
                   <label class="info-choice info-choice-muted">
                     <input
-                      v-model="info.leagueDeveloping"
+                      v-model="info.activistDeveloping"
                       type="checkbox"
-                      :disabled="leagueApplicationDisabled"
+                      :disabled="applicationDateDisabled"
                     />
                     正在发展
                   </label>
                 </div>
               </label>
               <label class="field-card field-full">
-                <span class="info-label">团号</span>
-                <input
-                  v-model="info.leagueNo"
-                  class="info-input"
-                  type="text"
-                  placeholder="请输入团号"
-                  :disabled="leagueNoDisabled"
-                />
-              </label>
-              <div class="field-card field-full">
-                <span class="info-label">是否申请入党</span>
+                <span class="info-label">上党课时间</span>
                 <div class="info-inline">
-                  <label class="info-choice">
-                    <input
-                      v-model="info.partyApplied"
-                      type="radio"
-                      :value="true"
-                      :disabled="partyAppliedDisabled"
-                    />
-                    是
-                  </label>
-                  <label class="info-choice">
-                    <input
-                      v-model="info.partyApplied"
-                      type="radio"
-                      :value="false"
-                      :disabled="partyAppliedDisabled"
-                    />
-                    否
-                  </label>
-                </div>
-              </div>
-              <template v-if="info.partyApplied">
-                <label class="field-card field-full">
-                  <span class="info-label">提交入党申请书时间</span>
                   <input
-                    v-model="info.applicationDate"
+                    v-model="info.partyTrainingDate"
                     class="info-input"
                     type="date"
                     lang="zh-CN"
                     :max="today"
-                    :disabled="applicationDateDisabled"
+                    :disabled="partyTrainingDisabled"
                   />
-                </label>
-                <label class="field-card field-full">
-                  <span class="info-label">确定积极分子时间</span>
-                  <div class="info-inline">
+                  <label class="info-choice info-choice-muted">
                     <input
-                      v-model="info.activistDate"
-                      class="info-input"
-                      type="date"
-                      lang="zh-CN"
-                      :max="today"
+                      v-model="info.partyTrainingPending"
+                      type="checkbox"
                       :disabled="activistDateDisabled"
                     />
-                    <label class="info-choice info-choice-muted">
-                      <input
-                        v-model="info.activistDeveloping"
-                        type="checkbox"
-                        :disabled="applicationDateDisabled"
-                      />
-                      正在发展
-                    </label>
-                  </div>
-                </label>
-                <label class="field-card field-full">
-                  <span class="info-label">上党课时间</span>
-                  <div class="info-inline">
+                    暂未报名
+                  </label>
+                </div>
+              </label>
+              <label class="field-card field-full">
+                <span class="info-label">确定发展对象时间</span>
+                <div class="info-inline">
+                  <input
+                    v-model="info.developmentTargetDate"
+                    class="info-input"
+                    type="date"
+                    lang="zh-CN"
+                    :max="today"
+                    :disabled="developmentTargetDisabled"
+                  />
+                  <label class="info-choice info-choice-muted">
                     <input
-                      v-model="info.partyTrainingDate"
-                      class="info-input"
-                      type="date"
-                      lang="zh-CN"
-                      :max="today"
+                      v-model="info.developmentTargetDeveloping"
+                      type="checkbox"
                       :disabled="partyTrainingDisabled"
                     />
-                    <label class="info-choice info-choice-muted">
-                      <input
-                        v-model="info.partyTrainingPending"
-                        type="checkbox"
-                        :disabled="activistDateDisabled"
-                      />
-                      暂未报名
-                    </label>
-                  </div>
-                </label>
-                <label class="field-card field-full">
-                  <span class="info-label">确定发展对象时间</span>
-                  <div class="info-inline">
+                    正在发展
+                  </label>
+                </div>
+              </label>
+              <label class="field-card field-full">
+                <span class="info-label">接收为预备党员时间</span>
+                <div class="info-inline">
+                  <input
+                    v-model="info.probationaryMemberDate"
+                    class="info-input"
+                    type="date"
+                    lang="zh-CN"
+                    :max="today"
+                    :disabled="probationaryDisabled"
+                  />
+                  <label class="info-choice info-choice-muted">
                     <input
-                      v-model="info.developmentTargetDate"
-                      class="info-input"
-                      type="date"
-                      lang="zh-CN"
-                      :max="today"
+                      v-model="info.probationaryDeveloping"
+                      type="checkbox"
                       :disabled="developmentTargetDisabled"
                     />
-                    <label class="info-choice info-choice-muted">
-                      <input
-                        v-model="info.developmentTargetDeveloping"
-                        type="checkbox"
-                        :disabled="partyTrainingDisabled"
-                      />
-                      正在发展
-                    </label>
-                  </div>
-                </label>
-                <label class="field-card field-full">
-                  <span class="info-label">接收为预备党员时间</span>
-                  <div class="info-inline">
+                    正在发展
+                  </label>
+                </div>
+              </label>
+              <label class="field-card field-full">
+                <span class="info-label">转为正式党员时间</span>
+                <div class="info-inline">
+                  <input
+                    v-model="info.fullMemberDate"
+                    class="info-input"
+                    type="date"
+                    lang="zh-CN"
+                    :max="today"
+                    :disabled="fullMemberDisabled"
+                  />
+                  <label class="info-choice info-choice-muted">
                     <input
-                      v-model="info.probationaryMemberDate"
-                      class="info-input"
-                      type="date"
-                      lang="zh-CN"
-                      :max="today"
+                      v-model="info.fullMemberDeveloping"
+                      type="checkbox"
                       :disabled="probationaryDisabled"
                     />
-                    <label class="info-choice info-choice-muted">
-                      <input
-                        v-model="info.probationaryDeveloping"
-                        type="checkbox"
-                        :disabled="developmentTargetDisabled"
-                      />
-                      正在发展
-                    </label>
-                  </div>
-                </label>
-                <label class="field-card field-full">
-                  <span class="info-label">转为正式党员时间</span>
-                  <div class="info-inline">
-                    <input
-                      v-model="info.fullMemberDate"
-                      class="info-input"
-                      type="date"
-                      lang="zh-CN"
-                      :max="today"
-                      :disabled="fullMemberDisabled"
-                    />
-                    <label class="info-choice info-choice-muted">
-                      <input
-                        v-model="info.fullMemberDeveloping"
-                        type="checkbox"
-                        :disabled="probationaryDisabled"
-                      />
-                      正在发展
-                    </label>
-                  </div>
-                </label>
-              </template>
+                    正在发展
+                  </label>
+                </div>
+              </label>
             </template>
-          </div>
+          </template>
         </div>
+      </div>
 
-        <div class="card info-card">
-          <div class="info-section-title">教育经历</div>
-          <div class="info-hint">从小学开始填</div>
-          <div ref="educationTableWrap" class="education-table-wrap">
-            <transition-group
-              name="education-row"
-              tag="div"
-              class="record-list"
-            >
-              <RecordRow
-                v-for="(item, index) in educationItems"
-                :key="`edu-${index}`"
-                type="education"
-                :item="item"
-                :index="index"
-                :disabled="isEducationRowDisabled(index)"
-                :today="today"
-                @update:item="educationItems[index] = $event"
-                @current-change="handleEducationCurrentChange"
-              />
-            </transition-group>
-            <div class="education-controls-wrap">
-              <div class="education-controls">
-                <button
-                  class="education-control"
-                  type="button"
-                  :disabled="!isEditing"
-                  aria-label="增加一行"
-                  @click="addEducationRow"
-                >
-                  +
-                </button>
-                <button
-                  class="education-control"
-                  type="button"
-                  :disabled="!isEditing || educationItems.length <= 1"
-                  aria-label="减少一行"
-                  @click="removeEducationRow"
-                >
-                  −
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card info-card">
-          <div class="info-section-title">学生干部经历</div>
-          <div ref="cadreTableWrap" class="education-table-wrap">
-            <transition-group
-              name="education-row"
-              tag="div"
-              class="record-list"
-            >
-              <RecordRow
-                v-for="(item, index) in cadreItems"
-                :key="`cadre-${index}`"
-                type="cadre"
-                :item="item"
-                :index="index"
-                :disabled="isCadreRowDisabled(index)"
-                :today="today"
-                @update:item="cadreItems[index] = $event"
-                @current-change="handleCadreCurrentChange"
-              />
-            </transition-group>
-            <div class="education-controls-wrap">
-              <div class="education-controls">
-                <button
-                  class="education-control"
-                  type="button"
-                  :disabled="!isEditing"
-                  aria-label="增加一行"
-                  @click="addCadreRow"
-                >
-                  +
-                </button>
-                <button
-                  class="education-control"
-                  type="button"
-                  :disabled="!isEditing || cadreItems.length <= 1"
-                  aria-label="减少一行"
-                  @click="removeCadreRow"
-                >
-                  −
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card info-card">
-          <!-- TODO: 单亲/离异等待现场演示求助 -->
-          <div class="info-section-title">
-            家庭信息
+      <div class="card info-card">
+        <div class="info-section-title">教育经历</div>
+        <div class="info-hint">从小学开始填</div>
+        <div ref="educationTableWrap" class="record-list-wrap">
+          <transition-group name="education-row" tag="div" class="record-list">
+            <RecordRow
+              v-for="(item, index) in educationItems"
+              :key="`edu-${index}`"
+              type="education"
+              :item="item"
+              :index="index"
+              :disabled="isEducationRowDisabled(index)"
+              :today="today"
+              @update:item="educationItems[index] = $event"
+              @current-change="handleEducationCurrentChange"
+            />
+          </transition-group>
+          <div class="record-controls">
             <button
-              class="hint-button"
+              class="record-ctl"
               type="button"
-              aria-label="填写说明"
-              @click="workUnitHintOpen = true"
+              :disabled="!isEditing"
+              aria-label="增加一行"
+              @click="addEducationRow"
             >
-              ?
+              +
+            </button>
+            <button
+              class="record-ctl"
+              type="button"
+              :disabled="!isEditing || educationItems.length <= 1"
+              aria-label="减少一行"
+              @click="removeEducationRow"
+            >
+              −
+            </button>
+            <button
+              class="record-ctl record-ctl-clear"
+              type="button"
+              :disabled="!isEditing"
+              aria-label="清空教育经历"
+              @click="handleClearEducation"
+            >
+              清空
             </button>
           </div>
-          <transition name="dialog-fade">
-            <div
-              v-if="workUnitHintOpen"
-              class="dialog-backdrop"
-              @click="workUnitHintOpen = false"
-            ></div>
-          </transition>
-          <transition name="dialog-pop">
-            <section v-if="workUnitHintOpen" class="dialog-card" @click.stop>
-              <header class="dialog-header">填写说明</header>
-              <div class="dialog-body">
-                <div class="hint-item">
-                  <span class="hint-label">工作单位：</span>无
-                  <span class="hint-sep">|</span>
-                  <span class="hint-label">职务：</span>待业/务农
-                </div>
-                <div class="hint-item">
-                  <span class="hint-label">工作单位：</span>无固定单位
-                  <span class="hint-sep">|</span>
-                  <span class="hint-label">职务：</span>散工
-                </div>
-                <div class="hint-item">
-                  <span class="hint-label">工作单位：</span>个体户
-                  <span class="hint-sep">|</span>
-                  <span class="hint-label">职务：</span>店主
-                </div>
-              </div>
-              <div class="dialog-actions">
-                <button
-                  class="ghost-button"
-                  type="button"
-                  @click="workUnitHintOpen = false"
-                >
-                  知道了
-                </button>
-              </div>
-            </section>
-          </transition>
-          <div class="info-form-grid family-grid">
-            <div class="family-section-title">父亲（监护人）</div>
-            <label class="field-card">
-              <span class="info-label">姓名</span>
-              <input
-                v-model="info.fatherName"
-                class="info-input"
-                type="text"
-                placeholder="请输入父亲姓名"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">手机号码</span>
-              <input
-                v-model="info.fatherPhone"
-                class="info-input"
-                type="tel"
-                placeholder="请输入父亲手机号码"
-                maxlength="11"
-                inputmode="numeric"
-                @input="handleDigitsInput('fatherPhone', 11, $event)"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">工作单位</span>
-              <input
-                v-model="info.fatherWorkUnit"
-                class="info-input"
-                type="text"
-                placeholder="请输入父亲工作单位"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">职务</span>
-              <input
-                v-model="info.fatherTitle"
-                class="info-input"
-                type="text"
-                placeholder="请输入父亲职务"
-                :disabled="!isEditing"
-              />
-            </label>
-            <div class="family-section-title">母亲（监护人2）</div>
-            <label class="field-card">
-              <span class="info-label">姓名</span>
-              <input
-                v-model="info.motherName"
-                class="info-input"
-                type="text"
-                placeholder="请输入母亲姓名"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">手机号码</span>
-              <input
-                v-model="info.motherPhone"
-                class="info-input"
-                type="tel"
-                placeholder="请输入母亲手机号码"
-                maxlength="11"
-                inputmode="numeric"
-                @input="handleDigitsInput('motherPhone', 11, $event)"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">工作单位</span>
-              <input
-                v-model="info.motherWorkUnit"
-                class="info-input"
-                type="text"
-                placeholder="请输入母亲工作单位"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">职务</span>
-              <input
-                v-model="info.motherTitle"
-                class="info-input"
-                type="text"
-                placeholder="请输入母亲职务"
-                :disabled="!isEditing"
-              />
-            </label>
-          </div>
         </div>
+      </div>
 
-        <div class="card info-card">
-          <div class="info-section-title">紧急联系人（除亲戚外）</div>
-          <div class="info-form-grid">
-            <label class="field-card">
-              <span class="info-label">紧急联系人电话</span>
-              <input
-                v-model="info.emergencyPhone"
-                class="info-input"
-                type="tel"
-                placeholder="请输入紧急联系人电话"
-                maxlength="11"
-                inputmode="numeric"
-                @input="handleDigitsInput('emergencyPhone', 11, $event)"
-                :disabled="!isEditing"
-              />
-            </label>
-            <label class="field-card">
-              <span class="info-label">紧急联系人的关系</span>
-              <input
-                v-model="info.emergencyRelation"
-                class="info-input"
-                type="text"
-                placeholder="如父母、亲属"
-                :disabled="!isEditing"
-              />
-            </label>
+      <div class="card info-card">
+        <div class="info-section-title">学生干部经历</div>
+        <div ref="cadreTableWrap" class="record-list-wrap">
+          <transition-group name="education-row" tag="div" class="record-list">
+            <RecordRow
+              v-for="(item, index) in cadreItems"
+              :key="`cadre-${index}`"
+              type="cadre"
+              :item="item"
+              :index="index"
+              :disabled="isCadreRowDisabled(index)"
+              :today="today"
+              @update:item="cadreItems[index] = $event"
+              @current-change="handleCadreCurrentChange"
+            />
+          </transition-group>
+          <div class="record-controls">
+            <button
+              class="record-ctl"
+              type="button"
+              :disabled="!isEditing"
+              aria-label="增加一行"
+              @click="addCadreRow"
+            >
+              +
+            </button>
+            <button
+              class="record-ctl"
+              type="button"
+              :disabled="!isEditing || cadreItems.length <= 1"
+              aria-label="减少一行"
+              @click="removeCadreRow"
+            >
+              −
+            </button>
+            <button
+              class="record-ctl record-ctl-clear"
+              type="button"
+              :disabled="!isEditing"
+              aria-label="清空干部经历"
+              @click="handleClearCadre"
+            >
+              清空
+            </button>
           </div>
         </div>
-      </section>
-      <transition name="edit-dock">
-        <div v-if="isEditing" class="edit-dock">
-          <div class="edit-dock-inner">
-            <button class="ghost-button" type="button" @click="cancelEdit">
-              取消
-            </button>
-            <button class="action-button" type="button" @click="confirmEdit">
-              {{ saveActionLabel }}
-            </button>
-          </div>
+      </div>
+
+      <div class="card info-card">
+        <!-- TODO: 单亲/离异等待现场演示求助 -->
+        <div class="info-section-title">
+          家庭信息
+          <button
+            class="hint-button"
+            type="button"
+            aria-label="填写说明"
+            @click="workUnitHintOpen = true"
+          >
+            ?
+          </button>
         </div>
-      </transition>
-      <MobileCapsule @open-sidebar="openDashboardSidebar" />
+        <transition name="dialog-fade">
+          <div
+            v-if="workUnitHintOpen"
+            class="dialog-backdrop"
+            @click="workUnitHintOpen = false"
+          ></div>
+        </transition>
+        <transition name="dialog-pop">
+          <section v-if="workUnitHintOpen" class="dialog-card" @click.stop>
+            <header class="dialog-header">填写说明</header>
+            <div class="dialog-body">
+              <div class="hint-item">
+                <span class="hint-label">工作单位：</span>无
+                <span class="hint-sep">|</span>
+                <span class="hint-label">职务：</span>待业/务农
+              </div>
+              <div class="hint-item">
+                <span class="hint-label">工作单位：</span>无固定单位
+                <span class="hint-sep">|</span>
+                <span class="hint-label">职务：</span>散工
+              </div>
+              <div class="hint-item">
+                <span class="hint-label">工作单位：</span>个体户
+                <span class="hint-sep">|</span>
+                <span class="hint-label">职务：</span>店主
+              </div>
+            </div>
+            <div class="dialog-actions">
+              <button
+                class="ghost-button"
+                type="button"
+                @click="workUnitHintOpen = false"
+              >
+                知道了
+              </button>
+            </div>
+          </section>
+        </transition>
+        <div class="info-form-grid family-grid">
+          <div class="family-section-title">父亲（监护人）</div>
+          <label class="field-card">
+            <span class="info-label">姓名</span>
+            <input
+              v-model="info.fatherName"
+              class="info-input"
+              type="text"
+              placeholder="请输入父亲姓名"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">手机号码</span>
+            <input
+              v-model="info.fatherPhone"
+              class="info-input"
+              type="tel"
+              placeholder="请输入父亲手机号码"
+              maxlength="11"
+              inputmode="numeric"
+              @input="handleDigitsInput('fatherPhone', 11, $event)"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">工作单位</span>
+            <input
+              v-model="info.fatherWorkUnit"
+              class="info-input"
+              type="text"
+              placeholder="请输入父亲工作单位"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">职务</span>
+            <input
+              v-model="info.fatherTitle"
+              class="info-input"
+              type="text"
+              placeholder="请输入父亲职务"
+              :disabled="!isEditing"
+            />
+          </label>
+          <div class="family-section-title">母亲（监护人2）</div>
+          <label class="field-card">
+            <span class="info-label">姓名</span>
+            <input
+              v-model="info.motherName"
+              class="info-input"
+              type="text"
+              placeholder="请输入母亲姓名"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">手机号码</span>
+            <input
+              v-model="info.motherPhone"
+              class="info-input"
+              type="tel"
+              placeholder="请输入母亲手机号码"
+              maxlength="11"
+              inputmode="numeric"
+              @input="handleDigitsInput('motherPhone', 11, $event)"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">工作单位</span>
+            <input
+              v-model="info.motherWorkUnit"
+              class="info-input"
+              type="text"
+              placeholder="请输入母亲工作单位"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">职务</span>
+            <input
+              v-model="info.motherTitle"
+              class="info-input"
+              type="text"
+              placeholder="请输入母亲职务"
+              :disabled="!isEditing"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <div class="info-section-title">紧急联系人（除亲戚外）</div>
+        <div class="info-form-grid">
+          <label class="field-card">
+            <span class="info-label">紧急联系人电话</span>
+            <input
+              v-model="info.emergencyPhone"
+              class="info-input"
+              type="tel"
+              placeholder="请输入紧急联系人电话"
+              maxlength="11"
+              inputmode="numeric"
+              @input="handleDigitsInput('emergencyPhone', 11, $event)"
+              :disabled="!isEditing"
+            />
+          </label>
+          <label class="field-card">
+            <span class="info-label">紧急联系人的关系</span>
+            <input
+              v-model="info.emergencyRelation"
+              class="info-input"
+              type="text"
+              placeholder="如父母、亲属"
+              :disabled="!isEditing"
+            />
+          </label>
+        </div>
+      </div>
+    </section>
+    <transition name="edit-dock">
+      <div v-if="isEditing" class="edit-dock">
+        <div class="edit-dock-inner">
+          <button class="ghost-button" type="button" @click="cancelEdit">
+            取消
+          </button>
+          <button class="action-button" type="button" @click="confirmEdit">
+            {{ saveActionLabel }}
+          </button>
+        </div>
+      </div>
+    </transition>
+    <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template v-if="isEditing" #right>
+        <div class="capsule-action" @click="cancelEdit">取消</div>
+        <div class="capsule-primary" @click="confirmEdit">
+          {{ saveActionLabel }}
+        </div>
+      </template>
+    </MobileCapsule>
   </main>
 </template>
 
@@ -974,15 +984,13 @@ import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import ExportPdfButton from "../components/ExportPdfButton.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
-import StepperInput from "../components/StepperInput.vue";
+import YearPicker from "../components/YearPicker.vue";
 import RecordRow from "../components/RecordRow.vue";
-import {
-  getMenuLocation,
-  isMenuEnabled,
-} from "../constants/menu";
+import { getMenuLocation, isMenuEnabled } from "../constants/menu";
 import { regionData, codeToText } from "element-china-area-data";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/upload";
+import { useUploadProgress } from "../composables/useUploadProgress";
 import { API_BASE } from "../api/request";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { resolveMediaUrl } from "../utils/media";
@@ -1015,9 +1023,16 @@ const workUnitHintOpen = ref(false);
 const today = getTodayString();
 const originalProfileData = ref(null);
 const savedProfileData = ref(null);
-const { submitProfileReviewRequest, updateReviewRequestStatus, fetchProfileReviewRequests, hasPendingProfileReviewRequest } = useNotifications(profile);
-const { settings: reviewSettings, fetchSettings: fetchReviewSettings } = useReviewSettings();
+const {
+  submitProfileReviewRequest,
+  updateReviewRequestStatus,
+  fetchProfileReviewRequests,
+  hasPendingProfileReviewRequest,
+} = useNotifications(profile);
+const { settings: reviewSettings, fetchSettings: fetchReviewSettings } =
+  useReviewSettings();
 const { success: toastSuccess, error: toastError } = useToast();
+const { uploadWithProgress } = useUploadProgress();
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -1076,6 +1091,12 @@ const info = reactive({
   fullMemberDeveloping: false,
   emergencyPhone: "",
   emergencyRelation: "",
+  isHk: false,
+  isMo: false,
+  isTw: false,
+  specialStudent: false,
+  specialStudentType: "",
+  specialStudentRemark: "",
   fatherName: "",
   fatherPhone: "",
   fatherWorkUnit: "",
@@ -1120,6 +1141,28 @@ const idTypeOptions = [
   "外国人永久居留身份证",
   "外国护照",
 ];
+
+function detectIdType(raw) {
+  if (!raw) return null;
+  const cleaned = raw.toUpperCase().replace(/[^0-9A-Z]/g, "");
+  if (!cleaned) return null;
+  // 港澳居民来往内地通行证: H/M + 8 digits
+  if (/^[HM]\d{8}$/.test(cleaned)) return "港澳居民来往内地通行证";
+  // 普通护照: E + 8 digits
+  if (/^E\d{8}$/.test(cleaned)) return "普通护照";
+  // 18-digit: 居民身份证, 台湾居民居住证(83), 港澳居民居住证(81/82), 外国人永久居留身份证
+  if (/^\d{17}[\dX]$/.test(cleaned)) {
+    if (cleaned.startsWith("83")) return "台湾居民居住证";
+    if (cleaned.startsWith("81") || cleaned.startsWith("82"))
+      return "港澳居民居住证";
+    return "居民身份证";
+  }
+  // 8-digit: 台湾居民来往大陆通行证(台胞证)
+  // Must NOT start with 81/82/83 — those are partial 18-digit residence permits
+  if (/^\d{8}$/.test(cleaned) && !/^8[123]/.test(cleaned))
+    return "台湾居民来往大陆通行证";
+  return null;
+}
 const dormCampusOptions = ["佛山校区", "广州校区"];
 const PROFILE_CHANGE_FIELDS = [
   { key: "fullName", label: "姓名", section: "学籍信息" },
@@ -1160,6 +1203,12 @@ const PROFILE_CHANGE_FIELDS = [
   { key: "fullMemberDate", label: "转正时间", section: "党团信息" },
   { key: "emergencyPhone", label: "紧急联系人电话", section: "家庭信息" },
   { key: "emergencyRelation", label: "与紧急联系人关系", section: "家庭信息" },
+  { key: "isHk", label: "香港身份", section: "身份信息" },
+  { key: "isMo", label: "澳门身份", section: "身份信息" },
+  { key: "isTw", label: "台湾身份", section: "身份信息" },
+  { key: "specialStudent", label: "特殊学生", section: "身份信息" },
+  { key: "specialStudentType", label: "特殊学生类型", section: "身份信息" },
+  { key: "specialStudentRemark", label: "特殊学生备注", section: "身份信息" },
   { key: "fatherName", label: "父亲姓名", section: "家庭信息" },
   { key: "fatherPhone", label: "父亲电话", section: "家庭信息" },
   { key: "fatherWorkUnit", label: "父亲工作单位", section: "家庭信息" },
@@ -1174,28 +1223,57 @@ const idNoMaxLength = computed(() => {
     case "居民身份证":
       return 18;
     case "台湾居民来往大陆通行证":
+      return 8;
     case "港澳居民来往内地通行证":
       return 9;
     case "普通护照":
       return 9;
     case "台湾居民居住证":
+      return 18;
     case "港澳居民居住证":
-      return 10;
+      return 18;
     case "外国人永久居留身份证":
-      return 15;
+      return 18;
     case "外国护照":
       return 20;
     default:
       return 32;
   }
 });
-const hasSavedProfileBefore = computed(() => Boolean(savedProfileData.value?.id));
-const isReviewer = computed(() =>
-  profile.role === "ADMIN" || profile.role === "TEACHER"
+
+const idNoHint = computed(() => {
+  switch (info.idType) {
+    case "居民身份证":
+      return "18位（17位数字 + 1位数字/X）";
+    case "台湾居民来往大陆通行证":
+      return "8位纯数字（台胞证）";
+    case "港澳居民来往内地通行证":
+      return "9位（H/M + 8位数字，回乡证）";
+    case "普通护照":
+      return "9位（E + 8位数字）";
+    case "台湾居民居住证":
+      return "18位纯数字（83开头）";
+    case "港澳居民居住证":
+      return "18位纯数字（81/82开头）";
+    case "外国人永久居留身份证":
+      return "18位纯数字（新版五星卡）";
+    case "外国护照":
+      return "6-9位字母数字组合";
+    default:
+      return "";
+  }
+});
+const hasSavedProfileBefore = computed(() =>
+  Boolean(savedProfileData.value?.id),
+);
+const isReviewer = computed(
+  () => profile.role === "ADMIN" || profile.role === "TEACHER",
 );
 const saveActionLabel = computed(() => {
   if (isReviewer.value) return "保存";
-  return hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled ? "请求审核" : "保存";
+  return hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled
+    ? "请求审核"
+    : "保存";
 });
 
 const dormBuildingOptions = computed(() => {
@@ -1287,6 +1365,18 @@ async function removeCadreRow() {
   }
   await animateCadreHeightWithUpdate(() => {
     cadreItems.pop();
+  });
+}
+
+async function handleClearEducation() {
+  await animateEducationHeightWithUpdate(() => {
+    educationItems.splice(0, educationItems.length, createEducationItem());
+  });
+}
+
+async function handleClearCadre() {
+  await animateCadreHeightWithUpdate(() => {
+    cadreItems.splice(0, cadreItems.length, createCadreItem());
   });
 }
 
@@ -1694,38 +1784,66 @@ function handleDigitsInput(field, maxLength, event) {
 function handleIdNoInput(event) {
   const raw = (event.target.value || "").toUpperCase();
   const maxLen = idNoMaxLength.value;
-  // 居民身份证: digits + optional X at end
+  // 居民身份证: 17位数字 + 1位数字/X
   if (info.idType === "居民身份证") {
     const cleaned = raw.replace(/[^0-9X]/g, "");
     const digits = cleaned.replace(/X/g, "").slice(0, 17);
-    if (raw.endsWith("X")) {
+    if (cleaned.endsWith("X")) {
       info.idNo = `${digits}X`.slice(0, maxLen);
       return;
     }
     info.idNo = digits;
     return;
   }
-  // 通行证类: 8 digits + 1 letter
-  if (
-    info.idType === "台湾居民来往大陆通行证" ||
-    info.idType === "港澳居民来往内地通行证"
-  ) {
-    const cleaned = raw.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
-    const digits = cleaned.replace(/[A-Z]/g, "").slice(0, 8);
-    const letter = cleaned.slice(8, 9).replace(/[^A-Z]/g, "");
-    info.idNo = `${digits}${letter}`.slice(0, maxLen);
+  // 台湾居民来往大陆通行证（台胞证）: 8位纯数字
+  if (info.idType === "台湾居民来往大陆通行证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 8);
     return;
   }
-  // 护照类: alphanumeric
-  if (info.idType === "普通护照" || info.idType === "外国护照") {
+  // 港澳居民来往内地通行证（回乡证）: H/M + 8位数字
+  if (info.idType === "港澳居民来往内地通行证") {
+    const cleaned = raw.replace(/[^0-9A-Z]/g, "").toUpperCase();
+    const letter = cleaned.slice(0, 1).replace(/[^HM]/g, "");
+    const digits = cleaned.replace(/[A-Z]/g, "").slice(0, 8);
+    info.idNo = `${letter}${digits}`.slice(0, maxLen);
+    return;
+  }
+  // 普通护照: E + 8位数字
+  if (info.idType === "普通护照") {
+    const cleaned = raw.replace(/[^0-9A-Z]/g, "").toUpperCase();
+    const letter = cleaned.slice(0, 1).replace(/[^E]/g, "");
+    const digits = cleaned.replace(/[A-Z]/g, "").slice(0, 8);
+    info.idNo = `${letter}${digits}`.slice(0, maxLen);
+    return;
+  }
+  // 台湾居民居住证: 18位纯数字（83开头）
+  if (info.idType === "台湾居民居住证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 18);
+    return;
+  }
+  // 港澳居民居住证: 18位纯数字（81/82开头）
+  if (info.idType === "港澳居民居住证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 18);
+    return;
+  }
+  // 外国人永久居留身份证（五星卡）: 18位纯数字
+  if (info.idType === "外国人永久居留身份证") {
+    info.idNo = raw.replace(/\D/g, "").slice(0, 18);
+    return;
+  }
+  // 外国护照: 6-9位字母数字组合
+  if (info.idType === "外国护照") {
     info.idNo = raw
-      .replace(/[^0-9A-Za-z]/g, "")
+      .replace(/[^0-9A-Z]/g, "")
       .toUpperCase()
       .slice(0, maxLen);
     return;
   }
-  // 居住证类: digits only
-  info.idNo = raw.replace(/\D/g, "").slice(0, maxLen);
+  // 默认: alphanumeric
+  info.idNo = raw
+    .replace(/[^0-9A-Z]/g, "")
+    .toUpperCase()
+    .slice(0, maxLen);
 }
 
 function triggerAvatarUpload() {
@@ -1739,7 +1857,7 @@ async function onAvatarChange(event) {
     return;
   }
   try {
-    const { data } = await uploadMedia(file);
+    const { data } = await uploadWithProgress(file, uploadMedia);
     if (data?.mediaType !== "IMAGE") {
       return;
     }
@@ -1760,13 +1878,26 @@ function enterEdit() {
 
 function cancelEdit() {
   if (originalProfileData.value) {
-    applyProfileResponse(originalProfileData.value, { syncSavedProfile: false });
+    applyProfileResponse(originalProfileData.value, {
+      syncSavedProfile: false,
+    });
   }
   isEditing.value = false;
 }
 
 async function confirmEdit() {
-  const requiresReview = hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled && !isReviewer.value;
+  if (info.classYear && !info.classMajor) {
+    toastError("请先选择专业");
+    return;
+  }
+  if (info.classYear && !info.classNo) {
+    toastError("请先选择班级");
+    return;
+  }
+  const requiresReview =
+    hasSavedProfileBefore.value &&
+    reviewSettings.profileReviewEnabled &&
+    !isReviewer.value;
   const className = buildClassName(
     info.classYear,
     info.classMajor,
@@ -1867,6 +1998,12 @@ async function confirmEdit() {
     motherPhone: info.motherPhone,
     motherWorkUnit: info.motherWorkUnit,
     motherTitle: info.motherTitle,
+    isHk: info.isHk,
+    isMo: info.isMo,
+    isTw: info.isTw,
+    specialStudent: info.specialStudent,
+    specialStudentType: info.specialStudentType || "",
+    specialStudentRemark: info.specialStudentRemark || "",
     educationExperiences,
     cadreExperiences,
   };
@@ -1947,7 +2084,10 @@ async function confirmEdit() {
         payloadSnapshot: payload,
         changes,
       });
-      if (reviewSettings.profileReviewAutoApprove && requestData?.status === "approved") {
+      if (
+        reviewSettings.profileReviewAutoApprove &&
+        requestData?.status === "approved"
+      ) {
         await fetchProfileReviewRequests(true);
         const updatedProfile = await getStudentProfile();
         applyProfileResponse(updatedProfile.data);
@@ -2061,6 +2201,12 @@ function buildPdfStudentSnapshot() {
     probationaryDeveloping: info.probationaryDeveloping,
     fullMemberDate: info.fullMemberDate,
     fullMemberDeveloping: info.fullMemberDeveloping,
+    isHk: info.isHk,
+    isMo: info.isMo,
+    isTw: info.isTw,
+    specialStudent: info.specialStudent,
+    specialStudentType: info.specialStudentType,
+    specialStudentRemark: info.specialStudentRemark,
     educationExperiences,
     cadreExperiences,
     avatarUrl: info.avatarUrl,
@@ -2140,8 +2286,18 @@ function buildCurrentProfileState() {
     motherPhone: info.motherPhone,
     motherWorkUnit: info.motherWorkUnit,
     motherTitle: info.motherTitle,
-    educationExperiences: educationItems.map((item) => ({ ...item })),
-    cadreExperiences: cadreItems.map((item) => ({ ...item })),
+    isHk: info.isHk,
+    isMo: info.isMo,
+    isTw: info.isTw,
+    specialStudent: info.specialStudent,
+    specialStudentType: info.specialStudentType,
+    specialStudentRemark: info.specialStudentRemark,
+    educationExperiences: educationItems
+      .filter((item) => !isEducationRowEmpty(item))
+      .map((item) => ({ ...item })),
+    cadreExperiences: cadreItems
+      .filter((item) => !isCadreRowEmpty(item))
+      .map((item) => ({ ...item })),
   };
 }
 
@@ -2161,8 +2317,12 @@ function buildProfileChanges(previousState, nextState) {
     return list;
   }, []);
 
-  const previousEducation = stringifyProfileCollection(previousState?.educationExperiences);
-  const nextEducation = stringifyProfileCollection(nextState?.educationExperiences);
+  const previousEducation = stringifyProfileCollection(
+    previousState?.educationExperiences,
+  );
+  const nextEducation = stringifyProfileCollection(
+    nextState?.educationExperiences,
+  );
   if (previousEducation !== nextEducation) {
     changes.push({
       section: "教育经历",
@@ -2172,7 +2332,9 @@ function buildProfileChanges(previousState, nextState) {
     });
   }
 
-  const previousCadre = stringifyProfileCollection(previousState?.cadreExperiences);
+  const previousCadre = stringifyProfileCollection(
+    previousState?.cadreExperiences,
+  );
   const nextCadre = stringifyProfileCollection(nextState?.cadreExperiences);
   if (previousCadre !== nextCadre) {
     changes.push({
@@ -2192,10 +2354,18 @@ function stringifyProfileCollection(items) {
     return "-";
   }
   const firstItem = list[0] || {};
-  if ("schoolName" in firstItem || "educationLevel" in firstItem || "witness" in firstItem) {
+  if (
+    "schoolName" in firstItem ||
+    "educationLevel" in firstItem ||
+    "witness" in firstItem
+  ) {
     return list.map(formatEducationExperienceItem).filter(Boolean).join("\n");
   }
-  if ("department" in firstItem || "position" in firstItem || "description" in firstItem) {
+  if (
+    "department" in firstItem ||
+    "position" in firstItem ||
+    "description" in firstItem
+  ) {
     return list.map(formatCadreExperienceItem).filter(Boolean).join("\n");
   }
   return list
@@ -2210,7 +2380,11 @@ function stringifyProfileCollection(items) {
 }
 
 function formatEducationExperienceItem(item, index) {
-  const period = formatPeriodText(item?.startDate, item?.endDate, item?.isCurrent);
+  const period = formatPeriodText(
+    item?.startDate,
+    item?.endDate,
+    item?.isCurrent,
+  );
   const schoolName = stringifyProfileChangeValue(item?.schoolName);
   const educationLevel = stringifyProfileChangeValue(item?.educationLevel);
   const witness = stringifyProfileChangeValue(item?.witness);
@@ -2224,7 +2398,11 @@ function formatEducationExperienceItem(item, index) {
 }
 
 function formatCadreExperienceItem(item, index) {
-  const period = formatPeriodText(item?.startDate, item?.endDate, item?.isCurrent);
+  const period = formatPeriodText(
+    item?.startDate,
+    item?.endDate,
+    item?.isCurrent,
+  );
   const department = stringifyProfileChangeValue(item?.department);
   const position = stringifyProfileChangeValue(item?.position);
   const description = stringifyProfileChangeValue(item?.description);
@@ -2329,6 +2507,12 @@ function applyProfileResponse(data, options = {}) {
   info.motherPhone = data.motherPhone || "";
   info.motherWorkUnit = data.motherWorkUnit || "";
   info.motherTitle = data.motherTitle || "";
+  info.isHk = Boolean(data.isHk);
+  info.isMo = Boolean(data.isMo);
+  info.isTw = Boolean(data.isTw);
+  info.specialStudent = Boolean(data.specialStudent);
+  info.specialStudentType = data.specialStudentType || "";
+  info.specialStudentRemark = data.specialStudentRemark || "";
   applyEducationExperiences(data.educationExperiences);
   applyCadreExperiences(data.cadreExperiences);
 
@@ -2629,6 +2813,55 @@ watch(
   },
 );
 
+const TW_ID_TYPES = ["台湾居民来往大陆通行证", "台湾居民居住证"];
+const HKMO_ID_TYPES = ["港澳居民来往内地通行证", "港澳居民居住证"];
+
+function detectHkMoFromIdNo(idNo) {
+  if (!idNo) return { isHk: false, isMo: false };
+  const cleaned = idNo.toUpperCase().replace(/[^0-9A-Z]/g, "");
+  // 港澳居民来往内地通行证: H=香港, M=澳门
+  if (/^H\d{8}$/.test(cleaned)) return { isHk: true, isMo: false };
+  if (/^M\d{8}$/.test(cleaned)) return { isHk: false, isMo: true };
+  // 港澳居民居住证: 81=香港, 82=澳门
+  if (/^81\d{16}$/.test(cleaned)) return { isHk: true, isMo: false };
+  if (/^82\d{16}$/.test(cleaned)) return { isHk: false, isMo: true };
+  return { isHk: false, isMo: false };
+}
+
+watch(
+  () => info.idType,
+  (nextType) => {
+    if (isEditing.value) {
+      info.idNo = "";
+    }
+    if (TW_ID_TYPES.includes(nextType)) {
+      info.isHk = false;
+      info.isMo = false;
+      info.isTw = true;
+    } else if (HKMO_ID_TYPES.includes(nextType)) {
+      info.isTw = false;
+      const detected = detectHkMoFromIdNo(info.idNo);
+      info.isHk = detected.isHk;
+      info.isMo = detected.isMo;
+    } else {
+      info.isHk = false;
+      info.isMo = false;
+      info.isTw = false;
+    }
+  },
+);
+
+watch(
+  () => info.idNo,
+  (nextIdNo) => {
+    if (HKMO_ID_TYPES.includes(info.idType)) {
+      const detected = detectHkMoFromIdNo(nextIdNo);
+      info.isHk = detected.isHk;
+      info.isMo = detected.isMo;
+    }
+  },
+);
+
 function loadUser() {
   try {
     const raw = JSON.parse(localStorage.getItem("bdai_sc_user") || "{}");
@@ -2656,5 +2889,10 @@ function loadUser() {
 </script>
 
 <style scoped>
-@import '../assets/styles/my-infos-view.css';
+@import "../assets/styles/my-infos-view.css";
+
+.class-num {
+  width: 76px !important;
+  flex-shrink: 0;
+}
 </style>

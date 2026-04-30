@@ -16,10 +16,8 @@ const router = createRouter({
     if (savedPosition) {
       return savedPosition
     }
-    if (to.path !== from.path) {
-      return { top: 0 }
-    }
-    return false
+    // 保持当前滚动位置不变
+    return { top: window.scrollY, left: window.scrollX, behavior: 'instant' }
   },
   routes: [
     {

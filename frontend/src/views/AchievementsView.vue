@@ -1,16 +1,8 @@
 <template>
   <main class="dashboard-right">
     <header class="feed-header">
-      <h1 class="feed-title">个人成就</h1>
+      <h1 class="feed-title">个人成果</h1>
     </header>
-
-    <section
-      v-if="activeCategory === 'all'"
-      class="info-card achievement-intro-card"
-    >
-      <div class="info-section-title">全部</div>
-      <p class="achievement-intro-text">这里存放了我所有的成就！</p>
-    </section>
 
     <div v-if="!filteredAchievements.length" class="empty-tip">
       {{ emptyMessage }}
@@ -48,7 +40,7 @@
     >
       <span aria-hidden="true">+</span>
     </button>
-    <MobileCapsule :hidden="editorOpen" @open-sidebar="openDashboardSidebar">
+    <MobileCapsule :hidden="editorOpen || viewOpen" @open-sidebar="openDashboardSidebar">
       <template #right>
         <div
           class="capsule-action capsule-primary"
@@ -75,7 +67,7 @@
       :aria-hidden="!viewOpen"
     >
       <header class="publisher-header">
-        <div class="publisher-title">成就查看</div>
+        <div class="publisher-title">成果查看</div>
         <button class="publisher-close" type="button" @click="closeView">
           关闭
         </button>
@@ -153,7 +145,7 @@
                 type="button"
                 @click="selectEditorImage(0)"
               >
-                <img :src="imagePreviews[0]" alt="成就图片" />
+                <img :src="imagePreviews[0]" alt="成果图片" />
                 <span class="media-remove" @click.stop="removeImage(0)"
                   >移除</span
                 >
@@ -171,7 +163,7 @@
                 type="button"
                 @click="selectEditorImage(index)"
               >
-                <img :src="image" alt="成就图片" />
+                <img :src="image" alt="成果图片" />
                 <span class="media-remove" @click.stop="removeImage(index)"
                   >移除</span
                 >
@@ -193,7 +185,7 @@
                 type="button"
                 @click="selectEditorImage(index)"
               >
-                <img :src="image" alt="成就图片" />
+                <img :src="image" alt="成果图片" />
                 <span class="media-remove" @click.stop="removeImage(index)">
                   移除
                 </span>
@@ -212,7 +204,7 @@
 
         <div class="achievement-fields">
           <div v-if="!editId" class="achievement-category-row">
-            <label class="field-label">成就分类</label>
+            <label class="field-label">成果分类</label>
             <select v-model="form.category">
               <option disabled value="">请选择分类</option>
               <option
@@ -272,7 +264,7 @@
             </Transition>
           </div>
           <div v-if="!activeFormConfig" class="empty-tip">
-            请选择成就分类后填写对应信息。
+            请选择成果分类后填写对应信息。
           </div>
           <div v-else class="achievement-dynamic-fields">
             <div
@@ -610,6 +602,7 @@ import {
 } from "../api/achievements";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { uploadMedia } from "../api/upload";
+import { useUploadProgress } from "../composables/useUploadProgress";
 import { renderDocx } from "../utils/docxRenderer";
 import { renderSheet } from "../utils/sheetRenderer";
 import { renderPdf } from "../utils/pdfRenderer";
@@ -655,10 +648,12 @@ const router = useRouter();
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const profile = reactive(loadUser());
-const { submitAchievementReviewRequest, findPendingAchievementReview } = useNotifications(profile);
+const { submitAchievementReviewRequest, findPendingAchievementReview } =
+  useNotifications(profile);
 const { settings: reviewSettings, fetchSettings: fetchReviewSettings } =
   useReviewSettings();
-const { info: toastInfo } = useToast();
+const { info: toastInfo, warn: toastWarn } = useToast();
+const { uploadWithProgress } = useUploadProgress();
 const activeMenu = ref("achievements");
 const editorOpen = ref(false);
 const hintCollapsed = ref(false);
@@ -823,10 +818,10 @@ const filteredAchievements = computed(() => {
 const emptyMessage = computed(() => {
   const { studentName, studentNo } = activeStudentQuery.value;
   if (studentName || studentNo) {
-    return "该学生暂无成就。";
+    return "该学生暂未添加任何个人成果。";
   }
   if (activeCategory.value === "all") {
-    return "还没有成就，点击右下角添加。";
+    return "还没有哦~点击右下角添加。";
   }
   return "该分类暂无成就，点击右下角添加。";
 });
@@ -942,14 +937,14 @@ function resetForm() {
 async function saveAchievement() {
   const config = activeFormConfig.value;
   if (!config) {
-    errorMessage.value = "请先选择成就分类";
+    toastWarn("请先选择成果分类");
     return;
   }
   const category =
     form.category ||
     (activeCategory.value === "all" ? "" : activeCategory.value);
   if (!category) {
-    errorMessage.value = "请先选择成就分类";
+    toastWarn("请先选择成果分类");
     return;
   }
   const titleKey = config.titleKey;
@@ -1232,7 +1227,7 @@ async function onImageChange(event) {
       continue;
     }
     try {
-      const { data } = await uploadMedia(file, {
+      const { data } = await uploadWithProgress(file, uploadMedia, {
         context: "achievement-image",
       });
       if (data?.url) {
@@ -1268,7 +1263,7 @@ async function onAttachmentChange(event) {
       continue;
     }
     try {
-      const { data } = await uploadMedia(file, {
+      const { data } = await uploadWithProgress(file, uploadMedia, {
         context: "achievement-attachment",
       });
       if (data?.url) {
@@ -1332,7 +1327,10 @@ function editFromView() {
   if (!viewItem.value) {
     return;
   }
-  const pending = findPendingAchievementReview(viewItem.value.id, viewItem.value.category);
+  const pending = findPendingAchievementReview(
+    viewItem.value.id,
+    viewItem.value.category,
+  );
   if (pending) {
     toastInfo("请等待通过审核后，再进行编辑或前往取消申请");
     return;
@@ -1364,7 +1362,10 @@ function openDelete() {
     return;
   }
   if (viewItem.value) {
-    const pending = findPendingAchievementReview(viewItem.value.id, viewItem.value.category);
+    const pending = findPendingAchievementReview(
+      viewItem.value.id,
+      viewItem.value.category,
+    );
     if (pending) {
       toastInfo("请等待通过审核后，再进行删除或前往取消申请");
       return;

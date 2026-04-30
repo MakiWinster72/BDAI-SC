@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const backendPort = import.meta.env.VITE_BACKEND_PORT || '8080'
 const apiBaseFromEnv = import.meta.env.VITE_API_BASE?.trim()
-const API_BASE = apiBaseFromEnv || `http://${window.location.hostname}:${backendPort}`
+const API_BASE = apiBaseFromEnv || (import.meta.env.DEV ? '' : `http://${window.location.hostname}:${backendPort}`)
 
 const request = axios.create({
   baseURL: API_BASE,

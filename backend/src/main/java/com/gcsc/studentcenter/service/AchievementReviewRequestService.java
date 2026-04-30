@@ -53,6 +53,8 @@ public class AchievementReviewRequestService {
         return requests.stream()
             .filter(r -> {
                 if ("pending".equals(r.getStatus())) {
+                    // pending: requester can always see their own pending request
+                    if (r.getRequester().getUsername().equals(username)) return true;
                     // pending: only reviewers (TEACHER/ADMIN/CADRE) can see, not regular students
                     if (!isReviewer(user)) return false;
                     // ADMIN can see all pending
@@ -182,6 +184,34 @@ public class AchievementReviewRequestService {
         achievementReviewRequestRepository.delete(request);
     }
 
+    @Transactional
+    public AchievementReviewRequestResponse setSupportingDocuments(Long requestId, String username, List<Map<String, String>> documents) {
+        AchievementReviewRequest request = loadRequest(requestId);
+        if (!"pending".equals(request.getStatus())) {
+            throw new IllegalArgumentException("只有待审核状态才能上传证明资料");
+        }
+        if (!request.getRequester().getUsername().equals(username)) {
+            throw new IllegalArgumentException("只有申请人才能上传证明资料");
+        }
+        if (documents != null) {
+            for (Map<String, String> doc : documents) {
+                if ("text".equals(doc.get("type"))) {
+                    if (doc.get("content") == null || doc.get("content").isBlank()) {
+                        throw new IllegalArgumentException("证明资料文本内容不能为空");
+                    }
+                } else {
+                    if (doc.get("url") == null || doc.get("url").isBlank()) {
+                        throw new IllegalArgumentException("证明资料链接不能为空");
+                    }
+                }
+            }
+        }
+        String json = (documents == null || documents.isEmpty()) ? null : writeJson(documents);
+        request.setSupportingDocumentsJson(json);
+        request.setUpdatedAt(LocalDateTime.now());
+        return toResponse(achievementReviewRequestRepository.save(request));
+    }
+
     private AchievementReviewRequestResponse toResponse(AchievementReviewRequest request) {
         return new AchievementReviewRequestResponse(
             request.getId(),
@@ -199,6 +229,7 @@ public class AchievementReviewRequestService {
             nullToEmpty(request.getRejectionReason()),
             readJsonNode(request.getPayloadSnapshotJson()),
             readChanges(request.getChangesJson()),
+            readSupportingDocuments(request.getSupportingDocumentsJson()),
             request.getCreatedAt(),
             request.getUpdatedAt()
         );
@@ -369,6 +400,17 @@ public class AchievementReviewRequestService {
     }
 
     private List<Map<String, Object>> readChanges(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (JsonProcessingException exception) {
+            return List.of();
+        }
+    }
+
+    private List<Map<String, Object>> readSupportingDocuments(String json) {
         if (json == null || json.isBlank()) {
             return List.of();
         }

@@ -25,8 +25,12 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
             sp.classMajor,
             sp.classNo,
             sp.college,
-            sp.hkMoTw,
-            sp.specialStudent
+            sp.isHk,
+            sp.isMo,
+            sp.isTw,
+            sp.specialStudent,
+            sp.specialStudentType,
+            u.avatarUrl
         )
         from StudentProfile sp
         join sp.user u
@@ -35,8 +39,11 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
             and (:classNo is null or sp.classNo = :classNo)
             and (:college is null or sp.college = :college)
             and (:major is null or sp.classMajor = :major)
-            and (:hkMoTw is null or sp.hkMoTw = :hkMoTw)
+            and (:isHk is null or sp.isHk = :isHk)
+            and (:isMo is null or sp.isMo = :isMo)
+            and (:isTw is null or sp.isTw = :isTw)
             and (:specialStudent is null or sp.specialStudent = :specialStudent)
+            and (:specialStudentType is null or sp.specialStudentType = :specialStudentType)
             and (:studentCategory is null or sp.studentCategory = :studentCategory)
             and (:allowedClassNames is null or sp.className in :allowedClassNames)
             and (
@@ -56,8 +63,11 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
         @Param("classNo") String classNo,
         @Param("college") String college,
         @Param("major") String major,
-        @Param("hkMoTw") Boolean hkMoTw,
+        @Param("isHk") Boolean isHk,
+        @Param("isMo") Boolean isMo,
+        @Param("isTw") Boolean isTw,
         @Param("specialStudent") Boolean specialStudent,
+        @Param("specialStudentType") String specialStudentType,
         @Param("studentCategory") String studentCategory,
         @Param("keyword") String keyword,
         @Param("allowedClassNames") List<String> allowedClassNames,

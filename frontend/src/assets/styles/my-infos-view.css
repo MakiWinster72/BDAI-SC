@@ -145,3 +145,12 @@
     position: relative;
   }
 }
+
+.record-ctl-clear {
+  width: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}

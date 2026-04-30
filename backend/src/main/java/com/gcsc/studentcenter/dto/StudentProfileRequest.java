@@ -50,7 +50,9 @@ public class StudentProfileRequest {
     private Boolean fullMemberDeveloping;
     private String emergencyPhone;
     private String emergencyRelation;
-    private Boolean hkMoTw;
+    private Boolean isHk;
+    private Boolean isMo;
+    private Boolean isTw;
     private Boolean specialStudent;
     private String fatherName;
     private String fatherPhone;
@@ -60,6 +62,8 @@ public class StudentProfileRequest {
     private String motherPhone;
     private String motherWorkUnit;
     private String motherTitle;
+    private String specialStudentType;
+    private String specialStudentRemark;
     private List<EducationExperienceItem> educationExperiences;
     private List<CadreExperienceItem> cadreExperiences;
 
@@ -430,12 +434,28 @@ public class StudentProfileRequest {
         this.emergencyRelation = emergencyRelation;
     }
 
-    public Boolean getHkMoTw() {
-        return hkMoTw;
+    public Boolean getIsHk() {
+        return isHk;
     }
 
-    public void setHkMoTw(Boolean hkMoTw) {
-        this.hkMoTw = hkMoTw;
+    public void setIsHk(Boolean isHk) {
+        this.isHk = isHk;
+    }
+
+    public Boolean getIsMo() {
+        return isMo;
+    }
+
+    public void setIsMo(Boolean isMo) {
+        this.isMo = isMo;
+    }
+
+    public Boolean getIsTw() {
+        return isTw;
+    }
+
+    public void setIsTw(Boolean isTw) {
+        this.isTw = isTw;
     }
 
     public Boolean getSpecialStudent() {
@@ -508,6 +528,22 @@ public class StudentProfileRequest {
 
     public void setMotherTitle(String motherTitle) {
         this.motherTitle = motherTitle;
+    }
+
+    public String getSpecialStudentType() {
+        return specialStudentType;
+    }
+
+    public void setSpecialStudentType(String specialStudentType) {
+        this.specialStudentType = specialStudentType;
+    }
+
+    public String getSpecialStudentRemark() {
+        return specialStudentRemark;
+    }
+
+    public void setSpecialStudentRemark(String specialStudentRemark) {
+        this.specialStudentRemark = specialStudentRemark;
     }
 
     public List<EducationExperienceItem> getEducationExperiences() {

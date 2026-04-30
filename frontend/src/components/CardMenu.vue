@@ -16,6 +16,14 @@
         <Transition :name="titleTransitionName" mode="out-in">
           <div :key="currentPanel" class="menu-card-title">
             {{ panelTitle }}
+            <button
+              v-if="currentPanel === 'notifications' && totalUnreadCount > 0"
+              class="menu-mark-all-read"
+              type="button"
+              @click="markAllRead"
+            >
+              全部已读
+            </button>
           </div>
         </Transition>
       </div>
@@ -33,8 +41,8 @@
             @click="selectNotificationCategory(cat.key)"
           >
             {{ cat.label }}
-            <span v-if="inboxEntries.filter(e => e.categoryKey === cat.key).length" class="tab-count">
-              {{ inboxEntries.filter(e => e.categoryKey === cat.key).length }}
+            <span v-if="notificationUnreadCounts[cat.key]" class="tab-count tab-count-unread">
+              {{ notificationUnreadCounts[cat.key] }}
             </span>
           </button>
         </nav>
@@ -98,7 +106,10 @@
             v-for="entry in filteredNotificationEntries"
             :key="entry.id"
             class="menu-notification-item"
-            :class="{ active: String(notificationActiveEntry) === String(entry.id) }"
+            :class="{
+              active: String(notificationActiveEntry) === String(entry.id),
+              'is-read': readIds.has(String(entry.id)),
+            }"
             type="button"
             @click="selectNotificationEntry(entry.id)"
           >
@@ -106,7 +117,7 @@
               <span class="menu-notification-badge" :class="entry.badgeClass">{{ entry.badgeText }}</span>
               <time class="menu-notification-time">{{ entry.timeText }}</time>
               <span
-                v-if="(entry.categoryKey === 'approved' || entry.categoryKey === 'rejected') && !processedReadIds.has(String(entry.id))"
+                v-if="!readIds.has(String(entry.id))"
                 class="menu-notification-dot"
                 aria-label="未读"
               />
@@ -225,15 +236,25 @@ const emit = defineEmits([
   "class-reviews-category-change",
 ]);
 
-const { inboxEntries, pendingCount, processedUnreadCount, processedReadIds, markProcessedEntryRead, classReviewEntries } = useNotifications(props.profile);
+const { inboxEntries, pendingCount, totalUnreadCount, unreadEntries, readIds, processedReadIds, markProcessedEntryRead, markEntryRead, markAllRead, classReviewEntries } = useNotifications(props.profile);
 
 const menuItems = computed(() => filterMenuItemsByRole(props.profile.role));
+
+const notificationUnreadCounts = computed(() => {
+  const counts = { unread: 0, pending: 0, delayed: 0, approved: 0, rejected: 0 };
+  inboxEntries.value.forEach((e) => {
+    const isUnread = !readIds.has(String(e.id));
+    if (isUnread) counts.unread++;
+    if (isUnread && counts[e.categoryKey] !== undefined) counts[e.categoryKey]++;
+  });
+  return counts;
+});
 
 const menuMeta = computed(() => {
   const totalPending = classReviewEntries.value.filter(e => e.categoryKey === 'pending' || e.categoryKey === 'delayed').length;
   return {
-    notifications: processedUnreadCount.value > 0
-      ? `待处理 ${pendingCount.value} | 已处理 ${processedUnreadCount.value}`
+    notifications: totalUnreadCount.value > 0
+      ? `待处理 ${pendingCount.value} | 未读 ${totalUnreadCount.value}`
       : `待处理 ${pendingCount.value}`,
     achievements: "查看与维护成果",
     "my-info": "编辑个人档案",
@@ -269,15 +290,20 @@ const classReviewCounts = computed(() => {
 });
 
 const notificationCategories = [
+  { key: "unread", label: "未读" },
   { key: "pending", label: "待处理" },
   { key: "delayed", label: "已滞后" },
   { key: "approved", label: "已通过" },
   { key: "rejected", label: "已驳回" },
 ];
 
-const filteredNotificationEntries = computed(() =>
-  inboxEntries.value.filter((e) => e.categoryKey === notificationActiveCategory.value),
-);
+const filteredNotificationEntries = computed(() => {
+  const cat = notificationActiveCategory.value;
+  if (cat === "unread") {
+    return inboxEntries.value.filter((e) => !readIds.has(String(e.id)));
+  }
+  return inboxEntries.value.filter((e) => e.categoryKey === cat);
+});
 
 const currentPanel = ref("menu");
 const panelDirection = ref("back");
@@ -294,7 +320,7 @@ const titleTransitionName = computed(() =>
   panelDirection.value === "forward" ? "menu-title-forward" : "menu-title-back",
 );
 const panelTitle = computed(() => {
-  if (currentPanel.value === "achievements") return "个人成就";
+  if (currentPanel.value === "achievements") return "个人成果";
   if (currentPanel.value === "notifications") return "通知详情";
   if (currentPanel.value === "class-reviews") return "班级审核";
   return "导航";
@@ -357,7 +383,6 @@ function handleMenuClick(key) {
     panelDirection.value = "forward";
     currentPanel.value = "achievements";
     nextTick(updateBodyFadeState);
-    emit("menu-click", key);
     return;
   }
   if (key === "notifications") {
@@ -391,8 +416,11 @@ function selectNotificationCategory(category) {
 
 function selectNotificationEntry(entryId) {
   const entry = filteredNotificationEntries.value.find((e) => String(e.id) === String(entryId));
-  if (entry && (entry.categoryKey === "approved" || entry.categoryKey === "rejected")) {
-    markProcessedEntryRead(String(entryId));
+  if (entry) {
+    markEntryRead(String(entryId));
+    if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
+      markProcessedEntryRead(String(entryId));
+    }
   }
   emit("notification-entry-click", { category: notificationActiveCategory.value, entryId: String(entryId) });
 }

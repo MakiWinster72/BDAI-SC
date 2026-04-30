@@ -3,7 +3,7 @@
  * 全局 CSS 变量定义 - 主题色彩、阴影、动画缓动等
  *
  * 包含内容:
- * - Purple Primary Theme: 主色调 (primary, primary-light, primary-dark)
+ * - Purple & Pink Primary Theme: 主色调 (primary, primary-light, primary-dark)
  * - Semantic Aliases: 语义化别名 (accent, accent-strong)
  * - Background Tints: 背景渐变色 (bg-deep, bg-mid, bg-soft)
  * - Surface & Glass: 卡片和玻璃效果 (card, card-hover, line)
@@ -14,32 +14,32 @@
  */
 
 :root {
-  /* ── Purple Primary Theme ── */
+  /* ── Purple & Pink Primary Theme ── */
   --primary: #640c72;
-  --primary-light: #9b59b6;
-  --primary-dark: #3d0770;
-  --primary-glow: rgba(100, 12, 114, 0.35);
-  --primary-surface: rgba(100, 12, 114, 0.08);
+  --primary-light: #FF85BB;
+  --primary-dark: #4a0956;
+  --primary-glow: rgba(100, 12, 114, 0.30);
+  --primary-surface: rgba(100, 12, 114, 0.06);
 
   /* ── Semantic Aliases (for backward compat) ── */
   --accent: var(--primary);
   --accent-strong: var(--primary-dark);
 
   /* ── Background Tints ── */
-  --bg-base: #f7f4fa; /* 全局中性底色（login 以外的所有页面） */
-  --bg-deep: #3d0770;
-  --bg-mid: #c77dff;
-  --bg-soft: #f3d5ff;
+  --bg-base: #F5F5F5;
+  --bg-deep: #640c72;
+  --bg-mid: #FF85BB;
+  --bg-soft: #FFCEE3;
 
   /* ── Surface & Glass ── */
-  --card: rgba(255, 255, 255, 0.78);
-  --card-hover: rgba(255, 255, 255, 0.92);
-  --line: rgba(100, 12, 114, 0.12);
-  --line-strong: rgba(100, 12, 114, 0.22);
+  --card: rgba(255, 255, 255, 0.82);
+  --card-hover: rgba(255, 255, 255, 0.95);
+  --line: rgba(100, 12, 114, 0.10);
+  --line-strong: rgba(100, 12, 114, 0.18);
 
   /* ── Text ── */
   --text-main: #2d1a3e;
-  --text-sub: #7b5a94;
+  --text-sub: #5a6a8a;
   --text-inverse: #ffffff;
 
   /* ── Status ── */
@@ -47,15 +47,15 @@
   --success: #27ae60;
 
   /* ── Shadows ── */
-  --shadow: 0 8px 32px rgba(100, 12, 114, 0.10);
-  --shadow-sm: 0 4px 16px rgba(100, 12, 114, 0.08);
-  --shadow-glow: 0 0 40px rgba(100, 12, 114, 0.25);
+  --shadow: 0 8px 32px rgba(100, 12, 114, 0.08);
+  --shadow-sm: 0 4px 16px rgba(100, 12, 114, 0.06);
+  --shadow-glow: 0 0 40px rgba(255, 133, 187, 0.25);
 
   /* ── Animation ── */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-page: cubic-bezier(0.22, 1, 0.36, 1);   /* 标准页面过渡: 卡片进入、面板滑入 */
-  --ease-dialog: cubic-bezier(0.22, 1, 0.36, 1);   /* 对话框 pop 效果 */
-  --ease-backdrop: ease;                            /* 背景模糊淡入淡出 */
+  --ease-page: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-dialog: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-backdrop: ease;
 
   /* 标准动画时长 */
   --duration-fast: 160ms;

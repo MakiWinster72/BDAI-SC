@@ -5,6 +5,7 @@ import {
   cancelAchievementReviewRequest,
   listAchievementReviewRequests,
   rejectAchievementReviewRequest,
+  setAchievementReviewRequestDocuments,
   submitAchievementReviewRequestApi,
 } from "../api/achievementReviewRequests";
 import {
@@ -12,10 +13,23 @@ import {
   cancelProfileReviewRequest,
   listProfileReviewRequests,
   rejectProfileReviewRequest,
+  setProfileReviewRequestDocuments,
   submitProfileReviewRequestApi,
 } from "../api/profileReviewRequests";
 
-const STORAGE_KEY = "bdai_sc_notification_center";
+const STORAGE_BASE = "bdai_sc_notification_center";
+
+function getStorageKey() {
+  try {
+    const token = localStorage.getItem("bdai_sc_token");
+    if (token) {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const user = payload.sub || payload.username || "unknown";
+      return `${STORAGE_BASE}_${user}`;
+    }
+  } catch { /* fallback */ }
+  return STORAGE_BASE;
+}
 const DEFAULT_DELAYED_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000;
 const CATEGORY_LABELS = {
   contest: "学科竞赛、文体艺术",
@@ -39,6 +53,7 @@ const store = reactive({
   profileReviewFetched: false,
   profileReviewLoading: false,
   processedReadIds: new Set(),
+  readIds: new Set(),
   delayedThresholdMs: DEFAULT_DELAYED_THRESHOLD_MS,
 });
 
@@ -47,12 +62,14 @@ function ensureLoaded() {
     return;
   }
   store.loaded = true;
+  const key = getStorageKey();
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const raw = JSON.parse(localStorage.getItem(key) || "{}");
     store.notifications = Array.isArray(raw.notifications)
       ? raw.notifications
       : [];
     store.processedReadIds = new Set(Array.isArray(raw.processedReadIds) ? raw.processedReadIds : []);
+    store.readIds = new Set(Array.isArray(raw.readIds) ? raw.readIds : []);
   } catch {
     store.notifications = [];
     store.processedReadIds = new Set();
@@ -63,11 +80,13 @@ function persistStore() {
   if (typeof window === "undefined") {
     return;
   }
+  const key = getStorageKey();
   localStorage.setItem(
-    STORAGE_KEY,
+    key,
     JSON.stringify({
       notifications: store.notifications,
       processedReadIds: [...store.processedReadIds],
+      readIds: [...store.readIds],
     }),
   );
 }
@@ -233,6 +252,7 @@ function buildReviewEntry(request, user) {
     recordId: request.recordId || null,
     payloadSnapshot: request.payloadSnapshot || null,
     changes: Array.isArray(request.changes) ? request.changes : [],
+    supportingDocuments: Array.isArray(request.supportingDocuments) ? request.supportingDocuments : [],
     categoryKey,
     timeText: formatRelativeTime(request.updatedAt || request.createdAt),
     createdAt: request.updatedAt || request.createdAt,
@@ -449,6 +469,22 @@ async function cancelReviewRequest({ requestId, resourceType }) {
   );
 }
 
+async function setSupportingDocuments({ requestId, documents, resourceType }) {
+  const isAch = resourceType === "achievement";
+  if (!isAch && resourceType !== "profile") {
+    throw new Error("审核请求类型无效");
+  }
+  const response = isAch
+    ? await setAchievementReviewRequestDocuments(requestId, documents)
+    : await setProfileReviewRequestDocuments(requestId, documents);
+  if (isAch) {
+    upsertAchievementReviewRequest(response.data);
+  } else {
+    upsertProfileReviewRequest(response.data);
+  }
+  return response.data;
+}
+
 export function useNotifications(userSource) {
   ensureLoaded();
   fetchDelayedThreshold();
@@ -520,7 +556,7 @@ export function useNotifications(userSource) {
 
   const hasPendingProfileReviewRequest = computed(() =>
     visibleReviewRequests.value.some(
-      (item) => item.resourceType === "profile" && item.status === "pending",
+      (item) => item.resourceType === "profile" && item.status === "pending" && item.requester?.username === currentUser.value?.username,
     ),
   );
 
@@ -559,6 +595,29 @@ export function useNotifications(userSource) {
     persistStore();
   }
 
+  function markEntryRead(entryId) {
+    store.readIds.add(String(entryId));
+    persistStore();
+  }
+
+  function markEntryUnread(entryId) {
+    store.readIds.delete(String(entryId));
+    persistStore();
+  }
+
+  function markAllRead() {
+    inboxEntries.value.forEach((e) => store.readIds.add(String(e.id)));
+    persistStore();
+  }
+
+  const totalUnreadCount = computed(() =>
+    inboxEntries.value.filter((e) => !store.readIds.has(String(e.id))).length,
+  );
+
+  const unreadEntries = computed(() =>
+    inboxEntries.value.filter((e) => !store.readIds.has(String(e.id))),
+  );
+
   function findPendingAchievementReview(recordId, category) {
     if (!recordId) return null;
     return store.achievementReviewRequests.find(
@@ -575,7 +634,10 @@ export function useNotifications(userSource) {
     pendingCount,
     categoryCounts,
     processedUnreadCount,
+    totalUnreadCount,
+    unreadEntries,
     processedReadIds: store.processedReadIds,
+    readIds: store.readIds,
     reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
     hasPendingProfileReviewRequest,
@@ -587,7 +649,11 @@ export function useNotifications(userSource) {
     addNotification,
     updateReviewRequestStatus,
     cancelReviewRequest,
+    setSupportingDocuments,
     markProcessedEntryRead,
+    markEntryRead,
+    markEntryUnread,
+    markAllRead,
     classReviewEntries,
   };
 }

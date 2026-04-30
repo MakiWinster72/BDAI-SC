@@ -31,8 +31,34 @@
       <RouterView />
     </div>
 
+    <!-- Mobile sidebar overlay -->
+    <Transition name="sidebar">
+      <div v-if="sidebarOpen" class="mobile-sidebar-backdrop" @click="closeSidebar" />
+    </Transition>
+    <Transition name="sidebar-panel">
+      <div v-if="sidebarOpen" class="mobile-sidebar-panel">
+        <DashboardSidebar
+          :profile="profile"
+          :active-menu="activeMenu"
+          :active-achievement="activeAchievement"
+          :show-achievements-drawer="showAchievementsDrawer"
+          :notification-active-category="notificationActiveCategory"
+          :notification-active-entry="notificationActiveEntry"
+          :class-reviews-active-category="classReviewsActiveCategory"
+          :class-reviews-active-entry="classReviewsActiveEntry"
+          :class-review-entries="classReviewEntries"
+          @menu-click="handleMenuClick"
+          @achievement-entry-click="handleAchievementEntry"
+          @notification-entry-click="handleNotificationEntry"
+          @class-reviews-entry-click="handleClassReviewsEntry"
+          @class-reviews-category-change="handleClassReviewsCategory"
+          @settings-click="goToSettings"
+        />
+      </div>
+    </Transition>
+
     <ToastContainer />
-    <div v-if="!isEmbedded" style="margin-top: auto">
+    <div v-if="!isEmbedded" class="dashboard-footer-wrap">
       <AppFooter />
     </div>
   </div>
@@ -56,6 +82,7 @@ import { loadUser } from "../utils/userStorage";
 const router = useRouter();
 const route = useRoute();
 const profile = reactive(loadUser());
+const sidebarOpen = ref(false);
 
 const activeMenu = computed(() => getActiveMenuFromRoute(route));
 const activeAchievement = computed(() => {
@@ -112,9 +139,11 @@ watch(
 );
 
 function openSidebar() {
+  sidebarOpen.value = true;
 }
 
 function closeSidebar() {
+  sidebarOpen.value = false;
 }
 
 function handleMenuClick(key) {
@@ -131,7 +160,7 @@ function handleAchievementEntry(key) {
 }
 
 function handleNotificationEntry({ category, entryId }) {
-  closeSidebar();
+  if (entryId) closeSidebar();
   navigateWithViewTransition(router, {
     path: "/notifications",
     query: { category, entry: entryId || "" },
@@ -147,7 +176,6 @@ function handleClassReviewsEntry({ entry }) {
 }
 
 function handleClassReviewsCategory(category) {
-  closeSidebar();
   navigateWithViewTransition(router, {
     path: "/notifications",
     query: { panel: "class-reviews", category },

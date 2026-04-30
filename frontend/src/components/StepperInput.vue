@@ -55,11 +55,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const model = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val),
-})
-
 const current = computed(() => {
   const v = props.modelValue
   if (v === '' || v === null || v === undefined) return null
@@ -115,17 +110,9 @@ function increment() {
         <path d="M2 6h8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
       </svg>
     </button>
-    <input
-      v-model="model"
-      class="stepper__input"
-      type="number"
-      :step="step"
-      :min="min"
-      :max="max"
-      :disabled="disabled"
-      :placeholder="placeholder"
-      aria-label="数值"
-    />
+    <span class="stepper__value" :aria-label="String(current ?? placeholder)">
+      {{ current ?? placeholder }}
+    </span>
     <button
       class="stepper__btn stepper__btn--inc"
       type="button"
@@ -143,23 +130,16 @@ function increment() {
 
 <style scoped>
 .stepper {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
   align-items: center;
-  gap: 0;
   height: 44px;
   border-radius: 10px;
   border: 1px solid var(--line-strong, #d0cfce);
   background: rgba(255, 255, 255, 0.96);
   overflow: hidden;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
-  /* 在 field-card 内填满宽度 */
   width: 100%;
   box-sizing: border-box;
-}
-
-.stepper:focus-within {
-  border-color: var(--primary, #640c72);
-  box-shadow: 0 0 0 3px var(--primary-surface, rgba(100, 12, 114, 0.1));
 }
 
 .stepper.is-disabled {
@@ -172,16 +152,15 @@ function increment() {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 100%;
   height: 100%;
   border: none;
   background: transparent;
-  color: var(--primary, #640c72);
+  color: var(--primary, var(--primary));
   cursor: pointer;
-  flex-shrink: 0;
-  transition: background 150ms ease, color 150ms ease;
-  /* 与输入框垂直居中，无需 padding */
+  outline: none;
   padding: 0;
+  transition: background 150ms ease, color 150ms ease;
 }
 
 .stepper__btn:hover:not(:disabled) {
@@ -205,35 +184,18 @@ function increment() {
   border-left: 1px solid var(--line, rgba(0, 0, 0, 0.06));
 }
 
-/* ── Input ── */
-.stepper__input {
-  flex: 1;
-  min-width: 0;
+/* ── Value Display ── */
+.stepper__value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 100%;
-  border: none;
-  background: transparent;
   color: var(--primary-dark, #2d1a3e);
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-  outline: none;
-  -moz-appearance: textfield;
+  font-size: 13px;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
   padding: 0 4px;
   box-sizing: border-box;
-  /* 禁止手动输入，只允许通过按钮改变 */
-  pointer-events: none;
   user-select: none;
-}
-
-.stepper__input::placeholder {
-  color: var(--text-sub, #aaa);
-  font-weight: 400;
-}
-
-.stepper__input::-webkit-outer-spin-button,
-.stepper__input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
 }
 </style>

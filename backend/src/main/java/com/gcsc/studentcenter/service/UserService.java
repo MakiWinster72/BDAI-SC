@@ -165,6 +165,14 @@ public class UserService {
             user.setRole(request.getRole());
         }
 
+        if (request.getRemark() != null) {
+            user.setRemark(request.getRemark().trim().isEmpty() ? null : request.getRemark().trim());
+        }
+
+        if (request.getAssignedClasses() != null && (user.getRole() == UserRole.TEACHER || user.getRole() == UserRole.ADMIN)) {
+            user.setAssignedClasses(request.getAssignedClasses());
+        }
+
         return userRepository.save(user);
     }
 

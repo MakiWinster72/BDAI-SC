@@ -243,7 +243,7 @@ function handleClose() {
   border: none;
   border-radius: 9px;
   background: var(--primary-surface, rgba(100, 12, 114, 0.08));
-  color: var(--primary, #640c72);
+  color: var(--primary, var(--primary));
   cursor: pointer;
   flex-shrink: 0;
   transition: background 160ms ease, transform 120ms ease;

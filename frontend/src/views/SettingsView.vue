@@ -121,19 +121,44 @@
         <transition name="expand">
           <div v-if="showLoginHistory" class="settings-expand login-history-list">
             <div v-if="loginHistoryLoading" class="login-history-loading">加载中...</div>
-            <div v-else-if="loginHistory.length === 0" class="login-history-empty">
-              暂无登录记录
-            </div>
-            <div
-              v-for="(item, index) in loginHistory"
-              :key="index"
-              class="login-history-item"
-            >
-              <div class="login-history-device">{{ item.deviceName }}</div>
-              <div class="login-history-meta">
-                <span class="login-history-ip">{{ item.ipAddress }}</span>
-                <span class="login-history-time">{{ formatTime(item.loginTime) }}</span>
+            <template v-else-if="loginHistory.length > 0">
+              <div
+                v-for="item in loginHistory"
+                :key="item.loginTime"
+                class="login-history-item"
+              >
+                <div class="login-history-device">
+                  <img
+                    class="device-icon"
+                    :src="browserIconSrc(item.browser)"
+                    :alt="item.browser || '未知浏览器'"
+                    :title="item.browser || '未知浏览器'"
+                  />
+                  <img
+                    class="device-icon"
+                    :src="osIconSrc(item.os)"
+                    :alt="item.os || '未知系统'"
+                    :title="item.os || '未知系统'"
+                  />
+                  {{ item.deviceName }}
+                </div>
+                <div class="login-history-meta">
+                  <span class="login-history-ip">{{ item.ipAddress }}</span>
+                  <span class="login-history-time">{{ formatTime(item.loginTime) }}</span>
+                </div>
               </div>
+              <PaginationBar
+                v-model:current-page="loginHistoryPage"
+                v-model:page-size="loginHistorySize"
+                :total-pages="loginHistoryTotalPages"
+                :page-size-options="[10, 20, 50]"
+                mode="simple"
+                @update:current-page="loadLoginHistory"
+                @update:page-size="onLoginHistorySizeChange"
+              />
+            </template>
+            <div v-else class="login-history-empty">
+              暂无登录记录
             </div>
           </div>
         </transition>
@@ -185,6 +210,7 @@
 <script setup>
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
+import PaginationBar from "../components/PaginationBar.vue";
 import StudentExportDialog from "../components/StudentExportDialog.vue";
 import { useStudentPdfExport } from "../composables/useStudentPdfExport";
 import { getMenuLocation, isMenuEnabled } from "../constants/menu";
@@ -209,6 +235,9 @@ const showExportOptions = ref(false);
 const showLoginHistory = ref(false);
 const loginHistory = ref([]);
 const loginHistoryLoading = ref(false);
+const loginHistoryPage = ref(1);
+const loginHistorySize = ref(20);
+const loginHistoryTotalPages = ref(1);
 const exportDialogOpen = ref(false);
 const passwordForm = reactive({
   oldPassword: "",
@@ -323,8 +352,10 @@ function toggleLoginHistory() {
 async function loadLoginHistory() {
   loginHistoryLoading.value = true;
   try {
-    const { data } = await getLoginHistory(0, 50);
+    const page = loginHistoryPage.value - 1;
+    const { data } = await getLoginHistory(page, loginHistorySize.value);
     loginHistory.value = data.content || [];
+    loginHistoryTotalPages.value = Math.max(1, data.totalPages || 1);
   } catch {
     loginHistory.value = [];
   } finally {
@@ -332,11 +363,46 @@ async function loadLoginHistory() {
   }
 }
 
+function onLoginHistorySizeChange(newSize) {
+  loginHistorySize.value = newSize;
+  loginHistoryPage.value = 1;
+  loadLoginHistory();
+}
+
 function formatTime(dateStr) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   const pad = (n) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+const ICON_BASE = "/assets/icons";
+
+const BROWSER_ICON_MAP = {
+  Chrome: "Chrome",
+  Safari: "Safari",
+  Firefox: "Firefox",
+  Edge: "Edge",
+  Opera: "opera",
+  Brave: "brave",
+};
+
+const OS_ICON_MAP = {
+  Windows: "Windows",
+  macOS: "macos",
+  Linux: "linux",
+  Android: "android",
+  iOS: "macos",
+};
+
+function browserIconSrc(browser) {
+  const file = BROWSER_ICON_MAP[browser];
+  return file ? `${ICON_BASE}/${file}.svg` : "";
+}
+
+function osIconSrc(os) {
+  const file = OS_ICON_MAP[os];
+  return file ? `${ICON_BASE}/${file}.svg` : "";
 }
 
 function cancelPasswordChange() {

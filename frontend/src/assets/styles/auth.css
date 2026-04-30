@@ -33,10 +33,10 @@
     ),
     radial-gradient(
       circle at 80% 80%,
-      rgba(155, 89, 182, 0.15),
+      rgba(255, 133, 187, 0.12),
       transparent 30%
     ),
-    linear-gradient(145deg, #f7eeff 0%, #e8d5f7 40%, #dcc8f0 70%, #c9a0dc 100%);
+    linear-gradient(145deg, #F5F5F5 0%, #faf2f5 40%, #FFCEE3 70%, #fce0ec 100%);
 }
 
 .auth-layout::before,

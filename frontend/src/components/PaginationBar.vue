@@ -236,13 +236,13 @@ function setPageSize(size) {
 
 .page-button:hover:not(:disabled):not(.active) {
   background: var(--card-hover, #f5f0fa);
-  border-color: var(--primary, #640c72);
+  border-color: var(--primary, var(--primary));
 }
 
 .page-button.active {
   background: var(--primary-surface, rgba(100, 12, 114, 0.1));
-  border-color: var(--primary, #640c72);
-  color: var(--primary, #640c72);
+  border-color: var(--primary, var(--primary));
+  color: var(--primary, var(--primary));
   font-weight: 700;
 }
 
@@ -279,14 +279,14 @@ function setPageSize(size) {
   border: 1.5px solid var(--line-strong, #d0cfce);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.9);
-  color: var(--primary, #640c72);
+  color: var(--primary, var(--primary));
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
 }
 
 .page-btn:hover:not(:disabled) {
   background: var(--primary-surface, rgba(100, 12, 114, 0.08));
-  border-color: var(--primary, #640c72);
+  border-color: var(--primary, var(--primary));
 }
 
 .page-btn:active:not(:disabled) {
@@ -351,7 +351,7 @@ function setPageSize(size) {
 }
 
 .page-size-select:focus {
-  border-color: var(--primary, #640c72);
+  border-color: var(--primary, var(--primary));
   box-shadow: 0 0 0 3px var(--primary-surface, rgba(100, 12, 114, 0.08));
 }
 </style>

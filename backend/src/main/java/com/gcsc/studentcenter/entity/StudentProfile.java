@@ -161,11 +161,23 @@ public class StudentProfile {
     @Column(name = "emergency_relation", length = 32)
     private String emergencyRelation;
 
-    @Column(name = "is_hk_mo_tw")
-    private Boolean hkMoTw;
+    @Column(name = "is_hk")
+    private Boolean isHk;
+
+    @Column(name = "is_mo")
+    private Boolean isMo;
+
+    @Column(name = "is_tw")
+    private Boolean isTw;
 
     @Column(name = "is_special")
     private Boolean specialStudent;
+
+    @Column(name = "special_student_type", length = 255)
+    private String specialStudentType;
+
+    @Column(name = "special_student_remark", length = 255)
+    private String specialStudentRemark;
 
     @Column(name = "father_name", length = 64)
     private String fatherName;
@@ -568,12 +580,28 @@ public class StudentProfile {
         this.emergencyRelation = emergencyRelation;
     }
 
-    public Boolean getHkMoTw() {
-        return hkMoTw;
+    public Boolean getIsHk() {
+        return isHk;
     }
 
-    public void setHkMoTw(Boolean hkMoTw) {
-        this.hkMoTw = hkMoTw;
+    public void setIsHk(Boolean isHk) {
+        this.isHk = isHk;
+    }
+
+    public Boolean getIsMo() {
+        return isMo;
+    }
+
+    public void setIsMo(Boolean isMo) {
+        this.isMo = isMo;
+    }
+
+    public Boolean getIsTw() {
+        return isTw;
+    }
+
+    public void setIsTw(Boolean isTw) {
+        this.isTw = isTw;
     }
 
     public Boolean getSpecialStudent() {
@@ -582,6 +610,22 @@ public class StudentProfile {
 
     public void setSpecialStudent(Boolean specialStudent) {
         this.specialStudent = specialStudent;
+    }
+
+    public String getSpecialStudentType() {
+        return specialStudentType;
+    }
+
+    public void setSpecialStudentType(String specialStudentType) {
+        this.specialStudentType = specialStudentType;
+    }
+
+    public String getSpecialStudentRemark() {
+        return specialStudentRemark;
+    }
+
+    public void setSpecialStudentRemark(String specialStudentRemark) {
+        this.specialStudentRemark = specialStudentRemark;
     }
 
     public String getFatherName() {

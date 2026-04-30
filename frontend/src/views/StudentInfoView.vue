@@ -1,5 +1,78 @@
 <template>
   <main class="dashboard-right">
+    <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template #right>
+        <button class="capsule-action is-filter" type="button" @click="openMobileFilter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+          </svg>
+          筛选
+          <span v-if="hasActiveFilters" class="capsule-filter-dot"></span>
+        </button>
+        <button class="capsule-action" type="button" @click="toggleGridView">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          {{ gridViewOpen ? "列表" : "表格" }}
+        </button>
+        <button
+          v-if="gridViewOpen"
+          class="capsule-action"
+          :class="{ 'capsule-active': gridFullscreen }"
+          type="button"
+          @click="toggleGridFullscreen"
+        >
+          {{ gridFullscreen ? "退出" : "全屏" }}
+        </button>
+        <button
+          v-if="!gridViewOpen"
+          class="capsule-action"
+          :class="{ 'capsule-active': selectMenuOpen }"
+          type="button"
+          aria-label="选择学生"
+          @click.stop="toggleSelectMenu"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          选择
+        </button>
+      </template>
+    </MobileCapsule>
+
+    <Teleport to="body">
+      <Transition name="select-float">
+        <div v-if="selectMenuOpen && !gridViewOpen" class="select-float-menu" @click.stop>
+          <button
+            class="select-float-btn"
+            type="button"
+            @click="handleSelectPage"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+            </svg>
+            选择本页
+          </button>
+          <button
+            class="select-float-btn"
+            type="button"
+            :disabled="selectAllLoading"
+            @click="handleSelectAll"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            {{ selectAllLoading ? "选择中..." : "选择全部" }}
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
+
     <header class="feed-header">
       <h1 class="feed-title">学生信息</h1>
     </header>
@@ -9,9 +82,6 @@
         <div class="student-filter-toolbar">
           <div class="student-filter-intro">
             <div class="info-section-title">搜索与筛选</div>
-            <div class="student-filter-caption">
-              {{ hasActiveFilters ? "已应用筛选条件" : "按姓名、学号、班级快速定位学生" }}
-            </div>
           </div>
           <div class="student-filter-search-wrap">
             <input
@@ -86,26 +156,45 @@
               <div class="student-filter-panel-head">
                 <span class="info-label">班级</span>
               </div>
-              <StepperInput
-                v-model="filters.classNo"
-                :min="1"
-                :max="10"
-                wrap
-                placeholder="全部"
-              />
+              <select v-model="filters.classNo" class="info-input">
+                <option value="">全部</option>
+                <option
+                  v-for="n in 10"
+                  :key="n"
+                  :value="String(n)"
+                >
+                  {{ n }}
+                </option>
+              </select>
             </div>
           </div>
 
           <div class="student-filter-meta">
             <div class="student-filter-flags">
               <label class="info-choice">
-                <input v-model="filters.isHkMoTw" type="checkbox" />
-                港澳台
+                <input v-model="filters.isHk" type="checkbox" />
+                香港
               </label>
               <label class="info-choice">
-                <input v-model="filters.isSpecial" type="checkbox" />
-                特殊学生
+                <input v-model="filters.isMo" type="checkbox" />
+                澳门
               </label>
+              <label class="info-choice">
+                <input v-model="filters.isTw" type="checkbox" />
+                台湾
+              </label>
+              <div class="student-special-filter">
+                <span class="info-label" style="margin-right: 6px;">特殊学生</span>
+                <select v-model="filters.specialStudentType" class="info-input">
+                  <option
+                    v-for="opt in specialStudentTypeOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
             </div>
             <div class="student-filter-status">
               {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
@@ -140,7 +229,10 @@
 
       <section class="card student-results-card">
         <div v-if="!gridViewOpen" class="student-results-header">
-          <div class="info-section-title">筛选结果</div>
+          <div class="info-section-title">
+            筛选结果
+            <span v-if="hasActiveFilters" class="student-results-count">已筛选</span>
+          </div>
           <div class="student-results-actions">
             <button
               class="ghost-button"
@@ -182,22 +274,33 @@
           加载学生信息中...
         </div>
         <div v-else-if="pagedStudents.length" class="student-list">
-          <div v-for="item in pagedStudents" :key="item.id" class="student-row">
-            <input v-model="selectedIds" type="checkbox" :value="item.id" />
+          <div
+            v-for="item in pagedStudents"
+            :key="item.id"
+            class="student-row"
+            :class="{ selected: selectedIds.includes(item.id) }"
+            @click="openDetail(item)"
+          >
+            <input v-model="selectedIds" type="checkbox" :value="item.id" @click.stop />
+            <div class="student-avatar">
+              <img v-if="item.avatarUrl" :src="resolveMediaUrl(item.avatarUrl)" :alt="item.name" />
+              <span v-else>{{ (item.name || '?')[0] }}</span>
+            </div>
             <div class="student-main">
-              <div class="student-name">{{ item.name }}</div>
+              <div class="student-name-row">
+                <span class="student-name">{{ item.name }}</span>
+                <span class="student-no-inline">{{ item.studentNo }}</span>
+              </div>
               <div class="student-meta">
                 {{ item.gradeYear }}级 {{ item.major }}{{ item.classNo }}班
-                {{ item.studentNo }}
+              </div>
+              <div v-if="item.isHk || item.isMo || item.isTw" class="student-hkmo-badge">
+                {{ getHkMoTwLabel(item) }}
+              </div>
+              <div v-if="item.specialStudentType" class="student-special-badge">
+                {{ getSpecialStudentTypeLabel(item.specialStudentType) }}
               </div>
             </div>
-            <button
-              class="ghost-button"
-              type="button"
-              @click="openDetail(item)"
-            >
-              详情
-            </button>
           </div>
         </div>
         <div v-else class="empty-tip">没有匹配的学生。</div>
@@ -233,22 +336,6 @@
         @click="openExportDialog"
       >
         {{ exportLabel }}
-      </button>
-      <button
-        class="floating-btn floating-btn-toggle"
-        type="button"
-        @click="toggleGridView"
-        :title="gridViewOpen ? '切换列表视图' : '切换表格视图'"
-      >
-        <span class="floating-toggle-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path
-              d="M7 7h10v3h2V5H5v5h2V7zm10 10H7v-3H5v5h14v-5h-2v3zM9 10l-3 2 3 2v-4zm6 4 3-2-3-2v4z"
-              fill="currentColor"
-            />
-          </svg>
-        </span>
-        {{ gridViewOpen ? "切换列表" : "切换表格" }}
       </button>
     </div>
 
@@ -318,6 +405,135 @@
       </div>
     </OverlayPanel>
 
+    <!-- Mobile Filter Sheet -->
+    <Teleport to="body">
+      <div v-if="mobileFilterOpen" class="sheet-overlay open" @click.self="closeMobileFilter">
+        <div class="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="筛选">
+          <div class="mobile-filter-handle"></div>
+          <header class="mobile-filter-header">
+            <h2 class="mobile-filter-title">筛选学生</h2>
+            <button class="mobile-filter-close" type="button" @click="closeMobileFilter">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </header>
+          <div class="mobile-filter-body">
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">关键词搜索</label>
+              <div class="mobile-filter-search">
+                <svg class="mobile-filter-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  v-model="filters.keyword"
+                  class="mobile-filter-input"
+                  type="text"
+                  placeholder="姓名、学号、班级..."
+                />
+              </div>
+            </div>
+
+            <div class="mobile-filter-row">
+              <div class="mobile-filter-section half">
+                <label class="mobile-filter-label">年级</label>
+                <div class="mobile-filter-select-wrap">
+                  <select v-model="filters.classYear" class="mobile-filter-select">
+                    <option value="">全部年级</option>
+                    <option v-for="year in classYearOptions" :key="year" :value="String(year)">{{ year }}级</option>
+                  </select>
+                  <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="mobile-filter-section half">
+                <label class="mobile-filter-label">班级</label>
+                <div class="mobile-filter-select-wrap">
+                  <select v-model="filters.classNo" class="mobile-filter-select">
+                    <option value="">全部班级</option>
+                    <option v-for="n in 10" :key="n" :value="String(n)">{{ n }}班</option>
+                  </select>
+                  <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">学生类型</label>
+              <div class="mobile-filter-select-wrap">
+                <select v-model="filters.studentCategory" class="mobile-filter-select">
+                  <option value="">全部类型</option>
+                  <option v-for="cat in studentCategoryOptions" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
+                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">专业</label>
+              <div class="mobile-filter-select-wrap">
+                <select v-model="filters.major" class="mobile-filter-select" :disabled="!filters.studentCategory">
+                  <option value="">全部专业</option>
+                  <option v-for="major in availableMajors" :key="major" :value="major">{{ major }}</option>
+                </select>
+                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">港澳台学生</label>
+              <div class="mobile-filter-chips">
+                <label class="mobile-filter-chip" :class="{ active: filters.isHk }">
+                  <input v-model="filters.isHk" type="checkbox" hidden />
+                  <span>香港</span>
+                </label>
+                <label class="mobile-filter-chip" :class="{ active: filters.isMo }">
+                  <input v-model="filters.isMo" type="checkbox" hidden />
+                  <span>澳门</span>
+                </label>
+                <label class="mobile-filter-chip" :class="{ active: filters.isTw }">
+                  <input v-model="filters.isTw" type="checkbox" hidden />
+                  <span>台湾</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="mobile-filter-section">
+              <label class="mobile-filter-label">特殊学生</label>
+              <div class="mobile-filter-select-wrap">
+                <select v-model="filters.specialStudentType" class="mobile-filter-select">
+                  <option value="">无</option>
+                  <option v-for="opt in specialStudentTypeOptions.slice(1)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="mobile-filter-footer">
+            <button class="mobile-filter-reset" type="button" @click="resetFilters">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              重置
+            </button>
+            <button class="mobile-filter-apply" type="button" @click="closeMobileFilter">
+              应用筛选
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <transition name="publisher-backdrop">
       <div
         v-if="viewOpen"
@@ -334,10 +550,13 @@
       }"
       :aria-hidden="!viewOpen"
     >
-      <header class="publisher-header">
-        <div class="publisher-title">学生详情</div>
-        <button class="publisher-close" type="button" @click="closeView">
-          关闭
+      <div class="student-detail-handle"></div>
+      <header class="student-detail-header">
+        <div class="student-detail-title">学生详情</div>
+        <button class="student-detail-close" type="button" @click="closeView">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
         </button>
       </header>
       <div v-if="viewLoading" class="empty-tip">加载中...</div>
@@ -358,14 +577,17 @@
       :class="{ open: achievementsOpen, closing: achievementsClosing }"
       :aria-hidden="!achievementsOpen"
     >
-      <header class="publisher-header">
-        <div class="publisher-title">个人成就</div>
+      <div class="student-detail-handle"></div>
+      <header class="student-detail-header">
+        <div class="student-detail-title">个人成就</div>
         <button
-          class="publisher-close"
+          class="student-detail-close"
           type="button"
           @click="closeAchievements"
         >
-          关闭
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
         </button>
       </header>
       <div class="student-achievements-body" v-if="viewItem">
@@ -387,23 +609,6 @@
       @close="closeExportDialog"
       @export-success="toastSuccess('学生信息已导出')"
     />
-
-    <MobileCapsule @open-sidebar="openDashboardSidebar">
-      <template #right>
-        <button class="capsule-action" type="button" @click="toggleGridView">
-          {{ gridViewOpen ? "列表" : "表格" }}
-        </button>
-        <button
-          v-if="gridViewOpen"
-          class="capsule-action"
-          :class="{ 'capsule-active': gridFullscreen }"
-          type="button"
-          @click="toggleGridFullscreen"
-        >
-          {{ gridFullscreen ? "退出" : "全屏" }}
-        </button>
-      </template>
-    </MobileCapsule>
 
     <div
       :class="['sheet-overlay', { open: gridViewConfirmOpen }]"
@@ -432,7 +637,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -451,7 +656,6 @@ import MobileCapsule from "../components/MobileCapsule.vue";
 import StudentExportDialog from "../components/StudentExportDialog.vue";
 import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import PaginationBar from "../components/PaginationBar.vue";
-import StepperInput from "../components/StepperInput.vue";
 import OverlayPanel from "../components/OverlayPanel.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
@@ -497,6 +701,42 @@ const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
 const sidebarOpen = ref(false);
 const activeCategory = ref("all");
+const mobileFilterOpen = ref(false);
+const selectMenuOpen = ref(false);
+
+function toggleSelectMenu() {
+  selectMenuOpen.value = !selectMenuOpen.value;
+}
+
+function closeSelectMenu() {
+  selectMenuOpen.value = false;
+}
+
+function handleSelectPage() {
+  closeSelectMenu();
+  selectCurrentPage();
+}
+
+function handleSelectAll() {
+  closeSelectMenu();
+  selectAllFiltered();
+}
+
+function onDocumentClick(e) {
+  if (!selectMenuOpen.value) return;
+  const menu = document.querySelector(".select-float-menu");
+  if (menu && !menu.contains(e.target)) {
+    closeSelectMenu();
+  }
+}
+
+function openMobileFilter() {
+  mobileFilterOpen.value = true;
+}
+
+function closeMobileFilter() {
+  mobileFilterOpen.value = false;
+}
 
 const classYearOptions = Array.from({ length: 11 }, (_, index) => 2020 + index);
 const majorOptions = [
@@ -576,13 +816,36 @@ const gridLocaleTextFunc = (key, defaultValue) => {
   return defaultValue;
 };
 
+const specialStudentTypeOptions = [
+  { value: "", label: "无" },
+  { value: "HIGH_CARE", label: "高关怀" },
+  { value: "ECONOMIC_SPECIAL", label: "经济困难>特殊困难" },
+  { value: "ECONOMIC_DIFFICULT", label: "经济困难>困难" },
+  { value: "ECONOMIC_GENERAL", label: "经济困难>一般困难" },
+  { value: "DISABILITY", label: "残疾" },
+  { value: "ORPHAN", label: "孤儿" },
+  { value: "ACADEMIC_DIFFICULTY", label: "学业困难" },
+];
+
+const specialStudentTypeLabelMap = {
+  HIGH_CARE: "高关怀",
+  ECONOMIC_SPECIAL: "经济困难>特殊困难",
+  ECONOMIC_DIFFICULT: "经济困难>困难",
+  ECONOMIC_GENERAL: "经济困难>一般困难",
+  DISABILITY: "残疾",
+  ORPHAN: "孤儿",
+  ACADEMIC_DIFFICULTY: "学业困难",
+};
+
 const filters = reactive({
   classYear: "",
   studentCategory: "",
   major: "",
   classNo: "",
-  isHkMoTw: false,
-  isSpecial: false,
+  isHk: false,
+  isMo: false,
+  isTw: false,
+  specialStudentType: "",
   keyword: "",
 });
 
@@ -667,7 +930,9 @@ const exportGroups = [
       { key: "motherPhone", label: "母亲电话" },
       { key: "motherWorkUnit", label: "母亲工作单位" },
       { key: "motherTitle", label: "母亲职务" },
-      { key: "hkMoTw", label: "港澳台" },
+      { key: "isHk", label: "香港" },
+      { key: "isMo", label: "澳门" },
+      { key: "isTw", label: "台湾" },
       { key: "specialStudent", label: "特殊学生" },
     ],
   },
@@ -748,7 +1013,7 @@ const familyRows = computed(() => {
     ["motherName", "motherPhone", "motherWorkUnit", "motherTitle"]
       .map((key) => byKey[key])
       .filter(Boolean),
-    ["hkMoTw", "specialStudent"].map((key) => byKey[key]).filter(Boolean),
+    ["isHk", "isMo", "isTw", "specialStudent"].map((key) => byKey[key]).filter(Boolean),
   ];
 });
 
@@ -765,8 +1030,8 @@ const hasActiveFilters = computed(() => {
     filters.studentCategory ||
     filters.major ||
     filters.classNo ||
-    filters.isHkMoTw ||
-    filters.isSpecial ||
+    filters.isHk || filters.isMo || filters.isTw ||
+    filters.specialStudentType ||
     filters.keyword,
   );
 });
@@ -805,8 +1070,10 @@ watch(
     studentCategory: filters.studentCategory,
     major: filters.major,
     classNo: filters.classNo,
-    isHkMoTw: filters.isHkMoTw,
-    isSpecial: filters.isSpecial,
+    isHk: filters.isHk,
+    isMo: filters.isMo,
+    isTw: filters.isTw,
+    specialStudentType: filters.specialStudentType,
     keyword: filters.keyword,
   }),
   () => {
@@ -860,14 +1127,18 @@ async function fetchStudents() {
     students.value = (data?.items || []).map((item) => ({
       id: item.id,
       name: item.fullName || "未命名",
+      avatarUrl: item.avatarUrl || "",
       className: buildClassName(item),
       gradeYear: item.classYear || "",
       college: item.college || "",
       major: item.classMajor || "",
       classNo: item.classNo || "",
       studentNo: item.studentNo || "",
-      hkMoTw: item.hkMoTw || false,
+      isHk: item.isHk || false,
+      isMo: item.isMo || false,
+      isTw: item.isTw || false,
       specialStudent: item.specialStudent || false,
+      specialStudentType: item.specialStudentType || "",
     }));
     totalPages.value = Math.max(1, data?.totalPages || 1);
     totalItems.value = data?.total || 0;
@@ -1086,6 +1357,18 @@ function saveViewProfile(payload) {
   return saveStudentProfileById(viewItem.value.id, payload);
 }
 
+function getSpecialStudentTypeLabel(type) {
+  return specialStudentTypeLabelMap[type] || type || "";
+}
+
+function getHkMoTwLabel(item) {
+  const parts = [];
+  if (item.isHk) parts.push("香港");
+  if (item.isMo) parts.push("澳门");
+  if (item.isTw) parts.push("台湾");
+  return parts.join(" / ");
+}
+
 function handleViewProfileSaved(data) {
   if (!data) {
     return;
@@ -1105,13 +1388,17 @@ function handleViewProfileSaved(data) {
       major: data.classMajor || "",
       classNo: data.classNo || "",
       studentNo: data.studentNo || "",
-      hkMoTw: data.hkMoTw || false,
+      isHk: data.isHk || false,
+      isMo: data.isMo || false,
+      isTw: data.isTw || false,
       specialStudent: data.specialStudent || false,
+      specialStudentType: data.specialStudentType || "",
     };
   });
 }
 
 onMounted(async () => {
+  document.addEventListener("click", onDocumentClick);
   const keywordParam = route.query.keyword;
   if (keywordParam && typeof keywordParam === "string") {
     filters.keyword = keywordParam;
@@ -1163,8 +1450,10 @@ function resetFilters() {
   filters.studentCategory = "";
   filters.major = "";
   filters.classNo = "";
-  filters.isHkMoTw = false;
-  filters.isSpecial = false;
+  filters.isHk = false;
+  filters.isMo = false;
+  filters.isTw = false;
+  filters.specialStudentType = "";
   filters.keyword = "";
 }
 
@@ -1185,11 +1474,17 @@ function buildSearchParams(page, size) {
   if (filters.classNo) {
     params.classNo = Number(filters.classNo);
   }
-  if (filters.isHkMoTw) {
-    params.hkMoTw = true;
+  if (filters.isHk) {
+    params.isHk = true;
   }
-  if (filters.isSpecial) {
-    params.specialStudent = true;
+  if (filters.isMo) {
+    params.isMo = true;
+  }
+  if (filters.isTw) {
+    params.isTw = true;
+  }
+  if (filters.specialStudentType) {
+    params.specialStudentType = filters.specialStudentType;
   }
   if (filters.keyword && filters.keyword.trim()) {
     params.keyword = filters.keyword.trim();
@@ -1278,7 +1573,9 @@ const MAIN_FIELD_ORDER = [
   "motherPhone",
   "motherWorkUnit",
   "motherTitle",
-  "hkMoTw",
+  "isHk",
+  "isMo",
+  "isTw",
   "specialStudent",
   "emergencyPhone",
   "emergencyRelation",
@@ -1325,7 +1622,9 @@ const MAIN_FIELD_META = {
     getter: (item) => item.dormBuilding || "",
   },
   dormRoom: { label: "住宿房间", getter: (item) => item.dormRoom || "" },
-  hkMoTw: { label: "港澳台", getter: (item) => (item.hkMoTw ? "是" : "否") },
+  isHk: { label: "香港", getter: (item) => (item.isHk ? "是" : "否") },
+  isMo: { label: "澳门", getter: (item) => (item.isMo ? "是" : "否") },
+  isTw: { label: "台湾", getter: (item) => (item.isTw ? "是" : "否") },
   specialStudent: {
     label: "特殊学生",
     getter: (item) => (item.specialStudent ? "是" : "否"),
@@ -1984,8 +2283,350 @@ function closeSidebar() {
 function goToSettings() {
   navigateWithViewTransition(router, "/settings");
 }
+
+onUnmounted(() => {
+  document.removeEventListener("click", onDocumentClick);
+});
 </script>
 
 <style scoped>
 @import '../assets/styles/student-info-view.css';
+
+/* Mobile filter capsule button */
+.capsule-action.is-filter {
+  position: relative;
+}
+
+.capsule-filter-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary, #e74c3c);
+}
+
+/* Mobile filter sheet - bottom sheet style */
+.mobile-filter-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: auto;
+  max-width: 100%;
+  max-height: 90vh;
+  background: var(--card, #fff);
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  animation: sheet-slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.mobile-filter-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--line, #ddd);
+  border-radius: 2px;
+  margin: 12px auto;
+  flex-shrink: 0;
+}
+
+.mobile-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 16px;
+  border-bottom: 1px solid var(--line, #f0f0f0);
+  flex-shrink: 0;
+}
+
+.mobile-filter-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text, #1a1a1a);
+  margin: 0;
+}
+
+.mobile-filter-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-secondary, #f5f5f5);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+}
+
+.mobile-filter-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.mobile-filter-row {
+  display: flex;
+  gap: 12px;
+}
+
+.mobile-filter-section {
+  margin-bottom: 20px;
+}
+
+.mobile-filter-section.half {
+  flex: 1;
+}
+
+.mobile-filter-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #888);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.mobile-filter-search {
+  position: relative;
+}
+
+.mobile-filter-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary, #aaa);
+}
+
+.mobile-filter-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 12px;
+  font-size: 15px;
+  background: var(--bg-secondary, #f8f8f8);
+  color: var(--text, #1a1a1a);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mobile-filter-input:focus {
+  outline: none;
+  border-color: var(--primary, var(--primary));
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
+  background: var(--card, #fff);
+}
+
+.mobile-filter-select-wrap {
+  position: relative;
+}
+
+.mobile-filter-select {
+  width: 100%;
+  height: 44px;
+  padding: 0 36px 0 14px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 12px;
+  font-size: 15px;
+  background: var(--bg-secondary, #f8f8f8);
+  color: var(--text, #1a1a1a);
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mobile-filter-select:focus {
+  outline: none;
+  border-color: var(--primary, var(--primary));
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
+  background: var(--card, #fff);
+}
+
+.mobile-filter-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-filter-select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary, #aaa);
+  pointer-events: none;
+}
+
+.mobile-filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mobile-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-secondary, #f0f0f0);
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.mobile-filter-chip:hover {
+  background: var(--bg-secondary, #e8e8e8);
+}
+
+.mobile-filter-chip.active {
+  background: var(--primary, var(--primary));
+  color: #fff;
+}
+
+.mobile-filter-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line, #f0f0f0);
+  flex-shrink: 0;
+  background: var(--card, #fff);
+}
+
+.mobile-filter-reset {
+  flex: 0 0 auto;
+  height: 46px;
+  padding: 0 20px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 23px;
+  background: var(--card, #fff);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.mobile-filter-reset:hover {
+  border-color: var(--text-secondary, #999);
+  color: var(--text, #333);
+}
+
+.mobile-filter-apply {
+  flex: 1;
+  height: 46px;
+  border: none;
+  border-radius: 23px;
+  background: linear-gradient(135deg, var(--primary, var(--primary)) 0%, var(--primary-dark, var(--primary-dark)) 100%);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(100, 12, 114, 0.3);
+}
+
+.mobile-filter-apply:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(100, 12, 114, 0.4);
+}
+
+.mobile-filter-apply:active {
+  transform: translateY(0);
+}
+
+/* Floating select menu above capsule */
+.select-float-menu {
+  position: fixed;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 56;
+}
+
+.select-float-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.select-float-btn:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+}
+
+.select-float-btn:active {
+  transform: scale(0.96);
+}
+
+.select-float-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Transition */
+.select-float-enter-active {
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-float-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-float-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.94);
+}
+
+.select-float-leave-to {
+  opacity: 0;
+  transform: translateY(4px) scale(0.96);
+}
+
+/* Hide desktop filter and results actions on mobile */
+@media (max-width: 768px) {
+  .student-filter-card {
+    display: none;
+  }
+  .student-results-actions {
+    display: none;
+  }
+}
 </style>

@@ -22,6 +22,7 @@ public class AchievementReviewRequestResponse {
     private final String rejectionReason;
     private final JsonNode payloadSnapshot;
     private final List<Map<String, Object>> changes;
+    private final List<Map<String, Object>> supportingDocuments;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -41,6 +42,7 @@ public class AchievementReviewRequestResponse {
         String rejectionReason,
         JsonNode payloadSnapshot,
         List<Map<String, Object>> changes,
+        List<Map<String, Object>> supportingDocuments,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
     ) {
@@ -59,6 +61,7 @@ public class AchievementReviewRequestResponse {
         this.rejectionReason = rejectionReason;
         this.payloadSnapshot = payloadSnapshot;
         this.changes = changes;
+        this.supportingDocuments = supportingDocuments;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -121,6 +124,10 @@ public class AchievementReviewRequestResponse {
 
     public List<Map<String, Object>> getChanges() {
         return changes;
+    }
+
+    public List<Map<String, Object>> getSupportingDocuments() {
+        return supportingDocuments;
     }
 
     public LocalDateTime getCreatedAt() {

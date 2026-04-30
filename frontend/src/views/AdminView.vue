@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
 import PaginationBar from "../components/PaginationBar.vue";
+import MobileCapsule from "../components/MobileCapsule.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
 import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses } from "../api/admin";
 import { useToast } from "../composables/useToast";
+import { useDashboardShell } from "../composables/useDashboardShell";
 import { loadUser } from "../utils/userStorage";
 import { buildClassName } from "../utils/profile";
 
@@ -16,7 +18,16 @@ const ATTACHMENT_TYPE_OPTIONS = [
 ];
 
 const profile = reactive(loadUser());
+const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const activeSection = shallowRef("upload");
+
+const ADMIN_TABS = [
+  { key: "upload", label: "上传限制", shortLabel: "媒体", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+  { key: "review", label: "审核策略", shortLabel: "审核", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+  { key: "users", label: "用户管理", shortLabel: "用户", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
+  { key: "backup", label: "备份与恢复", shortLabel: "数据", icon: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" },
+  { key: "other", label: "其他设置", shortLabel: "其他", icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" },
+];
 
 // Backup & Restore
 const backupForm = reactive({
@@ -175,6 +186,14 @@ async function fetchSystemSettings() {
   }
 }
 
+function stepThreshold(delta) {
+  const next = (systemSettings.delayedThresholdDays || 2) + delta;
+  if (next >= 1 && next <= 30) {
+    systemSettings.delayedThresholdDays = next;
+    handleSaveSystemSettings();
+  }
+}
+
 async function handleSaveSystemSettings() {
   systemSettingsMsg.value = "";
   try {
@@ -253,6 +272,8 @@ const form = reactive({
   attachmentVideoExts: settings.attachmentVideoExts,
   attachmentImageExts: settings.attachmentImageExts,
   attachmentArchiveExts: settings.attachmentArchiveExts,
+  supportingDocMaxCount: settings.supportingDocMaxCount,
+  supportingDocMaxSizeMb: settings.supportingDocMaxSizeMb,
 });
 const reviewForm = reactive({
   profileReviewEnabled: reviewSettings.profileReviewEnabled,
@@ -266,6 +287,9 @@ const imageSubtitle = computed(
 );
 const attachmentSubtitle = computed(
   () => `最多 ${form.attachmentMaxCount} 个 · 单个不超过 ${form.attachmentMaxSizeMb}MB`,
+);
+const supportingDocSubtitle = computed(
+  () => `最多 ${form.supportingDocMaxCount} 个 · 单个不超过 ${form.supportingDocMaxSizeMb}MB`,
 );
 const enabledPreviewTypes = computed(() =>
   ATTACHMENT_TYPE_OPTIONS.map((item) => ({
@@ -319,6 +343,8 @@ function syncFormFromSettings() {
   form.attachmentVideoExts = settings.attachmentVideoExts;
   form.attachmentImageExts = settings.attachmentImageExts;
   form.attachmentArchiveExts = settings.attachmentArchiveExts;
+  form.supportingDocMaxCount = settings.supportingDocMaxCount;
+  form.supportingDocMaxSizeMb = settings.supportingDocMaxSizeMb;
 }
 
 function syncReviewFormFromSettings() {
@@ -340,6 +366,8 @@ async function handleSubmit() {
     attachmentVideoExts: form.attachmentVideoExts,
     attachmentImageExts: form.attachmentImageExts,
     attachmentArchiveExts: form.attachmentArchiveExts,
+    supportingDocMaxCount: Number(form.supportingDocMaxCount),
+    supportingDocMaxSizeMb: Number(form.supportingDocMaxSizeMb),
   });
   if (result.success) {
     saveMessage.value = "上传限制已更新，成就页面会同步显示。";
@@ -453,10 +481,11 @@ const editModal = reactive({
     // Teacher assigned classes: list of full class name strings
     assignedClasses: [],
     // New class entry fields
-    newClassYear: "",
+    newClassYear: 2024,
     newClassCategory: "本科生",
     newClassMajor: "",
     newClassNo: 1,
+    remark: "",
   },
 });
 
@@ -485,23 +514,57 @@ async function handleCreateUser() {
     addUserModal.error = "请输入用户信息";
     return;
   }
+  // Parse and validate all lines first
+  const parsedUsers = [];
+  const errors = [];
+  const seenUsernames = new Set();
+
   for (let i = 0; i < lines.length; i++) {
     const parts = lines[i].split(",").map(p => p.trim());
     if (parts.length < 3) {
-      addUserModal.error = `第 ${i + 1} 行格式错误，需要：名字,学号,密码`;
-      return;
+      errors.push(`第 ${i + 1} 行：${parts[0] || '空'}，${parts[1] || '空'}，字段不足`);
+      continue;
     }
+    const [displayName, username, password] = parts;
+    if (seenUsernames.has(username)) {
+      errors.push(`第 ${i + 1} 行：${displayName}，${username}，重复`);
+      continue;
+    }
+    seenUsernames.add(username);
+    parsedUsers.push({ displayName, username, password, line: i + 1 });
   }
+
+  if (errors.length > 0) {
+    addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    return;
+  }
+
+  if (parsedUsers.length === 0) {
+    addUserModal.error = "没有有效用户数据";
+    return;
+  }
+
   addUserModal.saving = true;
   addUserModal.error = "";
+  const created = [];
+  const failed = [];
   try {
-    for (const line of lines) {
-      const [displayName, username, password] = line.split(",").map(p => p.trim());
-      await createUser({ displayName, username, password });
+    for (const user of parsedUsers) {
+      try {
+        await createUser(user);
+        created.push(user.username);
+      } catch (e) {
+        const msg = e?.response?.data?.message || "失败";
+        failed.push(`${user.displayName}，${user.username}，${msg}`);
+      }
     }
     await loadUsers(1);
     closeAddUserModal();
-    success(`已创建 ${lines.length} 个用户`);
+    if (failed.length > 0) {
+      addUserModal.error = `已创建 ${created.length} 个用户，失败 ${failed.length} 个：${failed.slice(0, 3).join("；")}${failed.length > 3 ? "…" : ""}`;
+    } else {
+      success(`已创建 ${created.length} 个用户`);
+    }
   } catch (e) {
     addUserModal.error = e?.response?.data?.message || "创建失败";
   } finally {
@@ -514,20 +577,50 @@ async function handleImportFile(e) {
   if (!file) return;
   const name = file.name.toLowerCase();
   try {
+    let rawLines = [];
     if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
       const XLSX = await import("xlsx");
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-      const rows = data.filter(r => r && r.length >= 3);
-      addUserModal.textarea = rows.map(r => `${r[0]},${r[1]},${r[2]}`).join("\n");
+      rawLines = data.filter(r => r && r.length >= 3);
     } else if (name.endsWith(".csv") || name.endsWith(".txt")) {
       const text = await file.text();
-      const lines = text.trim().split("\n").filter(l => l.trim());
-      addUserModal.textarea = lines.map(l => l.split(",").map(p => p.trim()).join(",")).join("\n");
+      rawLines = text.trim().split("\n").filter(l => l.trim());
     } else {
       addUserModal.error = "不支持的文件格式，请上传 xlsx、csv 或 txt 文件";
+      e.target.value = "";
+      return;
+    }
+
+    // Validate and find issues
+    const errors = [];
+    const seenUsernames = new Set();
+    rawLines.forEach((row, idx) => {
+      const parts = Array.isArray(row) ? row.map(p => String(p).trim()) : String(row).split(",").map(p => p.trim());
+      const displayName = parts[0] || '空';
+      const username = parts[1] || '空';
+      if (parts.length < 3) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，字段不足`);
+        return;
+      }
+      if (seenUsernames.has(username)) {
+        errors.push(`第 ${idx + 1} 行：${displayName}，${username}，重复`);
+      }
+      seenUsernames.add(username);
+    });
+
+    const validRows = rawLines.map(r => {
+      const parts = Array.isArray(r) ? r.map(p => String(p).trim()) : String(r).split(",").map(p => p.trim());
+      return parts.slice(0, 3).join(",");
+    });
+    addUserModal.textarea = validRows.join("\n");
+
+    if (errors.length > 0) {
+      addUserModal.error = errors.slice(0, 5).join("；") + (errors.length > 5 ? `…还有 ${errors.length - 5} 条` : "");
+    } else {
+      addUserModal.error = "";
     }
   } catch (err) {
     addUserModal.error = "文件解析失败";
@@ -536,16 +629,19 @@ async function handleImportFile(e) {
 }
 
 async function openEditModal(user) {
-  editModal.user = user;
-  editModal.form.username = user.username;
+  // Always get fresh user data from users array to avoid stale reference
+  const freshUser = users.value.find(u => u.id === user.id) || user;
+  editModal.user = freshUser;
+  editModal.form.username = freshUser.username;
   editModal.form.password = "";
-  editModal.form.role = user.role;
+  editModal.form.role = freshUser.role;
+  editModal.form.remark = freshUser.remark || "";
   // Load existing assigned classes for teachers
-  const existingAssigned = user.assignedClasses
-    ? user.assignedClasses.split(",").map(c => c.trim()).filter(Boolean)
+  const existingAssigned = freshUser.assignedClasses
+    ? freshUser.assignedClasses.split(",").map(c => c.trim()).filter(Boolean)
     : [];
   editModal.form.assignedClasses = existingAssigned;
-  editModal.form.newClassYear = "";
+  editModal.form.newClassYear = 2024;
   editModal.form.newClassCategory = "本科生";
   editModal.form.newClassMajor = "";
   editModal.form.newClassNo = 1;
@@ -574,7 +670,7 @@ function addTeacherAssignedClass() {
     return;
   }
   editModal.form.assignedClasses.push(className);
-  editModal.form.newClassYear = "";
+  editModal.form.newClassYear = 2024;
   editModal.form.newClassMajor = "";
   editModal.form.newClassNo = 1;
   editModal.error = "";
@@ -598,18 +694,20 @@ async function handleUpdateUser() {
     if (editModal.form.role !== editModal.user.role) {
       data.role = editModal.form.role;
     }
+    if (editModal.form.remark !== (editModal.user.remark || "")) {
+      data.remark = editModal.form.remark;
+    }
+    const currentRole = editModal.form.role || editModal.user.role;
+    if (currentRole === "TEACHER" || currentRole === "ADMIN") {
+      data.assignedClasses = editModal.form.assignedClasses.join(",");
+    }
     if (Object.keys(data).length > 0) {
       const res = await updateUser(editModal.user.id, data);
       if (res.data.success === false) {
         editModal.error = res.data.message || "更新失败";
+        editModal.saving = false;
         return;
       }
-    }
-    // Update teacher assigned classes if role is TEACHER
-    const currentRole = editModal.form.role || editModal.user.role;
-    if (currentRole === "TEACHER") {
-      const assignedClassesStr = editModal.form.assignedClasses.join(",");
-      await updateTeacherAssignedClasses(editModal.user.id, assignedClassesStr);
     }
     await loadUsers(userCurrentPage.value);
     closeEditModal();
@@ -657,13 +755,7 @@ watch([userSearch, userRoleFilter], () => {
     <!-- Category Tabs -->
     <nav class="admin-tabs" role="tablist" aria-label="管理功能分类">
       <button
-        v-for="tab in [
-          { key: 'upload', label: '上传限制', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-          { key: 'review', label: '审核策略', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-          { key: 'users', label: '用户管理', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-          { key: 'backup', label: '备份与恢复', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4' },
-          { key: 'other', label: '其他设置', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
-        ]"
+        v-for="tab in ADMIN_TABS"
         :key="tab.key"
         class="admin-tab"
         :class="{ active: activeSection === tab.key }"
@@ -813,6 +905,46 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
               </div>
 
+              <!-- Supporting Docs Block -->
+              <div class="setting-group">
+                <div class="setting-group-label">
+                  <span class="group-index">03</span>
+                  <span class="group-title">证明资料</span>
+                </div>
+                <div class="field-row">
+                  <div class="field-cell">
+                    <label class="field-label" for="sd-count">最多上传数量</label>
+                    <div class="input-wrap">
+                      <input
+                        id="sd-count"
+                        v-model.number="form.supportingDocMaxCount"
+                        class="text-input"
+                        type="number"
+                        min="1"
+                        max="20"
+                        aria-label="证明资料最多上传数量"
+                      />
+                      <span class="input-unit">个</span>
+                    </div>
+                  </div>
+                  <div class="field-cell">
+                    <label class="field-label" for="sd-size">单个文件最大大小</label>
+                    <div class="input-wrap">
+                      <input
+                        id="sd-size"
+                        v-model.number="form.supportingDocMaxSizeMb"
+                        class="text-input"
+                        type="number"
+                        min="1"
+                        max="200"
+                        aria-label="证明资料单个文件最大大小 MB"
+                      />
+                      <span class="input-unit">MB</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Feedback -->
               <Transition name="msg-fade">
                 <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
@@ -901,6 +1033,17 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
                 <div class="preview-tip">
                   {{ attachmentTypeSummary || "暂无可用附件类型" }} · 单个不超过 {{ form.attachmentMaxSizeMb }}MB
+                </div>
+              </div>
+              <!-- Supporting Docs Preview -->
+              <div class="preview-box" aria-hidden="true">
+                <div class="preview-box-header">
+                  <span class="preview-box-title">证明资料</span>
+                  <span class="preview-box-sub">{{ supportingDocSubtitle }}</span>
+                </div>
+                <div class="preview-empty">
+                  <div class="preview-add-btn">+</div>
+                  <span class="preview-empty-text">学生在审核通知中上传证明资料</span>
                 </div>
               </div>
             </div>
@@ -1157,11 +1300,12 @@ watch([userSearch, userRoleFilter], () => {
                           @change="selectAllPage"
                         />
                       </th>
-                      <th scope="col">用户名</th>
-                      <th scope="col">显示名称</th>
-                      <th scope="col">角色</th>
-                      <th scope="col">学号</th>
+                      <th scope="col" style="width: 130px;">用户名</th>
+                      <th scope="col" style="width: 100px;">显示名称</th>
+                      <th scope="col" style="width: 80px;">角色</th>
+                      <th scope="col" style="width: 120px;">学号</th>
                       <th scope="col">班级</th>
+                      <th scope="col" style="width: 120px;">备注</th>
                       <th scope="col" class="col-action"></th>
                     </tr>
                   </thead>
@@ -1184,6 +1328,7 @@ watch([userSearch, userRoleFilter], () => {
                       </td>
                       <td class="td-mono">{{ user.studentNo || '—' }}</td>
                       <td>{{ user.className || '—' }}</td>
+                      <td class="td-remark">{{ user.remark || '—' }}</td>
                       <td class="td-action">
                         <button class="icon-btn" @click.stop="openEditModal(user)" aria-label="编辑用户">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -1390,17 +1535,35 @@ watch([userSearch, userRoleFilter], () => {
                     <span class="toggle-title">待处理自动滞后</span>
                     <span class="toggle-hint">超过指定天数未处理的请求自动移入已滞后标签</span>
                   </div>
-                  <div class="input-wrap" style="width: 80px;">
+                  <div class="stepper-wrap">
+                    <button
+                      class="stepper-btn"
+                      type="button"
+                      aria-label="减少天数"
+                      :disabled="systemSettings.delayedThresholdDays <= 1"
+                      @click="stepThreshold(-1)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14" /></svg>
+                    </button>
                     <input
                       v-model.number="systemSettings.delayedThresholdDays"
-                      class="text-input"
+                      class="stepper-input"
                       type="number"
                       min="1"
                       max="30"
                       aria-label="待处理自动滞后天数"
                       @change="handleSaveSystemSettings"
                     />
-                    <span class="input-unit">天</span>
+                    <button
+                      class="stepper-btn"
+                      type="button"
+                      aria-label="增加天数"
+                      :disabled="systemSettings.delayedThresholdDays >= 30"
+                      @click="stepThreshold(1)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                    <span class="stepper-unit">天</span>
                   </div>
                 </div>
               </div>
@@ -1456,6 +1619,16 @@ watch([userSearch, userRoleFilter], () => {
               <select id="edit-role" v-model="editModal.form.role" class="modal-select">
                 <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
+            </div>
+            <div class="modal-field">
+              <label class="modal-label" for="edit-remark">备注</label>
+              <input
+                id="edit-remark"
+                v-model="editModal.form.remark"
+                class="modal-input"
+                type="text"
+                placeholder="如：班主任、班长、团支书等"
+              />
             </div>
             <Transition name="msg-fade">
               <div v-if="editModal.form.role === 'TEACHER'" class="modal-field">
@@ -1602,6 +1775,27 @@ watch([userSearch, userRoleFilter], () => {
         </div>
       </div>
     </Teleport>
+
+    <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template #right>
+        <button
+          v-for="tab in ADMIN_TABS"
+          :key="tab.key"
+          class="capsule-action admin-capsule-btn"
+          :class="{ 'capsule-active': activeSection === tab.key }"
+          type="button"
+          :aria-label="tab.label"
+          @click="switchSection(tab.key)"
+        >
+          <span class="capsule-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="tab.icon" />
+            </svg>
+          </span>
+          <span class="admin-capsule-label">{{ tab.shortLabel }}</span>
+        </button>
+      </template>
+    </MobileCapsule>
   </main>
 </template>
 
@@ -1728,5 +1922,62 @@ watch([userSearch, userRoleFilter], () => {
 
 .add-class-btn:hover {
   opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .add-user-layout {
+    width: calc(100vw - 32px);
+    max-width: 480px;
+  }
+  .add-user-example-panel {
+    display: none;
+  }
+  .add-user-modal {
+    width: 100% !important;
+  }
+}
+
+/* ── Admin Capsule Theme Overrides ────────────────────── */
+:deep(.capsule-left) {
+  padding: 10px 2px 10px 6px;
+}
+:deep(.capsule-right) {
+  flex: 1;
+  justify-content: space-evenly;
+  padding: 10px 6px 10px 2px;
+}
+
+.admin-capsule-btn {
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--primary);
+  padding: 6px clamp(3px, 2.2vw, 10px);
+  border: 1px solid rgba(100, 12, 114, 0.12);
+}
+.admin-capsule-btn .capsule-icon {
+  flex-shrink: 0;
+}
+
+.admin-capsule-label {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.capsule-action:active {
+  background: rgba(100, 12, 114, 0.08);
+}
+
+.capsule-action.capsule-active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+@media (max-width: 840px) {
+  .admin-shell {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  }
 }
 </style>

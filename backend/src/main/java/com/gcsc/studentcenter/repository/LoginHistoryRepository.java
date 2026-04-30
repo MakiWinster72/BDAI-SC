@@ -17,6 +17,8 @@ public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long
 
     Page<LoginHistory> findAllByUserIdOrderByLoginTimeDesc(Long userId, Pageable pageable);
 
+    Page<LoginHistory> findByUserIdAndLoginTimeAfterOrderByLoginTimeDesc(Long userId, LocalDateTime loginTime, Pageable pageable);
+
     @Modifying
     @Query("DELETE FROM LoginHistory l WHERE l.loginTime < :cutoff")
     int deleteByLoginTimeBefore(@Param("cutoff") LocalDateTime cutoff);
