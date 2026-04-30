@@ -28,6 +28,27 @@
   gap: 14px;
 }
 
+.feed-header-mark-all {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(100, 12, 114, 0.2);
+  background: var(--primary-surface);
+  color: var(--primary);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+  white-space: nowrap;
+}
+
+.feed-header-mark-all:hover {
+  background: rgba(100, 12, 114, 0.14);
+  border-color: var(--primary);
+}
+
 /* ── Category Tabs ──────────────────────────────────────── */
 .notif-tabs {
   display: flex;
@@ -351,6 +372,29 @@
 .notif-btn.is-info:hover {
   background: rgba(100, 12, 114, 0.14);
   border-color: var(--primary);
+}
+
+/* ── Toggle Read Button ──────────────────────────────────── */
+.notif-btn-toggle-read {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  margin-left: 4px;
+}
+
+.notif-btn-toggle-read:hover {
+  background: var(--primary-surface);
+  color: var(--primary);
+  border-color: rgba(100, 12, 114, 0.3);
 }
 
 /* ── Title & Content ─────────────────────────────────────── */

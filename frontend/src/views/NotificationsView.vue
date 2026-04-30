@@ -16,14 +16,15 @@ import { useDashboardShell } from "../composables/useDashboardShell";
 import MobileCapsule from "../components/MobileCapsule.vue";
 
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
-const { error: toastError } = useToast();
+const toast = useToast();
+const { error: toastError } = toast;
 const { uploadWithProgress } = useUploadProgress();
 const { settings: uploadLimits } = useAchievementUploadSettings();
 
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, classReviewEntries } = useNotifications(profile);
+const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, markEntryUnread, markAllRead, classReviewEntries } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
 const rejectReason = ref(localStorage.getItem("bdai_sc_reject_draft") || "");
@@ -62,6 +63,24 @@ const canViewStudentInfo = computed(() => {
   if (!["TEACHER", "ADMIN", "CADRE"].includes(profile.role)) return false;
   return Boolean(selectedEntry.value.requester?.username);
 });
+const isSelectedUnread = computed(() =>
+  selectedEntry.value && !readIds.has(String(selectedEntry.value.id)),
+);
+function toggleUnreadRead() {
+  if (!selectedEntry.value) return;
+  if (isSelectedUnread.value) {
+    markEntryRead(selectedEntry.value.id);
+    toast.success("已标记为已读");
+  } else {
+    markEntryUnread(selectedEntry.value.id);
+    toast.success("已标记为未读");
+  }
+}
+
+function handleMarkAllRead() {
+  markAllRead();
+  toast.success("全部已读");
+}
 
 const studentDetailOpen = ref(false);
 const studentDetailLoading = ref(false);
@@ -81,7 +100,10 @@ watch(selectedEntry, (entry) => {
   supportingDocsError.value = "";
   closeStudentDetail();
   if (!entry) return;
-  markEntryRead(entry.id);
+  if (!readIds.has(String(entry.id))) {
+    markEntryRead(entry.id);
+    toast.success("已标记为已读");
+  }
   if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
     markProcessedEntryRead(entry.id);
   }
@@ -338,6 +360,14 @@ async function handleRemoveSupportingDoc(index) {
   <main class="dashboard-right notif-view">
     <header class="feed-header">
       <h1 class="feed-title">{{ isClassReviewsMode ? '班级审核' : '通知详情' }}</h1>
+      <button
+        v-if="totalUnreadCount > 0"
+        class="feed-header-mark-all"
+        type="button"
+        @click="handleMarkAllRead"
+      >
+        全部已读
+      </button>
     </header>
 
     <!-- Empty State: no entry selected -->
@@ -361,6 +391,9 @@ async function handleRemoveSupportingDoc(index) {
             <div class="notif-detail-badges">
               <span class="notif-badge" :class="selectedEntry.badgeClass">{{ selectedEntry.badgeText }}</span>
               <time class="notif-time">{{ selectedEntry.timeText }}</time>
+              <button class="notif-btn-toggle-read" type="button" @click="toggleUnreadRead">
+                {{ isSelectedUnread ? '标记已读' : '标记未读' }}
+              </button>
             </div>
             <div class="notif-detail-actions">
               <button v-if="canCancelSelected" class="notif-btn is-cancel" type="button" @click="openCancelConfirm">取消申请</button>
