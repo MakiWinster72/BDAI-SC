@@ -224,7 +224,7 @@
           </label>
           <label class="field-card field-full">
             <span class="info-label">证件类型 / 证件号码</span>
-            <div class="class-inline id-type-inline">
+            <div class="class-inline id-type-inline id-row">
               <select
                 v-model="info.idType"
                 class="info-input"
@@ -2924,6 +2924,17 @@ function loadUser() {
   }
 
   .contact-row > .info-input:last-child {
+    width: 100%;
+    flex: unset;
+  }
+
+  .id-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .id-row > .info-input,
+  .id-row > select.info-input {
     width: 100%;
     flex: unset;
   }
