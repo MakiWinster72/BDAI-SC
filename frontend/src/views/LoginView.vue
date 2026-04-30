@@ -258,16 +258,16 @@ const isSubmitting = ref(false);
 const feedback = reactive({ text: "", type: "" });
 const showPassword = ref(false);
 const usernameError = ref("");
-const allowRegistration = ref(true);
+const allowRegistration = ref(false);
 
 async function fetchSystemSettings() {
   try {
     const res = await getSystemSettings();
-    allowRegistration.value = res.data.allowRegistration !== false;
+    allowRegistration.value = res.data.allowRegistration === true;
     localStorage.setItem('gcsc_allowRegistration', allowRegistration.value ? '1' : '0');
   } catch (e) {
-    allowRegistration.value = true;
-    localStorage.setItem('gcsc_allowRegistration', '1');
+    allowRegistration.value = false;
+    localStorage.setItem('gcsc_allowRegistration', '0');
   }
 }
 fetchSystemSettings();

@@ -41,7 +41,7 @@ public class SystemSettingsService {
                 .map(this::parseMap)
                 .orElseGet(LinkedHashMap::new);
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("allowRegistration", booleanValue(raw.get("allowRegistration"), true));
+        result.put("allowRegistration", booleanValue(raw.get("allowRegistration"), false));
         result.put("delayedThresholdDays", intValue(raw.get("delayedThresholdDays"), 2));
         return result;
     }
@@ -77,7 +77,7 @@ public class SystemSettingsService {
                 .map(SystemSetting::getSettingValue)
                 .map(this::parseMap)
                 .orElseGet(LinkedHashMap::new);
-        return booleanValue(raw.get("allowRegistration"), true);
+        return booleanValue(raw.get("allowRegistration"), false);
     }
 
     private Map<String, Object> parseMap(String value) {

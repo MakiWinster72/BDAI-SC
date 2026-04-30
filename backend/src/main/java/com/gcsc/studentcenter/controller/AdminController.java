@@ -3,6 +3,8 @@ package com.gcsc.studentcenter.controller;
 import com.gcsc.studentcenter.dto.CreateUserRequest;
 import com.gcsc.studentcenter.dto.UpdateUserRequest;
 import com.gcsc.studentcenter.dto.UserListItemResponse;
+import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.service.BackupService;
 import com.gcsc.studentcenter.service.JwtService;
 import com.gcsc.studentcenter.service.UserService;
@@ -27,11 +29,13 @@ public class AdminController {
     private final UserService userService;
     private final JwtService jwtService;
     private final BackupService backupService;
+    private final AppUserRepository appUserRepository;
 
-    public AdminController(UserService userService, JwtService jwtService, BackupService backupService) {
+    public AdminController(UserService userService, JwtService jwtService, BackupService backupService, AppUserRepository appUserRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.backupService = backupService;
+        this.appUserRepository = appUserRepository;
     }
 
     private boolean isAdmin(String authHeader) {
@@ -40,8 +44,13 @@ public class AdminController {
         }
         try {
             Claims claims = jwtService.parseToken(authHeader.substring(7));
-            String role = claims.get("role", String.class);
-            return "ADMIN".equals(role);
+            String username = claims.getSubject();
+            if (username == null) {
+                return false;
+            }
+            return appUserRepository.findByUsername(username)
+                .map(user -> user.getRole() == UserRole.ADMIN)
+                .orElse(false);
         } catch (JwtException ex) {
             return false;
         }

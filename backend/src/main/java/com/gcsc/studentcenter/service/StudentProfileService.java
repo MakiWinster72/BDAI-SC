@@ -217,6 +217,7 @@ public class StudentProfileService {
             profile != null ? profile.getId() : null,
             user.getUsername(),
             user.getDisplayName(),
+            user.getRole() != null ? user.getRole().name() : null,
             user.getStudentNo(),
             user.getClassName(),
             user.getCollege(),

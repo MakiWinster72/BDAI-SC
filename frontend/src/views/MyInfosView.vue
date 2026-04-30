@@ -2519,6 +2519,7 @@ function applyProfileResponse(data, options = {}) {
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;
   profile.avatarUrl = data.avatarUrl || profile.avatarUrl;
+  profile.role = data.role || profile.role;
   profile.studentNo = data.studentNo || profile.studentNo;
   profile.className = data.className || profile.className;
   profile.college = FIXED_COLLEGE;

@@ -6,6 +6,7 @@ import com.gcsc.studentcenter.dto.UserListItemResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,10 +27,12 @@ public class UserService {
 
     private final AppUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EntityManager entityManager;
 
-    public UserService(AppUserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(AppUserRepository userRepository, PasswordEncoder passwordEncoder, EntityManager entityManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.entityManager = entityManager;
     }
 
     public AppUser createUser(CreateUserRequest request) {
@@ -176,10 +180,58 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     public void deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new RuntimeException("用户不存在");
         }
+
+        entityManager.flush();
+
+        // Nullify reviewer_id references in review request tables
+        entityManager.createNativeQuery(
+            "UPDATE profile_review_requests SET reviewer_id = NULL WHERE reviewer_id = ?1")
+            .setParameter(1, userId).executeUpdate();
+        entityManager.createNativeQuery(
+            "UPDATE achievement_review_requests SET reviewer_id = NULL WHERE reviewer_id = ?1")
+            .setParameter(1, userId).executeUpdate();
+
+        // Delete review requests where user is the requester
+        entityManager.createNativeQuery(
+            "DELETE FROM profile_review_requests WHERE requester_id = ?1")
+            .setParameter(1, userId).executeUpdate();
+        entityManager.createNativeQuery(
+            "DELETE FROM achievement_review_requests WHERE requester_id = ?1")
+            .setParameter(1, userId).executeUpdate();
+
+        // Delete all achievement records
+        String[] achievementTables = {
+            "achievement_contests", "achievement_researches", "achievement_papers",
+            "achievement_patents", "achievement_certificates", "achievement_works",
+            "achievement_journals", "achievement_double_hundreds", "achievement_ieer_trainings"
+        };
+        for (String table : achievementTables) {
+            entityManager.createNativeQuery("DELETE FROM " + table + " WHERE author_id = ?1")
+                .setParameter(1, userId).executeUpdate();
+        }
+
+        // Delete login history
+        entityManager.createNativeQuery("DELETE FROM login_histories WHERE user_id = ?1")
+            .setParameter(1, userId).executeUpdate();
+
+        // Delete student profile sub-tables first (education/cadre experiences)
+        entityManager.createNativeQuery(
+            "DELETE FROM education_experiences WHERE profile_id IN (SELECT id FROM student_profiles WHERE user_id = ?1)")
+            .setParameter(1, userId).executeUpdate();
+        entityManager.createNativeQuery(
+            "DELETE FROM cadre_experiences WHERE profile_id IN (SELECT id FROM student_profiles WHERE user_id = ?1)")
+            .setParameter(1, userId).executeUpdate();
+
+        // Delete student profile
+        entityManager.createNativeQuery("DELETE FROM student_profiles WHERE user_id = ?1")
+            .setParameter(1, userId).executeUpdate();
+
+        entityManager.flush();
         userRepository.deleteById(userId);
     }
 

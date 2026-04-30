@@ -72,7 +72,7 @@ router.beforeEach((to) => {
   }
   if (to.path === '/register') {
     const allowReg = localStorage.getItem('gcsc_allowRegistration')
-    if (allowReg === '0') {
+    if (allowReg !== '1') {
       return '/login'
     }
   }

@@ -7,6 +7,7 @@ public class StudentProfileResponse {
     private Long id;
     private String username;
     private String displayName;
+    private String role;
     private String studentNo;
     private String className;
     private String college;
@@ -74,6 +75,7 @@ public class StudentProfileResponse {
         Long id,
         String username,
         String displayName,
+        String role,
         String studentNo,
         String className,
         String college,
@@ -140,6 +142,7 @@ public class StudentProfileResponse {
         this.id = id;
         this.username = username;
         this.displayName = displayName;
+        this.role = role;
         this.studentNo = studentNo;
         this.className = className;
         this.college = college;
@@ -214,6 +217,10 @@ public class StudentProfileResponse {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public String getRole() {
+        return role;
     }
 
     public String getStudentNo() {
