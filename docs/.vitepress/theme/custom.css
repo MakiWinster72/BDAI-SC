@@ -47,7 +47,9 @@
   --vp-font-family-base: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
     'HarmonyOS Sans SC', 'Helvetica Neue', Arial, sans-serif;
   --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code',
-    'SF Mono', ui-monospace, monospace;
+    'SF Mono', ui-monospace,
+    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
+    'HarmonyOS Sans SC', monospace;
 
   /* Layout */
   --vp-layout-max-width: 1280px;
@@ -482,7 +484,9 @@
 .vp-doc div[class*='language-'] code {
   font-size: 13.5px;
   line-height: 1.7;
-  font-family: 'SF Mono', 'Fira Code', var(--vp-font-family-mono);
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace,
+    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
+    'HarmonyOS Sans SC', monospace !important;
   background: transparent;
   border-radius: 0;
   padding: 0;
@@ -492,7 +496,9 @@
 
 /* Inline code — Apple style */
 .vp-doc :not(pre) > code {
-  font-family: 'SF Mono', 'Fira Code', var(--vp-font-family-mono);
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace,
+    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
+    'HarmonyOS Sans SC', monospace !important;
   background: var(--vp-code-inline-bg);
   border: 1px solid var(--vp-code-inline-border);
   border-radius: 5px;
