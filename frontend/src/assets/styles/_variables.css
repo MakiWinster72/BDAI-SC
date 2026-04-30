@@ -16,9 +16,9 @@
 :root {
   /* ── Purple & Pink Primary Theme ── */
   --primary: #640c72;
-  --primary-light: #FF85BB;
+  --primary-light: #ff85bb;
   --primary-dark: #4a0956;
-  --primary-glow: rgba(100, 12, 114, 0.30);
+  --primary-glow: rgba(100, 12, 114, 0.3);
   --primary-surface: rgba(100, 12, 114, 0.06);
 
   /* ── Semantic Aliases (for backward compat) ── */
@@ -26,15 +26,15 @@
   --accent-strong: var(--primary-dark);
 
   /* ── Background Tints ── */
-  --bg-base: #F5F5F5;
+  --bg-base: #f5f5f5;
   --bg-deep: #640c72;
-  --bg-mid: #FF85BB;
-  --bg-soft: #FFCEE3;
+  --bg-mid: #ff85bb;
+  --bg-soft: #ffcee3;
 
   /* ── Surface & Glass ── */
   --card: rgba(255, 255, 255, 0.82);
   --card-hover: rgba(255, 255, 255, 0.95);
-  --line: rgba(100, 12, 114, 0.10);
+  --line: rgba(100, 12, 114, 0.1);
   --line-strong: rgba(100, 12, 114, 0.18);
 
   /* ── Text ── */

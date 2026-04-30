@@ -8,11 +8,11 @@
 
 /* --- CSS Variable Overrides (Light Mode) --- */
 :root {
-  /* Brand colors */
-  --vp-c-brand-1: #0d9488;
-  --vp-c-brand-2: #0f766e;
-  --vp-c-brand-3: #115e59;
-  --vp-c-brand-soft: rgba(13, 148, 136, 0.12);
+  /* Brand colors — #640c72 primary purple */
+  --vp-c-brand-1: #640c72;
+  --vp-c-brand-2: #8b2da0;
+  --vp-c-brand-3: #4a0955;
+  --vp-c-brand-soft: rgba(100, 12, 114, 0.12);
 
   /* Primary text — dark slate for readability */
   --vp-c-text-1: #1e293b;
@@ -36,8 +36,8 @@
   --vp-c-yellow-soft: rgba(217, 119, 6, 0.12);
   --vp-c-red: #dc2626;
   --vp-c-red-soft: rgba(220, 38, 38, 0.12);
-  --vp-c-purple: #7c3aed;
-  --vp-c-purple-soft: rgba(124, 58, 237, 0.12);
+  --vp-c-purple: #640c72;
+  --vp-c-purple-soft: rgba(100, 12, 114, 0.12);
 
   /* Typography */
   --vp-font-family-base: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
@@ -70,11 +70,11 @@
   --vp-code-selection-bg: rgba(14, 165, 233, 0.25);
   --vp-code-token-comment: #64748b;
   --vp-code-token-punctuation: #64748b;
-  --vp-code-token-keyword: #7c3aed;
+  --vp-code-token-keyword: #640c72;
   --vp-code-token-string: #059669;
   --vp-code-token-variable: #0284c7;
   --vp-code-token-function: #d97706;
-  --vp-code-token-keyword2: #7c3aed;
+  --vp-code-token-keyword2: #640c72;
   --vp-code-token-regex: #ea580c;
   --vp-code-lang-color: #94a3b8;
   --vp-code-copy-bg: rgba(0, 0, 0, 0.06);
@@ -86,13 +86,13 @@
   /* Buttons */
   --vp-button-brand-border: transparent;
   --vp-button-brand-text: #ffffff;
-  --vp-button-brand-bg: #0d9488;
+  --vp-button-brand-bg: #640c72;
   --vp-button-brand-hover-border: transparent;
   --vp-button-brand-hover-text: #ffffff;
-  --vp-button-brand-hover-bg: #0f766e;
+  --vp-button-brand-hover-bg: #8b2da0;
   --vp-button-brand-active-border: transparent;
   --vp-button-brand-active-text: #ffffff;
-  --vp-button-brand-active-bg: #115e59;
+  --vp-button-brand-active-bg: #4a0955;
 
   --vp-button-alt-border: var(--vp-c-border);
   --vp-button-alt-text: var(--vp-c-text-1);
@@ -105,8 +105,8 @@
   --vp-button-alt-active-bg: var(--vp-c-brand-soft);
 
   /* Home page */
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #0d9488 0%, #0ea5e9 100%);
+  --vp-home-hero-name-color: #640c72;
+  --vp-home-hero-name-background: transparent;
 
   /* Shadows */
   --vp-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -144,14 +144,14 @@
   --vp-code-inline-color: #e2e8f0;
   --vp-code-scrollbar-thumb: rgba(255, 255, 255, 0.12);
   --vp-code-scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
-  --vp-code-selection-bg: rgba(100, 150, 255, 0.3);
+  --vp-code-selection-bg: rgba(192, 132, 252, 0.3);
   --vp-code-token-comment: #6b7280;
   --vp-code-token-punctuation: #9ca3af;
-  --vp-code-token-keyword: #f472b6;
+  --vp-code-token-keyword: #e879f9;
   --vp-code-token-string: #a5d6a7;
   --vp-code-token-variable: #93c5fd;
   --vp-code-token-function: #fbbf24;
-  --vp-code-token-keyword2: #c4b5fd;
+  --vp-code-token-keyword2: #c084fc;
   --vp-code-token-regex: #fb923c;
   --vp-code-lang-color: rgba(255, 255, 255, 0.35);
   --vp-code-copy-bg: rgba(255, 255, 255, 0.06);
@@ -164,7 +164,7 @@
   --vp-button-alt-hover-bg: var(--vp-c-bg-mute);
   --vp-button-alt-active-bg: var(--vp-c-bg-mute);
 
-  --vp-home-hero-name-background: linear-gradient(120deg, #14b8a6 0%, #38bdf8 100%);
+  --vp-home-hero-name-background: transparent;
 }
 
 /* --- Global Enhancements --- */
@@ -173,7 +173,7 @@
 }
 
 ::selection {
-  background: rgba(13, 148, 136, 0.2);
+  background: rgba(100, 12, 114, 0.2);
   color: inherit;
 }
 
@@ -305,7 +305,6 @@
   overflow: hidden;
   font-size: 0.9rem;
   margin: 1.5em 0;
-  box-shadow: var(--vp-shadow-1);
 }
 
 .vp-doc thead tr {
@@ -502,7 +501,6 @@
   border: none;
   padding: 14px 18px;
   margin: 1.5em 0;
-  box-shadow: var(--vp-shadow-1);
 }
 
 .vp-doc .custom-block.tip {
@@ -521,8 +519,8 @@
 }
 
 .vp-doc .custom-block.info {
-  background: rgba(14, 165, 233, 0.08);
-  border-left: 3px solid #0ea5e9;
+  background: rgba(100, 12, 114, 0.08);
+  border-left: 3px solid #640c72;
 }
 
 /* --- Home Page Hero --- */
