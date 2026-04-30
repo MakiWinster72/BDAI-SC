@@ -3,8 +3,12 @@
    #640c72 primary purple palette extending VitePress default
    =================================================== */
 
-/* --- Google Fonts: Noto Sans SC --- */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* --- Preconnect for Google Fonts (faster handshake) --- */
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://fonts.gstatic.com" />
+<!-- Google Fonts v2 API: display=swap prevents invisible text during load -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
 /* --- CSS Variable Overrides (Light Mode) --- */
 :root {
@@ -39,11 +43,11 @@
   --vp-c-purple: #640c72;
   --vp-c-purple-soft: rgba(100, 12, 114, 0.12);
 
-  /* Typography */
+  /* Typography — Chinese-first, elegant hierarchy */
   --vp-font-family-base: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
-    'Helvetica Neue', Arial, sans-serif;
+    'HarmonyOS Sans SC', 'Helvetica Neue', Arial, sans-serif;
   --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code',
-    ui-monospace, monospace;
+    'SF Mono', ui-monospace, monospace;
 
   /* Layout */
   --vp-layout-max-width: 1280px;

@@ -20,6 +20,7 @@ export default defineConfig({
   // Head tags — fonts + favicon
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
+    // Preconnect: skip DNS lookup + TCP handshake for Google Fonts
     ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
     [
       "link",
@@ -27,6 +28,13 @@ export default defineConfig({
         rel: "preconnect",
         href: "https://fonts.gstatic.com",
         crossorigin: "",
+      },
+    ],
+    [
+      "link",
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
       },
     ],
   ],
