@@ -16,10 +16,12 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: `http://127.0.0.1:${env.BDAI_SC_BACKEND_PORT || env.VITE_BACKEND_PORT || '8080'}`,
           changeOrigin: true,
+          xfwd: true,
         },
         '/uploads': {
           target: `http://127.0.0.1:${env.BDAI_SC_BACKEND_PORT || env.VITE_BACKEND_PORT || '8080'}`,
           changeOrigin: true,
+          xfwd: true,
         },
       },
     },
