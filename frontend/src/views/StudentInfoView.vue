@@ -233,6 +233,9 @@
             筛选结果
             <span v-if="hasActiveFilters" class="student-results-count">已筛选</span>
           </div>
+          <div class="student-results-meta">
+            {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
+          </div>
           <div class="student-results-actions">
             <button
               class="ghost-button"
@@ -2672,6 +2675,11 @@ onUnmounted(() => {
   }
   .student-results-actions {
     display: none;
+  }
+  .student-results-meta {
+    font-size: 13px;
+    color: var(--text-sub);
+    padding: 0 0 12px;
   }
 }
 </style>
