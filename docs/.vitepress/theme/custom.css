@@ -1,6 +1,6 @@
 /* ===================================================
    BDAI-SC Docs — Custom Theme
-   Academic-teal palette extending VitePress default
+   #640c72 primary purple palette extending VitePress default
    =================================================== */
 
 /* --- Google Fonts: Noto Sans SC --- */
@@ -115,7 +115,7 @@
   --vp-shadow-4: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06);
 
   /* Transitions */
-  --vp-ct: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --vp-ct: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* --- Dark Mode Overrides --- */
@@ -224,32 +224,76 @@
 }
 
 .VPSidebarItem.level-0 > .item > .text {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--vp-c-brand-1);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  transition: color 0.2s ease;
 }
 
+.VPSidebarItem.level-0 > .item:hover > .text {
+  color: var(--vp-c-brand-2);
+}
+
+/* Level 1 — sibling items container */
 .VPSidebarItem.level-1 .item {
-  border-radius: 6px;
-  margin: 1px 0;
-  transition: background var(--vp-ct), color var(--vp-ct);
+  border-radius: 8px;
+  margin: 2px 6px;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  color: var(--vp-c-text-2);
+  transition:
+    background 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .VPSidebarItem.level-1 .item:hover {
   background: var(--vp-c-brand-soft);
+  color: var(--vp-c-text-1);
 }
 
+/* Active state — current page */
 .VPSidebarItem.is-active:not(.level-0) > .item {
   background: var(--vp-c-brand-soft);
   color: var(--vp-c-brand-1);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .VPSidebarItem.is-active:not(.level-0) > .item > .indicator {
-  background: var(--vp-c-brand-1) !important;
+  display: none;
+}
+
+/* Active ancestor — parent group */
+.VPSidebarItem.level-0.is-active > .item > .text {
+  color: var(--vp-c-brand-2);
+}
+
+/* Nested items (level 2+) */
+.VPSidebarItem.level-2 .item {
+  border-radius: 6px;
+  margin: 1px 6px 1px 20px;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  font-size: 0.88rem;
+  color: var(--vp-c-text-3);
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.VPSidebarItem.level-2 .item:hover {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+.VPSidebarItem.level-2.is-active > .item {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
 }
 
 /* --- Content Typography --- */
@@ -652,9 +696,15 @@
 }
 
 /* --- Nav Bar Menu Dropdown --- */
+.VPNavBarMenu .VPNavBarMenuLink {
+  border-radius: 6px;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
 .VPNavBarMenu .VPNavBarMenuLink:hover,
 .VPNavBarMenu .VPNavBarMenuLink.active {
   color: var(--vp-c-brand-1) !important;
+  background: var(--vp-c-brand-soft);
 }
 
 /* --- Last Updated --- */
@@ -687,7 +737,7 @@
 :focus-visible {
   outline: 2px solid var(--vp-c-brand-1);
   outline-offset: 2px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 /* --- Reduced motion --- */
