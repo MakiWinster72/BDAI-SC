@@ -974,6 +974,22 @@
           {{ saveActionLabel }}
         </div>
       </template>
+      <template v-else #right>
+        <ExportPdfButton
+          :get-student="buildPdfStudentSnapshot"
+          :resolve-media-url="resolveMediaUrl"
+          button-class="ghost-button capsule-ghost"
+          @export-complete="toastSuccess('PDF 导出成功！')"
+          @export-error="toastError('PDF 导出失败')"
+        />
+        <button
+          class="action-button capsule-action-button"
+          type="button"
+          @click="enterEdit"
+        >
+          编辑
+        </button>
+      </template>
     </MobileCapsule>
   </main>
 </template>
@@ -2911,5 +2927,23 @@ function loadUser() {
     width: 100%;
     flex: unset;
   }
+}
+
+@media (max-width: 840px) {
+  .info-actions {
+    display: none;
+  }
+}
+
+.capsule-ghost {
+  height: 36px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+}
+
+.capsule-action-button {
+  height: 36px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
 }
 </style>
