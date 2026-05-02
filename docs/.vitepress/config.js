@@ -49,9 +49,7 @@ export default defineConfig({
       { text: "首页", link: "/" },
       {
         text: "指南",
-        items: [
-          { text: "快速开始", link: "/guide/getting-started" },
-        ],
+        items: [{ text: "快速开始", link: "/guide/getting-started" }],
       },
       {
         text: "使用手册",
@@ -62,9 +60,8 @@ export default defineConfig({
           { text: "个人成果", link: "/manual/03-achievements" },
           { text: "通知中心", link: "/manual/04-notifications" },
           { text: "学生信息管理", link: "/manual/05-student-info" },
-          { text: "班级审核", link: "/manual/06-class-reviews" },
-          { text: "后台管理", link: "/manual/07-admin" },
-          { text: "账号设置", link: "/manual/08-settings" },
+          { text: "后台管理", link: "/manual/06-admin" },
+          { text: "账号设置", link: "/manual/07-settings" },
         ],
       },
       {
@@ -191,9 +188,8 @@ export default defineConfig({
             { text: "个人成果", link: "/manual/03-achievements" },
             { text: "通知中心", link: "/manual/04-notifications" },
             { text: "学生信息管理", link: "/manual/05-student-info" },
-            { text: "班级审核", link: "/manual/06-class-reviews" },
-            { text: "后台管理", link: "/manual/07-admin" },
-            { text: "账号设置", link: "/manual/08-settings" },
+            { text: "后台管理", link: "/manual/06-admin" },
+            { text: "账号设置", link: "/manual/07-settings" },
           ],
         },
       ],
