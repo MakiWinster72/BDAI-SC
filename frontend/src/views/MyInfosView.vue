@@ -30,24 +30,36 @@
           <div class="info-hero-title">基础信息</div>
           <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
         </div>
-        <div class="info-actions">
-          <ExportPdfButton
-            :disabled="isEditing"
-            :get-student="buildPdfStudentSnapshot"
-            :resolve-media-url="resolveMediaUrl"
-            button-class="ghost-button"
-            @export-complete="toastSuccess('PDF 导出成功！')"
-            @export-error="toastError('PDF 导出失败')"
-          />
-          <button
-            class="action-button"
-            type="button"
-            :disabled="isEditing"
-            @click="enterEdit"
-          >
-            编辑
-          </button>
-        </div>
+      </div>
+
+      <!-- 桌面端悬浮操作栏 -->
+      <div class="info-floating-bar">
+        <transition name="float-btn" mode="out-in">
+          <div v-if="isEditing" class="float-btn-group" key="editing">
+            <button class="ghost-button" type="button" @click="cancelEdit">
+              取消
+            </button>
+            <button class="action-button" type="button" @click="confirmEdit">
+              {{ saveActionLabel }}
+            </button>
+          </div>
+          <div v-else class="float-btn-group" key="viewing">
+            <ExportPdfButton
+              :get-student="buildPdfStudentSnapshot"
+              :resolve-media-url="resolveMediaUrl"
+              button-class="ghost-button"
+              @export-complete="toastSuccess('PDF 导出成功！')"
+              @export-error="toastError('PDF 导出失败')"
+            />
+            <button
+              class="action-button"
+              type="button"
+              @click="enterEdit"
+            >
+              编辑
+            </button>
+          </div>
+        </transition>
       </div>
 
       <div class="card info-card">
@@ -955,18 +967,6 @@
         </div>
       </div>
     </section>
-    <transition name="edit-dock">
-      <div v-if="isEditing" class="edit-dock">
-        <div class="edit-dock-inner">
-          <button class="ghost-button" type="button" @click="cancelEdit">
-            取消
-          </button>
-          <button class="action-button" type="button" @click="confirmEdit">
-            {{ saveActionLabel }}
-          </button>
-        </div>
-      </div>
-    </transition>
     <MobileCapsule @open-sidebar="openDashboardSidebar">
       <template v-if="isEditing" #right>
         <div class="capsule-action" @click="cancelEdit">取消</div>
@@ -2907,6 +2907,27 @@ function loadUser() {
 
 <style scoped>
 @import "../assets/styles/my-infos-view.css";
+
+.float-btn-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.float-btn-enter-active,
+.float-btn-leave-active {
+  transition: opacity 200ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.float-btn-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+}
+
+.float-btn-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+}
 
 .class-num {
   width: 76px !important;

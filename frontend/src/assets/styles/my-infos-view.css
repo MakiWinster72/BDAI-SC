@@ -146,8 +146,51 @@
   }
 }
 
+/* ── Floating Action Bar (desktop) ─────────────────── */
+.info-floating-bar {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 16px;
+}
+
+.info-floating-bar .action-button,
+.info-floating-bar .ghost-button {
+  height: 44px !important;
+  padding: 0 24px !important;
+  font-size: 14px !important;
+  border-radius: 12px !important;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.info-floating-bar .action-button:hover:not(:disabled),
+.info-floating-bar .ghost-button:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 8px 28px rgba(100, 12, 114, 0.14);
+}
+
+.info-floating-bar .action-button:active:not(:disabled),
+.info-floating-bar .ghost-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+@media (max-width: 840px) {
+  .info-floating-bar {
+    display: none !important;
+  }
+}
+
 .record-ctl-clear {
-  width: auto;
   padding-left: 10px;
   padding-right: 10px;
   font-size: 12px;
