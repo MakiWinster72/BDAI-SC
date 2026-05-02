@@ -1012,7 +1012,8 @@
 .floating-actions {
   position: fixed;
   bottom: calc(130px + env(safe-area-inset-bottom));
-  left: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 50;
   display: flex;
   flex-direction: row;
@@ -1135,6 +1136,12 @@
   .student-right-stack {
     padding-bottom: 88px;
     gap: 10px;
+  }
+
+  .floating-actions {
+    left: 20px;
+    transform: none;
+    bottom: calc(88px + env(safe-area-inset-bottom));
   }
 
   .student-filter-grid {
@@ -1394,8 +1401,9 @@
   }
 
   .floating-actions {
+    left: 20px;
+    transform: none;
     bottom: 88px;
-    right: 12px;
     gap: 8px;
   }
 

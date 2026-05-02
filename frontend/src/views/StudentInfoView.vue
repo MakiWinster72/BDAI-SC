@@ -172,15 +172,27 @@
           <div class="student-filter-meta">
             <div class="student-filter-flags">
               <label class="info-choice">
-                <input v-model="filters.isHk" type="radio" name="hkmo-filter" />
+                <input
+                  type="checkbox"
+                  :checked="filters.isHk"
+                  @change="toggleHmt('isHk')"
+                />
                 香港
               </label>
               <label class="info-choice">
-                <input v-model="filters.isMo" type="radio" name="hkmo-filter" />
+                <input
+                  type="checkbox"
+                  :checked="filters.isMo"
+                  @change="toggleHmt('isMo')"
+                />
                 澳门
               </label>
               <label class="info-choice">
-                <input v-model="filters.isTw" type="radio" name="hkmo-filter" />
+                <input
+                  type="checkbox"
+                  :checked="filters.isTw"
+                  @change="toggleHmt('isTw')"
+                />
                 台湾
               </label>
               <div class="student-special-filter">
@@ -1122,7 +1134,20 @@ watch(() => filters.studentCategory, () => {
   filters.major = "";
 });
 
-// HMT is mutually exclusive - only one can be selected at a time
+// HMT checkboxes - allow toggling off, mutual exclusion when selecting
+function toggleHmt(key) {
+  const others = key === 'isHk' ? ['isMo', 'isTw'] : key === 'isMo' ? ['isHk', 'isTw'] : ['isHk', 'isMo'];
+  if (filters[key]) {
+    // turning off - just uncheck this one
+    filters[key] = false;
+  } else {
+    // turning on - uncheck others first, then check this
+    others.forEach(k => { filters[k] = false; });
+    filters[key] = true;
+  }
+}
+
+// HMT mutually exclusive
 watch(() => filters.isHk, (val) => {
   if (val) {
     filters.isMo = false;

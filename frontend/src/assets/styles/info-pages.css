@@ -521,6 +521,11 @@ input[type="date"].info-input::-webkit-calendar-picker-indicator {
   color: var(--primary-dark);
 }
 
+.info-choice input[type="checkbox"],
+.info-choice input[type="radio"] {
+  accent-color: var(--primary);
+}
+
 .info-choice-muted {
   color: var(--text-sub);
 }
