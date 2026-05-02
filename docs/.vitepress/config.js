@@ -225,12 +225,6 @@ export default defineConfig({
       { icon: "github", link: "https://github.com/MakiWinster/gcsc" },
     ],
 
-    // Edit link
-    editLink: {
-      pattern: "https://github.com/MakiWinster/gcsc/edit/main/docs/:path",
-      text: "在 GitHub 上编辑此页",
-    },
-
     // Doc footer
     docFooter: {
       prev: "上一页",
