@@ -2724,7 +2724,15 @@ onUnmounted(() => {
   .student-results-actions {
     display: none;
   }
+}
+
+.student-results-meta {
+  display: none;
+}
+
+@media (max-width: 768px) {
   .student-results-meta {
+    display: block;
     font-size: 13px;
     color: var(--text-sub);
     padding: 0 0 12px;

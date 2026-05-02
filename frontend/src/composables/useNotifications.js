@@ -376,7 +376,6 @@ async function fetchAchievementReviewRequests(force = false) {
     const { data } = await listAchievementReviewRequests();
     store.achievementReviewRequests = Array.isArray(data) ? data : [];
     store.achievementReviewFetched = true;
-    syncStoredIds();
     return store.achievementReviewRequests;
   } finally {
     store.achievementReviewLoading = false;
@@ -404,7 +403,6 @@ async function fetchProfileReviewRequests(force = false) {
     const { data } = await listProfileReviewRequests();
     store.profileReviewRequests = Array.isArray(data) ? data : [];
     store.profileReviewFetched = true;
-    syncStoredIds();
     return store.profileReviewRequests;
   } finally {
     store.profileReviewLoading = false;
