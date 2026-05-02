@@ -1680,7 +1680,7 @@ const leagueNoDisabled = computed(
     !info.leagueJoined,
 );
 const partyAppliedDisabled = computed(
-  () => !isEditing.value || !info.leagueJoinDate || info.leagueDeveloping,
+  () => !isEditing.value,
 );
 const applicationDateDisabled = computed(
   () => !isEditing.value || partyAppliedDisabled.value || !info.partyApplied,
