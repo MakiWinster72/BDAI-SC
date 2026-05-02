@@ -1801,13 +1801,14 @@ function handleIdNoInput(event) {
   const maxLen = idNoMaxLength.value;
   // 居民身份证: 17位数字 + 1位数字/X
   if (info.idType === "居民身份证") {
-    const cleaned = raw.replace(/[^0-9X]/g, "");
-    const digits = cleaned.replace(/X/g, "").slice(0, 17);
-    if (cleaned.endsWith("X")) {
-      info.idNo = `${digits}X`.slice(0, maxLen);
-      return;
+    const cleaned = raw.replace(/[^0-9A-Z]/g, "").toUpperCase();
+    const first17 = cleaned.slice(0, 17).replace(/[^0-9]/g, "");
+    const char18 = cleaned.charAt(17);
+    if (char18 === "X" || /^\d$/.test(char18)) {
+      info.idNo = first17 + char18;
+    } else {
+      info.idNo = first17;
     }
-    info.idNo = digits;
     return;
   }
   // 台湾居民来往大陆通行证（台胞证）: 8位纯数字
