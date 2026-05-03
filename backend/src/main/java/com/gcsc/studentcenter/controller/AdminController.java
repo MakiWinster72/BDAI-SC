@@ -31,322 +31,321 @@ import java.util.*;
 @RequestMapping("/api/admin")
 public class AdminController {
 
-    private final UserService userService;
-    private final JwtService jwtService;
-    private final BackupService backupService;
-    private final AppUserRepository appUserRepository;
+  private final UserService userService;
+  private final JwtService jwtService;
+  private final BackupService backupService;
+  private final AppUserRepository appUserRepository;
 
-    @Value("${app.upload-dir:./uploads}")
-    private String uploadDir;
+  @Value("${app.upload-dir:./uploads}")
+  private String uploadDir;
 
-    public AdminController(UserService userService, JwtService jwtService, BackupService backupService, AppUserRepository appUserRepository) {
-        this.userService = userService;
-        this.jwtService = jwtService;
-        this.backupService = backupService;
-        this.appUserRepository = appUserRepository;
+  public AdminController(UserService userService, JwtService jwtService, BackupService backupService,
+      AppUserRepository appUserRepository) {
+    this.userService = userService;
+    this.jwtService = jwtService;
+    this.backupService = backupService;
+    this.appUserRepository = appUserRepository;
+  }
+
+  private boolean isAdmin(String authHeader) {
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      return false;
     }
+    try {
+      Claims claims = jwtService.parseToken(authHeader.substring(7));
+      String username = claims.getSubject();
+      if (username == null) {
+        return false;
+      }
+      return appUserRepository.findByUsername(username)
+          .map(user -> user.getRole() == UserRole.ADMIN)
+          .orElse(false);
+    } catch (JwtException ex) {
+      return false;
+    }
+  }
 
-    private boolean isAdmin(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return false;
+  private String extractUsername(String authHeader) {
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      return null;
+    }
+    try {
+      Claims claims = jwtService.parseToken(authHeader.substring(7));
+      return claims.getSubject();
+    } catch (JwtException ex) {
+      return null;
+    }
+  }
+
+  @PostMapping("/users")
+  public ResponseEntity<?> createUser(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @RequestBody CreateUserRequest request) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      var user = userService.createUser(request);
+      return ResponseEntity.ok(new UserListItemResponse(user));
+    } catch (RuntimeException e) {
+      return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+    }
+  }
+
+  @GetMapping("/users")
+  public ResponseEntity<?> listUsers(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) String role,
+      @RequestParam(required = false) String className) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    String currentUsername = extractUsername(authHeader);
+    return ResponseEntity.ok(userService.listUsersPaginated(page, size, search, role, className, currentUsername));
+  }
+
+  @GetMapping("/users/ids")
+  public ResponseEntity<?> listAllUserIds(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) String role,
+      @RequestParam(required = false) String className) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    String currentUsername = extractUsername(authHeader);
+    return ResponseEntity.ok(userService.listAllUserIds(search, role, className, currentUsername));
+  }
+
+  @PutMapping("/users/{id}")
+  public ResponseEntity<?> updateUser(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable Long id,
+      @RequestBody UpdateUserRequest request) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      var user = userService.updateUser(id, request);
+      return ResponseEntity.ok(Map.of("success", true, "data", new UserListItemResponse(user)));
+    } catch (RuntimeException e) {
+      return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+    }
+  }
+
+  @DeleteMapping("/users/{id}")
+  public ResponseEntity<?> deleteUser(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable Long id) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      userService.deleteUser(id);
+      return ResponseEntity.ok(Map.of("success", true));
+    } catch (RuntimeException e) {
+      return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+    }
+  }
+
+  @GetMapping("/classes")
+  public ResponseEntity<?> listClasses(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    List<String> classes = userService.getDistinctStudentClasses();
+    return ResponseEntity.ok(Map.of("data", classes));
+  }
+
+  @PutMapping("/teachers/{id}/assigned-classes")
+  public ResponseEntity<?> updateTeacherAssignedClasses(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable Long id,
+      @RequestBody Map<String, String> request) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      String assignedClasses = request.get("assignedClasses");
+      var user = userService.setTeacherAssignedClasses(id, assignedClasses);
+      return ResponseEntity.ok(Map.of("success", true, "assignedClasses", user.getAssignedClasses()));
+    } catch (RuntimeException e) {
+      return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+    }
+  }
+
+  @GetMapping("/teachers/{id}/assigned-classes")
+  public ResponseEntity<?> getTeacherAssignedClasses(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable Long id) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      String assignedClasses = userService.getTeacherAssignedClasses(id);
+      return ResponseEntity.ok(Map.of("assignedClasses", assignedClasses));
+    } catch (RuntimeException e) {
+      return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+    }
+  }
+
+  @GetMapping("/backup/db")
+  public ResponseEntity<?> backupDatabase(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      byte[] sqlContent = backupService.dumpDatabase();
+      ByteArrayResource resource = new ByteArrayResource(sqlContent);
+      return ResponseEntity.ok()
+          .contentType(MediaType.APPLICATION_OCTET_STREAM)
+          .header(HttpHeaders.CONTENT_DISPOSITION,
+              "attachment; filename=\"" + backupService.generateBackupFilename() + "\"")
+          .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(sqlContent.length))
+          .body(resource);
+    } catch (RuntimeException e) {
+      return ResponseEntity.internalServerError()
+          .body(Map.of("success", false, "message", "备份失败: " + e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError()
+          .body(Map.of("success", false, "message", "备份失败: " + e.getMessage()));
+    }
+  }
+
+  @PostMapping("/restore/db")
+  public ResponseEntity<?> restoreDatabase(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @RequestParam("file") MultipartFile file) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    if (file.isEmpty()) {
+      return ResponseEntity.badRequest()
+          .body(Map.of("success", false, "message", "请上传 SQL 备份文件"));
+    }
+    String originalFilename = file.getOriginalFilename();
+    if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".sql")) {
+      return ResponseEntity.badRequest()
+          .body(Map.of("success", false, "message", "请上传 .sql 格式的备份文件"));
+    }
+    try {
+      byte[] sqlContent = file.getBytes();
+      backupService.restoreDatabase(sqlContent);
+      return ResponseEntity.ok(Map.of("success", true, "message", "数据库恢复成功"));
+    } catch (RuntimeException e) {
+      return ResponseEntity.internalServerError()
+          .body(Map.of("success", false, "message", "恢复失败: " + e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError()
+          .body(Map.of("success", false, "message", "恢复失败: " + e.getMessage()));
+    }
+  }
+
+  @GetMapping("/backup/attachments")
+  public ResponseEntity<?> backupAttachments(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      byte[] zipContent = backupService.dumpAttachments();
+      if (zipContent.length == 0) {
+        return ResponseEntity.ok(Map.of("success", false, "message", "附件目录为空，无需导出"));
+      }
+      ByteArrayResource resource = new ByteArrayResource(zipContent);
+      return ResponseEntity.ok()
+          .contentType(MediaType.APPLICATION_OCTET_STREAM)
+          .header(HttpHeaders.CONTENT_DISPOSITION,
+              "attachment; filename=\"" + backupService.generateAttachmentsFilename() + "\"")
+          .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(zipContent.length))
+          .body(resource);
+    } catch (RuntimeException e) {
+      return ResponseEntity.internalServerError()
+          .body(Map.of("success", false, "message", "导出失败: " + e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError()
+          .body(Map.of("success", false, "message", "导出失败: " + e.getMessage()));
+    }
+  }
+
+  @GetMapping("/storage-analysis")
+  public ResponseEntity<?> storageAnalysis(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
+    if (!isAdmin(authHeader)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    try {
+      Path uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
+      List<Map<String, Object>> entries = new ArrayList<>();
+      long totalBytes = 0;
+
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(uploadRoot)) {
+        for (Path entry : stream) {
+          if (!Files.isDirectory(entry))
+            continue;
+          String name = entry.getFileName().toString();
+          if (!name.matches("\\d+"))
+            continue;
+
+          long userId = Long.parseLong(name);
+          long size = folderSize(entry);
+          totalBytes += size;
+
+          var userOpt = appUserRepository.findById(userId);
+          String username = userOpt.map(AppUser::getUsername).orElse("(已删除)");
+          String displayName = userOpt.map(AppUser::getDisplayName).orElse("");
+
+          Map<String, Object> item = new LinkedHashMap<>();
+          item.put("userId", userId);
+          item.put("username", username);
+          item.put("displayName", displayName);
+          item.put("sizeBytes", size);
+          item.put("sizeFormatted", formatSize(size));
+          entries.add(item);
         }
-        try {
-            Claims claims = jwtService.parseToken(authHeader.substring(7));
-            String username = claims.getSubject();
-            if (username == null) {
-                return false;
+      }
+
+      entries.sort((a, b) -> Long.compare((Long) b.get("sizeBytes"), (Long) a.get("sizeBytes")));
+      List<Map<String, Object>> top30 = entries.size() > 30 ? entries.subList(0, 30) : entries;
+
+      return ResponseEntity.ok(Map.of(
+          "entries", top30,
+          "totalBytes", totalBytes,
+          "totalFormatted", formatSize(totalBytes),
+          "totalUsers", entries.size()));
+    } catch (IOException e) {
+      return ResponseEntity.internalServerError()
+          .body(Map.of("success", false, "message", "扫描失败: " + e.getMessage()));
+    }
+  }
+
+  private long folderSize(Path folder) throws IOException {
+    try (var files = Files.walk(folder)) {
+      return files
+          .filter(Files::isRegularFile)
+          .mapToLong(p -> {
+            try {
+              return Files.size(p);
+            } catch (IOException e) {
+              return 0L;
             }
-            return appUserRepository.findByUsername(username)
-                .map(user -> user.getRole() == UserRole.ADMIN)
-                .orElse(false);
-        } catch (JwtException ex) {
-            return false;
-        }
+          })
+          .sum();
     }
+  }
 
-    private String extractUsername(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return null;
-        }
-        try {
-            Claims claims = jwtService.parseToken(authHeader.substring(7));
-            return claims.getSubject();
-        } catch (JwtException ex) {
-            return null;
-        }
-    }
-
-    @PostMapping("/users")
-    public ResponseEntity<?> createUser(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @RequestBody CreateUserRequest request
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            var user = userService.createUser(request);
-            return ResponseEntity.ok(new UserListItemResponse(user));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/users")
-    public ResponseEntity<?> listUsers(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String role,
-            @RequestParam(required = false) String className
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        String currentUsername = extractUsername(authHeader);
-        return ResponseEntity.ok(userService.listUsersPaginated(page, size, search, role, className, currentUsername));
-    }
-
-    @GetMapping("/users/ids")
-    public ResponseEntity<?> listAllUserIds(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String role,
-            @RequestParam(required = false) String className
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        String currentUsername = extractUsername(authHeader);
-        return ResponseEntity.ok(userService.listAllUserIds(search, role, className, currentUsername));
-    }
-
-    @PutMapping("/users/{id}")
-    public ResponseEntity<?> updateUser(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @PathVariable Long id,
-            @RequestBody UpdateUserRequest request
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            var user = userService.updateUser(id, request);
-            return ResponseEntity.ok(Map.of("success", true, "data", new UserListItemResponse(user)));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<?> deleteUser(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @PathVariable Long id
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            userService.deleteUser(id);
-            return ResponseEntity.ok(Map.of("success", true));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/classes")
-    public ResponseEntity<?> listClasses(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        List<String> classes = userService.getDistinctStudentClasses();
-        return ResponseEntity.ok(Map.of("data", classes));
-    }
-
-    @PutMapping("/teachers/{id}/assigned-classes")
-    public ResponseEntity<?> updateTeacherAssignedClasses(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @PathVariable Long id,
-            @RequestBody Map<String, String> request
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            String assignedClasses = request.get("assignedClasses");
-            var user = userService.setTeacherAssignedClasses(id, assignedClasses);
-            return ResponseEntity.ok(Map.of("success", true, "assignedClasses", user.getAssignedClasses()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/teachers/{id}/assigned-classes")
-    public ResponseEntity<?> getTeacherAssignedClasses(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @PathVariable Long id
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            String assignedClasses = userService.getTeacherAssignedClasses(id);
-            return ResponseEntity.ok(Map.of("assignedClasses", assignedClasses));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/backup/db")
-    public ResponseEntity<?> backupDatabase(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            byte[] sqlContent = backupService.dumpDatabase();
-            ByteArrayResource resource = new ByteArrayResource(sqlContent);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + backupService.generateBackupFilename() + "\"")
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(sqlContent.length))
-                    .body(resource);
-        } catch (RuntimeException e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "备份失败: " + e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "备份失败: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/restore/db")
-    public ResponseEntity<?> restoreDatabase(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @RequestParam("file") MultipartFile file
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "请上传 SQL 备份文件"));
-        }
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".sql")) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "请上传 .sql 格式的备份文件"));
-        }
-        try {
-            byte[] sqlContent = file.getBytes();
-            backupService.restoreDatabase(sqlContent);
-            return ResponseEntity.ok(Map.of("success", true, "message", "数据库恢复成功"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "恢复失败: " + e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "恢复失败: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/backup/attachments")
-    public ResponseEntity<?> backupAttachments(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            byte[] zipContent = backupService.dumpAttachments();
-            if (zipContent.length == 0) {
-                return ResponseEntity.ok(Map.of("success", false, "message", "附件目录为空，无需导出"));
-            }
-            ByteArrayResource resource = new ByteArrayResource(zipContent);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + backupService.generateAttachmentsFilename() + "\"")
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(zipContent.length))
-                    .body(resource);
-        } catch (RuntimeException e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "导出失败: " + e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "导出失败: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/storage-analysis")
-    public ResponseEntity<?> storageAnalysis(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
-    ) {
-        if (!isAdmin(authHeader)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        try {
-            Path uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
-            List<Map<String, Object>> entries = new ArrayList<>();
-            long totalBytes = 0;
-
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(uploadRoot)) {
-                for (Path entry : stream) {
-                    if (!Files.isDirectory(entry)) continue;
-                    String name = entry.getFileName().toString();
-                    if (!name.matches("\\d+")) continue;
-
-                    long userId = Long.parseLong(name);
-                    long size = folderSize(entry);
-                    totalBytes += size;
-
-                    var userOpt = appUserRepository.findById(userId);
-                    String username = userOpt.map(AppUser::getUsername).orElse("(已删除)");
-                    String displayName = userOpt.map(AppUser::getDisplayName).orElse("");
-
-                    Map<String, Object> item = new LinkedHashMap<>();
-                    item.put("userId", userId);
-                    item.put("username", username);
-                    item.put("displayName", displayName);
-                    item.put("sizeBytes", size);
-                    item.put("sizeFormatted", formatSize(size));
-                    entries.add(item);
-                }
-            }
-
-            entries.sort((a, b) -> Long.compare((Long) b.get("sizeBytes"), (Long) a.get("sizeBytes")));
-            List<Map<String, Object>> top30 = entries.size() > 30 ? entries.subList(0, 30) : entries;
-
-            return ResponseEntity.ok(Map.of(
-                "entries", top30,
-                "totalBytes", totalBytes,
-                "totalFormatted", formatSize(totalBytes),
-                "totalUsers", entries.size()
-            ));
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "扫描失败: " + e.getMessage()));
-        }
-    }
-
-    private long folderSize(Path folder) throws IOException {
-        try (var files = Files.walk(folder)) {
-            return files
-                .filter(Files::isRegularFile)
-                .mapToLong(p -> {
-                    try { return Files.size(p); } catch (IOException e) { return 0L; }
-                })
-                .sum();
-        }
-    }
-
-    private String formatSize(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
-        if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024));
-        return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
-    }
+  private String formatSize(long bytes) {
+    if (bytes < 1024)
+      return bytes + " B";
+    if (bytes < 1024 * 1024)
+      return String.format("%.1f KB", bytes / 1024.0);
+    if (bytes < 1024 * 1024 * 1024)
+      return String.format("%.1f MB", bytes / (1024.0 * 1024));
+    return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
+  }
 }

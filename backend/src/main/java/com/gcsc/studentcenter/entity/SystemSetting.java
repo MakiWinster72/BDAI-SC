@@ -11,37 +11,37 @@ import java.time.LocalDateTime;
 @Table(name = "system_settings")
 public class SystemSetting {
 
-    @Id
-    @Column(name = "setting_key", nullable = false, length = 64)
-    private String settingKey;
+  @Id
+  @Column(name = "setting_key", nullable = false, length = 64)
+  private String settingKey;
 
-    @Column(name = "setting_value", nullable = false, columnDefinition = "TEXT")
-    private String settingValue;
+  @Column(name = "setting_value", nullable = false, columnDefinition = "TEXT")
+  private String settingValue;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
 
-    public String getSettingKey() {
-        return settingKey;
-    }
+  public String getSettingKey() {
+    return settingKey;
+  }
 
-    public void setSettingKey(String settingKey) {
-        this.settingKey = settingKey;
-    }
+  public void setSettingKey(String settingKey) {
+    this.settingKey = settingKey;
+  }
 
-    public String getSettingValue() {
-        return settingValue;
-    }
+  public String getSettingValue() {
+    return settingValue;
+  }
 
-    public void setSettingValue(String settingValue) {
-        this.settingValue = settingValue;
-    }
+  public void setSettingValue(String settingValue) {
+    this.settingValue = settingValue;
+  }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
+  }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+  public void setUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
+  }
 }

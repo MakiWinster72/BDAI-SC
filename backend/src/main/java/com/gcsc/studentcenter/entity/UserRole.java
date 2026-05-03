@@ -1,8 +1,8 @@
 package com.gcsc.studentcenter.entity;
 
 public enum UserRole {
-    STUDENT,
-    TEACHER,
-    ADMIN,
-    CADRE
+  STUDENT,
+  TEACHER,
+  ADMIN,
+  CADRE
 }

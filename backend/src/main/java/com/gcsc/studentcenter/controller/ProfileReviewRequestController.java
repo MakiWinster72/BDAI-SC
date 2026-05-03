@@ -16,69 +16,60 @@ import java.util.Map;
 @RequestMapping("/api/profile-review-requests")
 public class ProfileReviewRequestController {
 
-    private final ProfileReviewRequestService profileReviewRequestService;
+  private final ProfileReviewRequestService profileReviewRequestService;
 
-    public ProfileReviewRequestController(ProfileReviewRequestService profileReviewRequestService) {
-        this.profileReviewRequestService = profileReviewRequestService;
-    }
+  public ProfileReviewRequestController(ProfileReviewRequestService profileReviewRequestService) {
+    this.profileReviewRequestService = profileReviewRequestService;
+  }
 
-    @GetMapping
-    public ResponseEntity<List<ProfileReviewRequestResponse>> list(Authentication authentication) {
-        return ResponseEntity.ok(
-            profileReviewRequestService.listVisibleRequests(authentication.getName())
-        );
-    }
+  @GetMapping
+  public ResponseEntity<List<ProfileReviewRequestResponse>> list(Authentication authentication) {
+    return ResponseEntity.ok(
+        profileReviewRequestService.listVisibleRequests(authentication.getName()));
+  }
 
-    @PostMapping
-    public ResponseEntity<ProfileReviewRequestResponse> submit(
-        Authentication authentication,
-        @RequestBody ProfileReviewSubmitRequest request
-    ) {
-        return ResponseEntity.ok(
-            profileReviewRequestService.submit(authentication.getName(), request)
-        );
-    }
+  @PostMapping
+  public ResponseEntity<ProfileReviewRequestResponse> submit(
+      Authentication authentication,
+      @RequestBody ProfileReviewSubmitRequest request) {
+    return ResponseEntity.ok(
+        profileReviewRequestService.submit(authentication.getName(), request));
+  }
 
-    @PostMapping("/{id}/approve")
-    public ResponseEntity<ProfileReviewRequestResponse> approve(
-        Authentication authentication,
-        @PathVariable("id") Long id
-    ) {
-        return ResponseEntity.ok(
-            profileReviewRequestService.approve(id, authentication.getName())
-        );
-    }
+  @PostMapping("/{id}/approve")
+  public ResponseEntity<ProfileReviewRequestResponse> approve(
+      Authentication authentication,
+      @PathVariable("id") Long id) {
+    return ResponseEntity.ok(
+        profileReviewRequestService.approve(id, authentication.getName()));
+  }
 
-    @PostMapping("/{id}/reject")
-    public ResponseEntity<ProfileReviewRequestResponse> reject(
-        Authentication authentication,
-        @PathVariable("id") Long id,
-        @RequestBody ProfileReviewDecisionRequest request
-    ) {
-        return ResponseEntity.ok(
-            profileReviewRequestService.reject(id, authentication.getName(), request)
-        );
-    }
+  @PostMapping("/{id}/reject")
+  public ResponseEntity<ProfileReviewRequestResponse> reject(
+      Authentication authentication,
+      @PathVariable("id") Long id,
+      @RequestBody ProfileReviewDecisionRequest request) {
+    return ResponseEntity.ok(
+        profileReviewRequestService.reject(id, authentication.getName(), request));
+  }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancel(
-        Authentication authentication,
-        @PathVariable("id") Long id
-    ) {
-        profileReviewRequestService.cancel(id, authentication.getName());
-        return ResponseEntity.noContent().build();
-    }
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> cancel(
+      Authentication authentication,
+      @PathVariable("id") Long id) {
+    profileReviewRequestService.cancel(id, authentication.getName());
+    return ResponseEntity.noContent().build();
+  }
 
-    @PutMapping("/{id}/supporting-documents")
-    public ResponseEntity<ProfileReviewRequestResponse> setSupportingDocuments(
-        Authentication authentication,
-        @PathVariable("id") Long id,
-        @RequestBody SupportingDocumentsRequest body
-    ) {
-        List<Map<String, String>> docs = body != null && body.getDocuments() != null
-            ? body.getDocuments() : List.of();
-        return ResponseEntity.ok(
-            profileReviewRequestService.setSupportingDocuments(id, authentication.getName(), docs)
-        );
-    }
+  @PutMapping("/{id}/supporting-documents")
+  public ResponseEntity<ProfileReviewRequestResponse> setSupportingDocuments(
+      Authentication authentication,
+      @PathVariable("id") Long id,
+      @RequestBody SupportingDocumentsRequest body) {
+    List<Map<String, String>> docs = body != null && body.getDocuments() != null
+        ? body.getDocuments()
+        : List.of();
+    return ResponseEntity.ok(
+        profileReviewRequestService.setSupportingDocuments(id, authentication.getName(), docs));
+  }
 }

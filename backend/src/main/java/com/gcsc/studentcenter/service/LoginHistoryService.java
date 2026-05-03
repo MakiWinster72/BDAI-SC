@@ -21,150 +21,148 @@ import java.util.Optional;
 @Service
 public class LoginHistoryService {
 
-    private static final int RETENTION_DAYS = 30;
-    private static final int MAX_PAGE_SIZE = 100;
+  private static final int RETENTION_DAYS = 30;
+  private static final int MAX_PAGE_SIZE = 100;
 
-    private final LoginHistoryRepository loginHistoryRepository;
-    private final AppUserRepository appUserRepository;
+  private final LoginHistoryRepository loginHistoryRepository;
+  private final AppUserRepository appUserRepository;
 
-    public LoginHistoryService(
-        LoginHistoryRepository loginHistoryRepository,
-        AppUserRepository appUserRepository
-    ) {
-        this.loginHistoryRepository = loginHistoryRepository;
-        this.appUserRepository = appUserRepository;
+  public LoginHistoryService(
+      LoginHistoryRepository loginHistoryRepository,
+      AppUserRepository appUserRepository) {
+    this.loginHistoryRepository = loginHistoryRepository;
+    this.appUserRepository = appUserRepository;
+  }
+
+  public LoginHistory recordLogin(String username, String ipAddress, String userAgent) {
+    AppUser user = appUserRepository.findByUsername(username)
+        .orElse(null);
+    if (user == null) {
+      return null;
     }
 
-    public LoginHistory recordLogin(String username, String ipAddress, String userAgent) {
-        AppUser user = appUserRepository.findByUsername(username)
-            .orElse(null);
-        if (user == null) {
-            return null;
-        }
+    LoginHistory history = new LoginHistory();
+    history.setUserId(user.getId());
+    history.setIpAddress(ipAddress);
+    history.setUserAgent(userAgent);
+    history.setDeviceName(parseDeviceName(userAgent));
+    history.setLoginTime(LocalDateTime.now());
+    return loginHistoryRepository.save(history);
+  }
 
-        LoginHistory history = new LoginHistory();
-        history.setUserId(user.getId());
-        history.setIpAddress(ipAddress);
-        history.setUserAgent(userAgent);
-        history.setDeviceName(parseDeviceName(userAgent));
-        history.setLoginTime(LocalDateTime.now());
-        return loginHistoryRepository.save(history);
+  public Optional<LastLoginInfo> getPreviousLogin(String username) {
+    AppUser user = appUserRepository.findByUsername(username)
+        .orElse(null);
+    if (user == null) {
+      return Optional.empty();
+    }
+    Optional<LoginHistory> prev = loginHistoryRepository
+        .findFirstByUserIdOrderByLoginTimeDesc(user.getId());
+    if (prev.isEmpty()) {
+      return Optional.empty();
+    }
+    Optional<LoginHistory> secondLast = loginHistoryRepository
+        .findFirstByUserIdAndIdNotOrderByLoginTimeDesc(user.getId(), prev.get().getId());
+    if (secondLast.isEmpty()) {
+      return Optional.empty();
+    }
+    LoginHistory lh = secondLast.get();
+    return Optional.of(new LastLoginInfo(lh.getIpAddress(), lh.getDeviceName(), lh.getLoginTime()));
+  }
+
+  public Page<LoginHistoryResponse> getLoginHistory(String username, int page, int size) {
+    AppUser user = appUserRepository.findByUsername(username)
+        .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+    int cappedSize = Math.min(size, MAX_PAGE_SIZE);
+    Pageable pageable = PageRequest.of(Math.max(page, 0), cappedSize);
+    LocalDateTime cutoff = LocalDateTime.now().minusDays(RETENTION_DAYS);
+    Page<LoginHistory> historyPage = loginHistoryRepository
+        .findByUserIdAndLoginTimeAfterOrderByLoginTimeDesc(user.getId(), cutoff, pageable);
+    return historyPage.map(this::toResponse);
+  }
+
+  @Transactional
+  @Scheduled(cron = "0 0 3 * * ?")
+  public void cleanupOldRecords() {
+    LocalDateTime cutoff = LocalDateTime.now().minusDays(RETENTION_DAYS);
+    loginHistoryRepository.deleteByLoginTimeBefore(cutoff);
+  }
+
+  private LoginHistoryResponse toResponse(LoginHistory history) {
+    String ua = history.getUserAgent();
+    return new LoginHistoryResponse(
+        history.getIpAddress(),
+        history.getDeviceName(),
+        parseBrowser(ua),
+        parseOs(ua),
+        history.getLoginTime());
+  }
+
+  private String parseDeviceName(String userAgent) {
+    if (userAgent == null || userAgent.isBlank()) {
+      return "未知浏览器";
     }
 
-    public Optional<LastLoginInfo> getPreviousLogin(String username) {
-        AppUser user = appUserRepository.findByUsername(username)
-            .orElse(null);
-        if (user == null) {
-            return Optional.empty();
-        }
-        Optional<LoginHistory> prev = loginHistoryRepository
-            .findFirstByUserIdOrderByLoginTimeDesc(user.getId());
-        if (prev.isEmpty()) {
-            return Optional.empty();
-        }
-        Optional<LoginHistory> secondLast = loginHistoryRepository
-            .findFirstByUserIdAndIdNotOrderByLoginTimeDesc(user.getId(), prev.get().getId());
-        if (secondLast.isEmpty()) {
-            return Optional.empty();
-        }
-        LoginHistory lh = secondLast.get();
-        return Optional.of(new LastLoginInfo(lh.getIpAddress(), lh.getDeviceName(), lh.getLoginTime()));
+    String os = parseOs(userAgent);
+    String browser = parseBrowser(userAgent);
+    if (browser.equals("未知") && os.equals("未知")) {
+      return "未知浏览器";
     }
-
-    public Page<LoginHistoryResponse> getLoginHistory(String username, int page, int size) {
-        AppUser user = appUserRepository.findByUsername(username)
-            .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
-        int cappedSize = Math.min(size, MAX_PAGE_SIZE);
-        Pageable pageable = PageRequest.of(Math.max(page, 0), cappedSize);
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(RETENTION_DAYS);
-        Page<LoginHistory> historyPage = loginHistoryRepository
-            .findByUserIdAndLoginTimeAfterOrderByLoginTimeDesc(user.getId(), cutoff, pageable);
-        return historyPage.map(this::toResponse);
+    if (browser.equals("未知")) {
+      return os;
     }
-
-    @Transactional
-    @Scheduled(cron = "0 0 3 * * ?")
-    public void cleanupOldRecords() {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(RETENTION_DAYS);
-        loginHistoryRepository.deleteByLoginTimeBefore(cutoff);
+    if (os.equals("未知")) {
+      return browser;
     }
+    return browser + " / " + os;
+  }
 
-    private LoginHistoryResponse toResponse(LoginHistory history) {
-        String ua = history.getUserAgent();
-        return new LoginHistoryResponse(
-            history.getIpAddress(),
-            history.getDeviceName(),
-            parseBrowser(ua),
-            parseOs(ua),
-            history.getLoginTime()
-        );
+  private String parseOs(String ua) {
+    ua = ua.toLowerCase();
+    if (ua.contains("iphone") || ua.contains("ipad")) {
+      return "iOS";
     }
-
-    private String parseDeviceName(String userAgent) {
-        if (userAgent == null || userAgent.isBlank()) {
-            return "未知浏览器";
-        }
-
-        String os = parseOs(userAgent);
-        String browser = parseBrowser(userAgent);
-        if (browser.equals("未知") && os.equals("未知")) {
-            return "未知浏览器";
-        }
-        if (browser.equals("未知")) {
-            return os;
-        }
-        if (os.equals("未知")) {
-            return browser;
-        }
-        return browser + " / " + os;
+    if (ua.contains("android")) {
+      return "Android";
     }
-
-    private String parseOs(String ua) {
-        ua = ua.toLowerCase();
-        if (ua.contains("iphone") || ua.contains("ipad")) {
-            return "iOS";
-        }
-        if (ua.contains("android")) {
-            return "Android";
-        }
-        if (ua.contains("windows phone")) {
-            return "Windows Phone";
-        }
-        if (ua.contains("windows")) {
-            return "Windows";
-        }
-        if (ua.contains("macintosh") || ua.contains("mac os")) {
-            return "macOS";
-        }
-        if (ua.contains("linux")) {
-            return "Linux";
-        }
-        return "未知";
+    if (ua.contains("windows phone")) {
+      return "Windows Phone";
     }
-
-    private String parseBrowser(String ua) {
-        ua = ua.toLowerCase();
-        if (ua.contains("edg/")) {
-            return "Edge";
-        }
-        if (ua.contains("opr/") || ua.contains("opera")) {
-            return "Opera";
-        }
-        if (ua.contains("brave")) {
-            return "Brave";
-        }
-        if (ua.contains("chrome/") && !ua.contains("chromium")) {
-            return "Chrome";
-        }
-        if (ua.contains("safari/") && !ua.contains("chrome")) {
-            return "Safari";
-        }
-        if (ua.contains("firefox/")) {
-            return "Firefox";
-        }
-        if (ua.contains("webkit")) {
-            return "WebKit";
-        }
-        return "未知";
+    if (ua.contains("windows")) {
+      return "Windows";
     }
+    if (ua.contains("macintosh") || ua.contains("mac os")) {
+      return "macOS";
+    }
+    if (ua.contains("linux")) {
+      return "Linux";
+    }
+    return "未知";
+  }
+
+  private String parseBrowser(String ua) {
+    ua = ua.toLowerCase();
+    if (ua.contains("edg/")) {
+      return "Edge";
+    }
+    if (ua.contains("opr/") || ua.contains("opera")) {
+      return "Opera";
+    }
+    if (ua.contains("brave")) {
+      return "Brave";
+    }
+    if (ua.contains("chrome/") && !ua.contains("chromium")) {
+      return "Chrome";
+    }
+    if (ua.contains("safari/") && !ua.contains("chrome")) {
+      return "Safari";
+    }
+    if (ua.contains("firefox/")) {
+      return "Firefox";
+    }
+    if (ua.contains("webkit")) {
+      return "WebKit";
+    }
+    return "未知";
+  }
 }

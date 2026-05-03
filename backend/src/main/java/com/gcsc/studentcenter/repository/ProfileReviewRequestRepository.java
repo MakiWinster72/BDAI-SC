@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface ProfileReviewRequestRepository extends JpaRepository<ProfileReviewRequest, Long> {
 
-    List<ProfileReviewRequest> findAllByOrderByUpdatedAtDesc();
+  List<ProfileReviewRequest> findAllByOrderByUpdatedAtDesc();
 
-    List<ProfileReviewRequest> findAllByRequester_UsernameOrderByUpdatedAtDesc(String username);
+  List<ProfileReviewRequest> findAllByRequester_UsernameOrderByUpdatedAtDesc(String username);
 }

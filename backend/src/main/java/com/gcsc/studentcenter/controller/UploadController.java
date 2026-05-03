@@ -14,31 +14,30 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/upload")
 public class UploadController {
 
-    private final UploadService uploadService;
-    private final AppUserRepository appUserRepository;
+  private final UploadService uploadService;
+  private final AppUserRepository appUserRepository;
 
-    public UploadController(UploadService uploadService, AppUserRepository appUserRepository) {
-        this.uploadService = uploadService;
-        this.appUserRepository = appUserRepository;
-    }
+  public UploadController(UploadService uploadService, AppUserRepository appUserRepository) {
+    this.uploadService = uploadService;
+    this.appUserRepository = appUserRepository;
+  }
 
-    @PostMapping
-    public ResponseEntity<UploadResponse> upload(
-        @RequestParam("file") MultipartFile file,
-        @RequestParam(value = "context", required = false) String context
-    ) {
-        Long userId = getCurrentUserId();
-        return ResponseEntity.ok(uploadService.upload(file, context, userId));
-    }
+  @PostMapping
+  public ResponseEntity<UploadResponse> upload(
+      @RequestParam("file") MultipartFile file,
+      @RequestParam(value = "context", required = false) String context) {
+    Long userId = getCurrentUserId();
+    return ResponseEntity.ok(uploadService.upload(file, context, userId));
+  }
 
-    private Long getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) {
-            throw new IllegalStateException("未登录");
-        }
-        String username = auth.getName();
-        AppUser user = appUserRepository.findByUsername(username)
-            .orElseThrow(() -> new IllegalStateException("用户不存在"));
-        return user.getId();
+  private Long getCurrentUserId() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null) {
+      throw new IllegalStateException("未登录");
     }
+    String username = auth.getName();
+    AppUser user = appUserRepository.findByUsername(username)
+        .orElseThrow(() -> new IllegalStateException("用户不存在"));
+    return user.getId();
+  }
 }

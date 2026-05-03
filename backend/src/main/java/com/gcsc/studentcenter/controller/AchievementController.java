@@ -17,106 +17,101 @@ import java.util.List;
 @RequestMapping("/api/achievements")
 public class AchievementController {
 
-    private final AchievementService achievementService;
-    private final JwtService jwtService;
+  private final AchievementService achievementService;
+  private final JwtService jwtService;
 
-    public AchievementController(AchievementService achievementService, JwtService jwtService) {
-        this.achievementService = achievementService;
-        this.jwtService = jwtService;
-    }
+  public AchievementController(AchievementService achievementService, JwtService jwtService) {
+    this.achievementService = achievementService;
+    this.jwtService = jwtService;
+  }
 
-    @GetMapping
-    public ResponseEntity<List<AchievementRecordResponse>> list(
-        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-        @RequestParam(value = "category", required = false) String category,
-        @RequestParam(value = "studentNo", required = false) String studentNo,
-        @RequestParam(value = "studentName", required = false) String studentName
-    ) {
-        String username = resolveUsername(authHeader);
-        if (username == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.ok(achievementService.list(username, category, studentNo, studentName));
+  @GetMapping
+  public ResponseEntity<List<AchievementRecordResponse>> list(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @RequestParam(value = "category", required = false) String category,
+      @RequestParam(value = "studentNo", required = false) String studentNo,
+      @RequestParam(value = "studentName", required = false) String studentName) {
+    String username = resolveUsername(authHeader);
+    if (username == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+    return ResponseEntity.ok(achievementService.list(username, category, studentNo, studentName));
+  }
 
-    @GetMapping("/{category}/{id}")
-    public ResponseEntity<AchievementRecordResponse> getById(
-        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-        @PathVariable("category") String category,
-        @PathVariable("id") Long id
-    ) {
-        String username = resolveUsername(authHeader);
-        if (username == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String role = resolveRole(authHeader);
-        return ResponseEntity.ok(achievementService.getById(username, role, category, id));
+  @GetMapping("/{category}/{id}")
+  public ResponseEntity<AchievementRecordResponse> getById(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable("category") String category,
+      @PathVariable("id") Long id) {
+    String username = resolveUsername(authHeader);
+    if (username == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+    String role = resolveRole(authHeader);
+    return ResponseEntity.ok(achievementService.getById(username, role, category, id));
+  }
 
-    @PostMapping("/{category}")
-    public ResponseEntity<AchievementRecordResponse> create(
-        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-        @PathVariable("category") String category,
-        @RequestBody AchievementRecordRequest request
-    ) {
-        String username = resolveUsername(authHeader);
-        if (username == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.ok(achievementService.create(username, category, request));
+  @PostMapping("/{category}")
+  public ResponseEntity<AchievementRecordResponse> create(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable("category") String category,
+      @RequestBody AchievementRecordRequest request) {
+    String username = resolveUsername(authHeader);
+    if (username == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+    return ResponseEntity.ok(achievementService.create(username, category, request));
+  }
 
-    @PutMapping("/{category}/{id}")
-    public ResponseEntity<AchievementRecordResponse> update(
-        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-        @PathVariable("category") String category,
-        @PathVariable("id") Long id,
-        @RequestBody AchievementRecordRequest request
-    ) {
-        String username = resolveUsername(authHeader);
-        if (username == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String role = resolveRole(authHeader);
-        return ResponseEntity.ok(achievementService.update(username, role, category, id, request));
+  @PutMapping("/{category}/{id}")
+  public ResponseEntity<AchievementRecordResponse> update(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable("category") String category,
+      @PathVariable("id") Long id,
+      @RequestBody AchievementRecordRequest request) {
+    String username = resolveUsername(authHeader);
+    if (username == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+    String role = resolveRole(authHeader);
+    return ResponseEntity.ok(achievementService.update(username, role, category, id, request));
+  }
 
-    @DeleteMapping("/{category}/{id}")
-    public ResponseEntity<Void> delete(
-        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-        @PathVariable("category") String category,
-        @PathVariable("id") Long id
-    ) {
-        String username = resolveUsername(authHeader);
-        if (username == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String role = resolveRole(authHeader);
-        achievementService.delete(username, role, category, id);
-        return ResponseEntity.ok().build();
+  @DeleteMapping("/{category}/{id}")
+  public ResponseEntity<Void> delete(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @PathVariable("category") String category,
+      @PathVariable("id") Long id) {
+    String username = resolveUsername(authHeader);
+    if (username == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+    String role = resolveRole(authHeader);
+    achievementService.delete(username, role, category, id);
+    return ResponseEntity.ok().build();
+  }
 
-    private String resolveUsername(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return null;
-        }
-        try {
-            Claims claims = jwtService.parseToken(authHeader.substring(7));
-            return claims.getSubject();
-        } catch (JwtException ex) {
-            return null;
-        }
+  private String resolveUsername(String authHeader) {
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      return null;
     }
+    try {
+      Claims claims = jwtService.parseToken(authHeader.substring(7));
+      return claims.getSubject();
+    } catch (JwtException ex) {
+      return null;
+    }
+  }
 
-    private String resolveRole(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return null;
-        }
-        try {
-            Claims claims = jwtService.parseToken(authHeader.substring(7));
-            return claims.get("role", String.class);
-        } catch (JwtException ex) {
-            return null;
-        }
+  private String resolveRole(String authHeader) {
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      return null;
     }
+    try {
+      Claims claims = jwtService.parseToken(authHeader.substring(7));
+      return claims.get("role", String.class);
+    } catch (JwtException ex) {
+      return null;
+    }
+  }
 }

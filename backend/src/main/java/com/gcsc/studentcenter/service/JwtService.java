@@ -15,34 +15,33 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private final SecretKey secretKey;
-    private final long expiresMinutes;
+  private final SecretKey secretKey;
+  private final long expiresMinutes;
 
-    public JwtService(
-        @Value("${security.jwt.secret}") String secret,
-        @Value("${security.jwt.expires-minutes:120}") long expiresMinutes
-    ) {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expiresMinutes = expiresMinutes;
-    }
+  public JwtService(
+      @Value("${security.jwt.secret}") String secret,
+      @Value("${security.jwt.expires-minutes:120}") long expiresMinutes) {
+    this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    this.expiresMinutes = expiresMinutes;
+  }
 
-    public String generateToken(String username, String displayName, String role) {
-        Instant now = Instant.now();
-        return Jwts.builder()
-            .subject(username)
-            .claim("displayName", displayName)
-            .claim("role", role)
-            .issuedAt(Date.from(now))
-            .expiration(Date.from(now.plus(expiresMinutes, ChronoUnit.MINUTES)))
-            .signWith(secretKey)
-            .compact();
-    }
+  public String generateToken(String username, String displayName, String role) {
+    Instant now = Instant.now();
+    return Jwts.builder()
+        .subject(username)
+        .claim("displayName", displayName)
+        .claim("role", role)
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(now.plus(expiresMinutes, ChronoUnit.MINUTES)))
+        .signWith(secretKey)
+        .compact();
+  }
 
-    public Claims parseToken(String token) {
-        return Jwts.parser()
-            .verifyWith(secretKey)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-    }
+  public Claims parseToken(String token) {
+    return Jwts.parser()
+        .verifyWith(secretKey)
+        .build()
+        .parseSignedClaims(token)
+        .getPayload();
+  }
 }

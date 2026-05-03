@@ -15,26 +15,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/settings/achievement-upload")
 public class AchievementUploadSettingsController {
 
-    private final AchievementUploadSettingsService achievementUploadSettingsService;
+  private final AchievementUploadSettingsService achievementUploadSettingsService;
 
-    public AchievementUploadSettingsController(
-        AchievementUploadSettingsService achievementUploadSettingsService
-    ) {
-        this.achievementUploadSettingsService = achievementUploadSettingsService;
-    }
+  public AchievementUploadSettingsController(
+      AchievementUploadSettingsService achievementUploadSettingsService) {
+    this.achievementUploadSettingsService = achievementUploadSettingsService;
+  }
 
-    @GetMapping
-    public ResponseEntity<AchievementUploadSettingsResponse> getSettings() {
-        return ResponseEntity.ok(achievementUploadSettingsService.getSettings());
-    }
+  @GetMapping
+  public ResponseEntity<AchievementUploadSettingsResponse> getSettings() {
+    return ResponseEntity.ok(achievementUploadSettingsService.getSettings());
+  }
 
-    @PutMapping
-    public ResponseEntity<AchievementUploadSettingsResponse> updateSettings(
-        Authentication authentication,
-        @RequestBody AchievementUploadSettingsRequest request
-    ) {
-        return ResponseEntity.ok(
-            achievementUploadSettingsService.updateSettings(authentication.getName(), request)
-        );
-    }
+  @PutMapping
+  public ResponseEntity<AchievementUploadSettingsResponse> updateSettings(
+      Authentication authentication,
+      @RequestBody AchievementUploadSettingsRequest request) {
+    return ResponseEntity.ok(
+        achievementUploadSettingsService.updateSettings(authentication.getName(), request));
+  }
 }

@@ -9,133 +9,133 @@ import java.time.LocalDateTime;
 @Table(name = "achievement_journals")
 public class AchievementJournal {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "author_id", nullable = false)
-    private AppUser author;
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "author_id", nullable = false)
+  private AppUser author;
 
-    @Column(name = "student_no", length = 32)
-    private String studentNo;
+  @Column(name = "student_no", length = 32)
+  private String studentNo;
 
-    @Column(name = "student_name", length = 64)
-    private String studentName;
+  @Column(name = "student_name", length = 64)
+  private String studentName;
 
-    @Column(name = "work_title", nullable = false, length = 255)
-    private String workTitle;
+  @Column(name = "work_title", nullable = false, length = 255)
+  private String workTitle;
 
-    @Column(name = "publication_name", length = 255)
-    private String publicationName;
+  @Column(name = "publication_name", length = 255)
+  private String publicationName;
 
-    @Column(name = "publish_date")
-    private LocalDate publishDate;
+  @Column(name = "publish_date")
+  private LocalDate publishDate;
 
-    @Column(name = "remark", columnDefinition = "TEXT")
-    private String remark;
+  @Column(name = "remark", columnDefinition = "TEXT")
+  private String remark;
 
-    @Column(name = "image_url", length = 255)
-    private String imageUrl;
+  @Column(name = "image_url", length = 255)
+  private String imageUrl;
 
-    @Column(name = "_image_urls", columnDefinition = "TEXT")
-    private String imageUrls;
+  @Column(name = "_image_urls", columnDefinition = "TEXT")
+  private String imageUrls;
 
-    @Column(name = "_attachments", columnDefinition = "TEXT")
-    private String attachments;
+  @Column(name = "_attachments", columnDefinition = "TEXT")
+  private String attachments;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+  @Column(name = "created_at", nullable = false)
+  private LocalDateTime createdAt;
 
-    public Long getId() {
-        return id;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public AppUser getAuthor() {
-        return author;
-    }
+  public AppUser getAuthor() {
+    return author;
+  }
 
-    public void setAuthor(AppUser author) {
-        this.author = author;
-    }
+  public void setAuthor(AppUser author) {
+    this.author = author;
+  }
 
-    public String getStudentNo() {
-        return studentNo;
-    }
+  public String getStudentNo() {
+    return studentNo;
+  }
 
-    public void setStudentNo(String studentNo) {
-        this.studentNo = studentNo;
-    }
+  public void setStudentNo(String studentNo) {
+    this.studentNo = studentNo;
+  }
 
-    public String getStudentName() {
-        return studentName;
-    }
+  public String getStudentName() {
+    return studentName;
+  }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
+  public void setStudentName(String studentName) {
+    this.studentName = studentName;
+  }
 
-    public String getWorkTitle() {
-        return workTitle;
-    }
+  public String getWorkTitle() {
+    return workTitle;
+  }
 
-    public void setWorkTitle(String workTitle) {
-        this.workTitle = workTitle;
-    }
+  public void setWorkTitle(String workTitle) {
+    this.workTitle = workTitle;
+  }
 
-    public String getPublicationName() {
-        return publicationName;
-    }
+  public String getPublicationName() {
+    return publicationName;
+  }
 
-    public void setPublicationName(String publicationName) {
-        this.publicationName = publicationName;
-    }
+  public void setPublicationName(String publicationName) {
+    this.publicationName = publicationName;
+  }
 
-    public LocalDate getPublishDate() {
-        return publishDate;
-    }
+  public LocalDate getPublishDate() {
+    return publishDate;
+  }
 
-    public void setPublishDate(LocalDate publishDate) {
-        this.publishDate = publishDate;
-    }
+  public void setPublishDate(LocalDate publishDate) {
+    this.publishDate = publishDate;
+  }
 
-    public String getRemark() {
-        return remark;
-    }
+  public String getRemark() {
+    return remark;
+  }
 
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
+  public void setRemark(String remark) {
+    this.remark = remark;
+  }
 
-    public String getImageUrl() {
-        return imageUrl;
-    }
+  public String getImageUrl() {
+    return imageUrl;
+  }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
+  }
 
-    public String getImageUrls() {
-        return imageUrls;
-    }
+  public String getImageUrls() {
+    return imageUrls;
+  }
 
-    public void setImageUrls(String imageUrls) {
-        this.imageUrls = imageUrls;
-    }
+  public void setImageUrls(String imageUrls) {
+    this.imageUrls = imageUrls;
+  }
 
-    public String getAttachments() {
-        return attachments;
-    }
+  public String getAttachments() {
+    return attachments;
+  }
 
-    public void setAttachments(String attachments) {
-        this.attachments = attachments;
-    }
+  public void setAttachments(String attachments) {
+    this.attachments = attachments;
+  }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 }
