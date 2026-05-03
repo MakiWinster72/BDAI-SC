@@ -36,17 +36,46 @@
 }
 
 /* Heading colors */
-.vp-doc h1 { color: #0c4a6e; }
-.vp-doc h2 { color: #0369a1; }
-.vp-doc h3 { color: #047857; }
-.vp-doc h4 { color: #b45309; }
-.vp-doc h5 { color: #be123c; }
-.vp-doc h6 { color: #4a5568; }
+.vp-doc h1 {
+  color: #0c4a6e;
+}
+.vp-doc h2 {
+  color: #0369a1;
+}
+.vp-doc h3 {
+  color: #047857;
+}
+.vp-doc h4 {
+  color: #b45309;
+}
+.vp-doc h5 {
+  color: #be123c;
+}
+.vp-doc h6 {
+  color: #4a5568;
+}
 
 /* Dark mode headings */
-.dark .vp-doc h1 { color: #38bdf8; }
-.dark .vp-doc h2 { color: #22d3ee; }
-.dark .vp-doc h3 { color: #34d399; }
-.dark .vp-doc h4 { color: #fbbf24; }
-.dark .vp-doc h5 { color: #fb7185; }
-.dark .vp-doc h6 { color: #94a3b8; }
+.dark .vp-doc h1 {
+  color: #38bdf8;
+}
+.dark .vp-doc h2 {
+  color: #22d3ee;
+}
+.dark .vp-doc h3 {
+  color: #34d399;
+}
+.dark .vp-doc h4 {
+  color: #fbbf24;
+}
+.dark .vp-doc h5 {
+  color: #fb7185;
+}
+.dark .vp-doc h6 {
+  color: #94a3b8;
+}
+
+/* Navbar logo */
+.dark .vp-nav-bar svg rect {
+  fill: #0d9488 !important;
+}

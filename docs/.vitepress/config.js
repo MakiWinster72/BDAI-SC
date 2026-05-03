@@ -19,7 +19,7 @@ export default defineConfig({
 
   // Head tags — fonts + favicon
   head: [
-    ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
+    ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.png" }],
     // Preconnect: skip DNS lookup + TCP handshake for Google Fonts
     ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
     [
@@ -40,8 +40,6 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    // Logo
-    logo: "/logo.svg",
     siteTitle: "数智学院学生信息管理中心",
 
     // Nav

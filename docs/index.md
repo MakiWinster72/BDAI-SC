@@ -22,32 +22,32 @@ features:
     linkText: 查看档案模型
   - icon:
       src: /icons/achievement.svg
-    title: 九类成就记录
-    details: 竞赛、论文、专利、证书、科研、作品、双百、培训等学生荣誉的全生命周期管理。
+    title: 九类成果记录
+    details: 竞赛、论文、专利、证书、科研、作品、双百、大创等学生荣誉的全生命周期管理。
     link: /design/achievement-system
     linkText: 了解成就系统
   - icon:
       src: /icons/auth.svg
     title: JWT 认证体系
-    details: 基于 Spring Security + jjwt 的无状态认证，三级角色模型，完整的安全过滤器链。
+    details: 基于 Spring Security + jjwt 的无状态认证，四级角色。
     link: /design/jwt-auth
     linkText: 认证流程详解
   - icon:
       src: /icons/review.svg
-    title: 双轨审核工作流
-    details: 成就提交与档案修改均通过教师/管理员审核，支持批准、拒绝、撤回操作。
+    title: 审核工作流
+    details: 成就提交与档案修改均通过教师/管理员审核。
     link: /design/review-workflow
     linkText: 审核工作流
   - icon:
       src: /icons/fe.svg
     title: Vue 3 前端架构
-    details: Composition API + Composable 模式，Dashboard Shell + 响应式设计，支持 Iframe 嵌入。
+    details: Composition API + Composable 模式，Dashboard Shell + 响应式设计。
     link: /design/dashboard-layout
     linkText: 前端架构
   - icon:
       src: /icons/be.svg
     title: Spring Boot 后端
-    details: 分层架构（Controller / Service / Repository / Entity），JPA + MySQL，统一的异常处理。
+    details: 分层架构（Controller / Service / Repository / Entity），JPA + MySQL。
     link: /design/architecture
     linkText: 后端架构
 ---
