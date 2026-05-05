@@ -1835,16 +1835,82 @@
   height: 16px;
 }
 
+/* ── Storage Mobile ──────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .storage-card .card-header {
+    flex-wrap: wrap;
+  }
+  .storage-card .storage-refresh-btn {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 640px) {
+  .storage-card-body {
+    padding: 12px 16px 16px;
+  }
+  .storage-summary {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+  .storage-summary-value {
+    font-size: 16px;
+  }
+  .storage-chart {
+    max-height: 420px;
+  }
   .storage-bar-label {
-    width: 100px;
+    width: 110px;
+  }
+  .storage-bar-track-wrap {
+    height: 18px;
   }
   .storage-bar-size {
     width: 56px;
     font-size: 11px;
   }
   .storage-bar-row {
-    gap: 8px;
+    gap: 6px;
+    padding: 6px 0;
+  }
+  .storage-delete-btn {
+    width: 28px;
+    height: 28px;
+    margin-left: 2px;
+  }
+  .storage-delete-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .storage-bar-row {
+    flex-wrap: wrap;
+    gap: 2px 6px;
+    padding: 8px 0;
+  }
+  .storage-bar-label {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .storage-bar-size {
+    width: auto;
+    flex-shrink: 0;
+  }
+  .storage-delete-btn {
+    order: 1;
+    margin-left: 0;
+  }
+  .storage-bar-track-wrap {
+    width: 100%;
+    height: 20px;
+    flex: none;
+    order: 2;
   }
 }
 
