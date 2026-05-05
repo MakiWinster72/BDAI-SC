@@ -1,215 +1,165 @@
-# 项目结构指南
+# 项目结构
 
-## 概述
+本文档提供 GCSC（BDAI-SC 学生中心）代码库的完整导航。你将了解项目如何划分为后端和前端、每个顶级目录包含什么内容，以及数据在各层之间如何流动。如果刚来到这里，建议先读 [概述](./overview) 获取高层摘要，或读 [快速上手](./quick-start) 立即上手运行项目。
 
+## 高层架构
 
-本页面将引导你浏览 BDAI-SC 仓库中的每个目录和文件，帮助你快速熟悉一个此前从未接触过的全栈代码库。
+GCSC 是一个**全栈单体仓库**，后端采用 Java Spring Boot，前端采用 Vue 3 单页应用，双方仅通过 REST API 通信，由 JWT Token 保障安全，无服务端渲染或共享代码。数据库为 MySQL，文件上传存储在后端本地文件系统。`docs/` 目录下有一独立的 VitePress 文档站点，与应用本身无关。
 
-## 仓库概览
+## 顶级目录概览
 
-BDAI-SC 采用清晰的 monorepo 布局，由三大支柱构成：Java/Spring Boot 后端、Vue 3 前端，以及用于存放配置和文档的共享项目根目录。
+仓库根目录包含四个主要目录，各自有明确的职责：
 
-## 根级文件与目录
+| 目录 | 用途 | 技术栈 |
+|------|------|-------|
+| `backend/` | REST API 服务器、业务逻辑、数据库访问 | Java 21、Spring Boot 3.3.5、Maven |
+| `frontend/` | 单页应用、UI 组件、路由 | Vue 3.5、Vite 5.4 |
+| `docs/` | VitePress 文档站点（即本文档所在） | VitePress 1.6 |
+| `scripts/` | 测试和数据生成的工具脚本 | Python 3 |
+| `assets/` | README 和文档中使用的截图和品牌图标 | 静态图片 |
+| `skills/` | AI 助手上下文文件（CLAUDE.md 的配套） | Markdown |
 
-| 路径 | 用途 |
-|------|------|
-| `CLAUDE.md` | AI 辅助指引：架构摘要、构建命令、代码规范 |
-| `README.md` | 面向开发者的快速入门、功能列表及设计模型截图 |
-| `TODO.md` | 路线图与规划功能 |
-| `assets/` | 设计模型图片 (.png) 和 Logo 文件 |
-| `docs/` | 独立的设计参考：动画模式、认证说明、CSS 规范 |
-| `scripts/generate_test_data.py` | 用于向数据库填充样本记录的实用工具 |
+> 来源：[README.md](README.md#L1-L50)、[CLAUDE.md](CLAUDE.md#L1-L30)
 
-> 来源：CLAUDE.md, README.md, TODO.md
+## 后端结构（`backend/`）
 
-## 后端结构 (backend/)
+后端遵循**经典 Spring Boot 分层架构**，包边界清晰。Maven 管理依赖，`application.yml` 从仓库根目录的 `.env` 文件读取环境变量。主入口是 [StudentCenterApplication.java](backend/src/main/java/com/gcsc/studentcenter/StudentCenterApplication.java#L1-L15)，标注了 `@SpringBootApplication` 和 `@EnableScheduling`。
 
-后端是一个标准的基于 Maven 的 Spring Boot 3.3.5 应用，目标运行环境为 Java 21。
-
-### 顶层构建文件
-
-| 文件 | 职责 |
-|------|------|
-| `pom.xml` | Maven 项目描述符——声明 Spring Boot 父依赖、Java 21 版本及所有依赖项 |
-| `src/main/resources/application.yml` | 所有运行时配置：数据库 URL、JWT 密钥、CORS、上传限制、服务端口 |
-
-### Java 包布局
+### 包布局
 
 ```
 backend/src/main/java/com/gcsc/studentcenter/
-├── StudentCenterApplication.java   ← Spring Boot 启动入口
-├── config/        ← Security、CORS、JWT 过滤器、Web 配置
-├── controller/    ← REST API 端点（10 个控制器）
-├── service/       ← 业务逻辑层（12 个服务）
-├── repository/    ← JPA 数据访问接口（18 个仓库）
-├── entity/        ← JPA 实体类（20 个实体）
-├── dto/           ← 请求/响应数据传输对象（约 30 个 DTO）
-└── exception/     ← 全局异常处理器
+├── StudentCenterApplication.java      ← 应用入口
+├── config/                            ← 基础设施配置
+│   ├── SecurityConfig.java            ← 安全过滤器链与路由规则
+│   ├── JwtAuthenticationFilter.java   ← JWT Token 验证过滤器
+│   ├── GlobalCorsFilter.java          ← CORS 来源白名单
+│   └── WebConfig.java                 ← Web MVC 定制
+├── controller/                        ← REST API 端点（10 个 Controller）
+├── service/                           ← 业务逻辑层（14 个 Service）
+├── repository/                        ← JPA 数据访问（16 个 Repository）
+├── entity/                            ← JPA 实体类（19 个 Entity）
+├── dto/                               ← 请求/响应数据传输对象
+└── exception/
+    └── GlobalExceptionHandler.java    ← 统一错误响应
 ```
 
-### 逐层拆解
+### 关键设计决策
 
-**config/**
+后端按**关注点分层**而非按功能模块组织代码。每个垂直切片（如"成就"）分散在 `controller`、`service`、`repository` 和 `entity` 包中。`config/` 包处理横切关注点——安全、CORS、JWT 过滤——全部通过 Spring 的依赖注入接入。
 
-| 文件 | 职责 |
-|------|------|
-| `SecurityConfig.java` | 定义哪些 API 路径公开、哪些需要认证，配置过滤器链 |
-| `JwtAuthenticationFilter.java` | 从每个请求中提取并验证 JWT，设置 Spring Security 上下文 |
-| `GlobalCorsFilter.java` | 允许来自前端开发服务器的跨域请求 |
-| `WebConfig.java` | 其他 Web 级别配置（如静态资源处理） |
+一个值得注意的模式是**多态成就系统**：9 个独立的 JPA 实体类（`AchievementContest`、`AchievementPaper`、`AchievementPatent` 等）各有自己的 Repository，共享 title、description、media attachments 和 user association 的通用结构。这些由单一的 `AchievementService` 根据类型字符串分发来编排。
 
-**controller/**
+`application.yml` 通过环境变量配置所有外部连接（数据库 URL、JWT Secret、CORS 来源、上传目录、服务器端口），包含合理默认值。`spring.config.import` 指令从仓库根目录的 `.env` 文件导入变量。
 
-| 控制器 | API 领域 |
-|--------|----------|
-| `AuthController` | 登录、注册、令牌刷新 |
-| `StudentProfileController` | 学生个人信息 CRUD |
-| `AchievementController` | 成就记录（全部 9 种类型） |
-| `AchievementReviewRequestController` | 成就审核/审批工作流 |
-| `AchievementUploadSettingsController` | 每种成就类型的上传配置 |
-| `ProfileReviewRequestController` | 个人资料变更审核工作流 |
-| `ReviewSettingsController` | 审核系统配置 |
-| `AdminController` | 管理面板端点（用户、备份、系统设置） |
-| `UploadController` | 文件上传（最大 200 MB） |
+> 来源：[pom.xml](backend/pom.xml#L1-L77)、[application.yml](backend/src/main/resources/application.yml#L1-L39)、[StudentCenterApplication.java](backend/src/main/java/com/gcsc/studentcenter/StudentCenterApplication.java#L1-L15)
 
-> 来源：CLAUDE.md
+## 前端结构（`frontend/`）
 
-## 前端结构 (frontend/)
+前端是一个 **Vue 3 单页应用**，基于 Vite 构建。全部采用组合式 API（`<script setup>`），代码按 Web 开发关注点组织：API 模块、可复用组件、页面级视图、Composable Hook、路由、样式和工具函数。
 
-前端是一个使用 Vite 构建的 Vue 3 单页应用。
-
-### 顶层配置
-
-| 文件 | 职责 |
-|------|------|
-| `package.json` | 声明依赖项及脚本命令 |
-| `vite.config.js` | Vite 开发服务器配置——绑定到 0.0.0.0:5173 |
-| `index.html` | SPA 入口 HTML 文件 |
-| `public/assets/icons/` | 静态图标文件，构建时原样复制 |
-
-### 源码目录布局 (frontend/src/)
+### 目录布局
 
 ```
 frontend/src/
-├── main.js              ← 应用引导、全局 Toast 注册
-├── App.vue              ← 根组件：RouterView + ToastContainer
-├── styles.css           ← Vite 入口 CSS
-├── api/                 ← Axios 请求模块（12 个文件）
-├── assets/styles/       ← 全局 CSS 文件（19 个文件）
-├── components/          ← 可复用的 Vue 组件（18 个文件）
-├── composables/         ← Vue 组合式函数（11 个文件）
-├── constants/           ← 菜单配置、成就模式定义
-├── layouts/             ← DashboardLayout 布局包装器
-├── router/              ← Vue Router 配置
-├── utils/               ← 纯工具函数（11 个文件）
-└── views/              ← 页面级组件（8 个文件）
+├── main.js                            ← 应用引导与路由注册
+├── App.vue                            ← 根组件（RouterView + ToastContainer）
+├── api/                               ← Axios 请求模块（12 个文件）
+│   ├── request.js                     ← Axios 实例 + JWT 拦截器
+│   ├── auth.js                        ← 登录/注册调用
+│   ├── profile.js                     ← 学生档案 CRUD
+│   ├── achievements.js                ← 成就查询
+│   └── ...                            ← 其他领域专用模块
+├── views/                             ← 页面级路由组件（10 个视图）
+├── components/                        ← 共享可复用组件（16 个文件）
+│   └── achievement/                   ← 成就专用子组件
+├── composables/                       ← Vue Composable Hook（16 个 Hook）
+├── constants/                         ← 菜单定义、成就类型配置
+├── layouts/
+│   └── DashboardLayout.vue            ← 已认证页面外壳（侧边栏 + 顶部栏）
+├── router/
+│   └── index.js                       ← 路由定义 + 导航守卫
+├── utils/                             ← 纯工具函数（PDF、Excel、媒体）
+└── assets/
+    ├── fonts/                         ← 鸿蒙黑体字体文件
+    └── styles/                        ← 19 个模块化 CSS 文件
+        ├── _variables.css              ← CSS 自定义属性（主题颜色、阴影、动画）
+        ├── styles.css                  ← 主样式表（导入所有模块）
+        ├── layout.css                  ← 工作台外壳网格与响应式断点
+        ├── dialogs.css                 ← 模态框/抽屉叠加层样式
+        └── ...                         ← 各功能专用样式表
 ```
 
-### views/ — 页面组件
+### 前端如何组合在一起
 
-| 视图 | 路由 | 访问权限 |
-|------|------|----------|
-| `LoginView.vue` | `/login` | 仅访客 |
-| `RegisterView.vue` | `/register` | 仅访客 |
-| `MyInfosView.vue` | `/myinfos` | 已认证学生 |
-| `AchievementsView.vue` | `/achievements` | 已认证学生 |
-| `StudentInfoView.vue` | `/student-info` | TEACHER、ADMIN |
-| `AdminView.vue` | `/admin` | 仅 ADMIN |
-| `NotificationsView.vue` | `/notifications` | 已认证用户 |
-| `SettingsView.vue` | `/settings` | 已认证用户 |
+[main.js](frontend/src/main.js#L1-L14) 入口创建 Vue 实例、注册 Vue Router、导入全局样式表，并在 `window.$toast` 上暴露全局 toast 工具。[App.vue](frontend/src/App.vue#L1-L9) 很简洁——只有 `<RouterView />` 和 `<ToastContainer />`，因为所有布局结构都位于 [DashboardLayout.vue](frontend/src/layouts/DashboardLayout.vue) 中。
 
-### components/ — 共享可复用组件
+[router/index.js](frontend/src/router/index.js#L1-L83) 中的路由定义了两组路由：**游客路由**（`/login`、`/register`）和**已认证路由**（`/` 下所有子路由，嵌套在 `DashboardLayout` 内）。`beforeEach` 守卫检查 `localStorage` 中是否有 JWT Token，对教师专属和管理员专属页面执行基于角色的访问控制，并在系统设置关闭时拦截注册页面的访问。
 
-| 组件 | 用途 |
-|------|------|
-| `DashboardSidebar.vue` | 左侧边栏导航 |
-| `MobileCapsule.vue` | 移动端底部导航栏 |
-| `AppFooter.vue` | 仪表盘页脚 |
-| `BrandHeader.vue` | 带 Logo 的顶部标题栏 |
-| `OverlayPanel.vue` | 通用滑动覆盖面板 |
-| `StudentExportDialog.vue` | 导出学生档案的对话框 |
-| `StudentProfileEditor.vue` | 编辑学生信息的表单 |
-| `ToastContainer.vue` | 全局 Toast 通知容器 |
-| `PaginationBar.vue` | 可复用的分页控件 |
-| `AchievementCardBody.vue` | 列表/网格视图中的成就卡片 |
+[api/request.js](frontend/src/api/request.js#L1-L36) 中的 Axios 实例自动为每个出站请求附加 JWT `Authorization` Header，并在收到 401 响应时重定向到 `/login`。领域专用 API 模块（`auth.js`、`profile.js` 等）导入这个实例并导出干净的异步函数。
 
-### api/ — 请求模块
+**CSS 架构**：前端使用 19 个模块化 CSS 文件，通过单一主 `styles.css` 导入。主题 token 定义在 `_variables.css` 中作为 CSS 自定义属性（`--primary`、`--card`、`--shadow` 等），所有组件共享一致的主题风格。未使用 CSS 预处理器——仅有原生 CSS 加变量。
 
-| 模块 | 后端领域 |
-|------|----------|
-| `request.js` | Axios 实例、JWT 注入、401 处理 |
-| `auth.js` | 登录、注册、令牌操作 |
-| `profile.js` | 学生档案 CRUD |
-| `achievement.js` | 单类型成就操作 |
-| `achievements.js` | 跨类型成就查询 |
-| `upload.js` | 文件上传端点 |
-| `admin.js` | 管理面板 API |
+> 来源：[main.js](frontend/src/main.js#L1-L14)、[App.vue](frontend/src/App.vue#L1-L9)、[router/index.js](frontend/src/router/index.js#L1-L83)、[api/request.js](frontend/src/api/request.js#L1-L36)、[_variables.css](frontend/src/assets/styles/_variables.css#L1-L65)
 
-### composables/ — Vue 组合式函数
+## 支持目录
 
-| 组合式函数 | 功能 |
-|------------|------|
-| `useAchievementEditor.js` | 成就创建/编辑表单逻辑 |
-| `useAchievementList.js` | 分页成就列表 |
-| `useAchievementUpload.js` | 带进度跟踪的文件上传 |
-| `useDashboardShell.js` | 仪表盘布局状态 |
-| `useToast.js` | Toast 通知管理 |
-| `useOverlayState.js` | 模态框/覆盖层的开启与关闭切换 |
-| `useStudentPdfExport.js` | 学生档案的 PDF 导出流水线 |
-| `useReviewSettings.js` | 审核工作流配置 |
+### `docs/` — 文档站点
 
-### assets/styles/ — 全局 CSS
+一个独立的 VitePress 站点，生成你现在正在阅读的文档。它**与应用完全独立**——不导入任何源代码，有自己的 `package.json`，VitePress 是唯一依赖。文档页面分为四个部分：`guide/`（教程）、`design/`（技术深度解析）、`manual/`（用户手册）、`api/`（API 参考）。静态资源（图标、图片、截图）放在 `docs/public/`。
 
-| CSS 文件 | 覆盖范围 |
-|----------|----------|
-| `_variables.css` | CSS 自定义属性（颜色、间距、过渡时间） |
-| `_base.css` | 样式重置、排版、基础元素样式 |
-| `layout.css` | 仪表盘外壳、网格、响应式断点 |
-| `dialogs.css` | 模态覆盖层、Toast 定位、底部抽屉面板 |
-| `achievements.css` | 成就卡片网格、表单布局、媒体画廊 |
-| `auth.css` | 登录/注册页面样式 |
-| `buttons.css` | 幽灵按钮和操作按钮的基础样式 |
-| `cards.css` | 通用卡片组件样式 |
+> 来源：[docs/package.json](docs/package.json#L1-L14)、[docs/index.md](docs/index.md#L1-L54)
 
-### utils/ — 纯工具函数
+### `scripts/` — 工具脚本
 
-| 工具 | 用途 |
-|------|------|
-| `achievementFormatters.js` | 成就的日期格式化、分类标签 |
-| `studentProfileExport.js` | 导出编排（委托给 PDF/DOCX/XLSX 渲染器） |
-| `pdfRenderer.js` | 基于 jsPDF 的档案文档生成 |
-| `docxRenderer.js` | Word 文档档案生成 |
-| `sheetRenderer.js` | Excel 电子表格档案生成 |
-| `viewTransition.js` | 页面过渡动画辅助函数 |
-| `media.js` | 文件类型检测、预览 URL 处理 |
+包含 `generate_test_data.py`，一个生成真实感测试 SQL 插入语句的 Python 脚本。使用 `faker` 库生成中文姓名、电话号码、地址和学生记录，各表之间关系（`users`、`student_profiles`、教育/干部经历、九种成就类型）完整。对于用真实数据填充开发环境极有价值，无需手动输入。
 
-### constants/ — 静态配置
+> 来源：[generate_test_data.py](scripts/generate_test_data.py#L1-L30)
 
-`menu.js` 文件定义了侧边栏导航结构及基于角色的可见性规则。
+### `skills/` — AI 助手上下文
 
-## 技术栈总结
+作为 `CLAUDE.md` 的配套，提供结构化的参考文件。[SKILL.md](skills/SKILL.md#L1-L45) 索引将主题映射到详细参考文档，覆盖后端架构、前端约定、功能工作流、文件位置和构建说明。这些不是应用代码，而是帮助 AI 工具理解项目模式和约定的元数据。
 
-| 层级 | 技术 | 版本 |
-|------|------|------|
-| 运行环境（后端） | Java | 21 |
-| 框架（后端） | Spring Boot | 3.3.5 |
-| ORM | Spring Data JPA / Hibernate | （由 Boot 管理） |
-| 安全 | Spring Security + JJWT | 0.12.6 |
-| 数据库 | MySQL | 8.x |
-| 运行环境（前端） | Node.js | （推荐 LTS 版本） |
-| 框架（前端） | Vue 3 (Composition API) | 3.5.x |
-| 构建工具（前端） | Vite | 5.4.x |
-| 路由 | Vue Router | 4.4.x |
-| HTTP 客户端 | Axios | 1.7.x |
-| 数据表格 | AG Grid Vue | 31.3.x |
-| PDF 生成 | jsPDF + AutoTable | 2.5.x |
-| 电子表格 | SheetJS (xlsx) | 0.18.x |
-| 构建工具（后端） | Apache Maven | （含 Wrapper） |
+> 来源：[SKILL.md](skills/SKILL.md#L1-L45)
 
-> 来源：pom.xml, package.json, CLAUDE.md
+### `assets/` — 项目品牌
 
-## 后续步骤
+包含产品截图（按日期命名，如 `2026-03-09-1.png`）和品牌图标（Logo、设置图标），主要用于 README 和文档站点。这些文件**不被应用代码引用**——前端有自己的 `public/` 和 `src/assets/` 目录。
 
-- [架构概览](./architecture) — 了解系统的设计模式
-- [快速开始](./getting-started) — 在本地运行该项目
-- [JWT 身份验证流程](./jwt-auth) — 理解认证机制
+> 来源：[README.md](README.md#L200-L250)
+
+## 技术栈汇总
+
+| 层级 | 技术 | 版本 | 配置文件 |
+|------|------|------|---------|
+| 运行时 | Java (JDK) | 21 | 系统级 |
+| 后端框架 | Spring Boot | 3.3.5 | [pom.xml](backend/pom.xml#L1-L77) |
+| 安全 | Spring Security + JJWT | 6.x / 0.12.6 | [SecurityConfig.java](backend/src/main/java/com/gcsc/studentcenter/config/SecurityConfig.java#L1-L49) |
+| ORM | Hibernate（通过 Spring Data JPA） | 6.x | [application.yml](backend/src/main/resources/application.yml#L1-L39) |
+| 数据库 | MySQL | 8.0 | `.env` 文件 |
+| 后端构建 | Maven | 3.x | [pom.xml](backend/pom.xml#L1-L77) |
+| 前端框架 | Vue | 3.5 | [package.json](frontend/package.json#L1-L28) |
+| 前端构建 | Vite | 5.4 | [vite.config.js](frontend/vite.config.js#L1-L30) |
+| 路由 | Vue Router | 4.4 | [router/index.js](frontend/src/router/index.js#L1-L83) |
+| HTTP 客户端 | Axios | 1.7 | [api/request.js](frontend/src/api/request.js#L1-L36) |
+| 数据表格 | AG Grid Community | 31.3 | [package.json](frontend/package.json#L1-L28) |
+| 文档 | VitePress | 1.6 | [docs/package.json](docs/package.json#L1-L14) |
+
+> 来源：[README.md](README.md#L20-L55)、[pom.xml](backend/pom.xml#L1-L77)、[package.json](frontend/package.json#L1-L28)
+
+## 数据流概览
+
+理解单个请求如何在代码库中穿行，是有效导航代码库的关键。以下是经过认证的 API 调用的典型流程：
+
+请求经过三个检查点：**Vue Router 守卫**（检查 `localStorage` 中是否有 Token）、**Axios 拦截器**（将 Token 作为 `Authorization` Header 附加）、**Spring Security 过滤器链**（验证 JWT 并建立安全上下文）。只有三个检查全部通过，请求才到达 Controller。
+
+> 来源：[router/index.js](frontend/src/router/index.js#L52-L83)、[api/request.js](frontend/src/api/request.js#L1-L36)、[SecurityConfig.java](backend/src/main/java/com/gcsc/studentcenter/config/SecurityConfig.java#L1-L49)
+
+## 下一步
+
+本文档提供了全局视图。根据你想做的事，推荐以下阅读顺序：
+
+- 想深入了解**后端和前端各层如何交互**，继续读 [架构总览](./architecture)。
+- 想了解**用户如何认证以及 JWT Token 如何在系统中流动**，跳读 [安全与 JWT 认证](./jwt-auth)。
+- 想探索**前端如何组织路由并按角色保护页面**，读 [Vue Router 和路由守卫](./router)。
+- 想学习**前端 API 调用如何组织**，见 [Axios 请求层](./axios-layer)。
