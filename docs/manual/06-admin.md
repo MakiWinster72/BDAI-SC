@@ -46,7 +46,7 @@
 
 ![审核策略](/images/admin审核策略.png)
 
-## 备份与恢复
+## 备份与恢复 {#backup-restore}
 
 ### 备份
 

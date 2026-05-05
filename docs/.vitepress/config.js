@@ -60,6 +60,7 @@ export default defineConfig({
           { text: "学生信息管理", link: "/manual/05-student-info" },
           { text: "后台管理", link: "/manual/06-admin" },
           { text: "账号设置", link: "/manual/07-settings" },
+          { text: "备份与恢复", link: "/manual/09-backup" },
         ],
       },
       {
@@ -188,6 +189,7 @@ export default defineConfig({
             { text: "学生信息管理", link: "/manual/05-student-info" },
             { text: "后台管理", link: "/manual/06-admin" },
             { text: "账号设置", link: "/manual/07-settings" },
+            { text: "备份与恢复", link: "/manual/09-backup" },
           ],
         },
       ],
