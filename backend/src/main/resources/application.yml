@@ -2,10 +2,10 @@ spring:
   config:
     import: optional:file:.env[.properties],optional:file:../.env[.properties]
   datasource:
-    url: "${BDAI_SC_DB_URL:jdbc:mysql://127.0.0.1:3306/bdai_sc?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}"
+    url: jdbc:mysql://${BDAI_SC_DB_HOST:127.0.0.1}:${BDAI_SC_DB_PORT:3306}/${BDAI_SC_DB_NAME:bdai_sc}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: "${BDAI_SC_DB_USER:bdai_sc}"
-    password: "${BDAI_SC_DB_PASSWORD:bdai_sc}"
+    username: ${BDAI_SC_DB_USER:bdai_sc}
+    password: ${BDAI_SC_DB_PASSWORD:bdai_sc}
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
