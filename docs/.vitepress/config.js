@@ -138,6 +138,20 @@ export default defineConfig({
             { text: "详细设计概述", link: "/design/" },
           ],
         },
+        {
+          text: "使用手册",
+          items: [
+            { text: "手册首页", link: "/manual/" },
+            { text: "登录与注册", link: "/manual/01-login" },
+            { text: "我的信息", link: "/manual/02-myinfo" },
+            { text: "个人成果", link: "/manual/03-achievements" },
+            { text: "通知中心", link: "/manual/04-notifications" },
+            { text: "学生信息管理", link: "/manual/05-student-info" },
+            { text: "后台管理", link: "/manual/06-admin" },
+            { text: "账号设置", link: "/manual/07-settings" },
+            { text: "备份与恢复", link: "/manual/09-backup" },
+          ],
+        },
       ],
 
       "/design/": [
