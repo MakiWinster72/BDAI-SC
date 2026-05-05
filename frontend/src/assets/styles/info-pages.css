@@ -274,6 +274,7 @@
   background: transparent;
   border: none;
   min-width: 0;
+  overflow: hidden;
 }
 
 .field-full {
@@ -326,6 +327,8 @@
 
 /* ── Date Input Calendar Icon ─────────────────────────────── */
 input[type="date"].info-input {
+  width: 100%;
+  max-width: 100%;
   background-image: url("/assets/icons/calendar.svg");
   background-size: 18px;
   background-repeat: no-repeat;
@@ -333,11 +336,11 @@ input[type="date"].info-input {
   padding-right: 38px;
 }
 
-/* Hide native webkit picker icon — our calendar icon shows through */
+/* Hide native picker indicator — click anywhere on input to open calendar.
+   Without explicit size, the indicator stays at its natural size on the right;
+   iOS natively handles taps on the entire date input. */
 input[type="date"].info-input::-webkit-calendar-picker-indicator {
   opacity: 0;
-  width: 20px;
-  height: 20px;
   cursor: pointer;
 }
 
