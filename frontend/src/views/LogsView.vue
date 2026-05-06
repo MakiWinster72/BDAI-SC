@@ -140,7 +140,7 @@ watch(auditLogSearch, () => {
               <tbody>
                 <tr v-for="entry in auditLogs" :key="entry.id" class="user-row">
                   <td class="td-mono">{{ formatLogTime(entry.createdAt) }}</td>
-                  <td>{{ entry.username }}</td>
+                  <td>{{ entry.displayName || entry.username }}</td>
                   <td>
                     <span class="role-chip role-admin">
                       {{ ACTION_LABELS[entry.action] || entry.action }}
