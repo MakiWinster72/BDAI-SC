@@ -14,12 +14,12 @@ BDAI_SC Student Center - Full-stack web application for student achievement mana
 
 ### Backend
 ```bash
+source .env          # required — .env loaded via spring.config.import
 cd backend
 mvn spring-boot:run          # Run application
-mvn clean package             # Build JAR
 mvn clean package -DskipTests # Build without tests
-mvn test                      # Run all tests
-mvn test -Dtest=ClassName     # Run single test class
+mvn test                      # Run all tests (none currently exist — src/test/ is empty)
+mvn test -Dtest=ClassName    # Run single test class
 mvn test -Dtest=ClassName#methodName  # Run single test method
 ```
 
@@ -102,10 +102,13 @@ Global styles in `frontend/src/assets/styles/`:
 - Controlled vocabulary for fields like `politicalStatus`, `ethnicity`, `currentEducationLevel`
 
 ### Security Configuration
+- Config: `backend/src/main/resources/application.yml` loads `.env` via `spring.config.import` (searches `backend/` then `../`)
+- **Always `source .env`** from project root before running backend — env vars are not auto-loaded by Maven
 - Session: Stateless (JWT-based)
 - Password: BCrypt encoding via `PasswordEncoder` bean
 - CORS: Allowed origins include `localhost:5173`, `127.0.0.1:5173`, and local network patterns (`192.168.*.*`, `10.*.*.*`, `172.*.*.*`)
 - JWT secret configured in `application.yml` (`security.jwt.secret`)
+- Default admin account created on first startup: username `bdai`, password `bdai2026` (change after first login)
 
 ### File Uploads
 - Max size: 200MB (configured in `application.yml`)

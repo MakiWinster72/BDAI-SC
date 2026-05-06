@@ -8,8 +8,11 @@
 
 ## Build Commands
 
+> **First run**: `cp .env.example .env` then `source .env`
+
 ### Backend
 ```bash
+source .env          # required — .env loaded via spring.config.import
 cd backend
 mvn spring-boot:run            # Run application
 mvn clean package -DskipTests  # Build JAR without tests
@@ -37,21 +40,21 @@ FLUSH PRIVILEGES;
 
 ## Configuration
 
-- Config file: `backend/src/main/resources/application.yml`
-- Environment: `.env` in project root, imported via `spring.config.import` in `application.yml`
-- Copy `.env.example` to `.env` before first run
-- JWT token stored in localStorage as `bdai_sc_token`
-- File uploads: POST `/api/upload`, stored under `backend/uploads/`
+- Config: `backend/src/main/resources/application.yml` loads `.env` via `spring.config.import` (searches `backend/` then `../`)
+- **Always `source .env`** from project root before running backend — env vars are not auto-loaded by Maven
+- JWT token: stored in localStorage as `bdai_sc_token`
+- File uploads: POST `/api/upload`, stored under `backend/uploads/` (or `$BDAI_SC_UPLOAD_DIR`)
 - JPA `ddl-auto: update` — schema auto-created on first run
+- No backend tests currently exist (`src/test/` is empty)
 
 ## Architecture
 
 - **Package**: `com.gcsc.studentcenter` (controller/service/repository/entity/dto/config/exception)
 - **9 achievement types**: contest, research, paper, patent, certificate, works, journal, double-hundred, training
 - **Roles**: STUDENT (default), CADRE, TEACHER, ADMIN
-- **Review workflow**: achievements and profile changes require TEACHER/ADMIN approval
+- **Review workflow**: achievements and profile changes require TEACHER/ADMIN approval; CADRE can only review their own class
 
 ## Git Workflow
 
-- Branch: `feat/name`, `fix/name`, `page/name`
+- Branch: `feat/feature-name`, `fix/bug-description`, `page/page-name`
 - Commit (Chinese): `feat: 添加XX功能`, `fix: 修复XX问题`
