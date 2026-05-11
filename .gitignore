@@ -4,6 +4,7 @@
 backend/target/
 backend/*.log
 backend/uploads/
+**/static/*
 
 # frontend
 **/node_modules/
@@ -109,3 +110,7 @@ CLAUDE.md
 
 # Uploads directory (file storage)
 backend/uploads/
+
+# Docker
+mysql_data/
+uploads/

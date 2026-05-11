@@ -1,28 +1,14 @@
 # Windows Server 部署指南
 
-本指南介绍如何在 Windows Server 2016 / 2019 上部署 BDAI-SC 学生信息管理中心。
-
-## 如何选择部署方案
-
-| 系统版本 | 推荐方案 | 说明 |
-|---------|---------|------|
-| **Windows Server 2019** | Docker 部署（方案一） | Docker Engine 安装简单，一键启动全部服务 |
-| **Windows Server 2019** （Docker 不可用）| 直接部署（方案二） | 手动安装 JDK + MySQL + Nginx |
-| **Windows Server 2016** | 直接部署（方案二） | 不支持 Docker Desktop，只能直接部署 |
-
-> **如何确认目标机器版本？** 在服务器上运行 `winver` 或 `systeminfo | findstr /C:"OS Name"` 查看。
-
----
-
 ## 公共环境要求
 
-| 依赖 | 版本要求 |
-|------|---------|
-| JDK | 21+（如 Eclipse Temurin） |
-| MySQL | 8.0+ |
-| Maven | 3.9+ |
-| Node.js | 18+（仅构建前端用） |
-| Nginx | 最新稳定版 |
+| 依赖    | 版本要求                  |
+| ------- | ------------------------- |
+| JDK     | 21+（如 Eclipse Temurin） |
+| MySQL   | 8.0+                      |
+| Maven   | 3.9+                      |
+| Node.js | 18+（仅构建前端用）       |
+| Nginx   | 最新稳定版                |
 
 ---
 
@@ -56,21 +42,46 @@ Restart-Computer -Force
 重启后验证：`docker --version`
 
 > 如果上述命令失败，可能是 **Containers 功能未启用**，先运行：
+>
 > ```powershell
 > Install-WindowsFeature Containers
 > Restart-Computer -Force
 > ```
 
-### 步骤 2：上传项目
+### 步骤 2：配置 Docker 镜像加速
+
+以管理员身份打开 PowerShell，运行：
+
+```powershell
+# 创建配置目录（如果不存在）
+New-Item -Path "C:\ProgramData\Docker\config" -ItemType Directory -Force
+
+# 写入镜像加速配置
+@"
+{
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://dockerproxy.cn",
+    "https://docker.rainbond.cc"
+  ]
+}
+"@ | Out-File -FilePath "C:\ProgramData\Docker\config\daemon.json" -Encoding UTF8
+
+# 重启 Docker 服务
+Restart-Service Docker
+```
+
+配置完成后验证：`docker info | Select-String "Registry Mirrors"` 或 `docker run --rm hello-world`
+
+### 步骤 3：上传项目
 
 将项目完整上传到服务器，例如 `D:\GCSC\`，并创建以下文件。
 
-### 步骤 3：编写 docker-compose.yml
+### 步骤 4：编写 docker-compose.yml
 
 在 `D:\GCSC\docker-compose.yml`：
 
 ```yaml
-version: '3.8'
 services:
   db:
     image: mysql:8.0
@@ -113,7 +124,7 @@ services:
       - "5173:80"
 ```
 
-### 步骤 4：编写后端 Dockerfile
+### 步骤 5：编写后端 Dockerfile
 
 在 `backend/` 目录下创建 `Dockerfile`：
 
@@ -121,7 +132,7 @@ services:
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 COPY pom.xml .
-COPY src ./src
+COPY src/ ./src/
 RUN apk add --no-cache maven && mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
@@ -132,16 +143,16 @@ EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
-### 步骤 5：编写前端 Dockerfile
+### 步骤 6：编写前端 Dockerfile
 
 在 `frontend/` 目录下创建 `Dockerfile`：
 
 ```dockerfile
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package*.json .
+COPY package*.json ./
 RUN npm install
-COPY . .
+COPY . ./
 RUN npm run build
 
 FROM nginx:alpine
@@ -150,7 +161,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 ```
 
-### 步骤 6：编写 Nginx 配置
+### 步骤 7：编写 Nginx 配置
 
 在 `frontend/` 目录下创建 `nginx.conf`：
 
@@ -177,7 +188,7 @@ server {
 }
 ```
 
-### 步骤 7：启动服务
+### 步骤 8：启动服务
 
 ```powershell
 cd D:\GCSC
@@ -186,11 +197,12 @@ docker compose up -d --build
 
 访问：`http://服务器IP:5173`
 
-### 步骤 8：验证服务状态
+### 步骤 9：验证服务状态
 
 ```powershell
 docker compose ps        # 查看容器状态
-docker compose logs -f  # 查看实时日志
+docker compose logs -f   # 查看所有容器实时日志
+docker compose logs -f backend  # 只看后端日志
 ```
 
 ---
@@ -206,11 +218,13 @@ docker compose logs -f  # 查看实时日志
 1. 下载 [Eclipse Temurin 21 LTS](https://adoptium.net/temurin/releases/?version=21)（选择 `.msi` 安装包，x64）
 2. 运行安装程序，记住安装路径（如 `C:\Program Files\Eclipse Adoptium\jdk-21...`）
 3. 设置环境变量：
+
    ```powershell
    # 系统环境变量中添加
    JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.x_x
    # 并将 %JAVA_HOME%\bin 加入 PATH
    ```
+
 4. 验证：`java -version`
 
 #### 安装 MySQL 8.0
@@ -219,6 +233,7 @@ docker compose logs -f  # 查看实时日志
 2. 运行安装，选择 **Server only** 或 **Full**
 3. 设置 root 密码，记住它
 4. 安装完成后登录 MySQL 创建数据库和用户：
+
    ```sql
    CREATE DATABASE IF NOT EXISTS bdai_sc DEFAULT CHARACTER SET utf8mb4;
    CREATE USER IF NOT EXISTS 'bdai_sc'@'localhost' IDENTIFIED BY '你的密码';
@@ -238,10 +253,12 @@ docker compose logs -f  # 查看实时日志
 1. 下载 [Maven 3.9+](https://maven.apache.org/download.cgi)
 2. 解压到 `C:\maven`
 3. 设置环境变量：
+
    ```powershell
    MAVEN_HOME=C:\maven\apache-maven-3.9.x
    # 将 %MAVEN_HOME%\bin 加入 PATH
    ```
+
 4. 验证：`mvn -version`
 
 #### 安装 Node.js（用于构建前端）
@@ -333,38 +350,47 @@ netsh advfirewall firewall add rule name="GCSC Frontend" dir=in action=allow pro
 
 ---
 
-## 生产环境注意事项
+## 日常运维命令
 
-### 安全配置
+### Docker 部署（方案一）
 
-| 配置项 | 生产要求 |
-|--------|---------|
-| `BDAI_SC_JWT_SECRET` | 务必更换为至少 32 位的随机字符串 |
-| `BDAI_SC_CORS_ALLOWED_ORIGINS` | 改为前端实际域名，避免 `*` |
-| MySQL 密码 | 使用强密码，不要使用默认密码 |
-| 数据库备份 | 定期备份 `mysql_data` 卷或使用 `mysqldump` |
-
-### 防火墙设置
+在 `D:\GCSC\` 目录打开 PowerShell 运行：
 
 ```powershell
-netsh advfirewall firewall add rule name="GCSC Frontend" dir=in action=allow protocol=TCP localport=5173
-netsh advfirewall firewall add rule name="GCSC Backend" dir=in action=allow protocol=TCP localport=8080
+# 启动（首次或下次）
+docker compose up -d
+
+# 更新（代码有修改后重新构建）
+docker compose up -d --build
+
+# 关闭（保留数据）
+docker compose down
+
+# 关闭（删除 MySQL 数据）
+docker compose down -v
+
+# 查看容器状态
+docker compose ps
+
+# 查看所有容器实时日志
+docker compose logs -f
+
+# 查看指定容器日志
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+
+# 查看最近 N 行日志（不加 -f）
+docker compose logs --tail=100
+
+# 重启后端
+docker compose restart backend
+
+# 进入 MySQL 容器
+docker exec -it gcsc_mysql mysql -ubdai_sc -p
 ```
 
-### 常用运维命令
-
-#### Docker 部署（Server 2019）
-
-```powershell
-docker compose up -d --build      # 启动并构建
-docker compose down              # 停止服务
-docker compose down -v           # 停止并删除数据卷
-docker compose restart backend   # 重启后端
-docker compose logs -f backend  # 查看后端日志
-docker exec -it gcsc_mysql mysql -ubdai_sc -p  # 进入 MySQL
-```
-
-#### 直接部署（Server 2016 / 2019）
+### 直接部署（方案二）
 
 ```powershell
 # 后端（后台运行）
@@ -380,6 +406,88 @@ C:\nginx\nginx.exe -s reload
 # 查看后端进程
 tasklist | findstr java
 taskkill /F /PID <PID>   # 关闭后端进程
+```
+
+---
+
+## 文件存储说明
+
+### 附件存储位置
+
+用户上传的附件统一存放在项目根目录的 `uploads/` 目录下：
+
+```
+D:\GCSC\              # 项目根目录（Windows）
+~/projects/GCSC/      # 项目根目录（Linux）
+└── uploads/          # 用户上传的附件
+    ├── avatar/       # 头像图片
+    ├── achievement/  # 成果附件
+    └── ...
+```
+
+**Docker 部署时**，`uploads/` 通过 volume 映射到容器内 `/app/uploads`，容器删除后文件不丢失：
+
+```yaml
+backend:
+  volumes:
+    - ./uploads:/app/uploads # 宿主机 ./uploads → 容器 /app/uploads
+```
+
+### 数据目录（Docker）
+
+```bash
+mysql_data/           # MySQL 数据文件（Docker volume）
+uploads/              # 用户上传文件
+```
+
+---
+
+## 数据库访问
+
+### Docker 部署
+
+```powershell
+# 进入 MySQL 容器
+docker exec -it gcsc_mysql mysql -ubdai_sc -p
+
+# 宿主机用 mysql 客户端连接
+mysql -h127.0.0.1 -P3306 -ubdai_sc -p
+```
+
+### 直接部署
+
+```powershell
+mysql -h127.0.0.1 -P3306 -ubdai_sc -p
+```
+
+### 连接信息
+
+| 参数   | 值                                           |
+| ------ | -------------------------------------------- |
+| 主机   | `127.0.0.1`（Docker 部署也可用 `db` 服务名） |
+| 端口   | `3306`                                       |
+| 用户   | `bdai_sc`                                    |
+| 密码   | `bdai_sc`                                    |
+| 数据库 | `bdai_sc`                                    |
+
+---
+
+## 生产环境注意事项
+
+### 安全配置
+
+| 配置项                         | 生产要求                                   |
+| ------------------------------ | ------------------------------------------ |
+| `BDAI_SC_JWT_SECRET`           | 务必更换为至少 32 位的随机字符串           |
+| `BDAI_SC_CORS_ALLOWED_ORIGINS` | 改为前端实际域名，避免 `*`                 |
+| MySQL 密码                     | 使用强密码，不要使用默认密码               |
+| 数据库备份                     | 定期备份 `mysql_data` 卷或使用 `mysqldump` |
+
+### 防火墙设置
+
+```powershell
+netsh advfirewall firewall add rule name="GCSC Frontend" dir=in action=allow protocol=TCP localport=5173
+netsh advfirewall firewall add rule name="GCSC Backend" dir=in action=allow protocol=TCP localport=8080
 ```
 
 ### 数据备份
@@ -406,28 +514,18 @@ docker run --rm -v gcsc_mysql_data:/data -v D:\backup:/backup alpine tar czf /ba
 
 ## 故障排查
 
-| 问题 | 可能原因 | 解决方案 |
-|------|---------|---------|
-| 前端无法访问 | 防火墙未开放 5173 端口 | `netsh advfirewall firewall add rule name="GCSC Frontend" dir=in action=allow protocol=TCP localport=5173` |
-| API 请求失败 | 后端未启动或端口被占用 | `netstat -ano \| findstr 8080`，确认 JAR 进程在运行 |
-| 文件上传失败 | `uploads` 目录不存在或无写入权限 | 手动创建 `D:\GCSC\uploads` 目录 |
-| 数据库连接失败 | MySQL 未启动或密码错误 | 检查 MySQL 服务状态，确认 `.env` 中密码正确 |
-| CORS 错误 | `BDAI_SC_CORS_ALLOWED_ORIGINS` 未包含前端地址 | 修改 `.env` 中的 CORS 配置，重启后端 |
-| Docker 服务无法启动 | Windows 容器功能未启用 | `Install-WindowsFeature Containers`，重启后再试 |
-| 后端 JAR 启动报错 | JDK 版本不对（低于 21）| 确认 `java -version` 显示 21，JAVA_HOME 指向 JDK 而非 JRE |
-| Nginx 报 502 | 后端未启动或端口不对 | 先确认后端在 8080 端口运行 `netstat -ano \| findstr 8080` |
-| Maven 编译失败 | 网络问题（下载依赖慢）| 配置 Maven 镜像，或在服务器上保持网络畅通 |
+| 问题                | 可能原因                                      | 解决方案                                                                                                   |
+| ------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 前端无法访问        | 防火墙未开放 5173 端口                        | `netsh advfirewall firewall add rule name="GCSC Frontend" dir=in action=allow protocol=TCP localport=5173` |
+| API 请求失败        | 后端未启动或端口被占用                        | `netstat -ano \| findstr 8080`，确认 JAR 进程在运行                                                        |
+| 文件上传失败        | `uploads` 目录不存在或无写入权限              | 手动创建 `D:\GCSC\uploads` 目录                                                                            |
+| 数据库连接失败      | MySQL 未启动或密码错误                        | 检查 MySQL 服务状态，确认 `.env` 中密码正确                                                                |
+| CORS 错误           | `BDAI_SC_CORS_ALLOWED_ORIGINS` 未包含前端地址 | 修改 `.env` 中的 CORS 配置，重启后端                                                                       |
+| Docker 拉取镜像失败 | 国内访问 Docker Hub 受限                      | 参考"步骤 2：配置 Docker 镜像加速"配置加速器                                                               |
+| Docker 服务无法启动 | Windows 容器功能未启用                        | `Install-WindowsFeature Containers`，重启后再试                                                            |
+| 后端 JAR 启动报错   | JDK 版本不对（低于 21）                       | 确认 `java -version` 显示 21，JAVA_HOME 指向 JDK 而非 JRE                                                  |
+| Nginx 报 502        | 后端未启动或端口不对                          | 先确认后端在 8080 端口运行 `netstat -ano \| findstr 8080`                                                  |
+| Maven 编译失败      | 网络问题（下载依赖慢）                        | 配置 Maven 镜像，或在服务器上保持网络畅通                                                                  |
 
 ---
 
-## 两个版本的快速选择
-
-```
-winver 查看版本
-    │
-    ├── Windows Server 2019 → 用"方案一：Docker 部署"
-    │                          （只需运行 Install-Module + docker compose）
-    │
-    └── Windows Server 2016 → 用"方案二：直接部署"
-                               （手动装 JDK + MySQL + Nginx）
-```
