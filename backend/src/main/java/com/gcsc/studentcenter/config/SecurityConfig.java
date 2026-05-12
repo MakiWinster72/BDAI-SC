@@ -28,12 +28,12 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> {
           response.setStatus(HttpStatus.UNAUTHORIZED.value());
-          response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+          response.setContentType("application/json;charset=UTF-8");
           response.getWriter().write("{\"success\":false,\"message\":\"未登录或登录已过期\"}");
         }))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/api/auth/register", "/api/auth/login", "/api/settings/system", "/uploads/**",
+            .requestMatchers("/", "/login", "/register", "/api/auth/register", "/api/auth/login", "/api/settings/system", "/uploads/**",
                 "/api/achievements/**")
             .permitAll()
             .anyRequest().authenticated())

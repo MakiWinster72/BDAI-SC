@@ -1540,8 +1540,8 @@
     animation: none !important;
   }
 
-  .student-detail-view,
-  .student-achievements-view {
+  .student-detail-view.open,
+  .student-achievements-view.open {
     transform: translate(-50%, 0) scale(1);
     opacity: 1;
     pointer-events: auto;
