@@ -566,6 +566,14 @@
   display: block;
   width: 112px;
   height: 46px;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.captcha-placeholder {
+  color: var(--text-sub);
+  font-size: 12px;
 }
 
 .captcha-refresh {

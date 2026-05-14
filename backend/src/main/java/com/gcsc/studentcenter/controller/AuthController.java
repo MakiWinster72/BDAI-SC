@@ -1,12 +1,14 @@
 package com.gcsc.studentcenter.controller;
 
 import com.gcsc.studentcenter.dto.AuthResponse;
+import com.gcsc.studentcenter.dto.CaptchaResponse;
 import com.gcsc.studentcenter.dto.ChangePasswordRequest;
 import com.gcsc.studentcenter.dto.LoginHistoryResponse;
 import com.gcsc.studentcenter.dto.LoginRequest;
 import com.gcsc.studentcenter.dto.RegisterRequest;
 import com.gcsc.studentcenter.dto.UserProfileResponse;
 import com.gcsc.studentcenter.service.AuthService;
+import com.gcsc.studentcenter.service.CaptchaService;
 import com.gcsc.studentcenter.service.LoginHistoryService;
 import com.gcsc.studentcenter.service.SystemSettingsService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,12 +31,14 @@ import java.util.Map;
 public class AuthController {
 
   private final AuthService authService;
+  private final CaptchaService captchaService;
   private final LoginHistoryService loginHistoryService;
   private final SystemSettingsService systemSettingsService;
 
-  public AuthController(AuthService authService, LoginHistoryService loginHistoryService,
+  public AuthController(AuthService authService, CaptchaService captchaService, LoginHistoryService loginHistoryService,
       SystemSettingsService systemSettingsService) {
     this.authService = authService;
+    this.captchaService = captchaService;
     this.loginHistoryService = loginHistoryService;
     this.systemSettingsService = systemSettingsService;
   }
@@ -46,6 +50,11 @@ public class AuthController {
           .body(Map.of("success", false, "message", "当前未开放注册"));
     }
     return ResponseEntity.ok(authService.register(request));
+  }
+
+  @GetMapping("/captcha")
+  public ResponseEntity<CaptchaResponse> captcha() {
+    return ResponseEntity.ok(captchaService.createCaptcha());
   }
 
   @PostMapping("/login")

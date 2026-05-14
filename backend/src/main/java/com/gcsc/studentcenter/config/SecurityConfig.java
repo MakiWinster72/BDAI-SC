@@ -33,7 +33,7 @@ public class SecurityConfig {
         }))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/", "/login", "/register", "/api/auth/register", "/api/auth/login", "/api/settings/system", "/uploads/**",
+            .requestMatchers("/", "/login", "/register", "/api/auth/register", "/api/auth/login", "/api/auth/captcha", "/api/settings/system", "/uploads/**",
                 "/api/achievements/**")
             .permitAll()
             .anyRequest().authenticated())

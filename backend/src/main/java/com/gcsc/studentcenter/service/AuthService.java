@@ -28,18 +28,21 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final LoginHistoryService loginHistoryService;
+  private final CaptchaService captchaService;
 
   public AuthService(
       AppUserRepository appUserRepository,
       StudentProfileRepository studentProfileRepository,
       PasswordEncoder passwordEncoder,
       JwtService jwtService,
-      LoginHistoryService loginHistoryService) {
+      LoginHistoryService loginHistoryService,
+      CaptchaService captchaService) {
     this.appUserRepository = appUserRepository;
     this.studentProfileRepository = studentProfileRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.loginHistoryService = loginHistoryService;
+    this.captchaService = captchaService;
   }
 
   @Transactional
@@ -100,6 +103,8 @@ public class AuthService {
   }
 
   public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
+    captchaService.validateCaptcha(request.getCaptchaId(), request.getCaptchaCode());
+
     String username = request.getUsername().trim();
     if (username.isEmpty()) {
       throw new IllegalArgumentException("用户名不能为空");

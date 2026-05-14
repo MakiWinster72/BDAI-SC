@@ -227,13 +227,14 @@
                   title="点击刷新验证码"
                   @click="refreshCaptcha"
                 >
-                  <canvas
-                    ref="captchaCanvas"
+                  <img
+                    v-if="captchaImage"
+                    :src="captchaImage"
                     class="captcha-canvas"
-                    width="112"
-                    height="46"
+                    alt=""
                     aria-hidden="true"
-                  ></canvas>
+                  />
+                  <span v-else class="captcha-placeholder">加载中</span>
                 </button>
                 <button
                   type="button"
@@ -285,9 +286,9 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, shallowRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { login } from "../api/auth";
+import { getCaptcha, login } from "../api/auth";
 import { getSystemSettings } from "../api/admin";
 import { useToast } from "../composables/useToast";
 
@@ -307,10 +308,8 @@ const showPassword = ref(false);
 const usernameError = ref("");
 const captchaError = ref("");
 const allowRegistration = ref(false);
-const captchaCode = ref("");
-const captchaCanvas = ref(null);
-
-const captchaChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const captchaId = shallowRef("");
+const captchaImage = shallowRef("");
 
 async function fetchSystemSettings() {
   try {
@@ -324,77 +323,22 @@ async function fetchSystemSettings() {
 }
 fetchSystemSettings();
 
-function createCaptchaCode() {
-  return Array.from({ length: 4 }, () => captchaChars[Math.floor(Math.random() * captchaChars.length)]).join("");
-}
-
-function drawCaptcha() {
-  const canvas = captchaCanvas.value;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const width = 112;
-  const height = 46;
-  const ratio = window.devicePixelRatio || 1;
-
-  canvas.width = width * ratio;
-  canvas.height = height * ratio;
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-  ctx.clearRect(0, 0, width, height);
-
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#fff7fb");
-  gradient.addColorStop(1, "#f2edf7");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-
-  for (let i = 0; i < 8; i += 1) {
-    ctx.strokeStyle = `rgba(100, 12, 114, ${0.12 + Math.random() * 0.16})`;
-    ctx.lineWidth = 1 + Math.random() * 1.2;
-    ctx.beginPath();
-    ctx.moveTo(Math.random() * width, Math.random() * height);
-    ctx.bezierCurveTo(
-      Math.random() * width,
-      Math.random() * height,
-      Math.random() * width,
-      Math.random() * height,
-      Math.random() * width,
-      Math.random() * height,
-    );
-    ctx.stroke();
-  }
-
-  captchaCode.value.split("").forEach((char, index) => {
-    ctx.save();
-    ctx.translate(18 + index * 23, 29 + (Math.random() - 0.5) * 4);
-    ctx.rotate((Math.random() - 0.5) * 0.35);
-    ctx.font = `${22 + Math.floor(Math.random() * 4)}px Arial, sans-serif`;
-    ctx.fontKerning = "none";
-    ctx.fillStyle = index % 2 === 0 ? "#640c72" : "#a85d20";
-    ctx.fillText(char, -7, 7);
-    ctx.restore();
-  });
-
-  for (let i = 0; i < 24; i += 1) {
-    ctx.fillStyle = `rgba(100, 12, 114, ${0.16 + Math.random() * 0.2})`;
-    ctx.beginPath();
-    ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 1.7, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function refreshCaptcha({ clearInput = true, clearError = true } = {}) {
-  captchaCode.value = createCaptchaCode();
+async function refreshCaptcha({ clearInput = true, clearError = true } = {}) {
   if (clearInput) {
     form.captcha = "";
   }
   if (clearError) {
     captchaError.value = "";
   }
-  drawCaptcha();
+  try {
+    const { data } = await getCaptcha();
+    captchaId.value = data.captchaId || "";
+    captchaImage.value = data.imageBase64 || "";
+  } catch (error) {
+    captchaId.value = "";
+    captchaImage.value = "";
+    captchaError.value = parseError(error);
+  }
 }
 
 onMounted(() => {
@@ -424,16 +368,20 @@ async function handleLogin() {
     return;
   }
 
-  if (form.captcha.toUpperCase() !== captchaCode.value) {
-    captchaError.value = "验证码错误，请重新输入";
-    refreshCaptcha({ clearError: false });
+  if (!captchaId.value) {
+    captchaError.value = "验证码加载失败，请刷新后重试";
     return;
   }
 
   isSubmitting.value = true;
   try {
     const { username, password } = form;
-    const { data } = await login({ username, password });
+    const { data } = await login({
+      username,
+      password,
+      captchaId: captchaId.value,
+      captchaCode: form.captcha,
+    });
     feedback.text = data.message || "登录成功";
     feedback.type = "success";
 
