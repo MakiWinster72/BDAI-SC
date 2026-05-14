@@ -207,6 +207,52 @@
               </div>
             </div>
 
+            <div class="form-row">
+              <label class="form-label" for="captcha">图形验证码</label>
+              <div class="captcha-row">
+                <input
+                  id="captcha"
+                  v-model.trim="form.captcha"
+                  class="form-input captcha-input"
+                  type="text"
+                  placeholder="请输入验证码"
+                  autocomplete="off"
+                  :class="{ 'input--error': captchaError }"
+                  required
+                />
+                <button
+                  type="button"
+                  class="captcha-image-button"
+                  aria-label="刷新图形验证码"
+                  title="点击刷新验证码"
+                  @click="refreshCaptcha"
+                >
+                  <canvas
+                    ref="captchaCanvas"
+                    class="captcha-canvas"
+                    width="112"
+                    height="46"
+                    aria-hidden="true"
+                  ></canvas>
+                </button>
+                <button
+                  type="button"
+                  class="captcha-refresh"
+                  aria-label="换一张验证码"
+                  title="换一张验证码"
+                  @click="refreshCaptcha"
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/>
+                    <path d="M3 21v-5h5"/>
+                    <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                  </svg>
+                </button>
+              </div>
+              <span v-if="captchaError" class="field-error" role="alert">{{ captchaError }}</span>
+            </div>
+
             <button class="action-button" :disabled="isSubmitting" type="submit">
               <span class="btn-content">
                 <span v-if="isSubmitting" class="btn-spinner" aria-hidden="true"></span>
@@ -239,7 +285,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { login } from "../api/auth";
 import { getSystemSettings } from "../api/admin";
@@ -252,13 +298,19 @@ const toast = useToast();
 const form = reactive({
   username: route.query.username ? String(route.query.username) : "",
   password: "",
+  captcha: "",
 });
 
 const isSubmitting = ref(false);
 const feedback = reactive({ text: "", type: "" });
 const showPassword = ref(false);
 const usernameError = ref("");
+const captchaError = ref("");
 const allowRegistration = ref(false);
+const captchaCode = ref("");
+const captchaCanvas = ref(null);
+
+const captchaChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 async function fetchSystemSettings() {
   try {
@@ -272,6 +324,83 @@ async function fetchSystemSettings() {
 }
 fetchSystemSettings();
 
+function createCaptchaCode() {
+  return Array.from({ length: 4 }, () => captchaChars[Math.floor(Math.random() * captchaChars.length)]).join("");
+}
+
+function drawCaptcha() {
+  const canvas = captchaCanvas.value;
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const width = 112;
+  const height = 46;
+  const ratio = window.devicePixelRatio || 1;
+
+  canvas.width = width * ratio;
+  canvas.height = height * ratio;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  ctx.clearRect(0, 0, width, height);
+
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, "#fff7fb");
+  gradient.addColorStop(1, "#f2edf7");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  for (let i = 0; i < 8; i += 1) {
+    ctx.strokeStyle = `rgba(100, 12, 114, ${0.12 + Math.random() * 0.16})`;
+    ctx.lineWidth = 1 + Math.random() * 1.2;
+    ctx.beginPath();
+    ctx.moveTo(Math.random() * width, Math.random() * height);
+    ctx.bezierCurveTo(
+      Math.random() * width,
+      Math.random() * height,
+      Math.random() * width,
+      Math.random() * height,
+      Math.random() * width,
+      Math.random() * height,
+    );
+    ctx.stroke();
+  }
+
+  captchaCode.value.split("").forEach((char, index) => {
+    ctx.save();
+    ctx.translate(18 + index * 23, 29 + (Math.random() - 0.5) * 4);
+    ctx.rotate((Math.random() - 0.5) * 0.35);
+    ctx.font = `${22 + Math.floor(Math.random() * 4)}px Arial, sans-serif`;
+    ctx.fontKerning = "none";
+    ctx.fillStyle = index % 2 === 0 ? "#640c72" : "#a85d20";
+    ctx.fillText(char, -7, 7);
+    ctx.restore();
+  });
+
+  for (let i = 0; i < 24; i += 1) {
+    ctx.fillStyle = `rgba(100, 12, 114, ${0.16 + Math.random() * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 1.7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function refreshCaptcha({ clearInput = true, clearError = true } = {}) {
+  captchaCode.value = createCaptchaCode();
+  if (clearInput) {
+    form.captcha = "";
+  }
+  if (clearError) {
+    captchaError.value = "";
+  }
+  drawCaptcha();
+}
+
+onMounted(() => {
+  refreshCaptcha();
+});
+
 function parseError(error) {
   if (error?.response?.data?.message) {
     return error.response.data.message;
@@ -283,15 +412,28 @@ async function handleLogin() {
   feedback.text = "";
   feedback.type = "";
   usernameError.value = "";
+  captchaError.value = "";
 
   if (!form.username) {
     usernameError.value = "请输入学号";
     return;
   }
 
+  if (!form.captcha) {
+    captchaError.value = "请输入图形验证码";
+    return;
+  }
+
+  if (form.captcha.toUpperCase() !== captchaCode.value) {
+    captchaError.value = "验证码错误，请重新输入";
+    refreshCaptcha({ clearError: false });
+    return;
+  }
+
   isSubmitting.value = true;
   try {
-    const { data } = await login(form);
+    const { username, password } = form;
+    const { data } = await login({ username, password });
     feedback.text = data.message || "登录成功";
     feedback.type = "success";
 
@@ -320,6 +462,7 @@ async function handleLogin() {
   } catch (error) {
     feedback.text = parseError(error);
     feedback.type = "error";
+    refreshCaptcha();
   } finally {
     isSubmitting.value = false;
   }
