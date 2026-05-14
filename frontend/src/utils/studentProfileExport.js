@@ -529,7 +529,6 @@ export async function exportStudentRowsToExcel(
   selectedKeys,
   options = {},
 ) {
-  const { filenamePrefix = "students_export" } = options;
   const workbook = XLSX.utils.book_new();
   const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
     selectedKeys.has(item.selectKey),
@@ -589,7 +588,8 @@ export async function exportStudentRowsToExcel(
     });
   }
 
-  XLSX.writeFile(workbook, `${filenamePrefix}_${formatTimestamp()}.xlsx`, {
+  const safeFilename = buildExportFilename(rows, formatTimestamp());
+  XLSX.writeFile(workbook, `${safeFilename}.xlsx`, {
     compression: true,
   });
 }
@@ -771,5 +771,25 @@ function formatTimestamp() {
     now.getFullYear(),
     pad(now.getMonth() + 1),
     pad(now.getDate()),
-  ].join("") + `_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  ].join("") + `-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+function buildExportFilename(rows, ts) {
+  if (rows && rows.length === 1) {
+    const s = rows[0];
+    const displayName = sanitizeFilenamePart(s.fullName || s.displayName || s.name || "");
+    if (displayName) {
+      return `${displayName}_${ts}`;
+    }
+  }
+  const count = rows ? rows.length : 0;
+  return `学生信息导出_${count}人_${ts}`;
+}
+
+function sanitizeFilenamePart(part) {
+  if (!part) return "";
+  return String(part)
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }

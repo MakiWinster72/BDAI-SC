@@ -115,7 +115,23 @@ function formatTimestamp() {
   const hh = pad(now.getHours());
   const min = pad(now.getMinutes());
   const ss = pad(now.getSeconds());
-  return `${yyyy}${mm}${dd}_${hh}${min}${ss}`;
+  return `${yyyy}${mm}${dd}-${hh}${min}${ss}`;
+}
+
+function sanitizeFilenamePart(part) {
+  if (!part) return "";
+  return String(part)
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildPdfFilename(student, ts) {
+  const displayName = sanitizeFilenamePart(student.fullName || student.displayName || student.name || "");
+  if (displayName) {
+    return `${displayName}_${ts}`;
+  }
+  return `学生信息导出_${ts}`;
 }
 
 async function loadPdfFontBase64(url, cacheKey) {
@@ -678,7 +694,7 @@ export function useStudentPdfExport() {
         }
       }
 
-      doc.save(`student_resume_${formatTimestamp()}.pdf`);
+      doc.save(`${buildPdfFilename(student, formatTimestamp())}.pdf`);
       success = true;
       console.log("[useStudentPdfExport] doc.save() completed, success=", success);
     } catch (error) {

@@ -23,10 +23,6 @@ const props = defineProps({
     type: String,
     default: "导出预览",
   },
-  filenamePrefix: {
-    type: String,
-    default: "students_export",
-  },
   emptyMessage: {
     type: String,
     default: "请先选择学生再导出。",
@@ -247,9 +243,7 @@ async function handleConfirm() {
     if (exportFormat.value === "pdf") {
       await props.exportPdf(safeRows);
     } else {
-      await exportStudentRowsToExcel(safeRows, selectedKeys, {
-        filenamePrefix: props.filenamePrefix,
-      });
+      await exportStudentRowsToExcel(safeRows, selectedKeys);
     }
     if (props.onExportSuccess) {
       props.onExportSuccess();

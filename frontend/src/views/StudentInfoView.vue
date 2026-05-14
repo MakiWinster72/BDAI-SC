@@ -653,7 +653,6 @@
 
     <StudentExportDialog
       :open="exportDialogOpen"
-      filename-prefix="students_export"
       preview-title="导出预览(仅显示前三人)"
       empty-message="没有获取到学生详情，请稍后再试。"
       :load-rows="loadExportRows"
