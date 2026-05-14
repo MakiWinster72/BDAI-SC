@@ -164,6 +164,7 @@ def gen_users(n):
     u_reviewer_vars = []  # [{"var": "@u1", "name": ...}, ...]  admin + teacher
 
     idx = 0
+    student_counter = 0
     for i in range(1, n + 1):
         idx += 1
         u_var = f"@u{idx}"
@@ -192,11 +193,12 @@ def gen_users(n):
             assigned_classes = ",".join(random.sample(MAJORS, random.randint(1, 3)))
 
         if is_student_like:
+            student_counter += 1
             major = random.choice(MAJORS)
             class_no = f"{random.randint(1, 10):02d}"
             short = major[:4]
             cname = f"{short}{class_no}班"
-            sno = f"2021{random.randint(1000, 9999)}"
+            sno = f"2021{10000+student_counter:05d}"
         else:
             cname = None
             sno = None
@@ -446,7 +448,7 @@ def gen_contests(p_vars, count):
             q(str(random.randint(1, 100))),
             q(faker.name() + "," + faker.name()) if random.random() > 0.5 else "NULL",
             q(faker.name()) if random.random() > 0.5 else "NULL",
-            q(faker.sentence(8)),
+            q(faker.sentence(3)[:50]),
             "NULL", "NULL", "NULL", q(rand_datetime6()),
         ]))
     return sql
@@ -630,8 +632,8 @@ def gen_profile_review_requests(p_vars, u_reviewer_vars):
 # -------- main --------
 def main():
     ap = argparse.ArgumentParser(description="BDAI_SC 测试数据生成器 (纯 INSERT, 不删除现有数据)")
-    ap.add_argument("--users", type=int, default=20, help="用户数量 (默认20)")
-    ap.add_argument("--achievements", type=int, default=50, help="每种成就数量 (默认50)")
+    ap.add_argument("--users", type=int, default=2000, help="用户数量 (默认2000)")
+    ap.add_argument("--achievements", type=int, default=200, help="每种成就数量 (默认200)")
     ap.add_argument("-o", "--outfile", type=str, help="输出文件路径")
     args = ap.parse_args()
     nu = args.users
