@@ -9,7 +9,7 @@ import { searchStudentProfiles, getStudentProfileById } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { useUploadProgress } from "../composables/useUploadProgress";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
-import { resolveMediaUrl } from "../utils/media";
+import { resolveMediaObjectUrl, resolveMediaUrl } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
 import { useToast } from "../composables/useToast";
 import { useDashboardShell } from "../composables/useDashboardShell";
@@ -285,6 +285,11 @@ function closeStudentDetail() {
   setTimeout(() => { studentDetailItem.value = null; }, 450);
 }
 
+async function openSupportingDoc(url) {
+  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
+  window.open(targetUrl, "_blank", "noopener,noreferrer");
+}
+
 async function handleSupportingDocUpload(file) {
   if (!file || !selectedEntry.value) return;
   supportingDocsError.value = "";
@@ -473,7 +478,7 @@ async function handleRemoveSupportingDoc(index) {
                 </template>
                 <template v-else>
                   <img :src="supportingDocIcon(doc)" alt="" class="supporting-docs-file-icon" />
-                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="window.open(resolveMediaUrl(doc.url), '_blank')">{{ doc.name }}</span>
+                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="openSupportingDoc(doc.url)">{{ doc.name }}</span>
                   <button
                     v-if="canCancelSelected"
                     class="supporting-docs-remove"

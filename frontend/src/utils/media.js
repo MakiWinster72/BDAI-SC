@@ -6,6 +6,8 @@
  */
 import { API_BASE } from '../api/request';
 
+const privateMediaBlobUrls = new Map();
+
 // ── URL 处理 ────────────────────────────────────────────
 
 /**
@@ -17,6 +19,85 @@ export function resolveMediaUrl(url) {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   return `${API_BASE}${url}`;
+}
+
+export function isPrivateUploadUrl(url) {
+  const path = normalizeUploadPath(url);
+  return path.startsWith('/uploads/') && !path.includes('/avatar/');
+}
+
+export function resolveProtectedMediaUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url;
+  if (!isPrivateUploadUrl(url)) return resolveMediaUrl(url);
+  return resolveMediaApiUrl(url);
+}
+
+export async function fetchMedia(url, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (isPrivateUploadUrl(url)) {
+    const token = localStorage.getItem('bdai_sc_token');
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return fetch(resolveProtectedMediaUrl(url), {
+    ...options,
+    headers,
+  });
+}
+
+export async function resolveMediaObjectUrl(url) {
+  if (!url) return '';
+  if (!isPrivateUploadUrl(url)) return resolveMediaUrl(url);
+  const cacheKey = normalizeUploadPath(url);
+  const cached = privateMediaBlobUrls.get(cacheKey);
+  if (cached) return cached;
+
+  const response = await fetchMedia(url);
+  if (!response.ok) {
+    throw new Error(`媒体加载失败: ${response.status}`);
+  }
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  privateMediaBlobUrls.set(cacheKey, blobUrl);
+  return blobUrl;
+}
+
+export async function downloadMedia(url, filename = 'download') {
+  const targetUrl = await resolveMediaObjectUrl(url);
+  const link = document.createElement('a');
+  link.href = targetUrl;
+  link.download = filename;
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+export function revokePrivateMediaObjectUrls() {
+  privateMediaBlobUrls.forEach((url) => URL.revokeObjectURL(url));
+  privateMediaBlobUrls.clear();
+}
+
+function resolveMediaApiUrl(url) {
+  const path = normalizeUploadPath(url);
+  return `${API_BASE}/api/media${path}`;
+}
+
+function normalizeUploadPath(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      return new URL(url).pathname;
+    } catch {
+      return '';
+    }
+  }
+  if (url.startsWith(API_BASE)) {
+    return url.replace(API_BASE, '');
+  }
+  return url;
 }
 
 /**

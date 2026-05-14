@@ -1,8 +1,9 @@
 import * as docxLib from "docx-preview";
+import { fetchMedia } from "./media";
 
 export async function renderDocx(url) {
   try {
-    const response = await fetch(url);
+    const response = await fetchMedia(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch document: ${response.status}`);
     }
