@@ -1279,10 +1279,10 @@
   }
 
   .student-detail-view {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
     max-height: 84vh;
     border-radius: 22px 22px 0 0;
     transform: translateY(100%);
@@ -1303,8 +1303,9 @@
   }
 
   .student-detail-view.split {
-    width: 100%;
-    left: 0;
+    left: 16px;
+    right: 16px;
+    width: auto;
     max-height: 84vh;
     transform: translateY(100%);
   }
@@ -1318,10 +1319,10 @@
   }
 
   .student-achievements-view {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
     height: auto;
     max-height: 84vh;
     border-radius: 22px 22px 0 0;
