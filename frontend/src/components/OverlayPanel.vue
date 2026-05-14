@@ -286,7 +286,10 @@ function handleClose() {
 /* Responsive */
 @media (max-width: 640px) {
   .overlay-panel {
-    width: 100%;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
     max-height: 92vh;
     border-radius: 22px 22px 0 0;
     transform: translateY(100%);
@@ -301,7 +304,10 @@ function handleClose() {
   }
 
   .overlay-panel.placement-center {
-    width: 100%;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
     max-height: 92vh;
     border-radius: 22px 22px 0 0;
     transform: translateY(100%);

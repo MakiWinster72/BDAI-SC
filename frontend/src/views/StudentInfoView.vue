@@ -544,18 +544,6 @@
               </div>
             </div>
           </div>
-          <div class="mobile-filter-footer">
-            <button class="mobile-filter-reset" type="button" @click="resetFilters">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                <path d="M3 3v5h5"/>
-              </svg>
-              重置
-            </button>
-            <button class="mobile-filter-apply" type="button" @click="closeMobileFilter">
-              应用筛选
-            </button>
-          </div>
         </div>
       </div>
     </Teleport>
@@ -2470,14 +2458,15 @@ onUnmounted(() => {
 /* Mobile filter sheet - bottom sheet style */
 .mobile-filter-sheet {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
   top: auto;
   max-width: 100%;
   max-height: 90vh;
+  margin: 0 auto;
   background: var(--card, #fff);
-  border-radius: 24px 24px 0 0;
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
   animation: sheet-slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);

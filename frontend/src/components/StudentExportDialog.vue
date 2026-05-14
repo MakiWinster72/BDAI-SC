@@ -919,10 +919,11 @@ async function handleConfirm() {
 @media (max-width: 1100px) {
   .export-preview-panel {
     top: auto;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    width: 100%;
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    margin: 0 auto;
     height: 70vh;
     border-radius: 22px 22px 0 0;
     transform: translateY(100%) scale(0.97);
@@ -940,10 +941,11 @@ async function handleConfirm() {
 @media (max-width: 520px) {
   .export-dialog {
     top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    margin: 0 auto;
     max-height: 88vh;
     border-radius: 22px 22px 0 0;
     transform: translateY(100%) scale(0.97);
