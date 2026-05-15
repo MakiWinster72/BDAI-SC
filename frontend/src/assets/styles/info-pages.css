@@ -329,19 +329,16 @@
 input[type="date"].info-input {
   width: 100%;
   max-width: 100%;
-  background-image: url("/assets/icons/calendar.svg");
-  background-size: 18px;
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 38px;
 }
 
-/* Hide native picker indicator — click anywhere on input to open calendar.
-   Without explicit size, the indicator stays at its natural size on the right;
-   iOS natively handles taps on the entire date input. */
+/* Hide native picker indicator — transparent but still clickable */
 input[type="date"].info-input::-webkit-calendar-picker-indicator {
   opacity: 0;
   cursor: pointer;
+}
+
+input[type="date"].info-input::-moz-calendar-picker-indicator {
+  opacity: 0;
 }
 
 /* ── Info Inline ────────────────────────────────────────── */

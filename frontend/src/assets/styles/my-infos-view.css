@@ -150,8 +150,10 @@
 .info-floating-bar {
   position: fixed;
   bottom: 48px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 320px;
+  right: 0;
+  display: flex;
+  justify-content: center;
   z-index: 200;
   display: flex;
   gap: 10px;
