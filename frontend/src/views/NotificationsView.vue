@@ -27,9 +27,17 @@ const profile = reactive(loadUser());
 const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, markEntryUnread, markAllRead, classReviewEntries } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
-const rejectReason = ref(localStorage.getItem("bdai_sc_reject_draft") || "");
+const rejectReason = ref(localStorage.getItem(`bdai_sc_reject_draft_${route.query.entry}`) || "");
 watch(rejectReason, (val) => {
-  if (val) localStorage.setItem("bdai_sc_reject_draft", val);
+  const entryId = route.query.entry;
+  if (val) {
+    localStorage.setItem(`bdai_sc_reject_draft_${entryId}`, val);
+  } else {
+    localStorage.removeItem(`bdai_sc_reject_draft_${entryId}`);
+  }
+});
+watch(() => route.query.entry, (entryId) => {
+  rejectReason.value = localStorage.getItem(`bdai_sc_reject_draft_${entryId}`) || "";
 });
 const actionError = ref("");
 
@@ -236,7 +244,7 @@ async function rejectSelectedRequest() {
     await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "rejected", reviewer: profile, reason: rejectReason.value, resourceType: selectedEntry.value.resourceType });
     rejectEditorOpen.value = false;
     rejectReason.value = "";
-    localStorage.removeItem("bdai_sc_reject_draft");
+    localStorage.removeItem(`bdai_sc_reject_draft_${selectedEntry.value.id}`);
     router.replace({ path: "/notifications", query: { ...(isClassReviewsMode.value ? { panel: "class-reviews" } : {}), category: activeCategory.value, entry: "" } });
   } catch (error) {
     toastError("请尝试刷新页面,当前请求可能已经被他人更改");
