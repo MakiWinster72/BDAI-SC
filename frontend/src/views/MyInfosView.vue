@@ -2225,7 +2225,7 @@ function buildPdfStudentSnapshot() {
     specialStudentRemark: info.specialStudentRemark,
     educationExperiences,
     cadreExperiences,
-    avatarUrl: info.avatarUrl,
+    avatarUrl: profile.avatarUrl,
   };
 }
 
