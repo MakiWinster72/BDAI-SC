@@ -29,6 +29,7 @@ public class ProfileReviewRequestService {
   private final StudentProfileService studentProfileService;
   private final ReviewSettingsService reviewSettingsService;
   private final UserService userService;
+  private final NotificationReadStateService notificationReadStateService;
   private final ObjectMapper objectMapper;
 
   public ProfileReviewRequestService(
@@ -37,12 +38,14 @@ public class ProfileReviewRequestService {
       StudentProfileService studentProfileService,
       ReviewSettingsService reviewSettingsService,
       UserService userService,
+      NotificationReadStateService notificationReadStateService,
       ObjectMapper objectMapper) {
     this.profileReviewRequestRepository = profileReviewRequestRepository;
     this.appUserRepository = appUserRepository;
     this.studentProfileService = studentProfileService;
     this.reviewSettingsService = reviewSettingsService;
     this.userService = userService;
+    this.notificationReadStateService = notificationReadStateService;
     this.objectMapper = objectMapper;
   }
 
@@ -52,6 +55,9 @@ public class ProfileReviewRequestService {
     List<ProfileReviewRequest> requests = isReviewer(user)
         ? profileReviewRequestRepository.findAllByOrderByUpdatedAtDesc()
         : profileReviewRequestRepository.findAllByRequester_UsernameOrderByUpdatedAtDesc(username);
+    var readIds = notificationReadStateService.findReadResourceIds(
+        username,
+        NotificationReadStateService.RESOURCE_PROFILE);
     return requests.stream()
         .filter(r -> {
           if ("pending".equals(r.getStatus())) {
@@ -79,7 +85,7 @@ public class ProfileReviewRequestService {
           return r.getRequester().getUsername().equals(username)
               || (r.getReviewer() != null && r.getReviewer().getUsername().equals(username));
         })
-        .map(this::toResponse)
+        .map(request -> toResponse(request, readIds.contains(request.getId())))
         .toList();
   }
 
@@ -121,9 +127,10 @@ public class ProfileReviewRequestService {
     ProfileReviewRequest saved = profileReviewRequestRepository.save(entity);
 
     if (reviewSettingsService.isProfileReviewAutoApprove()) {
-      return toResponse(applyApprovedRequest(saved, null));
+      ProfileReviewRequest applied = applyApprovedRequest(saved, null);
+      return toResponse(applied, isRead(username, applied.getId()));
     }
-    return toResponse(saved);
+    return toResponse(saved, isRead(username, saved.getId()));
   }
 
   @Transactional
@@ -137,7 +144,8 @@ public class ProfileReviewRequestService {
       throw new IllegalArgumentException("该审核请求已处理");
     }
     ensureReviewerCanAccessRequest(reviewer, request);
-    return toResponse(applyApprovedRequest(request, reviewer));
+    ProfileReviewRequest saved = applyApprovedRequest(request, reviewer);
+    return toResponse(saved, isRead(reviewerUsername, saved.getId()));
   }
 
   @Transactional
@@ -161,7 +169,8 @@ public class ProfileReviewRequestService {
     request.setReviewer(reviewer);
     request.setRejectionReason(reason);
     request.setUpdatedAt(LocalDateTime.now());
-    return toResponse(profileReviewRequestRepository.save(request));
+    ProfileReviewRequest saved = profileReviewRequestRepository.save(request);
+    return toResponse(saved, isRead(reviewerUsername, saved.getId()));
   }
 
   @Transactional
@@ -202,10 +211,18 @@ public class ProfileReviewRequestService {
     String json = (documents == null || documents.isEmpty()) ? null : writeJson(documents);
     request.setSupportingDocumentsJson(json);
     request.setUpdatedAt(LocalDateTime.now());
-    return toResponse(profileReviewRequestRepository.save(request));
+    ProfileReviewRequest saved = profileReviewRequestRepository.save(request);
+    return toResponse(saved, isRead(username, saved.getId()));
   }
 
-  private ProfileReviewRequestResponse toResponse(ProfileReviewRequest request) {
+  private boolean isRead(String username, Long requestId) {
+    return notificationReadStateService.isRead(
+        username,
+        NotificationReadStateService.RESOURCE_PROFILE,
+        requestId);
+  }
+
+  private ProfileReviewRequestResponse toResponse(ProfileReviewRequest request, boolean read) {
     return new ProfileReviewRequestResponse(
         request.getId(),
         "profile",
@@ -220,7 +237,8 @@ public class ProfileReviewRequestService {
         readChanges(request.getChangesJson()),
         readSupportingDocuments(request.getSupportingDocumentsJson()),
         request.getCreatedAt(),
-        request.getUpdatedAt());
+        request.getUpdatedAt(),
+        read);
   }
 
   private ReviewUserResponse toUserResponse(AppUser user) {

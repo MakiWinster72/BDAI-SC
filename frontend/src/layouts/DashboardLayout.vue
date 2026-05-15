@@ -171,7 +171,7 @@ function handleClassReviewsEntry({ entry }) {
   closeSidebar();
   navigateWithViewTransition(router, {
     path: "/notifications",
-    query: { panel: "class-reviews", category: "pending", entry: String(entry.id) },
+    query: { panel: "class-reviews", category: "pending", entry: `${entry.resourceType}:${entry.id}` },
   });
 }
 

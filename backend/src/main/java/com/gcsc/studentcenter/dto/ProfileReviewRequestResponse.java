@@ -22,6 +22,7 @@ public class ProfileReviewRequestResponse {
   private final List<Map<String, Object>> supportingDocuments;
   private final LocalDateTime createdAt;
   private final LocalDateTime updatedAt;
+  private final boolean read;
 
   public ProfileReviewRequestResponse(
       Long id,
@@ -37,7 +38,8 @@ public class ProfileReviewRequestResponse {
       List<Map<String, Object>> changes,
       List<Map<String, Object>> supportingDocuments,
       LocalDateTime createdAt,
-      LocalDateTime updatedAt) {
+      LocalDateTime updatedAt,
+      boolean read) {
     this.id = id;
     this.resourceType = resourceType;
     this.status = status;
@@ -52,6 +54,7 @@ public class ProfileReviewRequestResponse {
     this.supportingDocuments = supportingDocuments;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.read = read;
   }
 
   public Long getId() {
@@ -108,5 +111,9 @@ public class ProfileReviewRequestResponse {
 
   public LocalDateTime getUpdatedAt() {
     return updatedAt;
+  }
+
+  public boolean isRead() {
+    return read;
   }
 }

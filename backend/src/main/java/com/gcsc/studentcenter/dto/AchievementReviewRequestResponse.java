@@ -25,6 +25,7 @@ public class AchievementReviewRequestResponse {
   private final List<Map<String, Object>> supportingDocuments;
   private final LocalDateTime createdAt;
   private final LocalDateTime updatedAt;
+  private final boolean read;
 
   public AchievementReviewRequestResponse(
       Long id,
@@ -44,7 +45,8 @@ public class AchievementReviewRequestResponse {
       List<Map<String, Object>> changes,
       List<Map<String, Object>> supportingDocuments,
       LocalDateTime createdAt,
-      LocalDateTime updatedAt) {
+      LocalDateTime updatedAt,
+      boolean read) {
     this.id = id;
     this.resourceType = resourceType;
     this.action = action;
@@ -63,6 +65,7 @@ public class AchievementReviewRequestResponse {
     this.supportingDocuments = supportingDocuments;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.read = read;
   }
 
   public Long getId() {
@@ -135,5 +138,9 @@ public class AchievementReviewRequestResponse {
 
   public LocalDateTime getUpdatedAt() {
     return updatedAt;
+  }
+
+  public boolean isRead() {
+    return read;
   }
 }

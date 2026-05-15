@@ -24,7 +24,7 @@ const { settings: uploadLimits } = useAchievementUploadSettings();
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, markEntryUnread, markAllRead, classReviewEntries } = useNotifications(profile);
+const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, markEntryUnread, markAllRead, getEntryReadKey, classReviewEntries } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
 const rejectReason = ref(localStorage.getItem(`bdai_sc_reject_draft_${route.query.entry}`) || "");
@@ -53,7 +53,7 @@ const filteredEntries = computed(() =>
 );
 const selectedEntry = computed(
   () =>
-    entriesSource.value.find((entry) => String(entry.id) === String(route.query.entry)) || null,
+    entriesSource.value.find((entry) => getEntryReadKey(entry) === String(route.query.entry)) || null,
 );
 const canProcessSelected = computed(() => {
   if (!selectedEntry.value || selectedEntry.value.source !== "review-request") return false;
@@ -72,15 +72,15 @@ const canViewStudentInfo = computed(() => {
   return Boolean(selectedEntry.value.requester?.username);
 });
 const isSelectedUnread = computed(() =>
-  selectedEntry.value && !readIds.has(String(selectedEntry.value.id)),
+  selectedEntry.value && !readIds.has(getEntryReadKey(selectedEntry.value)),
 );
 function toggleUnreadRead() {
   if (!selectedEntry.value) return;
   if (isSelectedUnread.value) {
-    markEntryRead(selectedEntry.value.id);
+    markEntryRead(selectedEntry.value);
     toast.success("已标记为已读");
   } else {
-    markEntryUnread(selectedEntry.value.id);
+    markEntryUnread(selectedEntry.value);
     toast.success("已标记为未读");
   }
 }
@@ -108,8 +108,8 @@ watch(selectedEntry, (entry) => {
   supportingDocsError.value = "";
   closeStudentDetail();
   if (!entry) return;
-  if (!readIds.has(String(entry.id))) {
-    markEntryRead(entry.id);
+  if (!readIds.has(getEntryReadKey(entry))) {
+    markEntryRead(entry);
     toast.success("已标记为已读");
   }
   if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
@@ -397,7 +397,7 @@ async function handleRemoveSupportingDoc(index) {
     <!-- Detail Panel -->
     <section v-else class="notif-detail">
       <Transition name="detail-fade" mode="out-in">
-        <div :key="selectedEntry.id" class="notif-detail-inner">
+        <div :key="getEntryReadKey(selectedEntry)" class="notif-detail-inner">
 
           <!-- Top Bar -->
           <div class="notif-detail-top">

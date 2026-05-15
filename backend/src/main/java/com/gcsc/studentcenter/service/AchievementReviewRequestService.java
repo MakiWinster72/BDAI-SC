@@ -26,6 +26,7 @@ public class AchievementReviewRequestService {
   private final AchievementService achievementService;
   private final ReviewSettingsService reviewSettingsService;
   private final UserService userService;
+  private final NotificationReadStateService notificationReadStateService;
   private final ObjectMapper objectMapper;
 
   public AchievementReviewRequestService(
@@ -34,12 +35,14 @@ public class AchievementReviewRequestService {
       AchievementService achievementService,
       ReviewSettingsService reviewSettingsService,
       UserService userService,
+      NotificationReadStateService notificationReadStateService,
       ObjectMapper objectMapper) {
     this.achievementReviewRequestRepository = achievementReviewRequestRepository;
     this.appUserRepository = appUserRepository;
     this.achievementService = achievementService;
     this.reviewSettingsService = reviewSettingsService;
     this.userService = userService;
+    this.notificationReadStateService = notificationReadStateService;
     this.objectMapper = objectMapper;
   }
 
@@ -49,6 +52,9 @@ public class AchievementReviewRequestService {
     List<AchievementReviewRequest> requests = isReviewer(user)
         ? achievementReviewRequestRepository.findAllByOrderByUpdatedAtDesc()
         : achievementReviewRequestRepository.findAllByRequester_UsernameOrderByUpdatedAtDesc(username);
+    var readIds = notificationReadStateService.findReadResourceIds(
+        username,
+        NotificationReadStateService.RESOURCE_ACHIEVEMENT);
     return requests.stream()
         .filter(r -> {
           if ("pending".equals(r.getStatus())) {
@@ -76,7 +82,7 @@ public class AchievementReviewRequestService {
           return r.getRequester().getUsername().equals(username)
               || (r.getReviewer() != null && r.getReviewer().getUsername().equals(username));
         })
-        .map(this::toResponse)
+        .map(request -> toResponse(request, readIds.contains(request.getId())))
         .toList();
   }
 
@@ -134,9 +140,10 @@ public class AchievementReviewRequestService {
     entity.setUpdatedAt(now);
     AchievementReviewRequest saved = achievementReviewRequestRepository.save(entity);
     if (reviewSettingsService.isAchievementReviewAutoApprove()) {
-      return toResponse(applyApprovedRequest(saved, null));
+      AchievementReviewRequest applied = applyApprovedRequest(saved, null);
+      return toResponse(applied, isRead(username, applied.getId()));
     }
-    return toResponse(saved);
+    return toResponse(saved, isRead(username, saved.getId()));
   }
 
   @Transactional
@@ -150,7 +157,8 @@ public class AchievementReviewRequestService {
       throw new IllegalArgumentException("该审核请求已处理");
     }
     ensureReviewerCanAccessRequest(reviewer, request);
-    return toResponse(applyApprovedRequest(request, reviewer));
+    AchievementReviewRequest saved = applyApprovedRequest(request, reviewer);
+    return toResponse(saved, isRead(reviewerUsername, saved.getId()));
   }
 
   @Transactional
@@ -170,7 +178,8 @@ public class AchievementReviewRequestService {
     request.setReviewer(reviewer);
     request.setRejectionReason(safeReason);
     request.setUpdatedAt(LocalDateTime.now());
-    return toResponse(achievementReviewRequestRepository.save(request));
+    AchievementReviewRequest saved = achievementReviewRequestRepository.save(request);
+    return toResponse(saved, isRead(reviewerUsername, saved.getId()));
   }
 
   @Transactional
@@ -211,10 +220,18 @@ public class AchievementReviewRequestService {
     String json = (documents == null || documents.isEmpty()) ? null : writeJson(documents);
     request.setSupportingDocumentsJson(json);
     request.setUpdatedAt(LocalDateTime.now());
-    return toResponse(achievementReviewRequestRepository.save(request));
+    AchievementReviewRequest saved = achievementReviewRequestRepository.save(request);
+    return toResponse(saved, isRead(username, saved.getId()));
   }
 
-  private AchievementReviewRequestResponse toResponse(AchievementReviewRequest request) {
+  private boolean isRead(String username, Long requestId) {
+    return notificationReadStateService.isRead(
+        username,
+        NotificationReadStateService.RESOURCE_ACHIEVEMENT,
+        requestId);
+  }
+
+  private AchievementReviewRequestResponse toResponse(AchievementReviewRequest request, boolean read) {
     return new AchievementReviewRequestResponse(
         request.getId(),
         "achievement",
@@ -233,7 +250,8 @@ public class AchievementReviewRequestService {
         readChanges(request.getChangesJson()),
         readSupportingDocuments(request.getSupportingDocumentsJson()),
         request.getCreatedAt(),
-        request.getUpdatedAt());
+        request.getUpdatedAt(),
+        read);
   }
 
   private ReviewUserResponse toUserResponse(AppUser user) {
