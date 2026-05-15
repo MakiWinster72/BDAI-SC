@@ -1926,6 +1926,10 @@ watch([userSearch, userRoleFilter], () => {
   gap: 16px;
   width: 280px;
   padding-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
 }
 
 .example-image-item {
@@ -1943,8 +1947,8 @@ watch([userSearch, userRoleFilter], () => {
 .example-image-item img {
   width: 100%;
   border-radius: 8px;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+  border: 1px solid rgba(100, 12, 114, 0.1);
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.12);
 }
 
 .class-select-hint {
