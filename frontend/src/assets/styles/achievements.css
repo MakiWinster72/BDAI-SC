@@ -2142,6 +2142,10 @@
     max-height: 80vh;
   }
 
+  .achievement-sheet.open {
+    border-radius: 20px 20px 20px 20px;
+  }
+
   .date-range-inline {
     flex-wrap: wrap;
   }
