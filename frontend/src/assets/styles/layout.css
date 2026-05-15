@@ -110,6 +110,7 @@
 .mobile-sidebar-panel .dashboard-menu-scroll {
   max-height: none;
   overflow: visible;
+  display: block;
 }
 
 @keyframes sidebar-panel-in {
