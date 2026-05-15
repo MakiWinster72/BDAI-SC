@@ -1859,14 +1859,14 @@ watch([userSearch, userRoleFilter], () => {
             <div class="example-image-item">
               <span class="example-image-label">xlsx 格式示例</span>
               <img
-                src="https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-04-26%2FMiniMax-M2.7%2F2035402385077047958%2F19dc31f5b60a75cfc31c26d9326c4ae3e983b11abf35e53eec1b66827cb9f233..png?Expires=1777278678&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=s73CeKoLgCEsSamacaRtMvhFGa0%3D"
+                src="/assets/images/xlsx格式示例.png"
                 alt="xlsx 格式示例"
               />
             </div>
             <div class="example-image-item">
               <span class="example-image-label">csv/txt 格式示例</span>
               <img
-                src="https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-04-26%2FMiniMax-M2.7%2F2035402385077047958%2F8eed82b4e7e942cbb4a0f56e3ba15ac98e97fca84dcba98f7cbb41bc6a448ccd..png?Expires=1777278679&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=YYfccG4eUdYEQyiFclPCu7VrXCQ%3D"
+                src="/assets/images/csv-txt格式示例.png"
                 alt="csv/txt 格式示例"
               />
             </div>

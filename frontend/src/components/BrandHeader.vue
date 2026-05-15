@@ -283,7 +283,7 @@ const roleLabel = computed(() => {
   justify-content: space-between;
   padding: 0 30px 45px;
   height: 180px;
-  background-image: url("/assets/statics/banner.png");
+  background-image: url("/assets/images/banner.png");
   background-size: cover;
   background-position: center;
   border-radius: 0;
