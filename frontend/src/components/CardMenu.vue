@@ -338,6 +338,7 @@ const achievementEntries = [
   { key: "works", label: "创作、表演的代表性作品" },
   { key: "doubleHundred", label: "双百工程" },
   { key: "ieerTraining", label: "大学生创新创业训练计划项目" },
+  { key: "sanSanXiang", label: '暑期"三下乡"社会实践活动' },
 ];
 
 watch(

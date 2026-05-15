@@ -26,6 +26,7 @@ export const achievementEntries = [
   { key: "works", label: "创作、表演的代表性作品" },
   { key: "doubleHundred", label: "双百工程" },
   { key: "ieerTraining", label: "大学生创新创业训练计划项目" },
+  { key: "sanSanXiang", label: "暑期“三下乡”社会实践活动" },
 ];
 
 export const categoryHints = {
@@ -71,6 +72,7 @@ export const categoryHints = {
   ],
   doubleHundred: ["请填写双百工程的具体参与内容"],
   ieerTraining: ["请填写大学生创新创业训练计划项目的具体内容"],
+  sanSanXiang: ["请填写暑期“三下乡”社会实践活动的具体参与内容"],
 };
 
 export const categoryFieldMap = {
@@ -578,6 +580,110 @@ export const categoryFieldMap = {
         label: "结项情况",
         kind: "input",
         placeholder: "优秀/通过/延期结项/终止项目",
+      },
+      {
+        key: "remark",
+        label: "备注",
+        kind: "input",
+        placeholder: "请输入备注",
+      },
+    ],
+  },
+  sanSanXiang: {
+    titleKey: "projectName",
+    fields: [
+      {
+        key: "studentNo",
+        label: "学号",
+        kind: "input",
+        placeholder: "请输入学号",
+      },
+      {
+        key: "studentName",
+        label: "学生姓名",
+        kind: "input",
+        placeholder: "请输入学生姓名",
+      },
+      {
+        key: "college",
+        label: "所在单位（学院）",
+        kind: "input",
+        placeholder: "请输入所在学院",
+      },
+      {
+        key: "teamName",
+        label: "团队名称",
+        kind: "input",
+        placeholder: "请输入团队名称",
+      },
+      {
+        key: "projectName",
+        label: "项目名称",
+        kind: "input",
+        placeholder: "请输入项目名称",
+      },
+      {
+        key: "serviceCategory",
+        label: "主要服务类别",
+        kind: "input",
+        hint: "岭南特色产业/海洋产业/乡村集体经济/绿美广东/县域科技服务/乡村规划建设/文化创意和保育/古建筑活化/乡村公共服务/决策咨询",
+      },
+      {
+        key: "isPaired",
+        label: '是否在"百千万校地通"结对',
+        kind: "radio",
+        options: [
+          { label: "是", value: "是" },
+          { label: "否", value: "否" },
+        ],
+      },
+      {
+        key: "projectType",
+        label: "项目类型",
+        kind: "input",
+        placeholder: "请输入项目类型",
+      },
+      {
+        key: "teamLeader",
+        label: "团队负责人",
+        kind: "input",
+        placeholder: "请输入团队负责人",
+      },
+      {
+        key: "teamMembers",
+        label: "团队成员",
+        kind: "input",
+        placeholder: "请输入团队成员",
+      },
+      {
+        key: "teamSize",
+        label: "团队人数",
+        kind: "input",
+        placeholder: "请输入团队人数",
+      },
+      {
+        key: "practiceDays",
+        label: "实践天数",
+        kind: "input",
+        placeholder: "请输入实践天数",
+      },
+      {
+        key: "instructor",
+        label: "指导老师",
+        kind: "input",
+        placeholder: "请输入指导老师",
+      },
+      {
+        key: "projectLevel",
+        label: "立项等级",
+        kind: "input",
+        placeholder: "请输入立项等级",
+      },
+      {
+        key: "finalLevel",
+        label: "单位初评结项等级",
+        kind: "input",
+        placeholder: "请输入单位初评结项等级",
       },
       {
         key: "remark",

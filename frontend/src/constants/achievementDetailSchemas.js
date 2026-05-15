@@ -94,4 +94,36 @@ export const achievementDetailSchemas = {
       },
     ],
   },
+  sanSanXiang: {
+    tag: "三下乡社会实践",
+    groups: [
+      {
+        label: "团队信息",
+        rows: [
+          row("所在学院", (fields) => text(fields.college)),
+          row("团队名称", (fields) => text(fields.teamName)),
+          row("团队负责人", (fields) => text(fields.teamLeader)),
+          row("团队人数", (fields) => text(fields.teamSize)),
+        ],
+      },
+      {
+        label: "项目信息",
+        rows: [
+          row("项目名称", (fields) => text(fields.projectName)),
+          row("主要服务类别", (fields) => text(fields.serviceCategory)),
+          row("项目类型", (fields) => text(fields.projectType)),
+          row("立项等级", (fields) => text(fields.projectLevel)),
+        ],
+      },
+      {
+        label: "实施信息",
+        rows: [
+          row("实践天数", (fields) => text(fields.practiceDays)),
+          row("指导老师", (fields) => text(fields.instructor)),
+          row("百千万校地通结对", (fields) => text(fields.isPaired)),
+          row("单位初评结项等级", (fields) => text(fields.finalLevel)),
+        ],
+      },
+    ],
+  },
 };

@@ -273,7 +273,10 @@
               :key="field.key"
               class="field-row"
             >
-              <label class="field-label">{{ field.label }}</label>
+              <label class="field-label">
+                {{ field.label }}
+                <span v-if="field.hint" class="field-label-hint" :title="field.hint">?</span>
+              </label>
               <input
                 v-if="field.kind === 'input'"
                 v-model="form.fields[field.key]"

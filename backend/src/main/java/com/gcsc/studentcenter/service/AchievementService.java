@@ -27,6 +27,7 @@ public class AchievementService {
   private final AchievementWorksRepository achievementWorksRepository;
   private final AchievementDoubleHundredRepository achievementDoubleHundredRepository;
   private final AchievementIeerTrainingRepository achievementIeerTrainingRepository;
+  private final AchievementSanSanXiangRepository achievementSanSanXiangRepository;
   private final AchievementUploadSettingsService achievementUploadSettingsService;
 
   public AchievementService(
@@ -40,6 +41,7 @@ public class AchievementService {
       AchievementWorksRepository achievementWorksRepository,
       AchievementDoubleHundredRepository achievementDoubleHundredRepository,
       AchievementIeerTrainingRepository achievementIeerTrainingRepository,
+      AchievementSanSanXiangRepository achievementSanSanXiangRepository,
       AchievementUploadSettingsService achievementUploadSettingsService) {
     this.appUserRepository = appUserRepository;
     this.achievementContestRepository = achievementContestRepository;
@@ -51,6 +53,7 @@ public class AchievementService {
     this.achievementWorksRepository = achievementWorksRepository;
     this.achievementDoubleHundredRepository = achievementDoubleHundredRepository;
     this.achievementIeerTrainingRepository = achievementIeerTrainingRepository;
+    this.achievementSanSanXiangRepository = achievementSanSanXiangRepository;
     this.achievementUploadSettingsService = achievementUploadSettingsService;
   }
 
@@ -124,6 +127,11 @@ public class AchievementService {
             .stream()
             .map(this::toResponse)
             .collect(Collectors.toList());
+      case "sanSanXiang":
+        return achievementSanSanXiangRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
+            .stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -149,6 +157,8 @@ public class AchievementService {
         return toResponse(loadDoubleHundred(username, role, id));
       case "ieerTraining":
         return toResponse(loadIeerTraining(username, role, id));
+      case "sanSanXiang":
+        return toResponse(loadSanSanXiang(username, role, id));
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -178,6 +188,8 @@ public class AchievementService {
         return toResponse(saveDoubleHundred(author, fields, request.getImageUrl()));
       case "ieerTraining":
         return toResponse(saveIeerTraining(author, fields, request.getImageUrl()));
+      case "sanSanXiang":
+        return toResponse(saveSanSanXiang(author, fields, request.getImageUrl()));
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -206,6 +218,8 @@ public class AchievementService {
         return toResponse(updateDoubleHundred(username, role, id, fields, request.getImageUrl()));
       case "ieerTraining":
         return toResponse(updateIeerTraining(username, role, id, fields, request.getImageUrl()));
+      case "sanSanXiang":
+        return toResponse(updateSanSanXiang(username, role, id, fields, request.getImageUrl()));
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -252,6 +266,9 @@ public class AchievementService {
       case "ieerTraining":
         achievementIeerTrainingRepository.delete(loadIeerTraining(username, role, id));
         return;
+      case "sanSanXiang":
+        achievementSanSanXiangRepository.delete(loadSanSanXiang(username, role, id));
+        return;
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -276,6 +293,8 @@ public class AchievementService {
     all.addAll(achievementDoubleHundredRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
         .stream().map(this::toResponse).collect(Collectors.toList()));
     all.addAll(achievementIeerTrainingRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
+        .stream().map(this::toResponse).collect(Collectors.toList()));
+    all.addAll(achievementSanSanXiangRepository.findAllByAuthor_UsernameOrderByCreatedAtDesc(username)
         .stream().map(this::toResponse).collect(Collectors.toList()));
     return all.stream()
         .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
@@ -339,6 +358,11 @@ public class AchievementService {
             .stream()
             .map(this::toResponse)
             .collect(Collectors.toList());
+      case "sanSanXiang":
+        return fetchSanSanXiangByStudent(studentNo, studentName)
+            .stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -363,6 +387,8 @@ public class AchievementService {
     all.addAll(fetchDoubleHundredByStudent(studentNo, studentName)
         .stream().map(this::toResponse).collect(Collectors.toList()));
     all.addAll(fetchIeerTrainingByStudent(studentNo, studentName)
+        .stream().map(this::toResponse).collect(Collectors.toList()));
+    all.addAll(fetchSanSanXiangByStudent(studentNo, studentName)
         .stream().map(this::toResponse).collect(Collectors.toList()));
     return all.stream()
         .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
@@ -495,6 +521,20 @@ public class AchievementService {
     return new ArrayList<>();
   }
 
+  private List<AchievementSanSanXiang> fetchSanSanXiangByStudent(String studentNo, String studentName) {
+    if (!studentNo.isEmpty() && !studentName.isEmpty()) {
+      return achievementSanSanXiangRepository
+          .findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(studentNo, studentName);
+    }
+    if (!studentNo.isEmpty()) {
+      return achievementSanSanXiangRepository.findAllByStudentNoOrderByCreatedAtDesc(studentNo);
+    }
+    if (!studentName.isEmpty()) {
+      return achievementSanSanXiangRepository.findAllByStudentNameOrderByCreatedAtDesc(studentName);
+    }
+    return new ArrayList<>();
+  }
+
   private boolean isPrivileged(AppUser user) {
     if (user == null || user.getRole() == null) {
       return false;
@@ -571,6 +611,13 @@ public class AchievementService {
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
     ensureOwner(username, role, ieerTraining.getAuthor());
     return ieerTraining;
+  }
+
+  private AchievementSanSanXiang loadSanSanXiang(String username, String role, Long id) {
+    AchievementSanSanXiang sanSanXiang = achievementSanSanXiangRepository.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
+    ensureOwner(username, role, sanSanXiang.getAuthor());
+    return sanSanXiang;
   }
 
   private void ensureOwner(String username, String role, AppUser author) {
@@ -996,6 +1043,36 @@ public class AchievementService {
     return achievementIeerTrainingRepository.save(ieerTraining);
   }
 
+  private AchievementSanSanXiang saveSanSanXiang(AppUser author, Map<String, String> fields, String imageUrl) {
+    String projectName = valueOf(fields, "projectName");
+    if (projectName.isEmpty()) {
+      throw new IllegalArgumentException("项目名称不能为空");
+    }
+    AchievementSanSanXiang sanSanXiang = new AchievementSanSanXiang();
+    sanSanXiang.setAuthor(author);
+    sanSanXiang.setStudentNo(valueOf(fields, "studentNo"));
+    sanSanXiang.setStudentName(valueOf(fields, "studentName"));
+    sanSanXiang.setCollege(valueOf(fields, "college"));
+    sanSanXiang.setTeamName(valueOf(fields, "teamName"));
+    sanSanXiang.setProjectName(projectName);
+    sanSanXiang.setServiceCategory(valueOf(fields, "serviceCategory"));
+    sanSanXiang.setIsPaired(valueOf(fields, "isPaired"));
+    sanSanXiang.setProjectType(valueOf(fields, "projectType"));
+    sanSanXiang.setTeamLeader(valueOf(fields, "teamLeader"));
+    sanSanXiang.setTeamMembers(valueOf(fields, "teamMembers"));
+    sanSanXiang.setTeamSize(valueOf(fields, "teamSize"));
+    sanSanXiang.setPracticeDays(valueOf(fields, "practiceDays"));
+    sanSanXiang.setInstructor(valueOf(fields, "instructor"));
+    sanSanXiang.setProjectLevel(valueOf(fields, "projectLevel"));
+    sanSanXiang.setFinalLevel(valueOf(fields, "finalLevel"));
+    sanSanXiang.setRemark(valueOf(fields, "remark"));
+    sanSanXiang.setImageUrl(imageUrl);
+    sanSanXiang.setImageUrls(valueOf(fields, "_imageUrls"));
+    sanSanXiang.setAttachments(valueOf(fields, "_attachments"));
+    sanSanXiang.setCreatedAt(LocalDateTime.now());
+    return achievementSanSanXiangRepository.save(sanSanXiang);
+  }
+
   private AchievementIeerTraining updateIeerTraining(String username, String role, Long id, Map<String, String> fields,
       String imageUrl) {
     AchievementIeerTraining ieerTraining = loadIeerTraining(username, role, id);
@@ -1017,6 +1094,34 @@ public class AchievementService {
     ieerTraining.setImageUrls(valueOf(fields, "_imageUrls"));
     ieerTraining.setAttachments(valueOf(fields, "_attachments"));
     return achievementIeerTrainingRepository.save(ieerTraining);
+  }
+
+  private AchievementSanSanXiang updateSanSanXiang(String username, String role, Long id,
+      Map<String, String> fields, String imageUrl) {
+    AchievementSanSanXiang sanSanXiang = loadSanSanXiang(username, role, id);
+    String projectName = valueOf(fields, "projectName");
+    if (!projectName.isEmpty()) {
+      sanSanXiang.setProjectName(projectName);
+    }
+    sanSanXiang.setStudentNo(valueOf(fields, "studentNo"));
+    sanSanXiang.setStudentName(valueOf(fields, "studentName"));
+    sanSanXiang.setCollege(valueOf(fields, "college"));
+    sanSanXiang.setTeamName(valueOf(fields, "teamName"));
+    sanSanXiang.setServiceCategory(valueOf(fields, "serviceCategory"));
+    sanSanXiang.setIsPaired(valueOf(fields, "isPaired"));
+    sanSanXiang.setProjectType(valueOf(fields, "projectType"));
+    sanSanXiang.setTeamLeader(valueOf(fields, "teamLeader"));
+    sanSanXiang.setTeamMembers(valueOf(fields, "teamMembers"));
+    sanSanXiang.setTeamSize(valueOf(fields, "teamSize"));
+    sanSanXiang.setPracticeDays(valueOf(fields, "practiceDays"));
+    sanSanXiang.setInstructor(valueOf(fields, "instructor"));
+    sanSanXiang.setProjectLevel(valueOf(fields, "projectLevel"));
+    sanSanXiang.setFinalLevel(valueOf(fields, "finalLevel"));
+    sanSanXiang.setRemark(valueOf(fields, "remark"));
+    sanSanXiang.setImageUrl(imageUrl);
+    sanSanXiang.setImageUrls(valueOf(fields, "_imageUrls"));
+    sanSanXiang.setAttachments(valueOf(fields, "_attachments"));
+    return achievementSanSanXiangRepository.save(sanSanXiang);
   }
 
   private AchievementRecordResponse toResponse(AchievementContest contest) {
@@ -1243,6 +1348,38 @@ public class AchievementService {
         "ieerTraining",
         ieerTraining.getImageUrl(),
         ieerTraining.getCreatedAt(),
+        fields);
+  }
+
+  private AchievementRecordResponse toResponse(AchievementSanSanXiang sanSanXiang) {
+    Map<String, String> fields = new HashMap<>();
+    fields.put("studentNo", sanSanXiang.getStudentNo());
+    fields.put("studentName", sanSanXiang.getStudentName());
+    fields.put("college", sanSanXiang.getCollege());
+    fields.put("teamName", sanSanXiang.getTeamName());
+    fields.put("projectName", sanSanXiang.getProjectName());
+    fields.put("serviceCategory", sanSanXiang.getServiceCategory());
+    fields.put("isPaired", sanSanXiang.getIsPaired());
+    fields.put("projectType", sanSanXiang.getProjectType());
+    fields.put("teamLeader", sanSanXiang.getTeamLeader());
+    fields.put("teamMembers", sanSanXiang.getTeamMembers());
+    fields.put("teamSize", sanSanXiang.getTeamSize());
+    fields.put("practiceDays", sanSanXiang.getPracticeDays());
+    fields.put("instructor", sanSanXiang.getInstructor());
+    fields.put("projectLevel", sanSanXiang.getProjectLevel());
+    fields.put("finalLevel", sanSanXiang.getFinalLevel());
+    fields.put("remark", sanSanXiang.getRemark());
+    if (sanSanXiang.getImageUrls() != null) {
+      fields.put("_imageUrls", sanSanXiang.getImageUrls());
+    }
+    if (sanSanXiang.getAttachments() != null) {
+      fields.put("_attachments", sanSanXiang.getAttachments());
+    }
+    return new AchievementRecordResponse(
+        sanSanXiang.getId(),
+        "sanSanXiang",
+        sanSanXiang.getImageUrl(),
+        sanSanXiang.getCreatedAt(),
         fields);
   }
 
