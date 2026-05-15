@@ -150,6 +150,16 @@ function supportingDocIcon(doc) {
   return "/assets/icons/doc.svg";
 }
 
+function isDocPreviewable(doc) {
+  const ext = resolveExtension(doc?.name || doc?.url || "");
+  return ["pdf", "xls", "xlsx", "doc", "docx", "jpeg", "jpg", "png", "heif", "mp4", "mov"].includes(ext);
+}
+
+async function openSupportingDocPreview(url) {
+  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
+  window.open(targetUrl, "_blank", "noopener,noreferrer");
+}
+
 function isStructuredChangeValue(value) {
   const text = formatChangeValue(value);
   return text.includes("第1条\n") || /^第\d+条$/m.test(text);
@@ -486,7 +496,19 @@ async function handleRemoveSupportingDoc(index) {
                 </template>
                 <template v-else>
                   <img :src="supportingDocIcon(doc)" alt="" class="supporting-docs-file-icon" />
-                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="openSupportingDoc(doc.url)">{{ doc.name }}</span>
+                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="isDocPreviewable(doc) ? openSupportingDocPreview(doc.url) : openSupportingDoc(doc.url)">{{ doc.name }}</span>
+                  <button
+                    v-if="isDocPreviewable(doc)"
+                    class="supporting-docs-preview"
+                    type="button"
+                    title="预览"
+                    @click.stop="openSupportingDocPreview(doc.url)"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
                   <button
                     v-if="canCancelSelected"
                     class="supporting-docs-remove"
