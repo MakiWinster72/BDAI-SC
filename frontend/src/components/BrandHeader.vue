@@ -388,6 +388,7 @@ const roleLabel = computed(() => {
     box-shadow 200ms ease,
     border-color 200ms ease;
   touch-action: manipulation;
+  overflow: visible;
 }
 
 .brand-profile-chip:hover {
@@ -490,7 +491,6 @@ const roleLabel = computed(() => {
 .chip-tail {
   display: flex;
   align-items: center;
-  overflow: hidden;
   max-width: 240px;
   opacity: 1;
   transition:
@@ -521,6 +521,7 @@ const roleLabel = computed(() => {
   font-size: 14px;
   font-weight: 600;
   border: none;
+  overflow: visible;
   transition:
     background 180ms ease,
     color 180ms ease,
