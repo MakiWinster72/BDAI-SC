@@ -554,6 +554,10 @@
               </div>
             </div>
           </div>
+          <div class="mobile-filter-footer">
+            <button class="mobile-filter-reset" type="button" @click="resetMobileFilters">重置</button>
+            <button class="mobile-filter-apply" type="button" @click="closeMobileFilter">完成</button>
+          </div>
         </div>
       </div>
     </Teleport>
@@ -792,6 +796,10 @@ function openMobileFilter() {
 
 function closeMobileFilter() {
   mobileFilterOpen.value = false;
+}
+
+function resetMobileFilters() {
+  resetFilters();
 }
 
 const filterSheetStyle = computed(() => ({
@@ -2697,6 +2705,7 @@ onUnmounted(() => {
   padding: 16px 20px;
   padding-bottom: max(16px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--line, #f0f0f0);
+  border-radius: 0 0 24px 24px;
   flex-shrink: 0;
   background: var(--card, #fff);
 }
