@@ -2755,13 +2755,13 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
-/* Floating select menu above capsule */
+/* Floating select menu - right side, selection actions */
 .select-float-menu {
   position: fixed;
-  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
-  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   z-index: 56;
 }
@@ -2769,12 +2769,12 @@ onUnmounted(() => {
 .select-float-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   height: 40px;
   padding: 0 16px;
-  border: none;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(100, 12, 114, 0.15);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--primary);
@@ -2782,14 +2782,15 @@ onUnmounted(() => {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 12px rgba(100, 12, 114, 0.1);
+  transition: all 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 
 .select-float-btn:hover {
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.15);
 }
 
 .select-float-btn:active {
