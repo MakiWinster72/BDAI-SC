@@ -11,7 +11,7 @@
           <span class="student-capsule-label">筛选</span>
           <span v-if="hasActiveFilters" class="capsule-filter-dot"></span>
         </button>
-        <button class="capsule-action student-capsule-btn" type="button" @click="toggleGridView">
+        <button class="capsule-action student-capsule-btn hide-on-mobile" type="button" @click="toggleGridView">
           <span class="capsule-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="7" height="7"/>
@@ -24,7 +24,7 @@
         </button>
         <button
           v-if="gridViewOpen"
-          class="capsule-action student-capsule-btn"
+          class="capsule-action student-capsule-btn hide-on-mobile"
           :class="{ 'capsule-active': gridFullscreen }"
           type="button"
           @click="toggleGridFullscreen"
@@ -2822,6 +2822,43 @@ onUnmounted(() => {
   }
   .student-results-actions {
     display: none;
+  }
+}
+
+/* Mobile capsule: hide grid/fullscreen buttons, wrap filter & select */
+@media (max-width: 768px) {
+  .capsule-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 12px 8px 4px;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .student-capsule-btn {
+    flex-direction: row;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+  }
+
+  .student-capsule-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .student-capsule-btn .capsule-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .student-capsule-btn .capsule-icon svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
