@@ -434,9 +434,19 @@
     <!-- Mobile Filter Sheet -->
     <Teleport to="body">
       <div v-if="mobileFilterOpen" class="sheet-overlay open" @click.self="closeMobileFilter">
-        <div class="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="筛选">
-          <div class="mobile-filter-handle"></div>
-          <header class="mobile-filter-header">
+        <div class="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="筛选" :style="filterSheetStyle">
+          <div
+            class="mobile-filter-handle"
+            @touchstart="handleFilterTouchStart"
+            @touchmove="handleFilterTouchMove"
+            @touchend="handleFilterTouchEnd"
+          ></div>
+          <header
+            class="mobile-filter-header"
+            @touchstart="handleFilterTouchStart"
+            @touchmove="handleFilterTouchMove"
+            @touchend="handleFilterTouchEnd"
+          >
             <h2 class="mobile-filter-title">筛选学生</h2>
             <button class="mobile-filter-close" type="button" @click="closeMobileFilter">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -743,6 +753,13 @@ const activeCategory = ref("all");
 const mobileFilterOpen = ref(false);
 const selectMenuOpen = ref(false);
 
+// Mobile filter sheet drag to close
+const filterTouchStartY = ref(0);
+const filterTouchCurrentY = ref(0);
+const filterIsDragging = ref(false);
+const filterDragTranslateY = ref(0);
+const FILTER_DRAG_THRESHOLD = 80;
+
 function toggleSelectMenu() {
   selectMenuOpen.value = !selectMenuOpen.value;
 }
@@ -775,6 +792,34 @@ function openMobileFilter() {
 
 function closeMobileFilter() {
   mobileFilterOpen.value = false;
+}
+
+const filterSheetStyle = computed(() => ({
+  transform: filterDragTranslateY.value > 0 ? `translateY(${filterDragTranslateY.value}px)` : "",
+  transition: filterIsDragging.value ? "none" : "",
+}));
+
+function handleFilterTouchStart(e) {
+  filterTouchStartY.value = e.touches[0].clientY;
+  filterTouchCurrentY.value = filterTouchStartY.value;
+  filterIsDragging.value = true;
+}
+
+function handleFilterTouchMove(e) {
+  if (!filterIsDragging.value) return;
+  const delta = e.touches[0].clientY - filterTouchStartY.value;
+  if (delta > 0) {
+    filterDragTranslateY.value = delta;
+  }
+}
+
+function handleFilterTouchEnd() {
+  if (!filterIsDragging.value) return;
+  if (filterDragTranslateY.value > FILTER_DRAG_THRESHOLD) {
+    closeMobileFilter();
+  }
+  filterIsDragging.value = false;
+  filterDragTranslateY.value = 0;
 }
 
 const classYearOptions = Array.from({ length: 11 }, (_, index) => 2020 + index);
@@ -2463,7 +2508,7 @@ onUnmounted(() => {
   right: 16px;
   top: auto;
   max-width: 100%;
-  max-height: 90vh;
+  max-height: 80vh;
   margin: 0 auto;
   background: var(--card, #fff);
   border-radius: 24px;
@@ -2471,6 +2516,7 @@ onUnmounted(() => {
   flex-direction: column;
   animation: sheet-slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  will-change: transform;
 }
 
 @keyframes sheet-slide-up {
