@@ -143,9 +143,9 @@ function handleClose() {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  max-height: 84vh;
+  max-height: 80vh;
   overflow: hidden;
-  border-radius: 22px 22px 0 0;
+  border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   background: var(--card, #fff);
   box-shadow: var(--shadow-glow, 0 8px 32px rgba(100, 12, 114, 0.15));
@@ -290,8 +290,8 @@ function handleClose() {
     left: 16px;
     right: 16px;
     width: auto;
-    max-height: 92vh;
-    border-radius: 22px 22px 0 0;
+    max-height: 80vh;
+    border-radius: 22px;
     transform: translateY(100%);
   }
 
@@ -308,8 +308,8 @@ function handleClose() {
     left: 16px;
     right: 16px;
     width: auto;
-    max-height: 92vh;
-    border-radius: 22px 22px 0 0;
+    max-height: 80vh;
+    border-radius: 22px;
     transform: translateY(100%);
   }
 
