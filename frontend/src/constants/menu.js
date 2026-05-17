@@ -4,6 +4,7 @@ export const MENU_ITEMS = [
   { key: "student-info", label: "学生信息" },
   { key: "class-reviews", label: "班级审核" },
   { key: "notifications", label: "通知" },
+  { key: "logs", label: "操作日志" },
   { key: "admin", label: "后台管理" },
 ];
 
@@ -17,6 +18,7 @@ export const MENU_ROUTE_MAP = {
     query: { panel: "class-reviews" },
   },
   admin: { path: "/admin" },
+  logs: { path: "/logs" },
 };
 
 const ENABLED_MENU_KEYS = new Set([
@@ -26,12 +28,14 @@ const ENABLED_MENU_KEYS = new Set([
   "student-info",
   "class-reviews",
   "admin",
+  "logs",
 ]);
 
 const ROLE_MENU_VISIBILITY = {
   "student-info": new Set(["TEACHER", "ADMIN"]),
   "class-reviews": new Set(["CADRE"]),
   admin: new Set(["ADMIN"]),
+  logs: new Set(["ADMIN"]),
 };
 
 export function isMenuEnabled(key) {
@@ -73,6 +77,9 @@ export function getActiveMenuFromRoute(route) {
   }
   if (routeName === "class-reviews") {
     return "class-reviews";
+  }
+  if (routeName === "logs") {
+    return "logs";
   }
   if (routeName === "settings") {
     return "";

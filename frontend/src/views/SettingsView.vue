@@ -172,7 +172,6 @@
 
     <StudentExportDialog
       :open="exportDialogOpen"
-      filename-prefix="student_profile_export"
       preview-title="导出预览"
       empty-message="没有获取到个人信息，请稍后再试。"
       :preview-limit="1"

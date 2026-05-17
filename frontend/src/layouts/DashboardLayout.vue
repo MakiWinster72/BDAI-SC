@@ -33,10 +33,22 @@
 
     <!-- Mobile sidebar overlay -->
     <Transition name="sidebar">
-      <div v-if="sidebarOpen" class="mobile-sidebar-backdrop" @click="closeSidebar" />
+      <div
+        v-if="sidebarOpen"
+        class="mobile-sidebar-backdrop"
+        :style="backdropStyle"
+        @click="closeSidebar"
+      />
     </Transition>
     <Transition name="sidebar-panel">
-      <div v-if="sidebarOpen" class="mobile-sidebar-panel">
+      <div
+        v-if="sidebarOpen"
+        class="mobile-sidebar-panel"
+        :style="isSwiping || swipeTranslateX !== 0 ? `transform: translateX(${swipeTranslateX}px)` : ''"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
+      >
         <DashboardSidebar
           :profile="profile"
           :active-menu="activeMenu"
@@ -84,6 +96,14 @@ const route = useRoute();
 const profile = reactive(loadUser());
 const sidebarOpen = ref(false);
 
+// Mobile swipe to close
+const touchStartX = ref(0);
+const touchCurrentX = ref(0);
+const isSwiping = ref(false);
+const swipeTranslateX = ref(0);
+const SWIPE_THRESHOLD = 80;
+const SWIPE_MAX_BLUR = 10;
+
 const activeMenu = computed(() => getActiveMenuFromRoute(route));
 const activeAchievement = computed(() => {
   if (route.name !== "achievements") {
@@ -125,6 +145,15 @@ const classReviewsActiveEntry = computed(() => {
 });
 const classReviewEntries = computed(() => []); // Not used in layout, CardMenu gets it directly from useNotifications
 
+const backdropStyle = computed(() => {
+  const progress = Math.min(Math.abs(swipeTranslateX.value) / 300, 1);
+  return {
+    transform: swipeTranslateX.value !== 0 ? `translateX(${swipeTranslateX}px)` : "",
+    backdropFilter: `blur(${(1 - progress) * SWIPE_MAX_BLUR}px)`,
+    backgroundColor: "transparent",
+  };
+});
+
 provide(dashboardShellKey, {
   openSidebar,
   closeSidebar,
@@ -144,6 +173,29 @@ function openSidebar() {
 
 function closeSidebar() {
   sidebarOpen.value = false;
+}
+
+function handleTouchStart(e) {
+  touchStartX.value = e.touches[0].clientX;
+  touchCurrentX.value = touchStartX.value;
+  isSwiping.value = true;
+}
+
+function handleTouchMove(e) {
+  if (!isSwiping.value) return;
+  const delta = e.touches[0].clientX - touchStartX.value;
+  if (delta < 0) {
+    swipeTranslateX.value = delta;
+  }
+}
+
+function handleTouchEnd() {
+  if (!isSwiping.value) return;
+  if (swipeTranslateX.value < -SWIPE_THRESHOLD) {
+    closeSidebar();
+  }
+  isSwiping.value = false;
+  swipeTranslateX.value = 0;
 }
 
 function handleMenuClick(key) {
@@ -171,7 +223,7 @@ function handleClassReviewsEntry({ entry }) {
   closeSidebar();
   navigateWithViewTransition(router, {
     path: "/notifications",
-    query: { panel: "class-reviews", category: "pending", entry: String(entry.id) },
+    query: { panel: "class-reviews", category: "pending", entry: `${entry.resourceType}:${entry.id}` },
   });
 }
 

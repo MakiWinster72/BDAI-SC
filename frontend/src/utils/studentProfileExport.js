@@ -109,6 +109,9 @@ export const exportGroups = [
       { key: "ach_certificate", label: "职业资格证书" },
       { key: "ach_research", label: "学生参与教师科研项目情况" },
       { key: "ach_works", label: "创作、表演的代表性作品" },
+      { key: "ach_doubleHundred", label: "双百工程" },
+      { key: "ach_ieerTraining", label: "大学生创新创业训练计划项目" },
+      { key: "ach_sanSanXiang", label: '暑期"三下乡"社会实践活动' },
     ],
   },
 ];
@@ -380,6 +383,9 @@ const ACHIEVEMENT_CATEGORIES = [
     selectKey: "ach_research",
   },
   { key: "works", label: "创作、表演的代表性作品", selectKey: "ach_works" },
+  { key: "doubleHundred", label: "双百工程", selectKey: "ach_doubleHundred" },
+  { key: "ieerTraining", label: "大学生创新创业训练计划项目", selectKey: "ach_ieerTraining" },
+  { key: "sanSanXiang", label: '暑期"三下乡"社会实践活动', selectKey: "ach_sanSanXiang" },
 ];
 
 const ACHIEVEMENT_FIELDS = {
@@ -448,6 +454,47 @@ const ACHIEVEMENT_FIELDS = {
     { key: "organizer", label: "主办方" },
     { key: "impactScope", label: "影响范围" },
     { key: "note", label: "备注说明" },
+  ],
+  doubleHundred: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "college", label: "学院" },
+    { key: "projectName", label: "项目名称" },
+    { key: "projectCategory", label: "项目类别" },
+    { key: "projectLeader", label: "项目负责人" },
+    { key: "teamMembers", label: "团队成员" },
+    { key: "instructors", label: "指导老师" },
+    { key: "teamSize", label: "项目人数" },
+    { key: "plannedLevel", label: "拟立项等级" },
+    { key: "finalLevel", label: "结项等级" },
+  ],
+  ieerTraining: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "collegeName", label: "学院名称" },
+    { key: "projectName", label: "项目名称" },
+    { key: "projectType", label: "项目类型" },
+    { key: "projectLeader", label: "项目负责人" },
+    { key: "instructorName", label: "指导教师" },
+    { key: "recommendedLevel", label: "推荐级别" },
+    { key: "isKeyArea", label: "重点领域" },
+    { key: "finalStatus", label: "结项情况" },
+  ],
+  sanSanXiang: [
+    { key: "studentName", label: "学生姓名" },
+    { key: "studentNo", label: "学号" },
+    { key: "college", label: "所在学院" },
+    { key: "teamName", label: "团队名称" },
+    { key: "projectName", label: "项目名称" },
+    { key: "serviceCategory", label: "主要服务类别" },
+    { key: "isPaired", label: "百千万校地通结对" },
+    { key: "projectType", label: "项目类型" },
+    { key: "teamLeader", label: "团队负责人" },
+    { key: "teamSize", label: "团队人数" },
+    { key: "practiceDays", label: "实践天数" },
+    { key: "instructor", label: "指导老师" },
+    { key: "projectLevel", label: "立项等级" },
+    { key: "finalLevel", label: "单位初评结项等级" },
   ],
 };
 
@@ -529,7 +576,6 @@ export async function exportStudentRowsToExcel(
   selectedKeys,
   options = {},
 ) {
-  const { filenamePrefix = "students_export" } = options;
   const workbook = XLSX.utils.book_new();
   const activeAchievementCategories = ACHIEVEMENT_CATEGORIES.filter((item) =>
     selectedKeys.has(item.selectKey),
@@ -589,7 +635,8 @@ export async function exportStudentRowsToExcel(
     });
   }
 
-  XLSX.writeFile(workbook, `${filenamePrefix}_${formatTimestamp()}.xlsx`, {
+  const safeFilename = buildExportFilename(rows, formatTimestamp());
+  XLSX.writeFile(workbook, `${safeFilename}.xlsx`, {
     compression: true,
   });
 }
@@ -771,5 +818,25 @@ function formatTimestamp() {
     now.getFullYear(),
     pad(now.getMonth() + 1),
     pad(now.getDate()),
-  ].join("") + `_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  ].join("") + `-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+function buildExportFilename(rows, ts) {
+  if (rows && rows.length === 1) {
+    const s = rows[0];
+    const displayName = sanitizeFilenamePart(s.fullName || s.displayName || s.name || "");
+    if (displayName) {
+      return `${displayName}_${ts}`;
+    }
+  }
+  const count = rows ? rows.length : 0;
+  return `学生信息导出_${count}人_${ts}`;
+}
+
+function sanitizeFilenamePart(part) {
+  if (!part) return "";
+  return String(part)
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }

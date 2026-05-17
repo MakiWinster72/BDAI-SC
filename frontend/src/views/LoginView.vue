@@ -207,6 +207,53 @@
               </div>
             </div>
 
+            <div class="form-row">
+              <label class="form-label" for="captcha">图形验证码</label>
+              <div class="captcha-row">
+                <input
+                  id="captcha"
+                  v-model.trim="form.captcha"
+                  class="form-input captcha-input"
+                  type="text"
+                  placeholder="请输入验证码"
+                  autocomplete="off"
+                  :class="{ 'input--error': captchaError }"
+                  required
+                />
+                <button
+                  type="button"
+                  class="captcha-image-button"
+                  aria-label="刷新图形验证码"
+                  title="点击刷新验证码"
+                  @click="refreshCaptcha"
+                >
+                  <img
+                    v-if="captchaImage"
+                    :src="captchaImage"
+                    class="captcha-canvas"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span v-else class="captcha-placeholder">加载中</span>
+                </button>
+                <button
+                  type="button"
+                  class="captcha-refresh"
+                  aria-label="换一张验证码"
+                  title="换一张验证码"
+                  @click="refreshCaptcha"
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/>
+                    <path d="M3 21v-5h5"/>
+                    <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                  </svg>
+                </button>
+              </div>
+              <span v-if="captchaError" class="field-error" role="alert">{{ captchaError }}</span>
+            </div>
+
             <button class="action-button" :disabled="isSubmitting" type="submit">
               <span class="btn-content">
                 <span v-if="isSubmitting" class="btn-spinner" aria-hidden="true"></span>
@@ -239,9 +286,9 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref, shallowRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { login } from "../api/auth";
+import { getCaptcha, login } from "../api/auth";
 import { getSystemSettings } from "../api/admin";
 import { useToast } from "../composables/useToast";
 
@@ -252,25 +299,51 @@ const toast = useToast();
 const form = reactive({
   username: route.query.username ? String(route.query.username) : "",
   password: "",
+  captcha: "",
 });
 
 const isSubmitting = ref(false);
 const feedback = reactive({ text: "", type: "" });
 const showPassword = ref(false);
 const usernameError = ref("");
-const allowRegistration = ref(true);
+const captchaError = ref("");
+const allowRegistration = ref(false);
+const captchaId = shallowRef("");
+const captchaImage = shallowRef("");
 
 async function fetchSystemSettings() {
   try {
     const res = await getSystemSettings();
-    allowRegistration.value = res.data.allowRegistration !== false;
+    allowRegistration.value = res.data.allowRegistration === true;
     localStorage.setItem('gcsc_allowRegistration', allowRegistration.value ? '1' : '0');
   } catch (e) {
-    allowRegistration.value = true;
-    localStorage.setItem('gcsc_allowRegistration', '1');
+    allowRegistration.value = false;
+    localStorage.setItem('gcsc_allowRegistration', '0');
   }
 }
 fetchSystemSettings();
+
+async function refreshCaptcha({ clearInput = true, clearError = true } = {}) {
+  if (clearInput) {
+    form.captcha = "";
+  }
+  if (clearError) {
+    captchaError.value = "";
+  }
+  try {
+    const { data } = await getCaptcha();
+    captchaId.value = data.captchaId || "";
+    captchaImage.value = data.imageBase64 || "";
+  } catch (error) {
+    captchaId.value = "";
+    captchaImage.value = "";
+    captchaError.value = parseError(error);
+  }
+}
+
+onMounted(() => {
+  refreshCaptcha();
+});
 
 function parseError(error) {
   if (error?.response?.data?.message) {
@@ -283,15 +356,32 @@ async function handleLogin() {
   feedback.text = "";
   feedback.type = "";
   usernameError.value = "";
+  captchaError.value = "";
 
   if (!form.username) {
     usernameError.value = "请输入学号";
     return;
   }
 
+  if (!form.captcha) {
+    captchaError.value = "请输入图形验证码";
+    return;
+  }
+
+  if (!captchaId.value) {
+    captchaError.value = "验证码加载失败，请刷新后重试";
+    return;
+  }
+
   isSubmitting.value = true;
   try {
-    const { data } = await login(form);
+    const { username, password } = form;
+    const { data } = await login({
+      username,
+      password,
+      captchaId: captchaId.value,
+      captchaCode: form.captcha,
+    });
     feedback.text = data.message || "登录成功";
     feedback.type = "success";
 
@@ -320,6 +410,7 @@ async function handleLogin() {
   } catch (error) {
     feedback.text = parseError(error);
     feedback.type = "error";
+    refreshCaptcha();
   } finally {
     isSubmitting.value = false;
   }

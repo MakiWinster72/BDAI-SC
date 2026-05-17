@@ -15,15 +15,16 @@ import java.util.Optional;
 @Repository
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long> {
 
-    Page<LoginHistory> findAllByUserIdOrderByLoginTimeDesc(Long userId, Pageable pageable);
+  Page<LoginHistory> findAllByUserIdOrderByLoginTimeDesc(Long userId, Pageable pageable);
 
-    Page<LoginHistory> findByUserIdAndLoginTimeAfterOrderByLoginTimeDesc(Long userId, LocalDateTime loginTime, Pageable pageable);
+  Page<LoginHistory> findByUserIdAndLoginTimeAfterOrderByLoginTimeDesc(Long userId, LocalDateTime loginTime,
+      Pageable pageable);
 
-    @Modifying
-    @Query("DELETE FROM LoginHistory l WHERE l.loginTime < :cutoff")
-    int deleteByLoginTimeBefore(@Param("cutoff") LocalDateTime cutoff);
+  @Modifying
+  @Query("DELETE FROM LoginHistory l WHERE l.loginTime < :cutoff")
+  int deleteByLoginTimeBefore(@Param("cutoff") LocalDateTime cutoff);
 
-    Optional<LoginHistory> findFirstByUserIdOrderByLoginTimeDesc(Long userId);
+  Optional<LoginHistory> findFirstByUserIdOrderByLoginTimeDesc(Long userId);
 
-    Optional<LoginHistory> findFirstByUserIdAndIdNotOrderByLoginTimeDesc(Long userId, Long excludeId);
+  Optional<LoginHistory> findFirstByUserIdAndIdNotOrderByLoginTimeDesc(Long userId, Long excludeId);
 }

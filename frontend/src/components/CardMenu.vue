@@ -104,20 +104,20 @@
         >
           <button
             v-for="entry in filteredNotificationEntries"
-            :key="entry.id"
+            :key="getEntryReadKey(entry)"
             class="menu-notification-item"
             :class="{
-              active: String(notificationActiveEntry) === String(entry.id),
-              'is-read': readIds.has(String(entry.id)),
+              active: String(notificationActiveEntry) === getEntryReadKey(entry),
+              'is-read': readIds.has(getEntryReadKey(entry)),
             }"
             type="button"
-            @click="selectNotificationEntry(entry.id)"
+            @click="selectNotificationEntry(entry)"
           >
             <div class="menu-notification-head">
               <span class="menu-notification-badge" :class="entry.badgeClass">{{ entry.badgeText }}</span>
               <time class="menu-notification-time">{{ entry.timeText }}</time>
               <span
-                v-if="!readIds.has(String(entry.id))"
+                v-if="!readIds.has(getEntryReadKey(entry))"
                 class="menu-notification-dot"
                 aria-label="未读"
               />
@@ -140,7 +140,7 @@
             v-for="item in filteredClassReviewEntries"
             :key="item.id + '-' + item.resourceType"
             class="menu-notification-item"
-            :class="{ active: String(classReviewsActiveEntry) === String(item.id) + '-' + item.resourceType }"
+            :class="{ active: String(classReviewsActiveEntry) === getEntryReadKey(item) }"
             type="button"
             @click="selectClassReviewEntry(item)"
           >
@@ -236,14 +236,14 @@ const emit = defineEmits([
   "class-reviews-category-change",
 ]);
 
-const { inboxEntries, pendingCount, totalUnreadCount, unreadEntries, readIds, processedReadIds, markProcessedEntryRead, markEntryRead, markAllRead, classReviewEntries } = useNotifications(props.profile);
+const { inboxEntries, pendingCount, totalUnreadCount, unreadEntries, readIds, processedReadIds, markProcessedEntryRead, markEntryRead, markAllRead, getEntryReadKey, classReviewEntries } = useNotifications(props.profile);
 
 const menuItems = computed(() => filterMenuItemsByRole(props.profile.role));
 
 const notificationUnreadCounts = computed(() => {
   const counts = { unread: 0, pending: 0, delayed: 0, approved: 0, rejected: 0 };
   inboxEntries.value.forEach((e) => {
-    const isUnread = !readIds.has(String(e.id));
+    const isUnread = !readIds.has(getEntryReadKey(e));
     if (isUnread) counts.unread++;
     if (isUnread && counts[e.categoryKey] !== undefined) counts[e.categoryKey]++;
   });
@@ -260,6 +260,7 @@ const menuMeta = computed(() => {
     "my-info": "编辑个人档案",
     "student-info": "检索学生资料",
     admin: "开关与系统设置",
+    logs: "审计追踪",
     "class-reviews": totalPending > 0
       ? `${totalPending} 条待审`
       : "无待审申请",
@@ -300,7 +301,7 @@ const notificationCategories = [
 const filteredNotificationEntries = computed(() => {
   const cat = notificationActiveCategory.value;
   if (cat === "unread") {
-    return inboxEntries.value.filter((e) => !readIds.has(String(e.id)));
+    return inboxEntries.value.filter((e) => !readIds.has(getEntryReadKey(e)));
   }
   return inboxEntries.value.filter((e) => e.categoryKey === cat);
 });
@@ -337,6 +338,7 @@ const achievementEntries = [
   { key: "works", label: "创作、表演的代表性作品" },
   { key: "doubleHundred", label: "双百工程" },
   { key: "ieerTraining", label: "大学生创新创业训练计划项目" },
+  { key: "sanSanXiang", label: '暑期"三下乡"社会实践活动' },
 ];
 
 watch(
@@ -414,15 +416,15 @@ function selectNotificationCategory(category) {
   emit("notification-entry-click", { category, entryId: "" });
 }
 
-function selectNotificationEntry(entryId) {
-  const entry = filteredNotificationEntries.value.find((e) => String(e.id) === String(entryId));
+function selectNotificationEntry(entry) {
+  const entryKey = getEntryReadKey(entry);
   if (entry) {
-    markEntryRead(String(entryId));
+    markEntryRead(entry);
     if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
-      markProcessedEntryRead(String(entryId));
+      markProcessedEntryRead(String(entry.id));
     }
   }
-  emit("notification-entry-click", { category: notificationActiveCategory.value, entryId: String(entryId) });
+  emit("notification-entry-click", { category: notificationActiveCategory.value, entryId: entryKey });
 }
 
 function selectClassReviewEntry(item) {

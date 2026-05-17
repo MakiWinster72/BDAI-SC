@@ -1,4 +1,4 @@
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import { getSystemSettings } from "../api/admin";
 import {
   approveAchievementReviewRequest,
@@ -16,6 +16,11 @@ import {
   setProfileReviewRequestDocuments,
   submitProfileReviewRequestApi,
 } from "../api/profileReviewRequests";
+import {
+  markAllNotificationsRead,
+  markNotificationRead,
+  markNotificationUnread,
+} from "../api/notificationReadStates";
 
 const STORAGE_BASE = "bdai_sc_notification_center";
 
@@ -69,7 +74,7 @@ function ensureLoaded() {
       ? raw.notifications
       : [];
     store.processedReadIds = new Set(Array.isArray(raw.processedReadIds) ? raw.processedReadIds : []);
-    store.readIds = new Set(Array.isArray(raw.readIds) ? raw.readIds : []);
+    store.readIds = new Set(Array.isArray(raw.readIds) ? raw.readIds.map((id) => String(id)) : []);
   } catch {
     store.notifications = [];
     store.processedReadIds = new Set();
@@ -89,6 +94,66 @@ function persistStore() {
       readIds: [...store.readIds],
     }),
   );
+}
+
+function getEntryReadKey(entryOrId, resourceType = "") {
+  if (entryOrId && typeof entryOrId === "object") {
+    const type = entryOrId.resourceType || entryOrId.source || resourceType || "notification";
+    const id = entryOrId.sourceId || entryOrId.id;
+    return `${type}:${id}`;
+  }
+  return resourceType ? `${resourceType}:${entryOrId}` : String(entryOrId);
+}
+
+function syncReadIdsFromServer(entries) {
+  let changed = false;
+  entries.forEach((entry) => {
+    if (entry.source !== "review-request") {
+      return;
+    }
+    const key = getEntryReadKey(entry);
+    if (entry.read) {
+      if (!store.readIds.has(key)) {
+        store.readIds.add(key);
+        changed = true;
+      }
+    } else if (store.readIds.has(key)) {
+      store.readIds.delete(key);
+      changed = true;
+    }
+  });
+  if (changed) {
+    persistStore();
+  }
+}
+
+function syncStoredIds() {
+  if (!store.achievementReviewFetched || !store.profileReviewFetched) {
+    return;
+  }
+  const allReadKeys = new Set([
+    ...store.achievementReviewRequests.map((r) => getEntryReadKey(r.id, r.resourceType || "achievement")),
+    ...store.profileReviewRequests.map((r) => getEntryReadKey(r.id, r.resourceType || "profile")),
+    ...store.notifications.map((n) => getEntryReadKey(n)),
+  ]);
+  let changed = false;
+  for (const id of store.processedReadIds) {
+    const stillExists = store.achievementReviewRequests.some((r) => String(r.id) === String(id))
+      || store.profileReviewRequests.some((r) => String(r.id) === String(id));
+    if (!stillExists) {
+      store.processedReadIds.delete(id);
+      changed = true;
+    }
+  }
+  for (const id of store.readIds) {
+    if (!allReadKeys.has(String(id))) {
+      store.readIds.delete(id);
+      changed = true;
+    }
+  }
+  if (changed) {
+    persistStore();
+  }
 }
 
 async function fetchDelayedThreshold() {
@@ -183,6 +248,18 @@ function upsertProfileReviewRequest(nextRequest) {
   store.profileReviewRequests.splice(index, 1, nextRequest);
 }
 
+function setReviewRequestReadState(resourceType, resourceId, read) {
+  const requests = resourceType === "achievement"
+    ? store.achievementReviewRequests
+    : resourceType === "profile"
+      ? store.profileReviewRequests
+      : [];
+  const request = requests.find((item) => String(item.id) === String(resourceId));
+  if (request) {
+    request.read = read;
+  }
+}
+
 function buildReviewEntry(request, user) {
   const isOwner = request.requester?.username === user.username;
   const requestTypeLabel = request.resourceType === "profile" ? "信息" : "成就";
@@ -253,6 +330,7 @@ function buildReviewEntry(request, user) {
     payloadSnapshot: request.payloadSnapshot || null,
     changes: Array.isArray(request.changes) ? request.changes : [],
     supportingDocuments: Array.isArray(request.supportingDocuments) ? request.supportingDocuments : [],
+    read: Boolean(request.read),
     categoryKey,
     timeText: formatRelativeTime(request.updatedAt || request.createdAt),
     createdAt: request.updatedAt || request.createdAt,
@@ -276,6 +354,7 @@ function buildNotificationEntry(notification) {
     badgeClass: notification.badgeClass || "is-system",
     meta: notification.meta || "系统消息",
     categoryKey,
+    read: store.readIds.has(getEntryReadKey(notification)),
     timeText: formatRelativeTime(notification.createdAt),
     createdAt: notification.createdAt,
   };
@@ -525,7 +604,7 @@ export function useNotifications(userSource) {
     const seen = new Set();
     return entries
       .filter((entry) => {
-        const key = `${entry.sourceId}-${entry.resourceType}`;
+        const key = getEntryReadKey(entry);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -590,32 +669,71 @@ export function useNotifications(userSource) {
     return allRequests.map((r) => buildReviewEntry(r, currentUser.value));
   });
 
+  watch(
+    inboxEntries,
+    (entries) => {
+      syncReadIdsFromServer(entries);
+      syncStoredIds();
+    },
+    { immediate: true },
+  );
+
   function markProcessedEntryRead(entryId) {
     store.processedReadIds.add(String(entryId));
     persistStore();
   }
 
-  function markEntryRead(entryId) {
-    store.readIds.add(String(entryId));
+  async function markEntryRead(entryOrId, resourceType = "") {
+    const key = getEntryReadKey(entryOrId, resourceType);
+    store.readIds.add(key);
+    if (entryOrId && typeof entryOrId === "object") {
+      setReviewRequestReadState(entryOrId.resourceType, entryOrId.sourceId || entryOrId.id, true);
+    }
     persistStore();
+    if (entryOrId && typeof entryOrId === "object" && entryOrId.source === "review-request") {
+      await markNotificationRead({
+        resourceType: entryOrId.resourceType,
+        resourceId: entryOrId.sourceId || entryOrId.id,
+      }).catch(() => {
+        refreshNotifications();
+      });
+    }
   }
 
-  function markEntryUnread(entryId) {
-    store.readIds.delete(String(entryId));
+  async function markEntryUnread(entryOrId, resourceType = "") {
+    const key = getEntryReadKey(entryOrId, resourceType);
+    store.readIds.delete(key);
+    if (entryOrId && typeof entryOrId === "object") {
+      setReviewRequestReadState(entryOrId.resourceType, entryOrId.sourceId || entryOrId.id, false);
+    }
     persistStore();
+    if (entryOrId && typeof entryOrId === "object" && entryOrId.source === "review-request") {
+      await markNotificationUnread({
+        resourceType: entryOrId.resourceType,
+        resourceId: entryOrId.sourceId || entryOrId.id,
+      }).catch(() => {
+        refreshNotifications();
+      });
+    }
   }
 
-  function markAllRead() {
-    inboxEntries.value.forEach((e) => store.readIds.add(String(e.id)));
+  async function markAllRead() {
+    inboxEntries.value.forEach((e) => {
+      store.readIds.add(getEntryReadKey(e));
+      setReviewRequestReadState(e.resourceType, e.sourceId || e.id, true);
+    });
     persistStore();
+    await markAllNotificationsRead().catch(() => {
+      refreshNotifications();
+    });
   }
 
   const totalUnreadCount = computed(() =>
-    inboxEntries.value.filter((e) => !store.readIds.has(String(e.id))).length,
+    inboxEntries.value.filter((e) => !store.readIds.has(getEntryReadKey(e))).length,
   );
 
   const unreadEntries = computed(() =>
-    inboxEntries.value.filter((e) => !store.readIds.has(String(e.id))),
+    inboxEntries.value.filter((e) => !store.readIds.has(getEntryReadKey(e))),
   );
 
   function findPendingAchievementReview(recordId, category) {
@@ -627,6 +745,15 @@ export function useNotifications(userSource) {
         item.category === category &&
         item.status === "pending",
     ) || null;
+  }
+
+  async function refreshNotifications() {
+    store.achievementReviewFetched = false;
+    store.profileReviewFetched = false;
+    await Promise.all([
+      fetchAchievementReviewRequests(true).catch(() => {}),
+      fetchProfileReviewRequests(true).catch(() => {}),
+    ]);
   }
 
   return {
@@ -644,6 +771,7 @@ export function useNotifications(userSource) {
     findPendingAchievementReview,
     fetchAchievementReviewRequests,
     fetchProfileReviewRequests,
+    refreshNotifications,
     submitAchievementReviewRequest,
     submitProfileReviewRequest,
     addNotification,
@@ -654,6 +782,7 @@ export function useNotifications(userSource) {
     markEntryRead,
     markEntryUnread,
     markAllRead,
+    getEntryReadKey,
     classReviewEntries,
   };
 }

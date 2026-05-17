@@ -30,24 +30,36 @@
           <div class="info-hero-title">基础信息</div>
           <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
         </div>
-        <div class="info-actions">
-          <ExportPdfButton
-            :disabled="isEditing"
-            :get-student="buildPdfStudentSnapshot"
-            :resolve-media-url="resolveMediaUrl"
-            button-class="ghost-button"
-            @export-complete="toastSuccess('PDF 导出成功！')"
-            @export-error="toastError('PDF 导出失败')"
-          />
-          <button
-            class="action-button"
-            type="button"
-            :disabled="isEditing"
-            @click="enterEdit"
-          >
-            编辑
-          </button>
-        </div>
+      </div>
+
+      <!-- 桌面端悬浮操作栏 -->
+      <div class="info-floating-bar">
+        <transition name="float-btn" mode="out-in">
+          <div v-if="isEditing" class="float-btn-group" key="editing">
+            <button class="ghost-button" type="button" @click="cancelEdit">
+              取消
+            </button>
+            <button class="action-button" type="button" @click="confirmEdit">
+              {{ saveActionLabel }}
+            </button>
+          </div>
+          <div v-else class="float-btn-group" key="viewing">
+            <ExportPdfButton
+              :get-student="buildPdfStudentSnapshot"
+              :resolve-media-url="resolveMediaUrl"
+              button-class="ghost-button"
+              @export-complete="toastSuccess('PDF 导出成功！')"
+              @export-error="toastError('PDF 导出失败')"
+            />
+            <button
+              class="action-button"
+              type="button"
+              @click="enterEdit"
+            >
+              编辑
+            </button>
+          </div>
+        </transition>
       </div>
 
       <div class="card info-card">
@@ -202,7 +214,7 @@
           </label>
           <label class="field-card field-full">
             <span class="info-label">手机号码 / 备用联系方式</span>
-            <div class="class-inline">
+            <div class="class-inline contact-row">
               <input
                 v-model="info.phone"
                 class="info-input"
@@ -213,7 +225,6 @@
                 @input="handleDigitsInput('phone', 11, $event)"
                 :disabled="!isEditing"
               />
-              <span class="class-text">/</span>
               <input
                 v-model="info.backupContact"
                 class="info-input"
@@ -225,7 +236,7 @@
           </label>
           <label class="field-card field-full">
             <span class="info-label">证件类型 / 证件号码</span>
-            <div class="class-inline id-type-inline">
+            <div class="class-inline id-type-inline id-row">
               <select
                 v-model="info.idType"
                 class="info-input"
@@ -956,24 +967,28 @@
         </div>
       </div>
     </section>
-    <transition name="edit-dock">
-      <div v-if="isEditing" class="edit-dock">
-        <div class="edit-dock-inner">
-          <button class="ghost-button" type="button" @click="cancelEdit">
-            取消
-          </button>
-          <button class="action-button" type="button" @click="confirmEdit">
-            {{ saveActionLabel }}
-          </button>
-        </div>
-      </div>
-    </transition>
     <MobileCapsule @open-sidebar="openDashboardSidebar">
       <template v-if="isEditing" #right>
         <div class="capsule-action" @click="cancelEdit">取消</div>
         <div class="capsule-primary" @click="confirmEdit">
           {{ saveActionLabel }}
         </div>
+      </template>
+      <template v-else #right>
+        <ExportPdfButton
+          :get-student="buildPdfStudentSnapshot"
+          :resolve-media-url="resolveMediaUrl"
+          button-class="ghost-button capsule-ghost"
+          @export-complete="toastSuccess('PDF 导出成功！')"
+          @export-error="toastError('PDF 导出失败')"
+        />
+        <button
+          class="action-button capsule-action-button"
+          type="button"
+          @click="enterEdit"
+        >
+          编辑
+        </button>
       </template>
     </MobileCapsule>
   </main>
@@ -1665,7 +1680,7 @@ const leagueNoDisabled = computed(
     !info.leagueJoined,
 );
 const partyAppliedDisabled = computed(
-  () => !isEditing.value || !info.leagueJoinDate || info.leagueDeveloping,
+  () => !isEditing.value,
 );
 const applicationDateDisabled = computed(
   () => !isEditing.value || partyAppliedDisabled.value || !info.partyApplied,
@@ -1786,13 +1801,14 @@ function handleIdNoInput(event) {
   const maxLen = idNoMaxLength.value;
   // 居民身份证: 17位数字 + 1位数字/X
   if (info.idType === "居民身份证") {
-    const cleaned = raw.replace(/[^0-9X]/g, "");
-    const digits = cleaned.replace(/X/g, "").slice(0, 17);
-    if (cleaned.endsWith("X")) {
-      info.idNo = `${digits}X`.slice(0, maxLen);
-      return;
+    const cleaned = raw.replace(/[^0-9A-Z]/g, "").toUpperCase();
+    const first17 = cleaned.slice(0, 17).replace(/[^0-9]/g, "");
+    const char18 = cleaned.charAt(17);
+    if (char18 === "X" || /^\d$/.test(char18)) {
+      info.idNo = first17 + char18;
+    } else {
+      info.idNo = first17;
     }
-    info.idNo = digits;
     return;
   }
   // 台湾居民来往大陆通行证（台胞证）: 8位纯数字
@@ -2209,7 +2225,7 @@ function buildPdfStudentSnapshot() {
     specialStudentRemark: info.specialStudentRemark,
     educationExperiences,
     cadreExperiences,
-    avatarUrl: info.avatarUrl,
+    avatarUrl: profile.avatarUrl,
   };
 }
 
@@ -2519,6 +2535,7 @@ function applyProfileResponse(data, options = {}) {
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;
   profile.avatarUrl = data.avatarUrl || profile.avatarUrl;
+  profile.role = data.role || profile.role;
   profile.studentNo = data.studentNo || profile.studentNo;
   profile.className = data.className || profile.className;
   profile.college = FIXED_COLLEGE;
@@ -2891,8 +2908,75 @@ function loadUser() {
 <style scoped>
 @import "../assets/styles/my-infos-view.css";
 
+.float-btn-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.float-btn-enter-active,
+.float-btn-leave-active {
+  transition: opacity 200ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.float-btn-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+}
+
+.float-btn-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+}
+
 .class-num {
   width: 76px !important;
   flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .contact-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .contact-row > .info-input:first-child {
+    width: 100%;
+    flex: unset;
+  }
+
+  .contact-row > .info-input:last-child {
+    width: 100%;
+    flex: unset;
+  }
+
+  .id-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .id-row > .info-input,
+  .id-row > select.info-input {
+    width: 100%;
+    flex: unset;
+  }
+}
+
+@media (max-width: 840px) {
+  .info-actions {
+    display: none;
+  }
+}
+
+.capsule-ghost {
+  height: 36px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+}
+
+.capsule-action-button {
+  height: 36px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
 }
 </style>

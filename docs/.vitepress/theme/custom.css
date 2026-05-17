@@ -1,0 +1,81 @@
+/* ===================================================
+   BDAI-SC Docs — Default VitePress Theme
+   =================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --vp-font-family-base:
+    "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial,
+    sans-serif;
+}
+
+/* Override Shiki inline font-family so Chinese falls back to Noto Sans SC */
+.vp-doc div[class*="language-"] pre,
+.vp-doc div[class*="language-"] code {
+  font-family:
+    "JetBrains Mono", "Fira Code", ui-monospace, "Noto Sans SC", "PingFang SC",
+    "Microsoft YaHei", monospace !important;
+}
+
+/* Inline code */
+.vp-doc :not(pre) > code {
+  font-family:
+    "JetBrains Mono", "Fira Code", ui-monospace, "Noto Sans SC", "PingFang SC",
+    "Microsoft YaHei", monospace !important;
+}
+
+/* Image styling */
+.vp-doc img {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dark .vp-doc img {
+  box-shadow: none;
+}
+
+/* Heading colors */
+.vp-doc h1 {
+  color: #0c4a6e;
+}
+.vp-doc h2 {
+  color: #0369a1;
+}
+.vp-doc h3 {
+  color: #047857;
+}
+.vp-doc h4 {
+  color: #b45309;
+}
+.vp-doc h5 {
+  color: #be123c;
+}
+.vp-doc h6 {
+  color: #4a5568;
+}
+
+/* Dark mode headings */
+.dark .vp-doc h1 {
+  color: #38bdf8;
+}
+.dark .vp-doc h2 {
+  color: #22d3ee;
+}
+.dark .vp-doc h3 {
+  color: #34d399;
+}
+.dark .vp-doc h4 {
+  color: #fbbf24;
+}
+.dark .vp-doc h5 {
+  color: #fb7185;
+}
+.dark .vp-doc h6 {
+  color: #94a3b8;
+}
+
+/* Navbar logo */
+.dark .vp-nav-bar svg rect {
+  fill: #0d9488 !important;
+}

@@ -596,6 +596,7 @@
   border: none;
   font-weight: 700;
   cursor: pointer;
+  overflow: visible;
   transition:
     transform 120ms ease,
     box-shadow 180ms ease,

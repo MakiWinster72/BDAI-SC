@@ -2,10 +2,10 @@ import { defineConfig } from "vitepress";
 import taskLists from "markdown-it-task-lists";
 
 export default defineConfig({
-  base: "/bdai-sc/",
-  title: "BSAI-SC wiki",
+  title: "BDAI-SC wiki",
   description: "大数据与人工智能学院学生信息管理中心 · 技术文档",
   lang: "zh-CN",
+  base: "/bdai-sc/",
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: true,
@@ -24,7 +24,7 @@ export default defineConfig({
 
   // Head tags — fonts + favicon
   head: [
-    ["link", { rel: "icon", type: "image/svg+xml", href: "/bdai-sc/favicon.png" }],
+    ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.png" }],
     // Preconnect: skip DNS lookup + TCP handshake for Google Fonts
     ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
     [
@@ -60,6 +60,7 @@ export default defineConfig({
         items: [
           { text: "快速开始", link: "/guide/getting-started" },
           { text: "测试清单", link: "/guide/test-checklist" },
+          { text: "Windows Server 部署指南", link: "/guide/10-deploy-windows" },
         ],
       },
       {
@@ -136,6 +137,10 @@ export default defineConfig({
           items: [
             { text: "快速开始", link: "/guide/getting-started" },
             { text: "测试清单", link: "/guide/test-checklist" },
+            {
+              text: "Windows Server 部署指南",
+              link: "/guide/10-deploy-windows",
+            },
             { text: "详细设计概述", link: "/design/" },
             { text: "设计规范", link: "/design/design-spec" },
           ],

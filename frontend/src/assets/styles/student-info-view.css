@@ -451,7 +451,7 @@
 .student-list {
   display: grid;
   gap: 14px;
-  padding: 2px 0;
+  padding: 2px 0 16px;
 }
 
 .student-results-loading {
@@ -599,7 +599,7 @@
   flex-wrap: wrap;
   padding-top: 8px;
   border-top: 1px solid var(--line);
-  margin-top: 8px;
+  margin-top: auto;
 }
 
 .student-pages {
@@ -1010,16 +1010,19 @@
 /* ── Floating Action Buttons ─────────────────── */
 
 .floating-actions {
-  position: sticky;
-  bottom: 24px;
+  position: fixed;
+  bottom: calc(90px + env(safe-area-inset-bottom));
+  right: 20px;
+  left: auto;
+  transform: none;
   z-index: 50;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
   width: fit-content;
   pointer-events: none;
+  transition: bottom 0.15s ease;
 }
 
 .floating-btn {
@@ -1134,6 +1137,13 @@
   .student-right-stack {
     padding-bottom: 88px;
     gap: 10px;
+  }
+
+  .floating-actions {
+    left: auto;
+    right: 20px;
+    transform: none;
+    bottom: calc(90px + env(safe-area-inset-bottom));
   }
 
   .student-filter-grid {
@@ -1271,10 +1281,10 @@
   }
 
   .student-detail-view {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
     max-height: 84vh;
     border-radius: 22px 22px 0 0;
     transform: translateY(100%);
@@ -1295,8 +1305,9 @@
   }
 
   .student-detail-view.split {
-    width: 100%;
-    left: 0;
+    left: 16px;
+    right: 16px;
+    width: auto;
     max-height: 84vh;
     transform: translateY(100%);
   }
@@ -1310,10 +1321,10 @@
   }
 
   .student-achievements-view {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
     height: auto;
     max-height: 84vh;
     border-radius: 22px 22px 0 0;
@@ -1393,8 +1404,10 @@
   }
 
   .floating-actions {
+    left: auto;
+    right: 20px;
+    transform: none;
     bottom: 88px;
-    right: 12px;
     gap: 8px;
   }
 
@@ -1531,8 +1544,8 @@
     animation: none !important;
   }
 
-  .student-detail-view,
-  .student-achievements-view {
+  .student-detail-view.open,
+  .student-achievements-view.open {
     transform: translate(-50%, 0) scale(1);
     opacity: 1;
     pointer-events: auto;

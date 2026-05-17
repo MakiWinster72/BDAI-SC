@@ -9,26 +9,35 @@ import { searchStudentProfiles, getStudentProfileById } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { useUploadProgress } from "../composables/useUploadProgress";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
-import { resolveMediaUrl } from "../utils/media";
+import { resolveMediaObjectUrl, resolveMediaUrl } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
 import { useToast } from "../composables/useToast";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import MobileCapsule from "../components/MobileCapsule.vue";
 
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
-const { error: toastError } = useToast();
+const toast = useToast();
+const { error: toastError } = toast;
 const { uploadWithProgress } = useUploadProgress();
 const { settings: uploadLimits } = useAchievementUploadSettings();
 
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, classReviewEntries } = useNotifications(profile);
+const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, markEntryUnread, markAllRead, getEntryReadKey, classReviewEntries } = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
-const rejectReason = ref(localStorage.getItem("bdai_sc_reject_draft") || "");
+const rejectReason = ref(localStorage.getItem(`bdai_sc_reject_draft_${route.query.entry}`) || "");
 watch(rejectReason, (val) => {
-  if (val) localStorage.setItem("bdai_sc_reject_draft", val);
+  const entryId = route.query.entry;
+  if (val) {
+    localStorage.setItem(`bdai_sc_reject_draft_${entryId}`, val);
+  } else {
+    localStorage.removeItem(`bdai_sc_reject_draft_${entryId}`);
+  }
+});
+watch(() => route.query.entry, (entryId) => {
+  rejectReason.value = localStorage.getItem(`bdai_sc_reject_draft_${entryId}`) || "";
 });
 const actionError = ref("");
 
@@ -44,7 +53,7 @@ const filteredEntries = computed(() =>
 );
 const selectedEntry = computed(
   () =>
-    entriesSource.value.find((entry) => String(entry.id) === String(route.query.entry)) || null,
+    entriesSource.value.find((entry) => getEntryReadKey(entry) === String(route.query.entry)) || null,
 );
 const canProcessSelected = computed(() => {
   if (!selectedEntry.value || selectedEntry.value.source !== "review-request") return false;
@@ -62,6 +71,24 @@ const canViewStudentInfo = computed(() => {
   if (!["TEACHER", "ADMIN", "CADRE"].includes(profile.role)) return false;
   return Boolean(selectedEntry.value.requester?.username);
 });
+const isSelectedUnread = computed(() =>
+  selectedEntry.value && !readIds.has(getEntryReadKey(selectedEntry.value)),
+);
+function toggleUnreadRead() {
+  if (!selectedEntry.value) return;
+  if (isSelectedUnread.value) {
+    markEntryRead(selectedEntry.value);
+    toast.success("已标记为已读");
+  } else {
+    markEntryUnread(selectedEntry.value);
+    toast.success("已标记为未读");
+  }
+}
+
+function handleMarkAllRead() {
+  markAllRead();
+  toast.success("全部已读");
+}
 
 const studentDetailOpen = ref(false);
 const studentDetailLoading = ref(false);
@@ -81,7 +108,10 @@ watch(selectedEntry, (entry) => {
   supportingDocsError.value = "";
   closeStudentDetail();
   if (!entry) return;
-  markEntryRead(entry.id);
+  if (!readIds.has(getEntryReadKey(entry))) {
+    markEntryRead(entry);
+    toast.success("已标记为已读");
+  }
   if (entry.categoryKey === "approved" || entry.categoryKey === "rejected") {
     markProcessedEntryRead(entry.id);
   }
@@ -118,6 +148,16 @@ function supportingDocIcon(doc) {
   if (["mp4", "mov", "webm"].includes(ext)) return "/assets/icons/video.svg";
   if (["jpeg", "jpg", "png", "heif"].includes(ext)) return "/assets/icons/image.svg";
   return "/assets/icons/doc.svg";
+}
+
+function isDocPreviewable(doc) {
+  const ext = resolveExtension(doc?.name || doc?.url || "");
+  return ["pdf", "xls", "xlsx", "doc", "docx", "jpeg", "jpg", "png", "heif", "mp4", "mov"].includes(ext);
+}
+
+async function openSupportingDocPreview(url) {
+  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
+  window.open(targetUrl, "_blank", "noopener,noreferrer");
 }
 
 function isStructuredChangeValue(value) {
@@ -214,7 +254,7 @@ async function rejectSelectedRequest() {
     await updateReviewRequestStatus({ requestId: selectedEntry.value.id, status: "rejected", reviewer: profile, reason: rejectReason.value, resourceType: selectedEntry.value.resourceType });
     rejectEditorOpen.value = false;
     rejectReason.value = "";
-    localStorage.removeItem("bdai_sc_reject_draft");
+    localStorage.removeItem(`bdai_sc_reject_draft_${selectedEntry.value.id}`);
     router.replace({ path: "/notifications", query: { ...(isClassReviewsMode.value ? { panel: "class-reviews" } : {}), category: activeCategory.value, entry: "" } });
   } catch (error) {
     toastError("请尝试刷新页面,当前请求可能已经被他人更改");
@@ -261,6 +301,11 @@ function viewStudentInfo() {
 function closeStudentDetail() {
   studentDetailOpen.value = false;
   setTimeout(() => { studentDetailItem.value = null; }, 450);
+}
+
+async function openSupportingDoc(url) {
+  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
+  window.open(targetUrl, "_blank", "noopener,noreferrer");
 }
 
 async function handleSupportingDocUpload(file) {
@@ -338,6 +383,14 @@ async function handleRemoveSupportingDoc(index) {
   <main class="dashboard-right notif-view">
     <header class="feed-header">
       <h1 class="feed-title">{{ isClassReviewsMode ? '班级审核' : '通知详情' }}</h1>
+      <button
+        v-if="totalUnreadCount > 0"
+        class="feed-header-mark-all"
+        type="button"
+        @click="handleMarkAllRead"
+      >
+        全部已读
+      </button>
     </header>
 
     <!-- Empty State: no entry selected -->
@@ -354,13 +407,16 @@ async function handleRemoveSupportingDoc(index) {
     <!-- Detail Panel -->
     <section v-else class="notif-detail">
       <Transition name="detail-fade" mode="out-in">
-        <div :key="selectedEntry.id" class="notif-detail-inner">
+        <div :key="getEntryReadKey(selectedEntry)" class="notif-detail-inner">
 
           <!-- Top Bar -->
           <div class="notif-detail-top">
             <div class="notif-detail-badges">
               <span class="notif-badge" :class="selectedEntry.badgeClass">{{ selectedEntry.badgeText }}</span>
               <time class="notif-time">{{ selectedEntry.timeText }}</time>
+              <button class="notif-btn-toggle-read" type="button" @click="toggleUnreadRead">
+                {{ isSelectedUnread ? '标记已读' : '标记未读' }}
+              </button>
             </div>
             <div class="notif-detail-actions">
               <button v-if="canCancelSelected" class="notif-btn is-cancel" type="button" @click="openCancelConfirm">取消申请</button>
@@ -440,7 +496,19 @@ async function handleRemoveSupportingDoc(index) {
                 </template>
                 <template v-else>
                   <img :src="supportingDocIcon(doc)" alt="" class="supporting-docs-file-icon" />
-                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="window.open(resolveMediaUrl(doc.url), '_blank')">{{ doc.name }}</span>
+                  <span class="supporting-docs-file-name" role="button" tabindex="0" @click="isDocPreviewable(doc) ? openSupportingDocPreview(doc.url) : openSupportingDoc(doc.url)">{{ doc.name }}</span>
+                  <button
+                    v-if="isDocPreviewable(doc)"
+                    class="supporting-docs-preview"
+                    type="button"
+                    title="预览"
+                    @click.stop="openSupportingDocPreview(doc.url)"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
                   <button
                     v-if="canCancelSelected"
                     class="supporting-docs-remove"

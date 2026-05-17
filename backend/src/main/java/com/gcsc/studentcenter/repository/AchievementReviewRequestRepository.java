@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface AchievementReviewRequestRepository extends JpaRepository<AchievementReviewRequest, Long> {
-    List<AchievementReviewRequest> findAllByRequester_UsernameOrderByUpdatedAtDesc(String username);
-    List<AchievementReviewRequest> findAllByOrderByUpdatedAtDesc();
+  List<AchievementReviewRequest> findAllByRequester_UsernameOrderByUpdatedAtDesc(String username);
+
+  List<AchievementReviewRequest> findAllByOrderByUpdatedAtDesc();
 }

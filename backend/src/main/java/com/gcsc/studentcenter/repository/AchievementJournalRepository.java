@@ -6,14 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface AchievementJournalRepository extends JpaRepository<AchievementJournal, Long> {
-    List<AchievementJournal> findAllByAuthor_UsernameOrderByCreatedAtDesc(String username);
+  List<AchievementJournal> findAllByAuthor_UsernameOrderByCreatedAtDesc(String username);
 
-    List<AchievementJournal> findAllByStudentNoOrderByCreatedAtDesc(String studentNo);
+  List<AchievementJournal> findAllByStudentNoOrderByCreatedAtDesc(String studentNo);
 
-    List<AchievementJournal> findAllByStudentNameOrderByCreatedAtDesc(String studentName);
+  List<AchievementJournal> findAllByStudentNameOrderByCreatedAtDesc(String studentName);
 
-    List<AchievementJournal> findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(
-        String studentNo,
-        String studentName
-    );
+  List<AchievementJournal> findAllByStudentNoAndStudentNameOrderByCreatedAtDesc(
+      String studentNo,
+      String studentName);
 }

@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from "vue";
+import { computed, reactive, watch } from "vue";
+import { resolveMediaObjectUrl, resolveMediaUrl } from "../utils/media";
 
 const props = defineProps({
   snapshot: {
@@ -20,6 +21,26 @@ const visibleFields = computed(() =>
     : [],
 );
 
+const imageSources = reactive({});
+
+watch(
+  () => props.snapshot?.imageUrls || [],
+  (urls) => {
+    Object.keys(imageSources).forEach((key) => {
+      delete imageSources[key];
+    });
+    urls.forEach((url) => {
+      imageSources[url] = resolveMediaUrl(url);
+      resolveMediaObjectUrl(url)
+        .then((blobUrl) => {
+          imageSources[url] = blobUrl;
+        })
+        .catch(() => {});
+    });
+  },
+  { immediate: true },
+);
+
 function resolveMediaTypeByExtension(name = "") {
   const cleanName = String(name).toLowerCase();
   const parts = cleanName.split(".");
@@ -37,11 +58,12 @@ function attachmentIcon(file) {
   return "/assets/icons/doc.svg";
 }
 
-function openAsset(url) {
+async function openAsset(url) {
   if (!url || typeof window === "undefined") {
     return;
   }
-  window.open(url, "_blank", "noopener,noreferrer");
+  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
+  window.open(targetUrl, "_blank", "noopener,noreferrer");
 }
 </script>
 
@@ -64,7 +86,7 @@ function openAsset(url) {
           type="button"
           @click="openAsset(url)"
         >
-          <img :src="url" alt="成就图片" />
+          <img :src="imageSources[url] || resolveMediaUrl(url)" alt="成就图片" />
         </button>
       </div>
 

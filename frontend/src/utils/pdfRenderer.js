@@ -1,7 +1,9 @@
 // PDF renderer - returns iframe HTML that fills the viewer area
+import { fetchMedia } from "./media";
+
 export async function renderPdf(url) {
   try {
-    const response = await fetch(url);
+    const response = await fetchMedia(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch PDF: ${response.status}`);
     }

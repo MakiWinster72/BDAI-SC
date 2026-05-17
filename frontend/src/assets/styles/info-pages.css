@@ -274,6 +274,7 @@
   background: transparent;
   border: none;
   min-width: 0;
+  overflow: hidden;
 }
 
 .field-full {
@@ -326,19 +327,18 @@
 
 /* ── Date Input Calendar Icon ─────────────────────────────── */
 input[type="date"].info-input {
-  background-image: url("/assets/icons/calendar.svg");
-  background-size: 18px;
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 38px;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* Hide native webkit picker icon — our calendar icon shows through */
+/* Hide native picker indicator — transparent but still clickable */
 input[type="date"].info-input::-webkit-calendar-picker-indicator {
   opacity: 0;
-  width: 20px;
-  height: 20px;
   cursor: pointer;
+}
+
+input[type="date"].info-input::-moz-calendar-picker-indicator {
+  opacity: 0;
 }
 
 /* ── Info Inline ────────────────────────────────────────── */
@@ -519,6 +519,11 @@ input[type="date"].info-input::-webkit-calendar-picker-indicator {
   gap: 6px;
   font-size: 13px;
   color: var(--primary-dark);
+}
+
+.info-choice input[type="checkbox"],
+.info-choice input[type="radio"] {
+  accent-color: var(--primary);
 }
 
 .info-choice-muted {

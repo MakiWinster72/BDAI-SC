@@ -15,24 +15,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/settings/review")
 public class ReviewSettingsController {
 
-    private final ReviewSettingsService reviewSettingsService;
+  private final ReviewSettingsService reviewSettingsService;
 
-    public ReviewSettingsController(ReviewSettingsService reviewSettingsService) {
-        this.reviewSettingsService = reviewSettingsService;
-    }
+  public ReviewSettingsController(ReviewSettingsService reviewSettingsService) {
+    this.reviewSettingsService = reviewSettingsService;
+  }
 
-    @GetMapping
-    public ResponseEntity<ReviewSettingsResponse> getSettings() {
-        return ResponseEntity.ok(reviewSettingsService.getSettings());
-    }
+  @GetMapping
+  public ResponseEntity<ReviewSettingsResponse> getSettings() {
+    return ResponseEntity.ok(reviewSettingsService.getSettings());
+  }
 
-    @PutMapping
-    public ResponseEntity<ReviewSettingsResponse> updateSettings(
-        Authentication authentication,
-        @RequestBody ReviewSettingsRequest request
-    ) {
-        return ResponseEntity.ok(
-            reviewSettingsService.updateSettings(authentication.getName(), request)
-        );
-    }
+  @PutMapping
+  public ResponseEntity<ReviewSettingsResponse> updateSettings(
+      Authentication authentication,
+      @RequestBody ReviewSettingsRequest request) {
+    return ResponseEntity.ok(
+        reviewSettingsService.updateSettings(authentication.getName(), request));
+  }
 }

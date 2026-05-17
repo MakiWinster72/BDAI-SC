@@ -9,133 +9,133 @@ import java.time.LocalDateTime;
 @Table(name = "achievement_certificates")
 public class AchievementCertificate {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "author_id", nullable = false)
-    private AppUser author;
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "author_id", nullable = false)
+  private AppUser author;
 
-    @Column(name = "student_no", length = 32)
-    private String studentNo;
+  @Column(name = "student_no", length = 32)
+  private String studentNo;
 
-    @Column(name = "student_name", length = 64)
-    private String studentName;
+  @Column(name = "student_name", length = 64)
+  private String studentName;
 
-    @Column(name = "certificate_type", length = 64)
-    private String certificateType;
+  @Column(name = "certificate_type", length = 64)
+  private String certificateType;
 
-    @Column(name = "certificate_name", nullable = false, length = 255)
-    private String certificateName;
+  @Column(name = "certificate_name", nullable = false, length = 255)
+  private String certificateName;
 
-    @Column(name = "obtain_date")
-    private LocalDate obtainDate;
+  @Column(name = "obtain_date")
+  private LocalDate obtainDate;
 
-    @Column(name = "remark", columnDefinition = "TEXT")
-    private String remark;
+  @Column(name = "remark", columnDefinition = "TEXT")
+  private String remark;
 
-    @Column(name = "image_url", length = 255)
-    private String imageUrl;
+  @Column(name = "image_url", length = 255)
+  private String imageUrl;
 
-    @Column(name = "_image_urls", columnDefinition = "TEXT")
-    private String imageUrls;
+  @Column(name = "_image_urls", columnDefinition = "TEXT")
+  private String imageUrls;
 
-    @Column(name = "_attachments", columnDefinition = "TEXT")
-    private String attachments;
+  @Column(name = "_attachments", columnDefinition = "TEXT")
+  private String attachments;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+  @Column(name = "created_at", nullable = false)
+  private LocalDateTime createdAt;
 
-    public Long getId() {
-        return id;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public AppUser getAuthor() {
-        return author;
-    }
+  public AppUser getAuthor() {
+    return author;
+  }
 
-    public void setAuthor(AppUser author) {
-        this.author = author;
-    }
+  public void setAuthor(AppUser author) {
+    this.author = author;
+  }
 
-    public String getStudentNo() {
-        return studentNo;
-    }
+  public String getStudentNo() {
+    return studentNo;
+  }
 
-    public void setStudentNo(String studentNo) {
-        this.studentNo = studentNo;
-    }
+  public void setStudentNo(String studentNo) {
+    this.studentNo = studentNo;
+  }
 
-    public String getStudentName() {
-        return studentName;
-    }
+  public String getStudentName() {
+    return studentName;
+  }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
+  public void setStudentName(String studentName) {
+    this.studentName = studentName;
+  }
 
-    public String getCertificateType() {
-        return certificateType;
-    }
+  public String getCertificateType() {
+    return certificateType;
+  }
 
-    public void setCertificateType(String certificateType) {
-        this.certificateType = certificateType;
-    }
+  public void setCertificateType(String certificateType) {
+    this.certificateType = certificateType;
+  }
 
-    public String getCertificateName() {
-        return certificateName;
-    }
+  public String getCertificateName() {
+    return certificateName;
+  }
 
-    public void setCertificateName(String certificateName) {
-        this.certificateName = certificateName;
-    }
+  public void setCertificateName(String certificateName) {
+    this.certificateName = certificateName;
+  }
 
-    public LocalDate getObtainDate() {
-        return obtainDate;
-    }
+  public LocalDate getObtainDate() {
+    return obtainDate;
+  }
 
-    public void setObtainDate(LocalDate obtainDate) {
-        this.obtainDate = obtainDate;
-    }
+  public void setObtainDate(LocalDate obtainDate) {
+    this.obtainDate = obtainDate;
+  }
 
-    public String getRemark() {
-        return remark;
-    }
+  public String getRemark() {
+    return remark;
+  }
 
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
+  public void setRemark(String remark) {
+    this.remark = remark;
+  }
 
-    public String getImageUrl() {
-        return imageUrl;
-    }
+  public String getImageUrl() {
+    return imageUrl;
+  }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
+  }
 
-    public String getImageUrls() {
-        return imageUrls;
-    }
+  public String getImageUrls() {
+    return imageUrls;
+  }
 
-    public void setImageUrls(String imageUrls) {
-        this.imageUrls = imageUrls;
-    }
+  public void setImageUrls(String imageUrls) {
+    this.imageUrls = imageUrls;
+  }
 
-    public String getAttachments() {
-        return attachments;
-    }
+  public String getAttachments() {
+    return attachments;
+  }
 
-    public void setAttachments(String attachments) {
-        this.attachments = attachments;
-    }
+  public void setAttachments(String attachments) {
+    this.attachments = attachments;
+  }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 }

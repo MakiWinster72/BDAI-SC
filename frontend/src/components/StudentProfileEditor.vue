@@ -4,6 +4,7 @@ import { regionData, codeToText } from "element-china-area-data";
 import ExportPdfButton from "./ExportPdfButton.vue";
 import { uploadMedia } from "../api/upload";
 import { useToast } from "../composables/useToast";
+import { useStudentPdfExport } from "../composables/useStudentPdfExport";
 import {
   buildClassName,
   buildDormRoom,
@@ -33,10 +34,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  editing: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emit = defineEmits(["saved", "openAchievements"]);
+const emit = defineEmits(["saved", "openAchievements", "start-edit", "cancel-edit"]);
 const { success: toastSuccess, error: toastError } = useToast();
+const { exportResumePdf } = useStudentPdfExport();
 
 const FIXED_COLLEGE = "大数据与人工智能学院";
 
@@ -270,6 +276,17 @@ watch(
     isEditing.value = false;
   },
   { immediate: true },
+);
+
+watch(
+  () => props.editing,
+  (editing) => {
+    if (editing && !isEditing.value) {
+      enterEdit();
+    } else if (!editing && isEditing.value) {
+      cancelEdit();
+    }
+  },
 );
 
 watch(
@@ -1269,6 +1286,30 @@ function applyProfileResponse(data) {
   applyEducationExperiences(source.educationExperiences);
   applyCadreExperiences(source.cadreExperiences);
 }
+
+async function triggerPdfExport() {
+  const student = buildPdfStudentSnapshot();
+  if (!student) {
+    toastError("PDF 导出失败");
+    return;
+  }
+  try {
+    await exportResumePdf({
+      student,
+      resolveMediaUrl: props.resolveMediaUrl,
+    });
+    toastSuccess("PDF 导出成功！");
+  } catch (err) {
+    console.error("[StudentProfileEditor] PDF export error:", err);
+    toastError("PDF 导出失败");
+  }
+}
+
+defineExpose({
+  triggerSave: confirmEdit,
+  cancelEdit: cancelEdit,
+  triggerPdfExport,
+});
 </script>
 
 <template>

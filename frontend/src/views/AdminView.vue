@@ -4,7 +4,7 @@ import PaginationBar from "../components/PaginationBar.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
-import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses } from "../api/admin";
+import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses, getStorageAnalysis, deleteUserStorage } from "../api/admin";
 import { useToast } from "../composables/useToast";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { loadUser } from "../utils/userStorage";
@@ -36,6 +36,58 @@ const backupForm = reactive({
 });
 const backupLoading = shallowRef(false);
 const restoreLoading = shallowRef(false);
+
+// Storage analysis
+const storageData = shallowRef(null);
+const storageLoading = shallowRef(false);
+const storageError = shallowRef("");
+
+async function fetchStorageAnalysis() {
+  storageLoading.value = true;
+  storageError.value = "";
+  try {
+    const res = await getStorageAnalysis();
+    storageData.value = res.data;
+  } catch (e) {
+    storageError.value = "存储分析加载失败";
+  } finally {
+    storageLoading.value = false;
+  }
+}
+
+const storageDeleting = shallowRef(new Set());
+
+function storageLabel(item) {
+  if (item.userExists) {
+    return item.displayName || item.username;
+  }
+  return "(已删除) #" + item.folderName;
+}
+
+async function handleDeleteStorage(item) {
+  const label = storageLabel(item);
+  if (!confirm("确定要删除「" + label + "」的全部附件文件吗？\n\n此操作不可恢复，将删除磁盘上的 " + item.sizeFormatted + " 文件。")) {
+    return;
+  }
+  storageDeleting.value = new Set([...storageDeleting.value, item.userId]);
+  try {
+    await deleteUserStorage(item.userId);
+    success("已删除「" + label + "」的附件");
+    await fetchStorageAnalysis();
+  } catch (e) {
+    error("删除失败");
+  } finally {
+    const s = new Set(storageDeleting.value);
+    s.delete(item.userId);
+    storageDeleting.value = s;
+  }
+}
+
+function barWidth(size, max) {
+  if (!max || max === 0) return "0%";
+  return Math.max(1, (size / max) * 100) + "%";
+}
+
 const { success, error } = useToast();
 
 async function handleBackupDb() {
@@ -216,6 +268,14 @@ function toggleUserSelect(id) {
 function selectAllPage() {
   selectedUserIds.value = new Set(users.value.map(u => u.id));
   allFilteredSelected.value = false;
+}
+
+function toggleSelectAllPage() {
+  if (allPageSelected.value) {
+    selectedUserIds.value = new Set();
+  } else {
+    selectAllPage();
+  }
 }
 
 async function selectAllFiltered() {
@@ -776,7 +836,7 @@ watch([userSearch, userRoleFilter], () => {
       <div :key="activeSection" class="admin-content">
 
         <!-- Upload Section -->
-        <div v-if="activeSection === 'upload'" class="admin-panel-grid">
+        <div v-if="activeSection === 'upload'" class="upload-section">
           <!-- Form Card -->
           <div class="card admin-card">
             <div class="card-header">
@@ -788,7 +848,7 @@ watch([userSearch, userRoleFilter], () => {
               </div>
               <div>
                 <div class="card-kicker">系统设置</div>
-                <h2 class="card-title">成就页面上传限制</h2>
+                <h2 class="card-title">成果页面限制</h2>
               </div>
             </div>
             <div class="card-body">
@@ -905,12 +965,52 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
               </div>
 
-              <!-- Supporting Docs Block -->
-              <div class="setting-group">
-                <div class="setting-group-label">
-                  <span class="group-index">03</span>
-                  <span class="group-title">证明资料</span>
+              <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
+                  <svg class="msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  {{ activeErrorMessage }}
                 </div>
+
+              <!-- Actions -->
+              <div class="card-actions">
+                <button
+                  class="btn btn-ghost"
+                  type="button"
+                  @click="syncFormFromSettings"
+                >
+                  重置
+                </button>
+                <button
+                  class="btn btn-primary"
+                  type="button"
+                  :disabled="activeSaving"
+                  @click="handleSubmit"
+                >
+                  <svg v-if="activeSaving" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
+                  </svg>
+                  {{ activeSaving ? "保存中…" : "保存设置" }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 证明资料 Card -->
+          <div class="card admin-card">
+            <div class="card-header">
+              <div class="card-header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <div class="card-kicker">系统设置</div>
+                <h2 class="card-title">证明资料</h2>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="setting-group">
                 <div class="field-row">
                   <div class="field-cell">
                     <label class="field-label" for="sd-count">最多上传数量</label>
@@ -944,32 +1044,7 @@ watch([userSearch, userRoleFilter], () => {
                   </div>
                 </div>
               </div>
-
-              <!-- Feedback -->
-              <Transition name="msg-fade">
-                <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
-                  <svg class="msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  {{ activeErrorMessage }}
-                </div>
-                <div v-else-if="saveMessage" class="msg-banner success" role="status">
-                  <svg class="msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ saveMessage }}
-                </div>
-              </Transition>
-
-              <!-- Actions -->
               <div class="card-actions">
-                <button
-                  class="btn btn-ghost"
-                  type="button"
-                  @click="syncFormFromSettings"
-                >
-                  重置
-                </button>
                 <button
                   class="btn btn-primary"
                   type="button"
@@ -981,70 +1056,6 @@ watch([userSearch, userRoleFilter], () => {
                   </svg>
                   {{ activeSaving ? "保存中…" : "保存设置" }}
                 </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Preview Card -->
-          <div class="card admin-card preview-card">
-            <div class="card-header">
-              <div class="card-header-icon preview-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">实时预览</div>
-                <h2 class="card-title">用户侧展示效果</h2>
-              </div>
-            </div>
-            <div class="card-body preview-shell">
-              <!-- Image Preview -->
-              <div class="preview-box" aria-hidden="true">
-                <div class="preview-box-header">
-                  <span class="preview-box-title">图片</span>
-                  <span class="preview-box-sub">{{ imageSubtitle }}</span>
-                </div>
-                <div class="preview-empty">
-                  <div class="preview-add-btn">+</div>
-                  <span class="preview-empty-text">点击添加图片</span>
-                </div>
-              </div>
-              <!-- Attachment Preview -->
-              <div class="preview-box" aria-hidden="true">
-                <div class="preview-box-header">
-                  <span class="preview-box-title">附件</span>
-                  <span class="preview-box-sub">{{ attachmentSubtitle }}</span>
-                </div>
-                <div class="format-list">
-                  <div
-                    v-for="item in enabledPreviewTypes"
-                    :key="item.key"
-                    class="format-chip"
-                  >
-                    <img class="format-chip-icon" :src="item.icon" alt="" aria-hidden="true" />
-                    <span class="format-chip-label">{{ item.label }}</span>
-                    <span class="format-chip-exts">{{ item.exts.slice(0, 3).join("/") }}</span>
-                  </div>
-                  <div v-if="!enabledPreviewTypes.length" class="preview-empty-text">
-                    暂无可用附件类型
-                  </div>
-                </div>
-                <div class="preview-tip">
-                  {{ attachmentTypeSummary || "暂无可用附件类型" }} · 单个不超过 {{ form.attachmentMaxSizeMb }}MB
-                </div>
-              </div>
-              <!-- Supporting Docs Preview -->
-              <div class="preview-box" aria-hidden="true">
-                <div class="preview-box-header">
-                  <span class="preview-box-title">证明资料</span>
-                  <span class="preview-box-sub">{{ supportingDocSubtitle }}</span>
-                </div>
-                <div class="preview-empty">
-                  <div class="preview-add-btn">+</div>
-                  <span class="preview-empty-text">学生在审核通知中上传证明资料</span>
-                </div>
               </div>
             </div>
           </div>
@@ -1152,21 +1163,12 @@ watch([userSearch, userRoleFilter], () => {
                 </div>
               </div>
 
-              <!-- Feedback -->
-              <Transition name="msg-fade">
-                <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
+              <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
                   <svg class="msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                   {{ activeErrorMessage }}
                 </div>
-                <div v-else-if="saveMessage" class="msg-banner success" role="status">
-                  <svg class="msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ saveMessage }}
-                </div>
-              </Transition>
 
               <!-- Actions -->
               <div class="card-actions">
@@ -1294,10 +1296,10 @@ watch([userSearch, userRoleFilter], () => {
                       <th scope="col" class="col-checkbox">
                         <input
                           type="checkbox"
-                          :checked="allFilteredSelected"
-                          :indeterminate="someSelected && !allFilteredSelected"
+                          :checked="allPageSelected"
+                          :indeterminate="someSelected && !allPageSelected"
                           aria-label="全选"
-                          @change="selectAllPage"
+                          @change="toggleSelectAllPage"
                         />
                       </th>
                       <th scope="col" style="width: 130px;">用户名</th>
@@ -1490,6 +1492,103 @@ watch([userSearch, userRoleFilter], () => {
                       {{ restoreLoading ? "恢复中…" : "恢复" }}
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Storage Analysis Card -->
+          <div class="admin-card storage-card">
+            <div class="card-header">
+              <div class="card-header-icon storage-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v1m3-2v2m3-3v3" />
+                </svg>
+              </div>
+              <div>
+                <div class="card-kicker">存储分析</div>
+                <h2 class="card-title">用户附件占用</h2>
+              </div>
+              <button
+                class="btn btn-ghost storage-refresh-btn"
+                type="button"
+                :disabled="storageLoading"
+                @click="fetchStorageAnalysis"
+              >
+                <svg v-if="storageLoading" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
+                </svg>
+                <svg v-else class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                刷新
+              </button>
+            </div>
+            <div class="card-body storage-card-body">
+              <!-- Summary -->
+              <div v-if="storageData" class="storage-summary">
+                <div class="storage-summary-item">
+                  <span class="storage-summary-label">总占用</span>
+                  <span class="storage-summary-value">{{ storageData.totalFormatted }}</span>
+                </div>
+                <div class="storage-summary-item">
+                  <span class="storage-summary-label">用户数</span>
+                  <span class="storage-summary-value">{{ storageData.totalUsers }} 个</span>
+                </div>
+              </div>
+
+              <!-- Loading -->
+              <div v-if="storageLoading" class="storage-center-state">
+                <svg class="loading-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
+                </svg>
+                <span>扫描中…</span>
+              </div>
+
+              <!-- Error -->
+              <div v-else-if="storageError" class="storage-center-state">
+                <span>{{ storageError }}</span>
+              </div>
+
+              <!-- Empty -->
+              <div v-else-if="!storageData || !storageData.entries.length" class="storage-center-state">
+                <span>暂无数据，点击"刷新"开始扫描</span>
+              </div>
+
+              <!-- Bar Chart -->
+              <div v-else class="storage-chart">
+                <div
+                  v-for="(item, idx) in storageData.entries"
+                  :key="item.userId"
+                  class="storage-bar-row"
+                  :class="{ 'storage-bar-row--odd': idx % 2 === 1 }"
+                >
+                  <div class="storage-bar-label">
+                    <span class="storage-bar-displayname">{{ storageLabel(item) }}</span>
+                    <span v-if="item.displayName" class="storage-bar-username">{{ item.username }}</span>
+                  </div>
+                  <div class="storage-bar-track-wrap">
+                    <div
+                      class="storage-bar-fill"
+                      :style="{ width: barWidth(item.sizeBytes, storageData.entries[0].sizeBytes) }"
+                    ></div>
+                  </div>
+                  <span class="storage-bar-size">{{ item.sizeFormatted }}</span>
+                  <button
+                    class="storage-delete-btn"
+                    type="button"
+                    :disabled="storageDeleting.has(item.userId)"
+                    :aria-label="'删除' + storageLabel(item) + '的附件'"
+                    @click="handleDeleteStorage(item)"
+                  >
+                    <svg v-if="storageDeleting.has(item.userId)" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1760,14 +1859,14 @@ watch([userSearch, userRoleFilter], () => {
             <div class="example-image-item">
               <span class="example-image-label">xlsx 格式示例</span>
               <img
-                src="https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-04-26%2FMiniMax-M2.7%2F2035402385077047958%2F19dc31f5b60a75cfc31c26d9326c4ae3e983b11abf35e53eec1b66827cb9f233..png?Expires=1777278678&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=s73CeKoLgCEsSamacaRtMvhFGa0%3D"
+                src="/assets/images/xlsx格式示例.png"
                 alt="xlsx 格式示例"
               />
             </div>
             <div class="example-image-item">
               <span class="example-image-label">csv/txt 格式示例</span>
               <img
-                src="https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-04-26%2FMiniMax-M2.7%2F2035402385077047958%2F8eed82b4e7e942cbb4a0f56e3ba15ac98e97fca84dcba98f7cbb41bc6a448ccd..png?Expires=1777278679&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=YYfccG4eUdYEQyiFclPCu7VrXCQ%3D"
+                src="/assets/images/csv-txt格式示例.png"
                 alt="csv/txt 格式示例"
               />
             </div>
@@ -1827,6 +1926,10 @@ watch([userSearch, userRoleFilter], () => {
   gap: 16px;
   width: 280px;
   padding-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
 }
 
 .example-image-item {
@@ -1844,8 +1947,8 @@ watch([userSearch, userRoleFilter], () => {
 .example-image-item img {
   width: 100%;
   border-radius: 8px;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+  border: 1px solid rgba(100, 12, 114, 0.1);
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.12);
 }
 
 .class-select-hint {

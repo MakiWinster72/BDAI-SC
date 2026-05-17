@@ -353,8 +353,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(61, 7, 112, 0.35);
-  backdrop-filter: blur(8px);
+  background: rgba(45, 26, 62, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
@@ -427,9 +428,26 @@
 }
 
 @media (max-width: 520px) {
+  .sheet-overlay {
+    align-items: flex-end;
+    justify-content: center;
+  }
+
   .sheet-modal {
     max-width: 100%;
-    border-radius: 20px 20px 0 0;
+    width: 100%;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateY(100%) scale(1);
+    border-radius: 24px 24px 0 0;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+    max-height: 90vh;
+  }
+
+  .sheet-overlay.open .sheet-modal {
+    transform: translateY(0) scale(1);
   }
 }
 

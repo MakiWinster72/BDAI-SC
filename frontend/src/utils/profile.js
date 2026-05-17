@@ -91,16 +91,12 @@ export function parseDormRoom(rawValue) {
   if (!raw) {
     return { floor: "", roomNo: "" };
   }
-  const digits = raw.replace(/\D/g, "");
-  if (!digits) {
-    return { floor: "", roomNo: "" };
-  }
-  if (digits.length <= 2) {
-    return { floor: "", roomNo: digits };
-  }
-  const floor = digits.slice(0, digits.length - 2);
-  const roomNo = digits.slice(-2);
-  return { floor, roomNo };
+  const floorMatch = raw.match(/^(\d+)层/);
+  const roomMatch = raw.match(/(\d+)号$/);
+  return {
+    floor: floorMatch ? floorMatch[1] : "",
+    roomNo: roomMatch ? roomMatch[1] : "",
+  };
 }
 
 /**

@@ -42,7 +42,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["preview", "edit", "delete"]);
+const emit = defineEmits(["preview", "download", "edit", "delete"]);
 const activeSchema = computed(() => achievementDetailSchemas[props.item.category] || null);
 const hasSchemaDetail = computed(() => Boolean(activeSchema.value));
 
@@ -180,12 +180,11 @@ function openAttachmentPreview(url) {
             >
               查看
             </a>
-            <a
+            <button
               class="attachment-download"
-              :href="file.url"
-              download
-              rel="noopener noreferrer"
+              type="button"
               title="下载"
+              @click="emit('download', file)"
             >
               <svg
                 width="14"
@@ -199,7 +198,7 @@ function openAttachmentPreview(url) {
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-            </a>
+            </button>
           </div>
         </div>
       </div>

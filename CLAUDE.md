@@ -14,12 +14,12 @@ BDAI_SC Student Center - Full-stack web application for student achievement mana
 
 ### Backend
 ```bash
+source .env          # required â€” .env loaded via spring.config.import
 cd backend
 mvn spring-boot:run          # Run application
-mvn clean package             # Build JAR
 mvn clean package -DskipTests # Build without tests
-mvn test                      # Run all tests
-mvn test -Dtest=ClassName     # Run single test class
+mvn test                      # Run all tests (none currently exist â€” src/test/ is empty)
+mvn test -Dtest=ClassName    # Run single test class
 mvn test -Dtest=ClassName#methodName  # Run single test method
 ```
 
@@ -102,10 +102,13 @@ Global styles in `frontend/src/assets/styles/`:
 - Controlled vocabulary for fields like `politicalStatus`, `ethnicity`, `currentEducationLevel`
 
 ### Security Configuration
+- Config: `backend/src/main/resources/application.yml` loads `.env` via `spring.config.import` (searches `backend/` then `../`)
+- **Always `source .env`** from project root before running backend â€” env vars are not auto-loaded by Maven
 - Session: Stateless (JWT-based)
 - Password: BCrypt encoding via `PasswordEncoder` bean
 - CORS: Allowed origins include `localhost:5173`, `127.0.0.1:5173`, and local network patterns (`192.168.*.*`, `10.*.*.*`, `172.*.*.*`)
 - JWT secret configured in `application.yml` (`security.jwt.secret`)
+- Default admin account created on first startup: username `bdai`, password `bdai2026` (change after first login)
 
 ### File Uploads
 - Max size: 200MB (configured in `application.yml`)
@@ -126,8 +129,15 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar â€
 ### Backend
 - Database tables/columns: snake_case (`student_profiles`, `display_name`)
 - Foreign keys: `table_name_id` pattern
-- Role names in DB become `ROLE_<name>` in Spring Security
+- Role names in DB become `ROLE_<role>` in Spring Security (STUDENT, TEACHER, ADMIN, CADRE)
 - Use `@Valid` on DTOs for validation
+
+### Review/Approval Workflow
+1. Student submits review request with `payloadSnapshot` and `changes`
+2. TEACHER/ADMIN sees pending entry in NotificationsView
+3. Approve: sets status to `approved`; Reject: requires reason
+4. Cancel: requester can cancel own pending request
+5. Auto-approve: if `reviewSettings.achievementReviewAutoApprove` or `profileReviewAutoApprove`
 
 ### Frontend
 - Views in `frontend/src/views/`
@@ -139,7 +149,6 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar â€
 ### Design & Animation Patterns
 - Dialogs use `sheet-overlay` / `sheet-modal` pattern from `dialogs.css` â€” frosted glass backdrop with `z-index: 1000`, modal at `z-index: 1010+`
 - Animation timing: `0.42s cubic-bezier(0.22, 1, 0.36, 1)` for transform, `0.38s ease` for opacity
-- See `docs/animation.md` for full animation guidelines
 
 ## Git Workflow
 - Features: `feat/feature-name`
@@ -147,6 +156,3 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar â€
 - Pages: `page/page-name`
 - Style: `style/description`
 - Commit style: Present tense, verb first (e.g., "Add login page")
-
-## Project Roadmap
-See `TODO.md` for planned features including: xlsx/pdf/csv export, dark mode, mobile optimizations (capsule UI, sidebar).

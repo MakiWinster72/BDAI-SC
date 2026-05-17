@@ -84,6 +84,7 @@
         :is-allowed-image="isAllowedImage"
         :is-pptx-file="isPptxFile"
         @preview="showPreview"
+        @download="downloadAttachment"
         @edit="editFromView"
         @delete="openDelete"
       />
@@ -272,7 +273,10 @@
               :key="field.key"
               class="field-row"
             >
-              <label class="field-label">{{ field.label }}</label>
+              <label class="field-label">
+                {{ field.label }}
+                <span v-if="field.hint" class="field-label-hint" :title="field.hint">?</span>
+              </label>
               <input
                 v-if="field.kind === 'input'"
                 v-model="form.fields[field.key]"
@@ -630,6 +634,9 @@ import {
   isPdfFile,
   isPptxFile,
   parseJsonArray,
+  downloadMedia,
+  resolveMediaObjectUrl,
+  revokePrivateMediaObjectUrls,
 } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
 import { dedupeAchievements, attachmentIcon } from "../utils/achievement";
@@ -1303,7 +1310,9 @@ function normalizeAchievement(item) {
     previewFields: fieldLines.slice(0, 2),
     image: imageUrls[0] || "",
     imageUrls,
+    rawImageUrls: imageUrls,
     attachments,
+    rawAttachments: attachments,
     category: item.category || "",
   };
 }
@@ -1339,11 +1348,11 @@ function editFromView() {
   editId.value = item.id;
   form.category = item.category || "";
   form.fields = { ...(item.fields || {}) };
-  form.imageUrls = (item.imageUrls || [])
+  form.imageUrls = (item.rawImageUrls || item.imageUrls || [])
     .map((url) => stripMediaUrl(url))
     .filter(Boolean);
   form.imageUrl = form.imageUrls[0] || "";
-  form.attachments = (item.attachments || []).map((entry) => ({
+  form.attachments = (item.rawAttachments || item.attachments || []).map((entry) => ({
     ...entry,
     url: stripMediaUrl(entry.url),
   }));
@@ -1399,6 +1408,15 @@ function showPreview(urls, index = 0) {
       previewType.value = "image";
     }
   }
+}
+
+function downloadAttachment(file) {
+  if (!file?.url) {
+    return;
+  }
+  downloadMedia(file.url, file.name || "附件").catch(() => {
+    errorMessage.value = "附件下载失败";
+  });
 }
 
 async function loadDocumentPreview(url) {
@@ -1558,7 +1576,7 @@ async function fetchAchievements() {
     }
     const { data } = await getAchievements(params);
     achievements.value = Array.isArray(data)
-      ? dedupeAchievements(data.map(normalizeAchievement))
+      ? await hydrateAchievementMedia(dedupeAchievements(data.map(normalizeAchievement)))
       : [];
     errorMessage.value = "";
   } catch (err) {
@@ -1615,12 +1633,12 @@ function applyFieldDefaults() {
 function resolveImageUrls(item) {
   const urls = [];
   if (item?.imageUrl) {
-    urls.push(resolveMediaUrl(item.imageUrl));
+    urls.push(stripMediaUrl(item.imageUrl));
   }
   const rawField = item?.fields?.[IMAGE_URLS_FIELD];
   const parsed = parseJsonArray(rawField);
   parsed.forEach((url) => {
-    const resolved = resolveMediaUrl(url);
+    const resolved = stripMediaUrl(url);
     if (resolved && !urls.includes(resolved)) {
       urls.push(resolved);
     }
@@ -1633,11 +1651,31 @@ function resolveAttachments(fields = {}) {
   const parsed = parseJsonArray(raw);
   return parsed
     .map((item) => ({
-      url: resolveMediaUrl(item.url),
+      url: stripMediaUrl(item.url),
       name: item.name || item.originalName || "附件",
       mediaType: item.mediaType || "",
     }))
     .filter((item) => item.url);
+}
+
+async function hydrateAchievementMedia(list) {
+  await Promise.all(
+    list.map(async (item) => {
+      item.imageUrls = await Promise.all(
+        (item.rawImageUrls || item.imageUrls || []).map((url) =>
+          resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url)),
+        ),
+      );
+      item.image = item.imageUrls[0] || "";
+      item.attachments = await Promise.all(
+        (item.rawAttachments || item.attachments || []).map(async (file) => ({
+          ...file,
+          url: await resolveMediaObjectUrl(file.url).catch(() => resolveMediaUrl(file.url)),
+        })),
+      );
+    }),
+  );
+  return list;
 }
 
 function handleUploadSettingsUpdated(event) {
@@ -1681,6 +1719,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  revokePrivateMediaObjectUrls();
   window.removeEventListener(
     "achievement-upload-settings-updated",
     handleUploadSettingsUpdated,

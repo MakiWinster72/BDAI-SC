@@ -94,14 +94,21 @@ function onFieldChange(key, e) {
         </label>
         <label class="record-field record-field-level">
           <span class="info-label">学历</span>
-          <input
+          <select
             :value="item.educationLevel"
             class="info-input"
-            type="text"
-            placeholder="学历"
             :disabled="disabled"
             @change="onFieldChange('educationLevel', $event)"
-          />
+          >
+            <option disabled value="">选择学历</option>
+            <option value="小学">小学</option>
+            <option value="初中">初中</option>
+            <option value="高中">高中</option>
+            <option value="中专">中专</option>
+            <option value="大专">大专</option>
+            <option value="本科">本科</option>
+            <option value="硕士">硕士</option>
+          </select>
         </label>
         <label class="record-field record-field-witness">
           <span class="info-label">证明人</span>

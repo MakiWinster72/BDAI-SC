@@ -23,10 +23,6 @@ const props = defineProps({
     type: String,
     default: "导出预览",
   },
-  filenamePrefix: {
-    type: String,
-    default: "students_export",
-  },
   emptyMessage: {
     type: String,
     default: "请先选择学生再导出。",
@@ -67,10 +63,36 @@ const previewRows = ref([]);
 const previewAchievementData = ref([]);
 let previewRequestId = 0;
 
+// Dialog drag to close
+const dialogTouchStartY = ref(0);
+const dialogTouchCurrentY = ref(0);
+const dialogIsDragging = ref(false);
+const dialogDragTranslateY = ref(0);
+const DIALOG_DRAG_THRESHOLD = 80;
+
+// Preview panel drag to close
+const previewTouchStartY = ref(0);
+const previewTouchCurrentY = ref(0);
+const previewIsDragging = ref(false);
+const previewDragTranslateY = ref(0);
+const PREVIEW_DRAG_THRESHOLD = 80;
+
 const showPdfOption = computed(
   () => props.enablePdf && typeof props.exportPdf === "function",
 );
 const showFieldSelection = computed(() => exportFormat.value !== "pdf");
+
+const dialogSheetStyle = computed(() => ({
+  transform: dialogDragTranslateY.value > 0 ? `translateY(${dialogDragTranslateY.value}px) scale(0.97)` : "",
+  transition: dialogIsDragging.value ? "none" : "",
+  "transform-origin": "bottom center",
+}));
+
+const previewSheetStyle = computed(() => ({
+  transform: previewDragTranslateY.value > 0 ? `translateY(${previewDragTranslateY.value}px) scale(0.97)` : "",
+  transition: previewIsDragging.value ? "none" : "",
+  "transform-origin": "bottom center",
+}));
 
 const isAllSelected = computed(() =>
   exportGroups.every((group) =>
@@ -147,6 +169,55 @@ watch(
 
 function requestClose() {
   emit("close");
+}
+
+// Dialog drag handlers
+function handleDialogTouchStart(e) {
+  dialogTouchStartY.value = e.touches[0].clientY;
+  dialogTouchCurrentY.value = dialogTouchStartY.value;
+  dialogIsDragging.value = true;
+}
+
+function handleDialogTouchMove(e) {
+  if (!dialogIsDragging.value) return;
+  const delta = e.touches[0].clientY - dialogTouchStartY.value;
+  if (delta > 0) {
+    dialogDragTranslateY.value = delta;
+  }
+}
+
+function handleDialogTouchEnd() {
+  if (!dialogIsDragging.value) return;
+  const dragDistance = dialogDragTranslateY.value;
+  dialogIsDragging.value = false;
+  dialogDragTranslateY.value = 0;
+  if (dragDistance > DIALOG_DRAG_THRESHOLD) {
+    requestClose();
+  }
+}
+
+// Preview panel drag handlers
+function handlePreviewTouchStart(e) {
+  previewTouchStartY.value = e.touches[0].clientY;
+  previewTouchCurrentY.value = previewTouchStartY.value;
+  previewIsDragging.value = true;
+}
+
+function handlePreviewTouchMove(e) {
+  if (!previewIsDragging.value) return;
+  const delta = e.touches[0].clientY - previewTouchStartY.value;
+  if (delta > 0) {
+    previewDragTranslateY.value = delta;
+  }
+}
+
+function handlePreviewTouchEnd() {
+  if (!previewIsDragging.value) return;
+  if (previewDragTranslateY.value > PREVIEW_DRAG_THRESHOLD) {
+    closeExportPreview();
+  }
+  previewIsDragging.value = false;
+  previewDragTranslateY.value = 0;
 }
 
 function toggleGroupSelection(group, checked) {
@@ -247,9 +318,7 @@ async function handleConfirm() {
     if (exportFormat.value === "pdf") {
       await props.exportPdf(safeRows);
     } else {
-      await exportStudentRowsToExcel(safeRows, selectedKeys, {
-        filenamePrefix: props.filenamePrefix,
-      });
+      await exportStudentRowsToExcel(safeRows, selectedKeys);
     }
     if (props.onExportSuccess) {
       props.onExportSuccess();
@@ -278,12 +347,19 @@ async function handleConfirm() {
       open,
       closing: exportDialogClosing,
       'split-right': exportPreviewOpen,
+      dragging: dialogIsDragging,
     }"
     role="dialog"
     aria-modal="true"
     :aria-label="title"
+    :style="dialogSheetStyle"
   >
-    <header class="export-dialog-header">
+    <header
+      class="export-dialog-header"
+      @touchstart="handleDialogTouchStart"
+      @touchmove="handleDialogTouchMove"
+      @touchend="handleDialogTouchEnd"
+    >
       <div class="export-dialog-title-row">
         <h2 class="export-dialog-title">{{ title }}</h2>
         <label class="export-all-toggle">
@@ -408,12 +484,18 @@ async function handleConfirm() {
   <!-- Preview Panel: slides in from the right when split mode -->
   <section
     class="export-preview-panel"
-    :class="{ open: exportPreviewOpen, closing: exportPreviewClosing }"
+    :class="{ open: exportPreviewOpen, closing: exportPreviewClosing, dragging: previewIsDragging }"
     role="dialog"
     aria-modal="true"
     :aria-label="previewTitle"
+    :style="previewSheetStyle"
   >
-    <header class="export-preview-header">
+    <header
+      class="export-preview-header"
+      @touchstart="handlePreviewTouchStart"
+      @touchmove="handlePreviewTouchMove"
+      @touchend="handlePreviewTouchEnd"
+    >
       <h2 class="export-preview-title">{{ previewTitle }}</h2>
       <button class="ghost-button" type="button" @click="closeExportPreview" aria-label="关闭预览">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -479,7 +561,7 @@ async function handleConfirm() {
   left: 50%;
   transform: translate(-50%, calc(-50% + 48px)) scale(0.97);
   width: min(860px, calc(100vw - 32px));
-  max-height: 85vh;
+  max-height: 80vh;
   border-radius: 22px;
   border: 1px solid var(--line);
   background: var(--card);
@@ -492,6 +574,7 @@ async function handleConfirm() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  will-change: transform;
   transition:
     transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.38s ease,
@@ -508,6 +591,10 @@ async function handleConfirm() {
 .export-dialog.closing {
   transform: translate(-50%, calc(-50% + 48px)) scale(0.97);
   opacity: 0;
+}
+
+.export-dialog.dragging {
+  transition: none !important;
 }
 
 /* Split mode: dialog slides to left, preview panel appears on right */
@@ -777,6 +864,10 @@ async function handleConfirm() {
   opacity: 0;
 }
 
+.export-preview-panel.dragging {
+  transition: none !important;
+}
+
 /* ── Preview Header ─────────────────────── */
 .export-preview-header {
   display: flex;
@@ -925,12 +1016,14 @@ async function handleConfirm() {
 @media (max-width: 1100px) {
   .export-preview-panel {
     top: auto;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    width: 100%;
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    margin: 0 auto;
     height: 70vh;
-    border-radius: 22px 22px 0 0;
+    max-height: 80vh;
+    border-radius: 22px;
     transform: translateY(100%) scale(0.97);
   }
 
@@ -946,12 +1039,13 @@ async function handleConfirm() {
 @media (max-width: 520px) {
   .export-dialog {
     top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 88vh;
-    border-radius: 22px 22px 0 0;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    margin: 0 auto;
+    max-height: 80vh;
+    border-radius: 22px;
     transform: translateY(100%) scale(0.97);
   }
 
@@ -969,7 +1063,9 @@ async function handleConfirm() {
     left: 0;
     right: 0;
     width: 100%;
-    height: 88vh;
+    height: 80vh;
+    max-height: 80vh;
+    border-radius: 22px;
     transform: translateY(100%) scale(0.97);
   }
 
@@ -983,6 +1079,8 @@ async function handleConfirm() {
 
   .export-preview-panel {
     height: 70vh;
+    max-height: 80vh;
+    border-radius: 22px;
   }
 }
 

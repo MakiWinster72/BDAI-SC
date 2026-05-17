@@ -2,44 +2,55 @@
   <main class="dashboard-right">
     <MobileCapsule @open-sidebar="openDashboardSidebar">
       <template #right>
-        <button class="capsule-action is-filter" type="button" @click="openMobileFilter">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
-          </svg>
-          筛选
+        <button class="capsule-action student-capsule-btn is-filter" type="button" @click="openMobileFilter">
+          <span class="capsule-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+            </svg>
+          </span>
+          <span class="student-capsule-label">筛选</span>
           <span v-if="hasActiveFilters" class="capsule-filter-dot"></span>
         </button>
-        <button class="capsule-action" type="button" @click="toggleGridView">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7"/>
-            <rect x="14" y="3" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/>
-          </svg>
-          {{ gridViewOpen ? "列表" : "表格" }}
+        <button class="capsule-action student-capsule-btn hide-on-mobile" type="button" @click="toggleGridView">
+          <span class="capsule-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+            </svg>
+          </span>
+          <span class="student-capsule-label">{{ gridViewOpen ? "列表" : "表格" }}</span>
         </button>
         <button
           v-if="gridViewOpen"
-          class="capsule-action"
+          class="capsule-action student-capsule-btn hide-on-mobile"
           :class="{ 'capsule-active': gridFullscreen }"
           type="button"
           @click="toggleGridFullscreen"
         >
-          {{ gridFullscreen ? "退出" : "全屏" }}
+          <span class="capsule-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+            </svg>
+          </span>
+          <span class="student-capsule-label">{{ gridFullscreen ? "退出" : "全屏" }}</span>
         </button>
         <button
           v-if="!gridViewOpen"
-          class="capsule-action"
+          class="capsule-action student-capsule-btn"
           :class="{ 'capsule-active': selectMenuOpen }"
           type="button"
           aria-label="选择学生"
           @click.stop="toggleSelectMenu"
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <path d="M9 12l2 2 4-4"/>
-          </svg>
-          选择
+          <span class="capsule-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </span>
+          <span class="student-capsule-label">选择</span>
         </button>
       </template>
     </MobileCapsule>
@@ -172,15 +183,27 @@
           <div class="student-filter-meta">
             <div class="student-filter-flags">
               <label class="info-choice">
-                <input v-model="filters.isHk" type="checkbox" />
+                <input
+                  type="checkbox"
+                  :checked="filters.isHk"
+                  @change="toggleHmt('isHk')"
+                />
                 香港
               </label>
               <label class="info-choice">
-                <input v-model="filters.isMo" type="checkbox" />
+                <input
+                  type="checkbox"
+                  :checked="filters.isMo"
+                  @change="toggleHmt('isMo')"
+                />
                 澳门
               </label>
               <label class="info-choice">
-                <input v-model="filters.isTw" type="checkbox" />
+                <input
+                  type="checkbox"
+                  :checked="filters.isTw"
+                  @change="toggleHmt('isTw')"
+                />
                 台湾
               </label>
               <div class="student-special-filter">
@@ -232,6 +255,9 @@
           <div class="info-section-title">
             筛选结果
             <span v-if="hasActiveFilters" class="student-results-count">已筛选</span>
+          </div>
+          <div class="student-results-meta">
+            {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
           </div>
           <div class="student-results-actions">
             <button
@@ -318,7 +344,7 @@
     </section>
 
     <!-- Floating action buttons -->
-    <div class="floating-actions">
+    <div ref="floatingRef" class="floating-actions">
       <Transition name="floating-action">
         <button
           v-if="hasSelection"
@@ -408,9 +434,19 @@
     <!-- Mobile Filter Sheet -->
     <Teleport to="body">
       <div v-if="mobileFilterOpen" class="sheet-overlay open" @click.self="closeMobileFilter">
-        <div class="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="筛选">
-          <div class="mobile-filter-handle"></div>
-          <header class="mobile-filter-header">
+        <div class="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="筛选" :style="filterSheetStyle">
+          <div
+            class="mobile-filter-handle"
+            @touchstart="handleFilterTouchStart"
+            @touchmove="handleFilterTouchMove"
+            @touchend="handleFilterTouchEnd"
+          ></div>
+          <header
+            class="mobile-filter-header"
+            @touchstart="handleFilterTouchStart"
+            @touchmove="handleFilterTouchMove"
+            @touchend="handleFilterTouchEnd"
+          >
             <h2 class="mobile-filter-title">筛选学生</h2>
             <button class="mobile-filter-close" type="button" @click="closeMobileFilter">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -490,16 +526,16 @@
             <div class="mobile-filter-section">
               <label class="mobile-filter-label">港澳台学生</label>
               <div class="mobile-filter-chips">
-                <label class="mobile-filter-chip" :class="{ active: filters.isHk }">
-                  <input v-model="filters.isHk" type="checkbox" hidden />
+                <label class="mobile-filter-chip" :class="{ active: filters.isHk }" @click.prevent="filters.isHk = !filters.isHk">
+                  <input :checked="filters.isHk" type="radio" name="hkmo" hidden />
                   <span>香港</span>
                 </label>
-                <label class="mobile-filter-chip" :class="{ active: filters.isMo }">
-                  <input v-model="filters.isMo" type="checkbox" hidden />
+                <label class="mobile-filter-chip" :class="{ active: filters.isMo }" @click.prevent="filters.isMo = !filters.isMo">
+                  <input :checked="filters.isMo" type="radio" name="hkmo" hidden />
                   <span>澳门</span>
                 </label>
-                <label class="mobile-filter-chip" :class="{ active: filters.isTw }">
-                  <input v-model="filters.isTw" type="checkbox" hidden />
+                <label class="mobile-filter-chip" :class="{ active: filters.isTw }" @click.prevent="filters.isTw = !filters.isTw">
+                  <input :checked="filters.isTw" type="radio" name="hkmo" hidden />
                   <span>台湾</span>
                 </label>
               </div>
@@ -519,16 +555,8 @@
             </div>
           </div>
           <div class="mobile-filter-footer">
-            <button class="mobile-filter-reset" type="button" @click="resetFilters">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                <path d="M3 3v5h5"/>
-              </svg>
-              重置
-            </button>
-            <button class="mobile-filter-apply" type="button" @click="closeMobileFilter">
-              应用筛选
-            </button>
+            <button class="mobile-filter-reset" type="button" @click="resetMobileFilters">重置</button>
+            <button class="mobile-filter-apply" type="button" @click="closeMobileFilter">完成</button>
           </div>
         </div>
       </div>
@@ -562,14 +590,39 @@
       <div v-if="viewLoading" class="empty-tip">加载中...</div>
       <StudentProfileEditor
         v-else-if="viewItem"
+        ref="profileEditorRef"
         :student="viewItem"
         :resolve-media-url="resolveMediaUrl"
         :save-profile="saveViewProfile"
         :can-edit="profile.role === 'ADMIN'"
         :show-achievements="true"
+        :editing="detailEditing"
         @saved="handleViewProfileSaved"
         @open-achievements="openAchievements"
+        @start-edit="detailEditing = true"
+        @cancel-edit="detailEditing = false"
       />
+      <div v-if="!viewLoading && viewItem" class="student-detail-capsule">
+        <template v-if="!detailEditing">
+          <button class="capsule-action" type="button" @click="openAchievements">
+            成果
+          </button>
+          <button class="capsule-action" type="button" @click="handleExportPdf">
+            PDF
+          </button>
+          <button class="capsule-action" type="button" @click="detailEditing = true">
+            编辑
+          </button>
+        </template>
+        <template v-else>
+          <button class="capsule-action" type="button" @click="handleCancelEdit">
+            取消
+          </button>
+          <button class="capsule-action capsule-action-primary" type="button" @click="handleSaveProfile">
+            保存
+          </button>
+        </template>
+      </div>
     </section>
 
     <section
@@ -602,12 +655,11 @@
 
     <StudentExportDialog
       :open="exportDialogOpen"
-      filename-prefix="students_export"
       preview-title="导出预览(仅显示前三人)"
       empty-message="没有获取到学生详情，请稍后再试。"
       :load-rows="loadExportRows"
       @close="closeExportDialog"
-      @export-success="toastSuccess('学生信息已导出')"
+      @export-success="handleStudentExportSuccess"
     />
 
     <div
@@ -654,6 +706,7 @@ import {
 import { listAchievements } from "../api/achievement";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import StudentExportDialog from "../components/StudentExportDialog.vue";
+import { createAuditLog } from "../api/auditLog";
 import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import PaginationBar from "../components/PaginationBar.vue";
 import OverlayPanel from "../components/OverlayPanel.vue";
@@ -704,6 +757,13 @@ const activeCategory = ref("all");
 const mobileFilterOpen = ref(false);
 const selectMenuOpen = ref(false);
 
+// Mobile filter sheet drag to close
+const filterTouchStartY = ref(0);
+const filterTouchCurrentY = ref(0);
+const filterIsDragging = ref(false);
+const filterDragTranslateY = ref(0);
+const FILTER_DRAG_THRESHOLD = 80;
+
 function toggleSelectMenu() {
   selectMenuOpen.value = !selectMenuOpen.value;
 }
@@ -736,6 +796,38 @@ function openMobileFilter() {
 
 function closeMobileFilter() {
   mobileFilterOpen.value = false;
+}
+
+function resetMobileFilters() {
+  resetFilters();
+}
+
+const filterSheetStyle = computed(() => ({
+  transform: filterDragTranslateY.value > 0 ? `translateY(${filterDragTranslateY.value}px)` : "",
+  transition: filterIsDragging.value ? "none" : "",
+}));
+
+function handleFilterTouchStart(e) {
+  filterTouchStartY.value = e.touches[0].clientY;
+  filterTouchCurrentY.value = filterTouchStartY.value;
+  filterIsDragging.value = true;
+}
+
+function handleFilterTouchMove(e) {
+  if (!filterIsDragging.value) return;
+  const delta = e.touches[0].clientY - filterTouchStartY.value;
+  if (delta > 0) {
+    filterDragTranslateY.value = delta;
+  }
+}
+
+function handleFilterTouchEnd() {
+  if (!filterIsDragging.value) return;
+  if (filterDragTranslateY.value > FILTER_DRAG_THRESHOLD) {
+    closeMobileFilter();
+  }
+  filterIsDragging.value = false;
+  filterDragTranslateY.value = 0;
 }
 
 const classYearOptions = Array.from({ length: 11 }, (_, index) => 2020 + index);
@@ -1094,6 +1186,41 @@ watch(() => filters.studentCategory, () => {
   filters.major = "";
 });
 
+// HMT checkboxes - allow toggling off, mutual exclusion when selecting
+function toggleHmt(key) {
+  const others = key === 'isHk' ? ['isMo', 'isTw'] : key === 'isMo' ? ['isHk', 'isTw'] : ['isHk', 'isMo'];
+  if (filters[key]) {
+    // turning off - just uncheck this one
+    filters[key] = false;
+  } else {
+    // turning on - uncheck others first, then check this
+    others.forEach(k => { filters[k] = false; });
+    filters[key] = true;
+  }
+}
+
+// HMT mutually exclusive
+watch(() => filters.isHk, (val) => {
+  if (val) {
+    filters.isMo = false;
+    filters.isTw = false;
+  }
+});
+
+watch(() => filters.isMo, (val) => {
+  if (val) {
+    filters.isHk = false;
+    filters.isTw = false;
+  }
+});
+
+watch(() => filters.isTw, (val) => {
+  if (val) {
+    filters.isHk = false;
+    filters.isMo = false;
+  }
+});
+
 watch(currentPage, () => {
   if (!gridViewOpen.value) {
     fetchStudents();
@@ -1327,6 +1454,7 @@ function closeView() {
   }
   viewOpen.value = false;
   viewClosing.value = true;
+  detailEditing.value = false;
   setTimeout(() => {
     viewItem.value = null;
     viewLoading.value = false;
@@ -1373,6 +1501,7 @@ function handleViewProfileSaved(data) {
   if (!data) {
     return;
   }
+  detailEditing.value = false;
   viewItem.value = data;
   const nextClassName = buildClassName(data);
   students.value = students.value.map((item) => {
@@ -1980,6 +2109,15 @@ function closeExportDialog() {
   exportDialogOpen.value = false;
 }
 
+async function handleStudentExportSuccess() {
+  toastSuccess('学生信息已导出');
+  try {
+    await createAuditLog({ action: 'EXPORT_STUDENTS', detail: '导出学生信息' });
+  } catch (e) {
+    // Silently ignore — export succeeded regardless
+  }
+}
+
 function isGroupSelected(group) {
   return group.fields.every((field) => exportSelections[field.key]);
 }
@@ -2284,23 +2422,86 @@ function goToSettings() {
   navigateWithViewTransition(router, "/settings");
 }
 
+function handleExportPdf() {
+  if (profileEditorRef.value?.triggerPdfExport) {
+    profileEditorRef.value.triggerPdfExport();
+  }
+}
+
+function handleSaveProfile() {
+  if (profileEditorRef.value?.triggerSave) {
+    profileEditorRef.value.triggerSave();
+  }
+}
+
+function handleCancelEdit() {
+  if (profileEditorRef.value?.cancelEdit) {
+    profileEditorRef.value.cancelEdit();
+  }
+  detailEditing.value = false;
+}
+
+const floatingRef = ref(null);
+const floatingBottom = ref("24px");
+const detailEditing = ref(false);
+const profileEditorRef = ref(null);
+
+function updateFloatingBottom() {
+  const footer = document.querySelector(".dashboard-footer-wrap");
+  if (!footer) return;
+  const footerRect = footer.getBoundingClientRect();
+  const viewH = window.innerHeight;
+  if (footerRect.top < viewH) {
+    floatingBottom.value = `${viewH - footerRect.top + 16}px`;
+  } else {
+    floatingBottom.value = "24px";
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("scroll", updateFloatingBottom, { passive: true });
+  window.addEventListener("resize", updateFloatingBottom);
+  updateFloatingBottom();
+});
+
 onUnmounted(() => {
   document.removeEventListener("click", onDocumentClick);
+  window.removeEventListener("scroll", updateFloatingBottom);
+  window.removeEventListener("resize", updateFloatingBottom);
 });
 </script>
 
 <style scoped>
 @import '../assets/styles/student-info-view.css';
 
-/* Mobile filter capsule button */
+/* Mobile capsule buttons — vertical icon+label layout matching AdminView */
 .capsule-action.is-filter {
   position: relative;
 }
 
+.student-capsule-btn {
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--primary);
+  padding: 6px clamp(3px, 2.2vw, 10px);
+  border: 1px solid rgba(100, 12, 114, 0.12);
+}
+.student-capsule-btn .capsule-icon {
+  flex-shrink: 0;
+}
+
+.student-capsule-label {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
 .capsule-filter-dot {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 2px;
+  right: 2px;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -2310,18 +2511,20 @@ onUnmounted(() => {
 /* Mobile filter sheet - bottom sheet style */
 .mobile-filter-sheet {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
   top: auto;
   max-width: 100%;
-  max-height: 90vh;
+  max-height: 80vh;
+  margin: 0 auto;
   background: var(--card, #fff);
-  border-radius: 24px 24px 0 0;
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
   animation: sheet-slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  will-change: transform;
 }
 
 @keyframes sheet-slide-up {
@@ -2502,6 +2705,7 @@ onUnmounted(() => {
   padding: 16px 20px;
   padding-bottom: max(16px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--line, #f0f0f0);
+  border-radius: 0 0 24px 24px;
   flex-shrink: 0;
   background: var(--card, #fff);
 }
@@ -2551,13 +2755,13 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
-/* Floating select menu above capsule */
+/* Floating select menu - right side, selection actions */
 .select-float-menu {
   position: fixed;
-  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
-  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   z-index: 56;
 }
@@ -2565,12 +2769,12 @@ onUnmounted(() => {
 .select-float-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   height: 40px;
   padding: 0 16px;
-  border: none;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(100, 12, 114, 0.15);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--primary);
@@ -2578,14 +2782,15 @@ onUnmounted(() => {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 12px rgba(100, 12, 114, 0.1);
+  transition: all 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 
 .select-float-btn:hover {
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.15);
 }
 
 .select-float-btn:active {
@@ -2627,6 +2832,115 @@ onUnmounted(() => {
   }
   .student-results-actions {
     display: none;
+  }
+}
+
+/* Mobile capsule: hide grid/fullscreen buttons, wrap filter & select */
+@media (max-width: 768px) {
+  .capsule-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 12px 8px 4px;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .student-capsule-btn {
+    flex-direction: row;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+  }
+
+  .student-capsule-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .student-capsule-btn .capsule-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .student-capsule-btn .capsule-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.student-results-meta {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .student-results-meta {
+    display: block;
+    font-size: 13px;
+    color: var(--text-sub);
+    padding: 0 0 12px;
+  }
+}
+
+/* Student detail capsule - hidden on desktop */
+.student-detail-capsule {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .student-detail-capsule {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--card);
+    backdrop-filter: blur(15px) saturate(140%);
+    -webkit-backdrop-filter: blur(15px) saturate(140%);
+    border-radius: 50px;
+    border: 2px solid rgba(100, 12, 114, 0.15);
+    box-shadow: 0 4px 20px rgba(100, 12, 114, 0.15);
+    z-index: 56;
+  }
+
+  .student-detail-capsule .capsule-action {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .student-detail-capsule .capsule-action:active {
+    transform: scale(0.95);
+  }
+
+  .student-detail-capsule .capsule-action-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(100, 12, 114, 0.25);
+  }
+}
+
+/* Student profile editor bottom padding for capsule */
+@media (max-width: 768px) {
+  .info-shell.student-profile-editor {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }
 </style>

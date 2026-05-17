@@ -203,6 +203,7 @@ function setPageSize(size) {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  padding: 10px 0;
 }
 
 .pagination-bar--simple {

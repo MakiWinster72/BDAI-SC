@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mysql:latest
+    container_name: gcsc_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: bdai2026root
+      MYSQL_DATABASE: bdai_sc
+      MYSQL_USER: bdai_sc
+      MYSQL_PASSWORD: bdai_sc
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    container_name: gcsc_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      BDAI_SC_DB_HOST: db
+      BDAI_SC_DB_PORT: 3306
+      BDAI_SC_DB_NAME: bdai_sc
+      BDAI_SC_DB_USER: bdai_sc
+      BDAI_SC_DB_PASSWORD: bdai_sc
+      BDAI_SC_JWT_SECRET: bdai_sc_owidoiqjwomdqo2i9028uijdoi
+      BDAI_SC_CORS_ALLOWED_ORIGINS: "*"
+      BDAI_SC_BACKEND_PORT: 8080
+      BDAI_SC_UPLOAD_DIR: /app/uploads
+    volumes:
+      - ./uploads:/app/uploads
+
+  frontend:
+    build: ./frontend
+    container_name: gcsc_frontend
+    restart: always
+    ports:
+      - "5173:80"
+
