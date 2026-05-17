@@ -83,13 +83,17 @@ const showPdfOption = computed(
 const showFieldSelection = computed(() => exportFormat.value !== "pdf");
 
 const dialogSheetStyle = computed(() => ({
-  transform: dialogDragTranslateY.value > 0 ? `translateY(${dialogDragTranslateY.value}px) scale(0.97)` : "",
+  transform: dialogDragTranslateY.value > 0
+    ? `translateY(${dialogDragTranslateY.value}px) scale(${1 - dialogDragTranslateY.value / 2000})`
+    : "",
   transition: dialogIsDragging.value ? "none" : "",
   "transform-origin": "bottom center",
 }));
 
 const previewSheetStyle = computed(() => ({
-  transform: previewDragTranslateY.value > 0 ? `translateY(${previewDragTranslateY.value}px) scale(0.97)` : "",
+  transform: previewDragTranslateY.value > 0
+    ? `translateY(${previewDragTranslateY.value}px) scale(${1 - previewDragTranslateY.value / 2000})`
+    : "",
   transition: previewIsDragging.value ? "none" : "",
   "transform-origin": "bottom center",
 }));
@@ -124,6 +128,7 @@ watch(
       if (!showPdfOption.value) {
         exportFormat.value = "excel";
       }
+      document.body.style.overflow = "hidden";
       return;
     }
     exportDialogClosing.value = true;
@@ -131,6 +136,7 @@ watch(
     exportPreviewClosing.value = false;
     setTimeout(() => {
       exportDialogClosing.value = false;
+      document.body.style.overflow = "";
     }, 420);
   },
 );
@@ -148,6 +154,9 @@ watch(previewSheets, (sheets) => {
 watch(exportPreviewOpen, (open) => {
   if (open) {
     refreshPreviewData();
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
   }
 });
 

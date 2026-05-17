@@ -792,10 +792,12 @@ function onDocumentClick(e) {
 
 function openMobileFilter() {
   mobileFilterOpen.value = true;
+  document.body.style.overflow = "hidden";
 }
 
 function closeMobileFilter() {
   mobileFilterOpen.value = false;
+  document.body.style.overflow = "";
 }
 
 function resetMobileFilters() {
@@ -803,8 +805,11 @@ function resetMobileFilters() {
 }
 
 const filterSheetStyle = computed(() => ({
-  transform: filterDragTranslateY.value > 0 ? `translateY(${filterDragTranslateY.value}px)` : "",
+  transform: filterDragTranslateY.value > 0
+    ? `translateY(${filterDragTranslateY.value}px) scale(${1 - filterDragTranslateY.value / 2000})`
+    : "",
   transition: filterIsDragging.value ? "none" : "",
+  "transform-origin": "bottom center",
 }));
 
 function handleFilterTouchStart(e) {
