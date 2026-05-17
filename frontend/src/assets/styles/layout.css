@@ -61,7 +61,7 @@
 .dashboard-menu-scroll {
   min-height: 0;
   max-height: calc(100vh - 48px - 182px);
-  overflow: hidden;
+  overflow: visible;
   padding: 0 6px 20px 0;
   background: none;
 }
