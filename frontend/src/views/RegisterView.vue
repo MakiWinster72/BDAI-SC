@@ -2,7 +2,7 @@
   <div class="auth-layout">
     <div class="auth-card">
       <h1 class="auth-title">创建账号</h1>
-      <p class="auth-subtitle">注册后即可登录 BDAI_SC 学生中心</p>
+      <p class="auth-subtitle">注册后即可登录数智学院学生信息管理中心</p>
 
       <form @submit.prevent="handleRegister">
         <div class="form-row">
