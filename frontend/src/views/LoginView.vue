@@ -208,7 +208,7 @@
             </div>
 
             <div class="form-row">
-              <label class="form-label" for="captcha">图形验证码</label>
+              <label class="form-label" for="captcha">验证码</label>
               <div class="captcha-row">
                 <input
                   id="captcha"
@@ -223,7 +223,7 @@
                 <button
                   type="button"
                   class="captcha-image-button"
-                  aria-label="刷新图形验证码"
+                  aria-label="刷新验证码"
                   title="点击刷新验证码"
                   @click="refreshCaptcha"
                 >
@@ -364,7 +364,7 @@ async function handleLogin() {
   }
 
   if (!form.captcha) {
-    captchaError.value = "请输入图形验证码";
+    captchaError.value = "请输入验证码";
     return;
   }
 
