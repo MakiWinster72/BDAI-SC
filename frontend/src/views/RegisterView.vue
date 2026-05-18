@@ -1,60 +1,252 @@
 <template>
   <div class="auth-layout">
-    <div class="auth-card">
-      <h1 class="auth-title">创建账号</h1>
-      <p class="auth-subtitle">注册后即可登录数智学院学生信息管理中心</p>
+    <!-- Ambient orbs -->
+    <div class="page-orb page-orb--1" aria-hidden="true"></div>
+    <div class="page-orb page-orb--2" aria-hidden="true"></div>
 
-      <form @submit.prevent="handleRegister">
-        <div class="form-row">
-          <label class="form-label" for="displayName">名字</label>
-          <input
-            id="displayName"
-            v-model.trim="form.displayName"
-            class="form-input"
-            type="text"
-            placeholder="请输入真实名字"
-            autocomplete="nickname"
-            required
-          />
+    <!-- Split panel: logo left, form right -->
+    <div class="split-panel">
+
+      <!-- ── LEFT: Brand Panel ── -->
+      <div class="brand-panel" aria-hidden="true">
+        <div class="brand-bg-orb brand-bg-orb--1"></div>
+        <div class="brand-bg-orb brand-bg-orb--2"></div>
+        <div class="brand-bg-orb brand-bg-orb--3"></div>
+
+        <!-- Data grid pattern -->
+        <div class="data-grid" aria-hidden="true">
+          <svg class="data-grid-svg" viewBox="0 0 280 320" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="40" x2="280" y2="40" class="grid-line"/>
+            <line x1="0" y1="80" x2="280" y2="80" class="grid-line"/>
+            <line x1="0" y1="120" x2="280" y2="120" class="grid-line"/>
+            <line x1="0" y1="160" x2="280" y2="160" class="grid-line"/>
+            <line x1="0" y1="200" x2="280" y2="200" class="grid-line"/>
+            <line x1="0" y1="240" x2="280" y2="240" class="grid-line"/>
+            <line x1="0" y1="280" x2="280" y2="280" class="grid-line"/>
+            <line x1="40" y1="0" x2="40" y2="320" class="grid-line"/>
+            <line x1="80" y1="0" x2="80" y2="320" class="grid-line"/>
+            <line x1="120" y1="0" x2="120" y2="320" class="grid-line"/>
+            <line x1="160" y1="0" x2="160" y2="320" class="grid-line"/>
+            <line x1="200" y1="0" x2="200" y2="320" class="grid-line"/>
+            <line x1="240" y1="0" x2="240" y2="320" class="grid-line"/>
+            <circle cx="80" cy="80" r="3" class="data-node"/>
+            <circle cx="160" cy="120" r="3" class="data-node"/>
+            <circle cx="200" cy="80" r="3" class="data-node"/>
+            <circle cx="120" cy="200" r="3" class="data-node"/>
+            <circle cx="40" cy="160" r="3" class="data-node"/>
+            <circle cx="240" cy="200" r="3" class="data-node"/>
+            <polyline points="80,80 160,120 200,80" class="data-flow-line"/>
+            <polyline points="40,160 120,200 240,200" class="data-flow-line"/>
+          </svg>
         </div>
 
-        <div class="form-row">
-          <label class="form-label" for="username"> 学号 </label>
-          <input
-            id="username"
-            v-model.trim="form.username"
-            class="form-input"
-            type="text"
-            placeholder="请输入学号"
-            autocomplete="username"
-            required
-          />
+        <!-- Floating data cards (top-right) -->
+        <div class="data-card data-card--1" aria-hidden="true">
+          <div class="data-card-bar" style="width:60%"></div>
+          <div class="data-card-bar" style="width:80%"></div>
+          <div class="data-card-bar" style="width:45%"></div>
+          <div class="data-card-label">Student #1</div>
         </div>
 
-        <div class="form-row">
-          <label class="form-label" for="password">密码</label>
-          <input
-            id="password"
-            v-model="form.password"
-            class="form-input"
-            type="password"
-            placeholder="至少 6 位"
-            autocomplete="new-password"
-            required
-          />
+        <!-- Floating data card (bottom-left) -->
+        <div class="data-card data-card--2" aria-hidden="true">
+          <div class="data-card-row">
+            <div class="data-dot data-dot--active"></div>
+            <div class="data-card-text">已录入</div>
+          </div>
+          <div class="data-card-row">
+            <div class="data-dot"></div>
+            <div class="data-card-text">审核中</div>
+          </div>
+          <div class="data-card-row">
+            <div class="data-dot"></div>
+            <div class="data-card-text">已完成</div>
+          </div>
         </div>
 
-        <button class="action-button" :disabled="isSubmitting" type="submit">
-          {{ isSubmitting ? "注册中..." : "注册" }}
-        </button>
-      </form>
+        <!-- Binary code decoration (top-left) -->
+        <div class="data-binary" aria-hidden="true">
+          <span>01100011</span>
+          <span>01110101</span>
+          <span>00100000</span>
+          <span>01110011</span>
+        </div>
 
-      <div :class="['feedback', feedback.type]">{{ feedback.text }}</div>
+        <!-- Bar chart (bottom area) -->
+        <div class="data-bars" aria-hidden="true">
+          <div class="bar-chart-label">Achievement Distribution</div>
+          <div class="bar-row">
+            <span class="bar-name">竞赛</span>
+            <div class="bar-track"><div class="bar-fill" style="width:78%"></div></div>
+            <span class="bar-val">78%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">科研</span>
+            <div class="bar-track"><div class="bar-fill bar-fill--purple" style="width:55%"></div></div>
+            <span class="bar-val">55%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">论文</span>
+            <div class="bar-track"><div class="bar-fill bar-fill--dark" style="width:42%"></div></div>
+            <span class="bar-val">42%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">专利</span>
+            <div class="bar-track"><div class="bar-fill" style="width:28%"></div></div>
+            <span class="bar-val">28%</span>
+          </div>
+        </div>
 
-      <div class="switch-line">
-        已有账号？
-        <RouterLink class="switch-link" to="/login">去登录</RouterLink>
+        <!-- Pie chart decoration (mid-right) -->
+        <div class="data-pie" aria-hidden="true">
+          <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="30" class="pie-base"/>
+            <path d="M40,40 L40,10 A30,30 0 0,1 68.6,55 Z" class="pie-slice-1"/>
+            <path d="M40,40 L68.6,55 A30,30 0 0,1 25,66 Z" class="pie-slice-2"/>
+            <path d="M40,40 L25,66 A30,30 0 0,1 10,30 Z" class="pie-slice-3"/>
+            <path d="M40,40 L10,30 A30,30 0 0,1 40,10 Z" class="pie-slice-4"/>
+          </svg>
+          <div class="pie-legend">
+            <div class="pie-legend-item"><span class="pie-dot" style="background:#FF85BB"></span>竞赛</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:#FFCEE3"></span>科研</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:var(--primary)"></span>论文</div>
+            <div class="pie-legend-item"><span class="pie-dot" style="background:rgba(255,255,255,0.25)"></span>其他</div>
+          </div>
+        </div>
+
+        <!-- Connection lines (network nodes) -->
+        <div class="data-connection" aria-hidden="true">
+          <svg class="data-conn-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="6" class="conn-node conn-node--center"/>
+            <circle cx="30" cy="40" r="4" class="conn-node"/>
+            <circle cx="170" cy="30" r="4" class="conn-node"/>
+            <circle cx="160" cy="170" r="4" class="conn-node"/>
+            <circle cx="40" cy="165" r="4" class="conn-node"/>
+            <line x1="100" y1="100" x2="30" y2="40" class="conn-line"/>
+            <line x1="100" y1="100" x2="170" y2="30" class="conn-line"/>
+            <line x1="100" y1="100" x2="160" y2="170" class="conn-line"/>
+            <line x1="100" y1="100" x2="40" y2="165" class="conn-line"/>
+            <line x1="30" y1="40" x2="170" y2="30" class="conn-line conn-line--dashed"/>
+            <line x1="170" y1="30" x2="160" y2="170" class="conn-line conn-line--dashed"/>
+            <line x1="160" y1="170" x2="40" y2="165" class="conn-line conn-line--dashed"/>
+            <line x1="40" y1="165" x2="30" y2="40" class="conn-line conn-line--dashed"/>
+          </svg>
+        </div>
+
+        <div class="brand-content">
+          <div class="brand-emblem">
+            <img
+              src="/assets/icons/xylogo.png"
+              alt="XY"
+              class="brand-emblem-img"
+            />
+            <div class="brand-emblem-ring"></div>
+          </div>
+          <div class="brand-text">
+            <div class="brand-name">大数据与人工智能学院</div>
+            <div class="brand-tagline">学生信息管理中心</div>
+          </div>
+        </div>
       </div>
+
+      <!-- ── RIGHT: Form Panel ── -->
+      <div class="form-panel">
+        <div class="form-card">
+          <div class="form-header">
+            <h1 class="form-title">创建账号</h1>
+            <p class="form-subtitle">注册后即可登录数智学院学生信息管理中心</p>
+          </div>
+
+          <form @submit.prevent="handleRegister" novalidate>
+            <div class="form-row">
+              <label class="form-label" for="displayName">名字</label>
+              <input
+                id="displayName"
+                v-model.trim="form.displayName"
+                class="form-input"
+                type="text"
+                placeholder="请输入真实名字"
+                autocomplete="nickname"
+                :class="{ 'input--error': displayNameError }"
+                required
+              />
+              <span v-if="displayNameError" class="field-error" role="alert">{{ displayNameError }}</span>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label" for="username">学号</label>
+              <input
+                id="username"
+                v-model.trim="form.username"
+                class="form-input"
+                type="text"
+                placeholder="请输入学号"
+                autocomplete="username"
+                :class="{ 'input--error': usernameError }"
+                required
+              />
+              <span v-if="usernameError" class="field-error" role="alert">{{ usernameError }}</span>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label" for="password">密码</label>
+              <div class="input-wrapper">
+                <input
+                  id="password"
+                  v-model="form.password"
+                  class="form-input"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="至少 6 位"
+                  autocomplete="new-password"
+                  :class="{ 'input--error': passwordError }"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  @click="showPassword = !showPassword"
+                  :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                >
+                  <svg v-if="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+              <span v-if="passwordError" class="field-error" role="alert">{{ passwordError }}</span>
+            </div>
+
+            <button class="action-button" :disabled="isSubmitting" type="submit">
+              <span class="btn-content">
+                <span v-if="isSubmitting" class="btn-spinner" aria-hidden="true"></span>
+                {{ isSubmitting ? "注册中..." : "注册" }}
+              </span>
+            </button>
+          </form>
+
+          <Transition name="feedback-fade">
+            <div v-if="feedback.text" :class="['feedback', feedback.type]" role="status" aria-live="polite">
+              <svg v-if="feedback.type === 'error'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              {{ feedback.text }}
+            </div>
+          </Transition>
+
+          <div class="switch-line">
+            已有账号？
+            <RouterLink class="switch-link" to="/login">去登录</RouterLink>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -74,6 +266,10 @@ const form = reactive({
 
 const isSubmitting = ref(false);
 const feedback = reactive({ text: "", type: "" });
+const showPassword = ref(false);
+const displayNameError = ref("");
+const usernameError = ref("");
+const passwordError = ref("");
 
 function parseError(error) {
   if (error?.response?.data?.message) {
@@ -85,7 +281,22 @@ function parseError(error) {
 async function handleRegister() {
   feedback.text = "";
   feedback.type = "";
-  isSubmitting.value = true;
+  displayNameError.value = "";
+  usernameError.value = "";
+  passwordError.value = "";
+
+  if (!form.displayName) {
+    displayNameError.value = "请输入真实名字";
+    return;
+  }
+  if (!form.username) {
+    usernameError.value = "请输入学号";
+    return;
+  }
+  if (!form.password || form.password.length < 6) {
+    passwordError.value = "密码至少 6 位";
+    return;
+  }
 
   localStorage.removeItem("bdai_sc_user");
   localStorage.removeItem("bdai_sc_token");
@@ -106,3 +317,7 @@ async function handleRegister() {
   }
 }
 </script>
+
+<style scoped>
+@import '../assets/styles/login-view.css';
+</style>
