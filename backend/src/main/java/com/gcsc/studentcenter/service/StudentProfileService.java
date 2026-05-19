@@ -1,11 +1,15 @@
 package com.gcsc.studentcenter.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,10 +51,13 @@ public class StudentProfileService {
   }
 
   @Transactional(readOnly = true)
-  public StudentProfileResponse getProfileById(Long id) {
+  public StudentProfileResponse getProfileById(String operatorUsername, Long id) {
+    AppUser operator = appUserRepository.findByUsername(operatorUsername)
+        .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
     StudentProfile profile = studentProfileRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("学生档案不存在"));
     AppUser user = profile.getUser();
+    ensureCanReadProfile(operator, user);
     return toResponse(user, profile);
   }
 
@@ -74,13 +81,76 @@ public class StudentProfileService {
     AppUser operator = appUserRepository.findByUsername(operatorUsername)
         .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
     if (operator.getRole() != UserRole.ADMIN) {
-      throw new IllegalArgumentException("无权限操作该学生档案");
+      throw new AccessDeniedException("无权限操作该学生档案");
     }
     StudentProfile profile = studentProfileRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("学生档案不存在"));
     AppUser user = profile.getUser();
     StudentProfile saved = saveProfileInternal(user, profile, request);
     return toResponse(user, saved);
+  }
+
+  @Transactional(readOnly = true)
+  public StudentSearchResponse searchProfilesForUser(
+      String operatorUsername,
+      Integer classYear,
+      String classNo,
+      String college,
+      String major,
+      Boolean isHk,
+      Boolean isMo,
+      Boolean isTw,
+      Boolean specialStudent,
+      String specialStudentType,
+      String studentCategory,
+      String keyword,
+      int page,
+      int size) {
+    AppUser operator = appUserRepository.findByUsername(operatorUsername)
+        .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+    int pageIndex = Math.max(page - 1, 0);
+    int pageSize = Math.max(size, 1);
+    PageRequest pageRequest = PageRequest.of(pageIndex, pageSize);
+
+    Page<StudentSearchItemResponse> result;
+    if (operator.getRole() == UserRole.STUDENT) {
+      result = studentProfileRepository.searchProfileForUser(
+          operator.getId(),
+          classYear,
+          normalize(classNo),
+          normalize(college),
+          normalize(major),
+          isHk,
+          isMo,
+          isTw,
+          specialStudent,
+          normalize(specialStudentType),
+          normalize(studentCategory),
+          normalize(keyword),
+          pageRequest);
+    } else {
+      result = studentProfileRepository.searchProfiles(
+          classYear,
+          normalize(classNo),
+          normalize(college),
+          normalize(major),
+          isHk,
+          isMo,
+          isTw,
+          specialStudent,
+          normalize(specialStudentType),
+          normalize(studentCategory),
+          normalize(keyword),
+          allowedClassNamesFor(operator),
+          pageRequest);
+    }
+
+    return new StudentSearchResponse(
+        result.getContent(),
+        pageIndex + 1,
+        pageSize,
+        result.getTotalElements(),
+        result.getTotalPages());
   }
 
   private StudentProfile saveProfileInternal(
@@ -194,6 +264,46 @@ public class StudentProfileService {
         pageSize,
         result.getTotalElements(),
         result.getTotalPages());
+  }
+
+  private void ensureCanReadProfile(AppUser operator, AppUser targetUser) {
+    if (operator.getId().equals(targetUser.getId()) || operator.getRole() == UserRole.ADMIN) {
+      return;
+    }
+    if (operator.getRole() == UserRole.TEACHER && assignedClasses(operator).contains(normalize(targetUser.getClassName()))) {
+      return;
+    }
+    if (operator.getRole() == UserRole.CADRE
+        && normalize(operator.getClassName()) != null
+        && normalize(operator.getClassName()).equals(normalize(targetUser.getClassName()))) {
+      return;
+    }
+    throw new AccessDeniedException("无权限查看该学生档案");
+  }
+
+  private List<String> allowedClassNamesFor(AppUser operator) {
+    if (operator.getRole() == UserRole.ADMIN) {
+      return null;
+    }
+    if (operator.getRole() == UserRole.TEACHER) {
+      return assignedClasses(operator);
+    }
+    if (operator.getRole() == UserRole.CADRE) {
+      String className = normalize(operator.getClassName());
+      return className == null ? Collections.emptyList() : List.of(className);
+    }
+    return Collections.emptyList();
+  }
+
+  private List<String> assignedClasses(AppUser teacher) {
+    String assigned = teacher.getAssignedClasses();
+    if (assigned == null || assigned.isBlank()) {
+      return Collections.emptyList();
+    }
+    return Arrays.stream(assigned.split(","))
+        .map(this::normalize)
+        .filter(item -> item != null)
+        .collect(Collectors.toList());
   }
 
   private void syncUserSummary(AppUser user, StudentProfile profile) {
