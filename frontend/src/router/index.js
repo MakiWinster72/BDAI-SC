@@ -8,7 +8,6 @@ import StudentInfoView from '../views/StudentInfoView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import AdminView from '../views/AdminView.vue'
 import LogsView from '../views/LogsView.vue'
-import ClassReviewsView from '../views/ClassReviewsView.vue'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
 
 const router = createRouter({
@@ -52,8 +51,7 @@ const router = createRouter({
         {
           path: 'class-reviews',
           name: 'class-reviews',
-          component: ClassReviewsView,
-          meta: { allowedRoles: ['CADRE'] }
+          redirect: { path: '/notifications', query: { panel: 'class-reviews', category: 'pending' } },
         }
       ]
     },
