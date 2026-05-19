@@ -1016,6 +1016,18 @@ import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { useUploadProgress } from "../composables/useUploadProgress";
 import { useProfileAvatarUpload } from "../composables/useProfileAvatarUpload";
+import {
+  buildCadrePayload,
+  buildEducationPayload,
+  createCadreItem,
+  createEducationItem,
+  createProfileExperienceRows,
+  createProfileInfo,
+  isCadreRowEmpty,
+  isEducationRowEmpty,
+  normalizeCadreExperiences,
+  normalizeEducationExperiences,
+} from "../composables/useProfileFormModel";
 import { API_BASE } from "../api/request";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { resolveMediaUrl } from "../utils/media";
@@ -1062,78 +1074,15 @@ const { avatarInput, triggerAvatarUpload, handleAvatarChange } =
     upload: (file) => uploadWithProgress(file, uploadMedia),
   });
 
-const info = reactive({
-  name: profile.displayName || profile.username || "",
-  avatarUrl: profile.avatarUrl || "",
-  studentNo: profile.studentNo || "",
-  classYear: new Date().getFullYear(),
-  classMajor: "",
-  classNo: 1,
-  className: profile.className || "",
-  college: FIXED_COLLEGE,
-  enrollmentDate: "",
-  studentCategory: "",
-  ethnicity: "",
-  politicalStatus: "",
-  dormCampus: "",
-  dormBuilding: "",
-  dormRoom: "",
-  dormFloor: "",
-  dormRoomNo: "",
-  offCampusLiving: false,
-  offCampusAddress: "",
-  classTeacher: "",
-  counselor: "",
-  phone: "",
-  backupContact: "",
-  address: "",
-  addressProvince: "",
-  addressCity: "",
-  addressCounty: "",
-  addressDetail: "",
-  offCampusProvince: "",
-  offCampusCity: "",
-  offCampusCounty: "",
-  offCampusDetail: "",
-  idType: "居民身份证",
-  idNo: "",
-  birthDate: "",
-  nativePlace: "",
-  leagueNo: "",
-  leagueApplicationDate: "",
-  leagueJoinDate: "",
-  leagueJoined: false,
-  leagueDeveloping: false,
-  partyApplied: false,
-  notDeveloped: false,
-  applicationDate: "",
-  activistDate: "",
-  activistDeveloping: false,
-  partyTrainingDate: "",
-  partyTrainingPending: false,
-  developmentTargetDate: "",
-  developmentTargetDeveloping: false,
-  probationaryMemberDate: "",
-  probationaryDeveloping: false,
-  fullMemberDate: "",
-  fullMemberDeveloping: false,
-  emergencyPhone: "",
-  emergencyRelation: "",
-  isHk: false,
-  isMo: false,
-  isTw: false,
-  specialStudent: false,
-  specialStudentType: "",
-  specialStudentRemark: "",
-  fatherName: "",
-  fatherPhone: "",
-  fatherWorkUnit: "",
-  fatherTitle: "",
-  motherName: "",
-  motherPhone: "",
-  motherWorkUnit: "",
-  motherTitle: "",
-});
+const info = reactive(
+  createProfileInfo({
+    name: profile.displayName || profile.username || "",
+    avatarUrl: profile.avatarUrl || "",
+    studentNo: profile.studentNo || "",
+    classYear: new Date().getFullYear(),
+    className: profile.className || "",
+  }),
+);
 
 function detectIdType(raw) {
   if (!raw) return null;
@@ -1297,37 +1246,12 @@ const dormBuildingOptions = computed(() => {
   }
   return [];
 });
-const educationItems = reactive(
-  Array.from({ length: 5 }, () => createEducationItem()),
-);
-const cadreItems = reactive(Array.from({ length: 5 }, () => createCadreItem()));
+const { educationItems, cadreItems } = createProfileExperienceRows();
 
 function getTodayString() {
   const now = new Date();
   const offsetMs = now.getTimezoneOffset() * 60 * 1000;
   return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
-}
-
-function createEducationItem() {
-  return {
-    startDate: "",
-    endDate: "",
-    schoolName: "",
-    educationLevel: "",
-    witness: "",
-    isCurrent: false,
-  };
-}
-
-function createCadreItem() {
-  return {
-    startDate: "",
-    endDate: "",
-    department: "",
-    position: "",
-    description: "",
-    isCurrent: false,
-  };
 }
 
 async function addEducationRow() {
@@ -1611,28 +1535,6 @@ function pruneCadreRowsAfter(index) {
   }
 }
 
-function isEducationRowEmpty(entry) {
-  return (
-    !entry.startDate &&
-    !entry.endDate &&
-    !entry.schoolName &&
-    !entry.educationLevel &&
-    !entry.witness &&
-    !entry.isCurrent
-  );
-}
-
-function isCadreRowEmpty(entry) {
-  return (
-    !entry.startDate &&
-    !entry.endDate &&
-    !entry.department &&
-    !entry.position &&
-    !entry.description &&
-    !entry.isCurrent
-  );
-}
-
 const dormBuildingDisabled = computed(
   () => !isEditing.value || info.offCampusLiving || !info.dormCampus,
 );
@@ -1900,26 +1802,8 @@ async function confirmEdit() {
     info.dormRoomNo,
     info.dormRoom,
   );
-  const educationExperiences = educationItems
-    .filter((item) => !isEducationRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      schoolName: item.schoolName,
-      educationLevel: item.educationLevel,
-      witness: item.witness,
-      isCurrent: item.isCurrent,
-    }));
-  const cadreExperiences = cadreItems
-    .filter((item) => !isCadreRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      department: item.department,
-      position: item.position,
-      description: item.description,
-      isCurrent: item.isCurrent,
-    }));
+  const educationExperiences = buildEducationPayload(educationItems);
+  const cadreExperiences = buildCadrePayload(cadreItems);
   const payload = {
     fullName: info.name,
     avatarUrl: info.avatarUrl,
@@ -2104,26 +1988,8 @@ function buildPdfStudentSnapshot() {
     info.offCampusDetail,
     info.offCampusAddress,
   );
-  const educationExperiences = educationItems
-    .filter((item) => !isEducationRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      schoolName: item.schoolName,
-      educationLevel: item.educationLevel,
-      witness: item.witness,
-      isCurrent: item.isCurrent,
-    }));
-  const cadreExperiences = cadreItems
-    .filter((item) => !isCadreRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      department: item.department,
-      position: item.position,
-      description: item.description,
-      isCurrent: item.isCurrent,
-    }));
+  const educationExperiences = buildEducationPayload(educationItems);
+  const cadreExperiences = buildCadrePayload(cadreItems);
   return {
     fullName: studentName,
     studentNo,
@@ -2269,12 +2135,8 @@ function buildCurrentProfileState() {
     specialStudent: info.specialStudent,
     specialStudentType: info.specialStudentType,
     specialStudentRemark: info.specialStudentRemark,
-    educationExperiences: educationItems
-      .filter((item) => !isEducationRowEmpty(item))
-      .map((item) => ({ ...item })),
-    cadreExperiences: cadreItems
-      .filter((item) => !isCadreRowEmpty(item))
-      .map((item) => ({ ...item })),
+    educationExperiences: buildEducationPayload(educationItems),
+    cadreExperiences: buildCadrePayload(cadreItems),
   };
 }
 
@@ -2509,37 +2371,15 @@ function applyProfileResponse(data, options = {}) {
 }
 
 function applyEducationExperiences(rawItems) {
-  const nextItems = Array.isArray(rawItems) ? rawItems : [];
-  const normalized = nextItems.map((item) => ({
-    startDate: item?.startDate || "",
-    endDate: item?.isCurrent ? "" : item?.endDate || "",
-    schoolName: item?.schoolName || "",
-    educationLevel: item?.educationLevel || "",
-    witness: item?.witness || "",
-    isCurrent: Boolean(item?.isCurrent),
-  }));
-  const filtered = normalized.filter((item) => !isEducationRowEmpty(item));
-  if (!filtered.length) {
-    filtered.push(createEducationItem());
-  }
-  educationItems.splice(0, educationItems.length, ...filtered);
+  educationItems.splice(
+    0,
+    educationItems.length,
+    ...normalizeEducationExperiences(rawItems),
+  );
 }
 
 function applyCadreExperiences(rawItems) {
-  const nextItems = Array.isArray(rawItems) ? rawItems : [];
-  const normalized = nextItems.map((item) => ({
-    startDate: item?.startDate || "",
-    endDate: item?.isCurrent ? "" : item?.endDate || "",
-    department: item?.department || "",
-    position: item?.position || "",
-    description: item?.description || "",
-    isCurrent: Boolean(item?.isCurrent),
-  }));
-  const filtered = normalized.filter((item) => !isCadreRowEmpty(item));
-  if (!filtered.length) {
-    filtered.push(createCadreItem());
-  }
-  cadreItems.splice(0, cadreItems.length, ...filtered);
+  cadreItems.splice(0, cadreItems.length, ...normalizeCadreExperiences(rawItems));
 }
 
 function saveUser(data) {

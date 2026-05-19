@@ -5,6 +5,18 @@ import ExportPdfButton from "./ExportPdfButton.vue";
 import ProtectedMediaImage from "./ProtectedMediaImage.vue";
 import { uploadMedia } from "../api/upload";
 import { useProfileAvatarUpload } from "../composables/useProfileAvatarUpload";
+import {
+  buildCadrePayload,
+  buildEducationPayload,
+  createCadreItem,
+  createEducationItem,
+  createProfileExperienceRows,
+  createProfileInfo,
+  isCadreRowEmpty,
+  isEducationRowEmpty,
+  normalizeCadreExperiences,
+  normalizeEducationExperiences,
+} from "../composables/useProfileFormModel";
 import { useToast } from "../composables/useToast";
 import { useStudentPdfExport } from "../composables/useStudentPdfExport";
 import {
@@ -56,7 +68,7 @@ const emit = defineEmits(["saved", "openAchievements", "start-edit", "cancel-edi
 const { success: toastSuccess, error: toastError } = useToast();
 const { exportResumePdf } = useStudentPdfExport();
 
-const info = reactive(createEmptyInfo());
+const info = reactive(createProfileInfo());
 const isEditing = ref(false);
 const saving = ref(false);
 const workUnitHintOpen = ref(false);
@@ -68,8 +80,7 @@ const { avatarInput, triggerAvatarUpload, handleAvatarChange } =
     upload: uploadMedia,
   });
 
-const educationItems = reactive(Array.from({ length: 5 }, () => createEducationItem()));
-const cadreItems = reactive(Array.from({ length: 5 }, () => createCadreItem()));
+const { educationItems, cadreItems } = createProfileExperienceRows();
 
 const classMajorOptions = computed(() => {
   return majorOptionsByCategory[info.studentCategory] || [];
@@ -459,125 +470,10 @@ watch(
   },
 );
 
-function createEmptyInfo() {
-  return {
-    name: "",
-    avatarUrl: "",
-    studentNo: "",
-    classYear: "",
-    classMajor: "",
-    classNo: 1,
-    className: "",
-    college: FIXED_COLLEGE,
-    enrollmentDate: "",
-    studentCategory: "",
-    ethnicity: "",
-    politicalStatus: "",
-    dormCampus: "",
-    dormBuilding: "",
-    dormRoom: "",
-    dormFloor: "",
-    dormRoomNo: "",
-    offCampusLiving: false,
-    offCampusAddress: "",
-    classTeacher: "",
-    counselor: "",
-    phone: "",
-    backupContact: "",
-    address: "",
-    addressProvince: "",
-    addressCity: "",
-    addressCounty: "",
-    addressDetail: "",
-    offCampusProvince: "",
-    offCampusCity: "",
-    offCampusCounty: "",
-    offCampusDetail: "",
-    idType: "居民身份证",
-    idNo: "",
-    birthDate: "",
-    nativePlace: "",
-    leagueNo: "",
-    leagueApplicationDate: "",
-    leagueJoinDate: "",
-    leagueJoined: false,
-    leagueDeveloping: false,
-    partyApplied: false,
-    notDeveloped: false,
-    applicationDate: "",
-    activistDate: "",
-    activistDeveloping: false,
-    partyTrainingDate: "",
-    partyTrainingPending: false,
-    developmentTargetDate: "",
-    developmentTargetDeveloping: false,
-    probationaryMemberDate: "",
-    probationaryDeveloping: false,
-    fullMemberDate: "",
-    fullMemberDeveloping: false,
-    emergencyPhone: "",
-    emergencyRelation: "",
-    fatherName: "",
-    fatherPhone: "",
-    fatherWorkUnit: "",
-    fatherTitle: "",
-    motherName: "",
-    motherPhone: "",
-    motherWorkUnit: "",
-    motherTitle: "",
-    specialStudentType: "",
-    specialStudentRemark: "",
-  };
-}
-
 function getTodayString() {
   const now = new Date();
   const offsetMs = now.getTimezoneOffset() * 60 * 1000;
   return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
-}
-
-function createEducationItem() {
-  return {
-    startDate: "",
-    endDate: "",
-    schoolName: "",
-    educationLevel: "",
-    witness: "",
-    isCurrent: false,
-  };
-}
-
-function createCadreItem() {
-  return {
-    startDate: "",
-    endDate: "",
-    department: "",
-    position: "",
-    description: "",
-    isCurrent: false,
-  };
-}
-
-function isEducationRowEmpty(entry) {
-  return (
-    !entry.startDate &&
-    !entry.endDate &&
-    !entry.schoolName &&
-    !entry.educationLevel &&
-    !entry.witness &&
-    !entry.isCurrent
-  );
-}
-
-function isCadreRowEmpty(entry) {
-  return (
-    !entry.startDate &&
-    !entry.endDate &&
-    !entry.department &&
-    !entry.position &&
-    !entry.description &&
-    !entry.isCurrent
-  );
 }
 
 function clearEducationRowsAfter(index) {
@@ -801,26 +697,8 @@ function buildSavePayload() {
     info.offCampusAddress,
   );
   const dormRoom = buildDormRoom(info.dormFloor, info.dormRoomNo, info.dormRoom);
-  const educationExperiences = educationItems
-    .filter((item) => !isEducationRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      schoolName: item.schoolName,
-      educationLevel: item.educationLevel,
-      witness: item.witness,
-      isCurrent: item.isCurrent,
-    }));
-  const cadreExperiences = cadreItems
-    .filter((item) => !isCadreRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      department: item.department,
-      position: item.position,
-      description: item.description,
-      isCurrent: item.isCurrent,
-    }));
+  const educationExperiences = buildEducationPayload(educationItems);
+  const cadreExperiences = buildCadrePayload(cadreItems);
 
   const payload = {
     fullName: info.name,
@@ -971,26 +849,8 @@ function buildPdfStudentSnapshot() {
     info.offCampusDetail,
     info.offCampusAddress,
   );
-  const educationExperiences = educationItems
-    .filter((item) => !isEducationRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      schoolName: item.schoolName,
-      educationLevel: item.educationLevel,
-      witness: item.witness,
-      isCurrent: item.isCurrent,
-    }));
-  const cadreExperiences = cadreItems
-    .filter((item) => !isCadreRowEmpty(item))
-    .map((item) => ({
-      startDate: item.startDate,
-      endDate: item.endDate,
-      department: item.department,
-      position: item.position,
-      description: item.description,
-      isCurrent: item.isCurrent,
-    }));
+  const educationExperiences = buildEducationPayload(educationItems);
+  const cadreExperiences = buildCadrePayload(cadreItems);
 
   return {
     fullName: info.name,
@@ -1126,37 +986,15 @@ function buildCurrentProfileState() {
 }
 
 function applyEducationExperiences(rawItems) {
-  const nextItems = Array.isArray(rawItems) ? rawItems : [];
-  const normalized = nextItems.map((item) => ({
-    startDate: item?.startDate || "",
-    endDate: item?.isCurrent ? "" : item?.endDate || "",
-    schoolName: item?.schoolName || "",
-    educationLevel: item?.educationLevel || "",
-    witness: item?.witness || "",
-    isCurrent: Boolean(item?.isCurrent),
-  }));
-  const filtered = normalized.filter((item) => !isEducationRowEmpty(item));
-  if (!filtered.length) {
-    filtered.push(createEducationItem());
-  }
-  educationItems.splice(0, educationItems.length, ...filtered);
+  educationItems.splice(
+    0,
+    educationItems.length,
+    ...normalizeEducationExperiences(rawItems),
+  );
 }
 
 function applyCadreExperiences(rawItems) {
-  const nextItems = Array.isArray(rawItems) ? rawItems : [];
-  const normalized = nextItems.map((item) => ({
-    startDate: item?.startDate || "",
-    endDate: item?.isCurrent ? "" : item?.endDate || "",
-    department: item?.department || "",
-    position: item?.position || "",
-    description: item?.description || "",
-    isCurrent: Boolean(item?.isCurrent),
-  }));
-  const filtered = normalized.filter((item) => !isCadreRowEmpty(item));
-  if (!filtered.length) {
-    filtered.push(createCadreItem());
-  }
-  cadreItems.splice(0, cadreItems.length, ...filtered);
+  cadreItems.splice(0, cadreItems.length, ...normalizeCadreExperiences(rawItems));
 }
 
 function applyProfileResponse(data) {
