@@ -1003,10 +1003,19 @@ import YearPicker from "../components/YearPicker.vue";
 import RecordRow from "../components/RecordRow.vue";
 import ProtectedMediaImage from "../components/ProtectedMediaImage.vue";
 import { getMenuLocation, isMenuEnabled } from "../constants/menu";
+import {
+  FIXED_COLLEGE,
+  dormCampusOptions,
+  idTypeOptions,
+  majorOptionsByCategory,
+  politicalStatusOptions,
+  studentCategoryOptions,
+} from "../constants/profileOptions";
 import { regionData, codeToText } from "element-china-area-data";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";
 import { uploadMedia } from "../api/upload";
 import { useUploadProgress } from "../composables/useUploadProgress";
+import { useProfileAvatarUpload } from "../composables/useProfileAvatarUpload";
 import { API_BASE } from "../api/request";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { resolveMediaUrl } from "../utils/media";
@@ -1024,13 +1033,11 @@ import { useToast } from "../composables/useToast";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
-const FIXED_COLLEGE = "大数据与人工智能学院";
 
 const profile = reactive(loadUser());
 const activeMenu = ref("my-info");
 const activeAchievement = ref("all");
 const isEditing = ref(false);
-const avatarInput = ref(null);
 const sidebarOpen = ref(false);
 const achievementsOpen = ref(false);
 const educationTableWrap = ref(null);
@@ -1049,6 +1056,11 @@ const { settings: reviewSettings, fetchSettings: fetchReviewSettings } =
   useReviewSettings();
 const { success: toastSuccess, error: toastError } = useToast();
 const { uploadWithProgress } = useUploadProgress();
+const { avatarInput, triggerAvatarUpload, handleAvatarChange } =
+  useProfileAvatarUpload({
+    canUpload: () => isEditing.value,
+    upload: (file) => uploadWithProgress(file, uploadMedia),
+  });
 
 const info = reactive({
   name: profile.displayName || profile.username || "",
@@ -1123,41 +1135,6 @@ const info = reactive({
   motherTitle: "",
 });
 
-const majorOptionsByCategory = {
-  本科生: [
-    "计算机科学与技术",
-    "计算机科学与技术（实验区）",
-    "计算机科学与技术(中外联合培养项目班)",
-    "2025计算机科学与技术（中外联合培养项目班未赴国外学习）",
-    "软件工程",
-    "人工智能",
-    "电子商务",
-    "电子商务（大数据决策分析）",
-    "大数据管理与应用",
-    "大数据管理与应用（佛山校区全学段）",
-    "大数据管理与应用（数字治理）",
-  ],
-  研究生: [
-    "管理科学与工程",
-    "技术经济及管理",
-    "智能科学与技术",
-    "计算机技术",
-    "图书情报",
-  ],
-};
-const studentCategoryOptions = ["本科生", "研究生"];
-const politicalStatusOptions = ["群众", "共青团员", "中共预备党员", "中共党员"];
-const idTypeOptions = [
-  "居民身份证",
-  "台湾居民来往大陆通行证",
-  "港澳居民来往内地通行证",
-  "普通护照",
-  "台湾居民居住证",
-  "港澳居民居住证",
-  "外国人永久居留身份证",
-  "外国护照",
-];
-
 function detectIdType(raw) {
   if (!raw) return null;
   const cleaned = raw.toUpperCase().replace(/[^0-9A-Z]/g, "");
@@ -1179,7 +1156,6 @@ function detectIdType(raw) {
     return "台湾居民来往大陆通行证";
   return null;
 }
-const dormCampusOptions = ["佛山校区", "广州校区"];
 const PROFILE_CHANGE_FIELDS = [
   { key: "fullName", label: "姓名", section: "学籍信息" },
   { key: "avatarUrl", label: "头像", section: "基础信息" },
@@ -1863,25 +1839,9 @@ function handleIdNoInput(event) {
     .slice(0, maxLen);
 }
 
-function triggerAvatarUpload() {
-  avatarInput.value && avatarInput.value.click();
-}
-
 async function onAvatarChange(event) {
-  const [file] = Array.from(event.target.files || []);
-  event.target.value = "";
-  if (!file) {
-    return;
-  }
-  try {
-    const { data } = await uploadWithProgress(file, uploadMedia);
-    if (data?.mediaType !== "IMAGE") {
-      return;
-    }
-    info.avatarUrl = data.url || "";
-  } catch (err) {
-    console.error(err);
-  }
+  const avatarUrl = await handleAvatarChange(event);
+  if (avatarUrl) info.avatarUrl = avatarUrl;
 }
 
 function enterEdit() {
