@@ -1,5 +1,5 @@
 <script setup>
-import { text, joinText } from "../../../utils/achievementFormatters";
+import { text, joinText } from "@/utils/achievementFormatters";
 
 defineProps({
   item: {

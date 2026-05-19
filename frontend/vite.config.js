@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
   return {
     envDir,
     plugins: [vue()],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
     server: {
       host: env.BDAI_SC_FRONTEND_HOST || '0.0.0.0',
       port: Number.parseInt(env.BDAI_SC_FRONTEND_PORT, 10) || 5173,

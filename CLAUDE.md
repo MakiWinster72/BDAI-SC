@@ -18,7 +18,7 @@ source .env          # required — .env loaded via spring.config.import
 cd backend
 mvn spring-boot:run          # Run application
 mvn clean package -DskipTests # Build without tests
-mvn test                      # Run all tests (none currently exist — src/test/ is empty)
+mvn test                      # Run all tests (security service tests in src/test/java)
 mvn test -Dtest=ClassName    # Run single test class
 mvn test -Dtest=ClassName#methodName  # Run single test method
 ```
@@ -31,6 +31,8 @@ npm run dev          # Development server (http://localhost:5173)
 npm run build        # Production build
 npm run preview      # Preview production build
 ```
+
+From repo root: `npm --prefix frontend run build`. Full local check: `./scripts/verify.sh` (frontend build + backend tests).
 
 ### Database Setup
 ```sql
@@ -72,13 +74,14 @@ All share a common structure: title, description, media attachments, user associ
 1. **Login/Register**: `AuthService` generates JWT with `sub` (username), `displayName`, and `role` claims
 2. **Request**: Frontend `request.js` interceptor adds `Authorization: Bearer <token>` header
 3. **Filter**: `JwtAuthenticationFilter.doFilterInternal()` parses token, extracts role, sets `ROLE_<role>` authority in SecurityContext
-4. **SecurityConfig**: Routes `/api/auth/register`, `/api/auth/login`, `/uploads/**`, `/api/achievements/**` are public; everything else requires authentication
-5. **Username validation**: `^[a-zA-Z0-9_]{4,32}$` (4-32 chars, alphanumeric and underscore)
+4. **SecurityConfig**: Public routes include `/api/auth/register`, `/api/auth/login`, `/api/auth/captcha`, `/api/settings/system`. All other API routes require JWT. Achievement CRUD and uploads are **not** public.
+5. **Media access**: Files are read via `GET /api/media/uploads/{userId}/{folder}/{filename}` with authentication and object-level checks. No public `/uploads/**` static mapping.
+6. **Username validation**: `^[a-zA-Z0-9_]{4,32}$` (4-32 chars, alphanumeric and underscore)
 
 ### Frontend Directory Structure
 ```
 frontend/src/
-├── api/          # Axios request modules (e.g., profile.js, achievement.js)
+├── api/          # Axios request modules (e.g., profile.js, achievements.js)
 ├── assets/       # Static assets
 │   └── styles/   # Global CSS: dialogs.css, layout.css, achievements.css, ...
 ├── components/   # Shared Vue components
@@ -112,8 +115,10 @@ Global styles in `frontend/src/assets/styles/`:
 
 ### File Uploads
 - Max size: 200MB (configured in `application.yml`)
-- Storage: `backend/uploads/` directory (not in classpath)
-- Endpoint: `/api/upload`
+- Storage: `backend/uploads/` or `$BDAI_SC_UPLOAD_DIR` (not in classpath)
+- Upload: `POST /api/upload` (authenticated); URLs returned as `/api/media/uploads/...`
+- Read: `GET /api/media/uploads/{userId}/{folder}/{filename}` (authenticated; avatars included)
+- Frontend: `ProtectedMediaImage`, `fetchMedia` for private blob URLs
 - Supported previews: images, videos, PDFs, docx/doc, xlsx/xls
 
 ### Frontend Request Module
@@ -138,6 +143,7 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar �
 3. Approve: sets status to `approved`; Reject: requires reason
 4. Cancel: requester can cancel own pending request
 5. Auto-approve: if `reviewSettings.achievementReviewAutoApprove` or `profileReviewAutoApprove`
+6. When profile/achievement review is **enabled**, STUDENT and CADRE cannot direct-write via profile/achievement APIs; they must use review requests. TEACHER/ADMIN can still direct-write. Approved reviews persist via dedicated service methods (`saveProfileFromApprovedReview`, `createFromApprovedReview`, etc.)
 
 ### Frontend
 - Views in `frontend/src/views/`

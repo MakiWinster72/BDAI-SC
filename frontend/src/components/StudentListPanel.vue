@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import PaginationBar from "./PaginationBar.vue";
 import ProtectedMediaImage from "./ProtectedMediaImage.vue";
-import { resolveMediaUrl } from "../utils/media";
+import { resolveMediaUrl } from "@/utils/media";
 
 const props = defineProps({
   loading: {

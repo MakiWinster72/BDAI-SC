@@ -1,10 +1,10 @@
 import { ref } from "vue";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
-import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
-import { listAchievements } from "../api/achievement";
-import { fetchMedia } from "../utils/media";
+import harmonyFontUrl from "@/assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
+import harmonyFontBlackUrl from "@/assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
+import { listAchievements } from "@/api/achievements";
+import { fetchMedia } from "@/utils/media";
 
 const PDF_FONT_NAME = "HarmonyOSSansSC";
 const PDF_FONT_BLACK = "HarmonyOSSansSCBlack";

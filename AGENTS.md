@@ -30,6 +30,8 @@ npm run build
 npm run preview
 ```
 
+从仓库根目录构建前端：`npm --prefix frontend run build`
+
 ## Database Setup
 ```sql
 CREATE DATABASE IF NOT EXISTS bdai_sc DEFAULT CHARACTER SET utf8mb4;
@@ -43,16 +45,17 @@ FLUSH PRIVILEGES;
 - Config: `backend/src/main/resources/application.yml` loads `.env` via `spring.config.import` (searches `backend/` then `../`)
 - **Always `source .env`** from project root before running backend — env vars are not auto-loaded by Maven
 - JWT token: stored in localStorage as `bdai_sc_token`
-- File uploads: POST `/api/upload`, stored under `backend/uploads/` (or `$BDAI_SC_UPLOAD_DIR`)
+- File uploads: POST `/api/upload` (authenticated), stored under `backend/uploads/` or `$BDAI_SC_UPLOAD_DIR`; read via `GET /api/media/uploads/{userId}/{folder}/{filename}` (authenticated, object-level checks). No public `/uploads/**` static mapping.
 - JPA `ddl-auto: update` — schema auto-created on first run
-- No backend tests currently exist (`src/test/` is empty)
+- Backend tests: `StudentProfileServiceSecurityTest`, `AchievementServiceSecurityTest` — run `mvn test` after security/auth changes
 
 ## Architecture
 
 - **Package**: `com.gcsc.studentcenter` (controller/service/repository/entity/dto/config/exception)
-- **9 achievement types**: contest, research, paper, patent, certificate, works, journal, double-hundred, training
+- **9 achievement types**: contest, research, paper, patent, certificate, works, journal, double-hundred, ieer-training
 - **Roles**: STUDENT (default), CADRE, TEACHER, ADMIN
-- **Review workflow**: achievements and profile changes require TEACHER/ADMIN approval; CADRE can only review their own class
+- **Review workflow**: achievements and profile changes go through review requests; TEACHER/ADMIN approve. When review is enabled, STUDENT/CADRE cannot direct-write profile or achievements (must submit review). CADRE class review is scoped to own class.
+- **Verification**: frontend changes → `npm --prefix frontend run build`; backend security → `mvn test`; or `./scripts/verify.sh` from repo root
 
 ## Git Workflow
 

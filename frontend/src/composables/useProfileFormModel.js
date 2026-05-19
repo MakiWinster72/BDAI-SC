@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import { FIXED_COLLEGE } from "../constants/profileOptions";
+import { FIXED_COLLEGE } from "@/constants/profileOptions";
 
 export function createProfileInfo(overrides = {}) {
   return {

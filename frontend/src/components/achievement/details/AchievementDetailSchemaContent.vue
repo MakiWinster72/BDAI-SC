@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import { text } from "../../../utils/achievementFormatters";
+import { text } from "@/utils/achievementFormatters";
 
 const props = defineProps({
   item: {

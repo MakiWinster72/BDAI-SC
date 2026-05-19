@@ -94,7 +94,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { resolveMediaUrl } from "../utils/media";
+import { resolveMediaUrl } from "@/utils/media";
 import ProtectedMediaImage from "./ProtectedMediaImage.vue";
 
 const props = defineProps({

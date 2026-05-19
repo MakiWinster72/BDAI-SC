@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import AchievementsView from '../views/AchievementsView.vue'
-import MyInfosView from '../views/MyInfosView.vue'
-import NotificationsView from '../views/NotificationsView.vue'
-import StudentInfoView from '../views/StudentInfoView.vue'
-import SettingsView from '../views/SettingsView.vue'
-import AdminView from '../views/AdminView.vue'
-import LogsView from '../views/LogsView.vue'
-import DashboardLayout from '../layouts/DashboardLayout.vue'
+import LoginView from '@/views/LoginView.vue'
+import RegisterView from '@/views/RegisterView.vue'
+import AchievementsView from '@/views/AchievementsView.vue'
+import MyInfosView from '@/views/MyInfosView.vue'
+import NotificationsView from '@/views/NotificationsView.vue'
+import StudentInfoView from '@/views/StudentInfoView.vue'
+import SettingsView from '@/views/SettingsView.vue'
+import AdminView from '@/views/AdminView.vue'
+import LogsView from '@/views/LogsView.vue'
+import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import { loadUser } from '@/utils/userStorage'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -69,8 +70,7 @@ router.beforeEach((to) => {
     return '/myinfos'
   }
   if (to.meta.allowedRoles) {
-    const raw = JSON.parse(localStorage.getItem('bdai_sc_user') || '{}')
-    const role = raw.role || 'STUDENT'
+    const role = loadUser().role
     if (!to.meta.allowedRoles.includes(role)) {
       return '/myinfos'
     }

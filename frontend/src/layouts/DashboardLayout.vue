@@ -79,17 +79,17 @@
 <script setup>
 import { computed, provide, reactive, ref, watch } from "vue";
 import { RouterView, useRoute, useRouter } from "vue-router";
-import BrandHeader from "../components/BrandHeader.vue";
-import DashboardSidebar from "../components/DashboardSidebar.vue";
-import AppFooter from "../components/AppFooter.vue";
-import ToastContainer from "../components/ToastContainer.vue";
+import BrandHeader from "@/components/BrandHeader.vue";
+import DashboardSidebar from "@/components/DashboardSidebar.vue";
+import AppFooter from "@/components/AppFooter.vue";
+import ToastContainer from "@/components/ToastContainer.vue";
 import {
   getActiveMenuFromRoute,
   getMenuLocation,
-} from "../constants/menu";
-import { dashboardShellKey } from "../composables/useDashboardShell";
-import { navigateWithViewTransition } from "../utils/viewTransition";
-import { loadUser } from "../utils/userStorage";
+} from "@/constants/menu";
+import { dashboardShellKey } from "@/composables/useDashboardShell";
+import { navigateWithViewTransition } from "@/utils/viewTransition";
+import { loadUser } from "@/utils/userStorage";
 
 const router = useRouter();
 const route = useRoute();

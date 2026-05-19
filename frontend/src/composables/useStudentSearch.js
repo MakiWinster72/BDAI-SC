@@ -4,7 +4,7 @@ import {
   specialStudentTypeOptions,
   studentCategoryOptions,
   studentSearchClassYearOptions,
-} from "../constants/profileOptions";
+} from "@/constants/profileOptions";
 
 const specialStudentTypeLabelMap = Object.fromEntries(
   specialStudentTypeOptions

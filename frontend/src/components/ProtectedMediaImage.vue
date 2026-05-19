@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import { useResolvedMediaUrl } from "../composables/useResolvedMediaUrl";
+import { useResolvedMediaUrl } from "@/composables/useResolvedMediaUrl";
 
 const props = defineProps({
   src: {

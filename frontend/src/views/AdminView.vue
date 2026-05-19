@@ -1,18 +1,18 @@
 <script setup>
 import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
-import MobileCapsule from "../components/MobileCapsule.vue";
-import AdminBackupTab from "../components/AdminBackupTab.vue";
-import AdminUploadSettingsTab from "../components/AdminUploadSettingsTab.vue";
-import AdminReviewSettingsTab from "../components/AdminReviewSettingsTab.vue";
-import AdminSystemSettingsTab from "../components/AdminSystemSettingsTab.vue";
-import AdminUsersTab from "../components/AdminUsersTab.vue";
-import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
-import { useReviewSettings } from "../composables/useReviewSettings";
-import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses, getStorageAnalysis, deleteUserStorage } from "../api/admin";
-import { useToast } from "../composables/useToast";
-import { useDashboardShell } from "../composables/useDashboardShell";
-import { loadUser } from "../utils/userStorage";
-import { buildClassName } from "../utils/profile";
+import MobileCapsule from "@/components/MobileCapsule.vue";
+import AdminBackupTab from "@/components/AdminBackupTab.vue";
+import AdminUploadSettingsTab from "@/components/AdminUploadSettingsTab.vue";
+import AdminReviewSettingsTab from "@/components/AdminReviewSettingsTab.vue";
+import AdminSystemSettingsTab from "@/components/AdminSystemSettingsTab.vue";
+import AdminUsersTab from "@/components/AdminUsersTab.vue";
+import { useAchievementUploadSettings } from "@/composables/useAchievementUploadSettings";
+import { useReviewSettings } from "@/composables/useReviewSettings";
+import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses, getStorageAnalysis, deleteUserStorage } from "@/api/admin";
+import { useToast } from "@/composables/useToast";
+import { useDashboardShell } from "@/composables/useDashboardShell";
+import { loadUser } from "@/utils/userStorage";
+import { buildClassName } from "@/utils/profile";
 
 const ATTACHMENT_TYPE_OPTIONS = [
   { key: "document", label: "文档", icon: "/assets/icons/doc.svg" },
@@ -1117,7 +1117,7 @@ watch([userSearch, userRoleFilter], () => {
 </template>
 
 <style>
-@import '../assets/styles/admin-view.css';
+@import '@/assets/styles/admin-view.css';
 </style>
 
 <style scoped>

@@ -209,18 +209,18 @@
 <script setup>
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import PaginationBar from "../components/PaginationBar.vue";
-import StudentExportDialog from "../components/StudentExportDialog.vue";
-import { useStudentPdfExport } from "../composables/useStudentPdfExport";
-import { getMenuLocation, isMenuEnabled } from "../constants/menu";
-import { getStudentProfile } from "../api/profile";
-import { API_BASE } from "../api/request";
-import { changePassword, getLoginHistory } from "../api/auth";
-import { navigateWithViewTransition } from "../utils/viewTransition";
-import { useDashboardShell } from "../composables/useDashboardShell";
-import { useToast } from "../composables/useToast";
-import { resolveMediaUrl } from "../utils/media";
-import { loadUser } from "../utils/userStorage";
+import PaginationBar from "@/components/PaginationBar.vue";
+import StudentExportDialog from "@/components/StudentExportDialog.vue";
+import { useStudentPdfExport } from "@/composables/useStudentPdfExport";
+import { getMenuLocation, isMenuEnabled } from "@/constants/menu";
+import { getStudentProfile } from "@/api/profile";
+import { API_BASE } from "@/api/request";
+import { changePassword, getLoginHistory } from "@/api/auth";
+import { navigateWithViewTransition } from "@/utils/viewTransition";
+import { useDashboardShell } from "@/composables/useDashboardShell";
+import { useToast } from "@/composables/useToast";
+import { resolveMediaUrl } from "@/utils/media";
+import { loadUser } from "@/utils/userStorage";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
@@ -448,5 +448,5 @@ async function handleChangePassword() {
 </script>
 
 <style scoped>
-@import '../assets/styles/settings-view.css';
+@import '@/assets/styles/settings-view.css';
 </style>

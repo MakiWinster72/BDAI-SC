@@ -288,9 +288,9 @@
 <script setup>
 import { onMounted, reactive, ref, shallowRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { getCaptcha, login } from "../api/auth";
-import { getSystemSettings } from "../api/admin";
-import { useToast } from "../composables/useToast";
+import { getCaptcha, login } from "@/api/auth";
+import { getSystemSettings } from "@/api/admin";
+import { useToast } from "@/composables/useToast";
 
 const route = useRoute();
 const router = useRouter();
@@ -418,5 +418,5 @@ async function handleLogin() {
 </script>
 
 <style scoped>
-@import '../assets/styles/login-view.css';
+@import '@/assets/styles/login-view.css';
 </style>

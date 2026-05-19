@@ -4,7 +4,7 @@
  * 在多个视图和组件中重复定义（SettingsView、AchievementsView、NotificationsView 等），
  * 统一管理后复用。
  */
-import { API_BASE } from '../api/request';
+import { API_BASE } from '@/api/request';
 
 const privateMediaBlobUrls = new Map();
 const MEDIA_API_PREFIX = '/api/media';

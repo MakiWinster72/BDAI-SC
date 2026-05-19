@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import { achievementDetailSchemas } from "../../constants/achievementDetailSchemas";
+import { achievementDetailSchemas } from "@/constants/achievementDetailSchemas";
 import AchievementDetailContest from "./details/AchievementDetailContest.vue";
 import AchievementDetailSchemaContent from "./details/AchievementDetailSchemaContent.vue";
 import AchievementDetailWorks from "./details/AchievementDetailWorks.vue";

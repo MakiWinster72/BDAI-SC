@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, watch } from "vue";
-import { resolveMediaObjectUrl, resolveMediaUrl } from "../utils/media";
+import { resolveMediaObjectUrl, resolveMediaUrl } from "@/utils/media";
 
 const props = defineProps({
   snapshot: {

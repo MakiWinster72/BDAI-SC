@@ -11,7 +11,7 @@
 
 <script setup>
 import { computed } from "vue";
-import { useStudentPdfExport } from "../composables/useStudentPdfExport";
+import { useStudentPdfExport } from "@/composables/useStudentPdfExport";
 
 const props = defineProps({
   student: {

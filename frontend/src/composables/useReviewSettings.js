@@ -1,5 +1,5 @@
 import { reactive, shallowRef } from "vue";
-import { getReviewSettings, updateReviewSettings } from "../api/reviewSettings";
+import { getReviewSettings, updateReviewSettings } from "@/api/reviewSettings";
 
 const STORAGE_KEY = "bdai_sc_review_settings";
 
@@ -37,7 +37,7 @@ function persistSettings(settings) {
   return normalized;
 }
 
-export function useReviewSettings() {
+function createReviewSettingsStore() {
   const settings = reactive(readCachedSettings());
   const loading = shallowRef(false);
   const saving = shallowRef(false);
@@ -90,4 +90,10 @@ export function useReviewSettings() {
     fetchSettings,
     saveSettings,
   };
+}
+
+const reviewSettingsStore = createReviewSettingsStore();
+
+export function useReviewSettings() {
+  return reviewSettingsStore;
 }

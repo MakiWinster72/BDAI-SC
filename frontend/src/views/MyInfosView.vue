@@ -997,12 +997,12 @@
 <script setup>
 import { reactive, computed, ref, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import ExportPdfButton from "../components/ExportPdfButton.vue";
-import MobileCapsule from "../components/MobileCapsule.vue";
-import YearPicker from "../components/YearPicker.vue";
-import RecordRow from "../components/RecordRow.vue";
-import ProtectedMediaImage from "../components/ProtectedMediaImage.vue";
-import { getMenuLocation, isMenuEnabled } from "../constants/menu";
+import ExportPdfButton from "@/components/ExportPdfButton.vue";
+import MobileCapsule from "@/components/MobileCapsule.vue";
+import YearPicker from "@/components/YearPicker.vue";
+import RecordRow from "@/components/RecordRow.vue";
+import ProtectedMediaImage from "@/components/ProtectedMediaImage.vue";
+import { getMenuLocation, isMenuEnabled } from "@/constants/menu";
 import {
   FIXED_COLLEGE,
   dormCampusOptions,
@@ -1010,12 +1010,12 @@ import {
   majorOptionsByCategory,
   politicalStatusOptions,
   studentCategoryOptions,
-} from "../constants/profileOptions";
+} from "@/constants/profileOptions";
 import { regionData, codeToText } from "element-china-area-data";
-import { getStudentProfile, saveStudentProfile } from "../api/profile";
-import { uploadMedia } from "../api/upload";
-import { useUploadProgress } from "../composables/useUploadProgress";
-import { useProfileAvatarUpload } from "../composables/useProfileAvatarUpload";
+import { getStudentProfile, saveStudentProfile } from "@/api/profile";
+import { uploadMedia } from "@/api/upload";
+import { useUploadProgress } from "@/composables/useUploadProgress";
+import { useProfileAvatarUpload } from "@/composables/useProfileAvatarUpload";
 import {
   buildCadrePayload,
   buildEducationPayload,
@@ -1027,26 +1027,27 @@ import {
   isEducationRowEmpty,
   normalizeCadreExperiences,
   normalizeEducationExperiences,
-} from "../composables/useProfileFormModel";
-import { API_BASE } from "../api/request";
-import { navigateWithViewTransition } from "../utils/viewTransition";
-import { resolveMediaUrl } from "../utils/media";
+} from "@/composables/useProfileFormModel";
+import { API_BASE } from "@/api/request";
+import { navigateWithViewTransition } from "@/utils/viewTransition";
+import { resolveMediaUrl } from "@/utils/media";
 import {
   buildClassName,
   buildDormRoom,
   buildAddress,
   parseAddressToRegion,
   parseDormRoom,
-} from "../utils/profile";
-import { useDashboardShell } from "../composables/useDashboardShell";
-import { useNotifications } from "../composables/useNotifications";
-import { useReviewSettings } from "../composables/useReviewSettings";
-import { useToast } from "../composables/useToast";
+} from "@/utils/profile";
+import { useDashboardShell } from "@/composables/useDashboardShell";
+import { useNotifications } from "@/composables/useNotifications";
+import { useReviewSettings } from "@/composables/useReviewSettings";
+import { useToast } from "@/composables/useToast";
+import { loadUser } from "@/utils/userStorage";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 
-const profile = reactive(loadUser());
+const profile = reactive({ ...loadUser(), college: FIXED_COLLEGE });
 const activeMenu = ref("my-info");
 const activeAchievement = ref("all");
 const isEditing = ref(false);
@@ -2680,34 +2681,10 @@ watch(
   },
 );
 
-function loadUser() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("bdai_sc_user") || "{}");
-    return {
-      username: raw.username || "",
-      displayName: raw.displayName || "",
-      avatarUrl: raw.avatarUrl || "",
-      role: raw.role || "STUDENT",
-      studentNo: raw.studentNo || "",
-      className: raw.className || "",
-      college: FIXED_COLLEGE,
-    };
-  } catch {
-    return {
-      username: "",
-      displayName: "",
-      avatarUrl: "",
-      role: "STUDENT",
-      studentNo: "",
-      className: "",
-      college: FIXED_COLLEGE,
-    };
-  }
-}
 </script>
 
 <style scoped>
-@import "../assets/styles/my-infos-view.css";
+@import "@/assets/styles/my-infos-view.css";
 
 .float-btn-group {
   display: flex;

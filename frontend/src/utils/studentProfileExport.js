@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { listAchievements } from "../api/achievement";
+import { listAchievements } from "@/api/achievements";
 
 export const exportGroups = [
   {
@@ -514,6 +514,17 @@ export function getSelectedExportKeys(selections) {
       .filter(([, value]) => Boolean(value))
       .map(([key]) => key),
   );
+}
+
+export const ACHIEVEMENT_EXPORT_CATEGORIES = ACHIEVEMENT_CATEGORIES;
+
+export function checkStudentProfileNeedsDetail(selectedKeys) {
+  const hasEdu = EDUCATION_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasParty = PARTY_FIELD_ORDER.some((key) => selectedKeys.has(key));
+  const hasNonBaseMain = MAIN_FIELD_ORDER.some(
+    (key) => !IDENTITY_KEYS.includes(key) && selectedKeys.has(key),
+  );
+  return hasEdu || hasParty || hasNonBaseMain;
 }
 
 export async function fetchAchievementsForStudents(rows) {

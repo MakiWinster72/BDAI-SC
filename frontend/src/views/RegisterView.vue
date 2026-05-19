@@ -254,7 +254,7 @@
 <script setup>
 import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { register } from "../api/auth";
+import { register } from "@/api/auth";
 
 const router = useRouter();
 
@@ -319,5 +319,5 @@ async function handleRegister() {
 </script>
 
 <style scoped>
-@import '../assets/styles/login-view.css';
+@import '@/assets/styles/login-view.css';
 </style>

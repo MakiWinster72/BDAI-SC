@@ -1,4 +1,4 @@
-import { buildClassName, buildDormRoom, buildAddress } from "../utils/profile";
+import { buildClassName, buildDormRoom, buildAddress } from "@/utils/profile";
 
 export function useProfileSnapshot({
   info,

@@ -8,7 +8,7 @@ import {
   familyRows,
   fetchAchievementsForStudents,
   getSelectedExportKeys,
-} from "../utils/studentProfileExport";
+} from "@/utils/studentProfileExport";
 
 const props = defineProps({
   open: {

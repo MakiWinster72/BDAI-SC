@@ -183,8 +183,8 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUpdated, ref, toRefs, watch } from "vue";
-import { filterMenuItemsByRole, isMenuEnabled } from "../constants/menu";
-import { useNotifications } from "../composables/useNotifications";
+import { filterMenuItemsByRole, isMenuEnabled } from "@/constants/menu";
+import { useNotifications } from "@/composables/useNotifications";
 
 const props = defineProps({
   profile: {

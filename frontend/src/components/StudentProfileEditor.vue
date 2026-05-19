@@ -3,8 +3,8 @@ import { computed, reactive, ref, watch } from "vue";
 import { regionData, codeToText } from "element-china-area-data";
 import ExportPdfButton from "./ExportPdfButton.vue";
 import ProtectedMediaImage from "./ProtectedMediaImage.vue";
-import { uploadMedia } from "../api/upload";
-import { useProfileAvatarUpload } from "../composables/useProfileAvatarUpload";
+import { uploadMedia } from "@/api/upload";
+import { useProfileAvatarUpload } from "@/composables/useProfileAvatarUpload";
 import {
   buildCadrePayload,
   buildEducationPayload,
@@ -16,9 +16,9 @@ import {
   isEducationRowEmpty,
   normalizeCadreExperiences,
   normalizeEducationExperiences,
-} from "../composables/useProfileFormModel";
-import { useToast } from "../composables/useToast";
-import { useStudentPdfExport } from "../composables/useStudentPdfExport";
+} from "@/composables/useProfileFormModel";
+import { useToast } from "@/composables/useToast";
+import { useStudentPdfExport } from "@/composables/useStudentPdfExport";
 import {
   FIXED_COLLEGE,
   classYearOptions,
@@ -28,14 +28,14 @@ import {
   politicalStatusOptions,
   specialStudentTypeOptions,
   studentCategoryOptions,
-} from "../constants/profileOptions";
+} from "@/constants/profileOptions";
 import {
   buildClassName,
   buildDormRoom,
   buildAddress,
   parseAddressToRegion,
   parseDormRoom,
-} from "../utils/profile";
+} from "@/utils/profile";
 
 const props = defineProps({
   student: {

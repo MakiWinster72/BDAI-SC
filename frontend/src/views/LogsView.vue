@@ -1,9 +1,9 @@
 <script setup>
 import { computed, onMounted, shallowRef, watch } from "vue";
-import PaginationBar from "../components/PaginationBar.vue";
-import MobileCapsule from "../components/MobileCapsule.vue";
-import { getAuditLogs } from "../api/auditLog";
-import { useDashboardShell } from "../composables/useDashboardShell";
+import PaginationBar from "@/components/PaginationBar.vue";
+import MobileCapsule from "@/components/MobileCapsule.vue";
+import { getAuditLogs } from "@/api/auditLog";
+import { useDashboardShell } from "@/composables/useDashboardShell";
 
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 
@@ -167,7 +167,7 @@ watch(auditLogSearch, () => {
 </template>
 
 <style scoped>
-@import '../assets/styles/admin-view.css';
+@import '@/assets/styles/admin-view.css';
 
 /* Keep user column visible on small screens */
 @media (max-width: 700px) {

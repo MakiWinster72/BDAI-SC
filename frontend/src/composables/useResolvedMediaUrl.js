@@ -1,5 +1,5 @@
 import { ref, watch } from "vue";
-import { resolveMediaObjectUrl, resolveMediaUrl } from "../utils/media";
+import { resolveMediaObjectUrl, resolveMediaUrl } from "@/utils/media";
 
 export function useResolvedMediaUrl(source) {
   const resolvedUrl = ref("");

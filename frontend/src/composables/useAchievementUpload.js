@@ -5,8 +5,8 @@
  * 事件监听在 onMounted/onBeforeUnmount 中注册/注销。
  */
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
-import { ATTACHMENT_TYPE_META } from "../constants/achievementConstants";
-import { resolveMediaTypeByExtension } from "../utils/media";
+import { ATTACHMENT_TYPE_META } from "@/constants/achievementConstants";
+import { resolveMediaTypeByExtension } from "@/utils/media";
 
 const imageInput = ref(null);
 const attachmentInput = ref(null);

@@ -13,7 +13,7 @@ import {
   formatWorksOccasion,
   formatWorksTag,
   text,
-} from "../utils/achievementFormatters";
+} from "@/utils/achievementFormatters";
 
 const props = defineProps({
   item: {

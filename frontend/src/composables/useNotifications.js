@@ -1,5 +1,5 @@
 import { computed, reactive, watch } from "vue";
-import { getSystemSettings } from "../api/admin";
+import { getSystemSettings } from "@/api/admin";
 import {
   approveAchievementReviewRequest,
   cancelAchievementReviewRequest,
@@ -7,7 +7,7 @@ import {
   rejectAchievementReviewRequest,
   setAchievementReviewRequestDocuments,
   submitAchievementReviewRequestApi,
-} from "../api/achievementReviewRequests";
+} from "@/api/achievementReviewRequests";
 import {
   approveProfileReviewRequest,
   cancelProfileReviewRequest,
@@ -15,12 +15,12 @@ import {
   rejectProfileReviewRequest,
   setProfileReviewRequestDocuments,
   submitProfileReviewRequestApi,
-} from "../api/profileReviewRequests";
+} from "@/api/profileReviewRequests";
 import {
   markAllNotificationsRead,
   markNotificationRead,
   markNotificationUnread,
-} from "../api/notificationReadStates";
+} from "@/api/notificationReadStates";
 
 const STORAGE_BASE = "bdai_sc_notification_center";
 

@@ -2,7 +2,7 @@ import {
   formatPaperAuthors,
   formatPatentInventor,
   text,
-} from "../utils/achievementFormatters";
+} from "@/utils/achievementFormatters";
 
 function row(label, value, options = {}) {
   return {

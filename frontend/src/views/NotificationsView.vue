@@ -1,19 +1,19 @@
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import AchievementReviewSnapshotCard from "../components/AchievementReviewSnapshotCard.vue";
-import StudentProfileEditor from "../components/StudentProfileEditor.vue";
-import { API_BASE } from "../api/request";
-import { useNotifications } from "../composables/useNotifications";
-import { searchStudentProfiles, getStudentProfileById } from "../api/profile";
-import { uploadMedia } from "../api/upload";
-import { useUploadProgress } from "../composables/useUploadProgress";
-import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
-import { resolveMediaObjectUrl, resolveMediaUrl } from "../utils/media";
-import { loadUser } from "../utils/userStorage";
-import { useToast } from "../composables/useToast";
-import { useDashboardShell } from "../composables/useDashboardShell";
-import MobileCapsule from "../components/MobileCapsule.vue";
+import AchievementReviewSnapshotCard from "@/components/AchievementReviewSnapshotCard.vue";
+import StudentProfileEditor from "@/components/StudentProfileEditor.vue";
+import { API_BASE } from "@/api/request";
+import { useNotifications } from "@/composables/useNotifications";
+import { searchStudentProfiles, getStudentProfileById } from "@/api/profile";
+import { uploadMedia } from "@/api/upload";
+import { useUploadProgress } from "@/composables/useUploadProgress";
+import { useAchievementUploadSettings } from "@/composables/useAchievementUploadSettings";
+import { resolveMediaObjectUrl, resolveMediaUrl } from "@/utils/media";
+import { loadUser } from "@/utils/userStorage";
+import { useToast } from "@/composables/useToast";
+import { useDashboardShell } from "@/composables/useDashboardShell";
+import MobileCapsule from "@/components/MobileCapsule.vue";
 
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const toast = useToast();
@@ -717,5 +717,5 @@ async function handleRemoveSupportingDoc(index) {
 </template>
 
 <style scoped>
-@import '../assets/styles/notifications-view.css';
+@import '@/assets/styles/notifications-view.css';
 </style>

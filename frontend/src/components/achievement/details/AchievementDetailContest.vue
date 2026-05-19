@@ -4,7 +4,7 @@ import {
   formatContestDate,
   joinText,
   text,
-} from "../../../utils/achievementFormatters";
+} from "@/utils/achievementFormatters";
 
 defineProps({
   item: {

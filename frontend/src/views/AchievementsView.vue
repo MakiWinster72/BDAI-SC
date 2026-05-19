@@ -597,28 +597,28 @@ import {
   watch,
 } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { getMenuLocation, isMenuEnabled } from "../constants/menu";
+import { getMenuLocation, isMenuEnabled } from "@/constants/menu";
 import {
   createAchievement,
   deleteAchievement,
   getAchievements,
   updateAchievement,
-} from "../api/achievements";
-import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
-import { uploadMedia } from "../api/upload";
-import { useUploadProgress } from "../composables/useUploadProgress";
-import { renderDocx } from "../utils/docxRenderer";
-import { renderSheet } from "../utils/sheetRenderer";
-import { renderPdf } from "../utils/pdfRenderer";
-import { API_BASE } from "../api/request";
-import MobileCapsule from "../components/MobileCapsule.vue";
-import AchievementCardBody from "../components/AchievementCardBody.vue";
-import AchievementDetailRenderer from "../components/achievement/AchievementDetailRenderer.vue";
-import { navigateWithViewTransition } from "../utils/viewTransition";
-import { useDashboardShell } from "../composables/useDashboardShell";
-import { useNotifications } from "../composables/useNotifications";
-import { useReviewSettings } from "../composables/useReviewSettings";
-import { useToast } from "../composables/useToast";
+} from "@/api/achievements";
+import { useAchievementUploadSettings } from "@/composables/useAchievementUploadSettings";
+import { uploadMedia } from "@/api/upload";
+import { useUploadProgress } from "@/composables/useUploadProgress";
+import { renderDocx } from "@/utils/docxRenderer";
+import { renderSheet } from "@/utils/sheetRenderer";
+import { renderPdf } from "@/utils/pdfRenderer";
+import { API_BASE } from "@/api/request";
+import MobileCapsule from "@/components/MobileCapsule.vue";
+import AchievementCardBody from "@/components/AchievementCardBody.vue";
+import AchievementDetailRenderer from "@/components/achievement/AchievementDetailRenderer.vue";
+import { navigateWithViewTransition } from "@/utils/viewTransition";
+import { useDashboardShell } from "@/composables/useDashboardShell";
+import { useNotifications } from "@/composables/useNotifications";
+import { useReviewSettings } from "@/composables/useReviewSettings";
+import { useToast } from "@/composables/useToast";
 import {
   resolveMediaUrl,
   stripMediaUrl,
@@ -637,9 +637,9 @@ import {
   downloadMedia,
   resolveMediaObjectUrl,
   revokePrivateMediaObjectUrls,
-} from "../utils/media";
-import { loadUser } from "../utils/userStorage";
-import { dedupeAchievements, attachmentIcon } from "../utils/achievement";
+} from "@/utils/media";
+import { loadUser } from "@/utils/userStorage";
+import { dedupeAchievements, attachmentIcon } from "@/utils/achievement";
 import {
   categoryFieldMap,
   categoryHints,
@@ -648,8 +648,8 @@ import {
   attachmentIconMap,
   IMAGE_URLS_FIELD,
   ATTACHMENTS_FIELD,
-} from "../constants/achievementConstants";
-import { useAchievementUpload } from "../composables/useAchievementUpload";
+} from "@/constants/achievementConstants";
+import { useAchievementUpload } from "@/composables/useAchievementUpload";
 
 const router = useRouter();
 const route = useRoute();
@@ -852,12 +852,7 @@ function getCurrentStudentNo() {
   if (studentNo) {
     return studentNo;
   }
-  try {
-    const raw = JSON.parse(localStorage.getItem("bdai_sc_user") || "{}");
-    return raw.studentNo || profile.studentNo || "";
-  } catch {
-    return profile.studentNo || "";
-  }
+  return profile.studentNo || "";
 }
 
 function getCurrentStudentName() {

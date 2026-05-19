@@ -2,7 +2,7 @@ import { computed, reactive, shallowRef } from "vue";
 import {
   getAchievementUploadSettings,
   updateAchievementUploadSettings,
-} from "../api/achievementUploadSettings";
+} from "@/api/achievementUploadSettings";
 
 const STORAGE_KEY = "bdai_sc_achievement_upload_settings";
 
@@ -108,7 +108,7 @@ function splitExtText(value) {
   return value ? value.split(",").filter(Boolean) : [];
 }
 
-export function useAchievementUploadSettings() {
+function createAchievementUploadSettingsStore() {
   const settings = reactive(readCachedSettings());
   const loading = shallowRef(false);
   const saving = shallowRef(false);
@@ -201,4 +201,10 @@ export function useAchievementUploadSettings() {
     fetchSettings,
     saveSettings,
   };
+}
+
+const achievementUploadSettingsStore = createAchievementUploadSettingsStore();
+
+export function useAchievementUploadSettings() {
+  return achievementUploadSettingsStore;
 }

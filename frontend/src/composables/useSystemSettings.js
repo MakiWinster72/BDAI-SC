@@ -1,5 +1,5 @@
 import { reactive, readonly } from "vue";
-import { getSystemSettings } from "../api/admin";
+import { getSystemSettings } from "@/api/admin";
 
 const store = reactive({
   loaded: false,

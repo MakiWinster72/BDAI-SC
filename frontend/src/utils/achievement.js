@@ -15,7 +15,7 @@ import {
   attachmentIconMap,
   IMAGE_URLS_FIELD,
   ATTACHMENTS_FIELD,
-} from '../constants/achievementConstants';
+} from '@/constants/achievementConstants';
 
 // ── 去重 & 归一化 ─────────────────────────────────────
 
