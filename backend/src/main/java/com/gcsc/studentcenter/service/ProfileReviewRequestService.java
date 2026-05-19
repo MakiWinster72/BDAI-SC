@@ -299,7 +299,7 @@ public class ProfileReviewRequestService {
   private ProfileReviewRequest applyApprovedRequest(ProfileReviewRequest request, AppUser reviewer) {
     StudentProfileRequest profileRequest = readProfileRequest(request.getPayloadSnapshotJson());
 
-    studentProfileService.saveProfile(request.getRequester().getUsername(), profileRequest);
+    studentProfileService.saveProfileFromApprovedReview(request.getRequester().getUsername(), profileRequest);
 
     request.setStatus("approved");
     request.setReviewer(reviewer);

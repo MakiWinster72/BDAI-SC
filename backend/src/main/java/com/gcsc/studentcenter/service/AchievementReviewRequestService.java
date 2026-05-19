@@ -315,8 +315,8 @@ public class AchievementReviewRequestService {
   private AchievementReviewRequest applyApprovedRequest(AchievementReviewRequest request, AppUser reviewer) {
     AchievementRecordRequest payload = readPayload(request.getPayloadJson());
     AchievementRecordResponse applied = "create".equals(request.getAction())
-        ? achievementService.create(request.getRequester().getUsername(), request.getCategory(), payload)
-        : achievementService.update(
+        ? achievementService.createFromApprovedReview(request.getRequester().getUsername(), request.getCategory(), payload)
+        : achievementService.updateFromApprovedReview(
             request.getRequester().getUsername(),
             request.getRequester().getRole().name(),
             request.getCategory(),

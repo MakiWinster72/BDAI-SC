@@ -4,6 +4,7 @@ import com.gcsc.studentcenter.dto.AchievementRecordRequest;
 import com.gcsc.studentcenter.dto.AchievementRecordResponse;
 import com.gcsc.studentcenter.entity.*;
 import com.gcsc.studentcenter.repository.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ public class AchievementService {
   private final AchievementIeerTrainingRepository achievementIeerTrainingRepository;
   private final AchievementSanSanXiangRepository achievementSanSanXiangRepository;
   private final AchievementUploadSettingsService achievementUploadSettingsService;
+  private final ReviewSettingsService reviewSettingsService;
 
   public AchievementService(
       AppUserRepository appUserRepository,
@@ -42,7 +44,8 @@ public class AchievementService {
       AchievementDoubleHundredRepository achievementDoubleHundredRepository,
       AchievementIeerTrainingRepository achievementIeerTrainingRepository,
       AchievementSanSanXiangRepository achievementSanSanXiangRepository,
-      AchievementUploadSettingsService achievementUploadSettingsService) {
+      AchievementUploadSettingsService achievementUploadSettingsService,
+      ReviewSettingsService reviewSettingsService) {
     this.appUserRepository = appUserRepository;
     this.achievementContestRepository = achievementContestRepository;
     this.achievementPaperRepository = achievementPaperRepository;
@@ -55,6 +58,7 @@ public class AchievementService {
     this.achievementIeerTrainingRepository = achievementIeerTrainingRepository;
     this.achievementSanSanXiangRepository = achievementSanSanXiangRepository;
     this.achievementUploadSettingsService = achievementUploadSettingsService;
+    this.reviewSettingsService = reviewSettingsService;
   }
 
   public List<AchievementRecordResponse> list(
@@ -165,6 +169,11 @@ public class AchievementService {
   }
 
   public AchievementRecordResponse create(String username, String category, AchievementRecordRequest request) {
+    ensureDirectAchievementWriteAllowed(username);
+    return createFromApprovedReview(username, category, request);
+  }
+
+  public AchievementRecordResponse createFromApprovedReview(String username, String category, AchievementRecordRequest request) {
     AppUser author = appUserRepository.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
     Map<String, String> fields = safeFields(request.getFields());
@@ -196,6 +205,12 @@ public class AchievementService {
   }
 
   public AchievementRecordResponse update(String username, String role, String category, Long id,
+      AchievementRecordRequest request) {
+    ensureDirectAchievementWriteAllowed(username);
+    return updateFromApprovedReview(username, role, category, id, request);
+  }
+
+  public AchievementRecordResponse updateFromApprovedReview(String username, String role, String category, Long id,
       AchievementRecordRequest request) {
     Map<String, String> fields = safeFields(request.getFields());
     validateAchievementMedia(fields);
@@ -238,6 +253,7 @@ public class AchievementService {
   }
 
   public void delete(String username, String role, String category, Long id) {
+    ensureDirectAchievementWriteAllowed(username);
     switch (requireCategory(category)) {
       case "contest":
         achievementContestRepository.delete(loadContest(username, role, id));
@@ -626,6 +642,17 @@ public class AchievementService {
     }
     if (!author.getUsername().equals(username)) {
       throw new IllegalArgumentException("无权限操作该成就");
+    }
+  }
+
+  private void ensureDirectAchievementWriteAllowed(String username) {
+    if (!reviewSettingsService.isAchievementReviewEnabled()) {
+      return;
+    }
+    AppUser user = appUserRepository.findByUsername(username)
+        .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+    if (user.getRole() == UserRole.STUDENT || user.getRole() == UserRole.CADRE) {
+      throw new AccessDeniedException("成就审核已开启，请提交审核申请");
     }
   }
 

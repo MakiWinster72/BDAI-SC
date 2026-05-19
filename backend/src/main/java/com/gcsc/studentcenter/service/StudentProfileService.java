@@ -34,12 +34,15 @@ public class StudentProfileService {
 
   private final StudentProfileRepository studentProfileRepository;
   private final AppUserRepository appUserRepository;
+  private final ReviewSettingsService reviewSettingsService;
 
   public StudentProfileService(
       StudentProfileRepository studentProfileRepository,
-      AppUserRepository appUserRepository) {
+      AppUserRepository appUserRepository,
+      ReviewSettingsService reviewSettingsService) {
     this.studentProfileRepository = studentProfileRepository;
     this.appUserRepository = appUserRepository;
+    this.reviewSettingsService = reviewSettingsService;
   }
 
   @Transactional(readOnly = true)
@@ -63,6 +66,22 @@ public class StudentProfileService {
 
   @Transactional
   public StudentProfileResponse saveProfile(String username, StudentProfileRequest request) {
+    AppUser user = appUserRepository.findByUsername(username)
+        .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+    ensureDirectProfileWriteAllowed(user);
+    StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
+        .orElseGet(() -> {
+          StudentProfile created = new StudentProfile();
+          created.setUser(user);
+          return created;
+        });
+
+    StudentProfile saved = saveProfileInternal(user, profile, request);
+    return toResponse(user, saved);
+  }
+
+  @Transactional
+  public StudentProfileResponse saveProfileFromApprovedReview(String username, StudentProfileRequest request) {
     AppUser user = appUserRepository.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
     StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
@@ -279,6 +298,15 @@ public class StudentProfileService {
       return;
     }
     throw new AccessDeniedException("无权限查看该学生档案");
+  }
+
+  private void ensureDirectProfileWriteAllowed(AppUser user) {
+    if (!reviewSettingsService.isProfileReviewEnabled()) {
+      return;
+    }
+    if (user.getRole() == UserRole.STUDENT || user.getRole() == UserRole.CADRE) {
+      throw new AccessDeniedException("个人信息审核已开启，请提交审核申请");
+    }
   }
 
   private List<String> allowedClassNamesFor(AppUser operator) {
