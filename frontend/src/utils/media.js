@@ -7,6 +7,7 @@
 import { API_BASE } from '../api/request';
 
 const privateMediaBlobUrls = new Map();
+const MEDIA_API_PREFIX = '/api/media';
 
 // ── URL 处理 ────────────────────────────────────────────
 
@@ -17,13 +18,14 @@ const privateMediaBlobUrls = new Map();
  */
 export function resolveMediaUrl(url) {
   if (!url) return '';
+  if (isUploadUrl(url)) return resolveMediaApiUrl(url);
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   return `${API_BASE}${url}`;
 }
 
 export function isPrivateUploadUrl(url) {
-  const path = normalizeUploadPath(url);
-  return path.startsWith('/uploads/') && !path.includes('/avatar/');
+  const path = toUploadPath(normalizeUploadPath(url));
+  return path.startsWith('/uploads/');
 }
 
 export function resolveProtectedMediaUrl(url) {
@@ -82,7 +84,10 @@ export function revokePrivateMediaObjectUrls() {
 
 function resolveMediaApiUrl(url) {
   const path = normalizeUploadPath(url);
-  return `${API_BASE}/api/media${path}`;
+  if (path.startsWith(`${MEDIA_API_PREFIX}/uploads/`)) {
+    return `${API_BASE}${path}`;
+  }
+  return `${API_BASE}${MEDIA_API_PREFIX}${toUploadPath(path)}`;
 }
 
 function normalizeUploadPath(url) {
@@ -98,6 +103,18 @@ function normalizeUploadPath(url) {
     return url.replace(API_BASE, '');
   }
   return url;
+}
+
+function isUploadUrl(url) {
+  const path = normalizeUploadPath(url);
+  return path.startsWith('/uploads/') || path.startsWith(`${MEDIA_API_PREFIX}/uploads/`);
+}
+
+function toUploadPath(path) {
+  if (path.startsWith(`${MEDIA_API_PREFIX}/uploads/`)) {
+    return path.slice(MEDIA_API_PREFIX.length);
+  }
+  return path;
 }
 
 /**

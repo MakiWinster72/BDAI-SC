@@ -25,7 +25,7 @@ import java.util.Set;
 @RequestMapping("/api/media")
 public class MediaController {
 
-  private static final Set<String> PRIVATE_FOLDERS = Set.of("achievements", "reviews");
+  private static final Set<String> SUPPORTED_FOLDERS = Set.of("avatar", "achievements", "reviews");
 
   private final AppUserRepository appUserRepository;
   private final Path uploadRoot;
@@ -43,7 +43,7 @@ public class MediaController {
       @PathVariable Long userId,
       @PathVariable String folder,
       @PathVariable String filename) throws MalformedURLException {
-    if (!PRIVATE_FOLDERS.contains(folder)) {
+    if (!SUPPORTED_FOLDERS.contains(folder)) {
       throw new IllegalArgumentException("文件类型不支持");
     }
     if (authentication == null || !canAccess(authentication.getName(), userId)) {

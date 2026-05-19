@@ -60,7 +60,7 @@ public class UploadService {
       throw new IllegalStateException("上传失败，请稍后再试");
     }
 
-    String url = "/uploads/" + userId + "/" + subfolder + "/" + filename;
+    String url = "/api/media/uploads/" + userId + "/" + subfolder + "/" + filename;
     return new UploadResponse(true, url, mediaType, file.getOriginalFilename());
   }
 

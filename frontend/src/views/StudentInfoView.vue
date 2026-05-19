@@ -309,7 +309,7 @@
           >
             <input v-model="selectedIds" type="checkbox" :value="item.id" @click.stop />
             <div class="student-avatar">
-              <img v-if="item.avatarUrl" :src="resolveMediaUrl(item.avatarUrl)" :alt="item.name" />
+              <ProtectedMediaImage v-if="item.avatarUrl" :src="resolveMediaUrl(item.avatarUrl)" :alt="item.name" />
               <span v-else>{{ (item.name || '?')[0] }}</span>
             </div>
             <div class="student-main">
@@ -710,6 +710,7 @@ import { createAuditLog } from "../api/auditLog";
 import StudentProfileEditor from "../components/StudentProfileEditor.vue";
 import PaginationBar from "../components/PaginationBar.vue";
 import OverlayPanel from "../components/OverlayPanel.vue";
+import ProtectedMediaImage from "../components/ProtectedMediaImage.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useToast } from "../composables/useToast";

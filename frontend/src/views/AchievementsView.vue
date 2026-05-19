@@ -747,14 +747,22 @@ const form = reactive({
   fields: {},
 });
 
-const imagePreviews = computed(() =>
-  (form.imageUrls || []).map((url) => resolveMediaUrl(url)),
-);
+const imagePreviews = ref([]);
 const attachmentPreviews = computed(() =>
   (form.attachments || []).map((file) => ({
     ...file,
     url: resolveMediaUrl(file.url),
   })),
+);
+
+watch(
+  () => [...(form.imageUrls || [])],
+  async (urls) => {
+    imagePreviews.value = await Promise.all(
+      urls.map((url) => resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url))),
+    );
+  },
+  { immediate: true },
 );
 
 const categoryOptions = computed(() =>

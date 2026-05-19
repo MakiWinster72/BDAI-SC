@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
 import harmonyFontBlackUrl from "../assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
 import { listAchievements } from "../api/achievement";
+import { fetchMedia } from "../utils/media";
 
 const PDF_FONT_NAME = "HarmonyOSSansSC";
 const PDF_FONT_BLACK = "HarmonyOSSansSCBlack";
@@ -355,7 +356,7 @@ export function useStudentPdfExport() {
           ? resolveMediaUrl(avatarUrlRaw)
           : avatarUrlRaw;
         try {
-          const response = await fetch(avatarUrl, { mode: "cors" });
+          const response = await fetchMedia(avatarUrl, { mode: "cors" });
           const blob = await response.blob();
           const dataUrl = await new Promise((resolve) => {
             const reader = new FileReader();

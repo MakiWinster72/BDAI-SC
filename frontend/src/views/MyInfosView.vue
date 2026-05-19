@@ -12,7 +12,7 @@
           :disabled="!isEditing"
           @click="triggerAvatarUpload"
         >
-          <img
+          <ProtectedMediaImage
             v-if="info.avatarUrl"
             :src="resolveMediaUrl(info.avatarUrl)"
             alt="头像"
@@ -1001,6 +1001,7 @@ import ExportPdfButton from "../components/ExportPdfButton.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import YearPicker from "../components/YearPicker.vue";
 import RecordRow from "../components/RecordRow.vue";
+import ProtectedMediaImage from "../components/ProtectedMediaImage.vue";
 import { getMenuLocation, isMenuEnabled } from "../constants/menu";
 import { regionData, codeToText } from "element-china-area-data";
 import { getStudentProfile, saveStudentProfile } from "../api/profile";

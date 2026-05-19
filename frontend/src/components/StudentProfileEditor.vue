@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from "vue";
 import { regionData, codeToText } from "element-china-area-data";
 import ExportPdfButton from "./ExportPdfButton.vue";
+import ProtectedMediaImage from "./ProtectedMediaImage.vue";
 import { uploadMedia } from "../api/upload";
 import { useToast } from "../composables/useToast";
 import { useStudentPdfExport } from "../composables/useStudentPdfExport";
@@ -1324,7 +1325,7 @@ defineExpose({
         :disabled="!isEditing"
         @click="triggerAvatarUpload"
       >
-        <img
+        <ProtectedMediaImage
           v-if="info.avatarUrl"
           :src="resolveMediaUrl(info.avatarUrl)"
           alt="头像"
