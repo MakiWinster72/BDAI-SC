@@ -3,12 +3,8 @@ package com.gcsc.studentcenter.controller;
 import com.gcsc.studentcenter.dto.AchievementRecordRequest;
 import com.gcsc.studentcenter.dto.AchievementRecordResponse;
 import com.gcsc.studentcenter.service.AchievementService;
-import com.gcsc.studentcenter.service.JwtService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,100 +14,51 @@ import java.util.List;
 public class AchievementController {
 
   private final AchievementService achievementService;
-  private final JwtService jwtService;
 
-  public AchievementController(AchievementService achievementService, JwtService jwtService) {
+  public AchievementController(AchievementService achievementService) {
     this.achievementService = achievementService;
-    this.jwtService = jwtService;
   }
 
   @GetMapping
   public ResponseEntity<List<AchievementRecordResponse>> list(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @RequestParam(value = "category", required = false) String category,
       @RequestParam(value = "studentNo", required = false) String studentNo,
       @RequestParam(value = "studentName", required = false) String studentName) {
-    String username = resolveUsername(authHeader);
-    if (username == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-    return ResponseEntity.ok(achievementService.list(username, category, studentNo, studentName));
+    return ResponseEntity.ok(achievementService.list(authentication.getName(), category, studentNo, studentName));
   }
 
   @GetMapping("/{category}/{id}")
   public ResponseEntity<AchievementRecordResponse> getById(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable("category") String category,
       @PathVariable("id") Long id) {
-    String username = resolveUsername(authHeader);
-    if (username == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-    String role = resolveRole(authHeader);
-    return ResponseEntity.ok(achievementService.getById(username, role, category, id));
+    return ResponseEntity.ok(achievementService.getById(authentication.getName(), category, id));
   }
 
   @PostMapping("/{category}")
   public ResponseEntity<AchievementRecordResponse> create(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable("category") String category,
       @RequestBody AchievementRecordRequest request) {
-    String username = resolveUsername(authHeader);
-    if (username == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-    return ResponseEntity.ok(achievementService.create(username, category, request));
+    return ResponseEntity.ok(achievementService.create(authentication.getName(), category, request));
   }
 
   @PutMapping("/{category}/{id}")
   public ResponseEntity<AchievementRecordResponse> update(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable("category") String category,
       @PathVariable("id") Long id,
       @RequestBody AchievementRecordRequest request) {
-    String username = resolveUsername(authHeader);
-    if (username == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-    String role = resolveRole(authHeader);
-    return ResponseEntity.ok(achievementService.update(username, role, category, id, request));
+    return ResponseEntity.ok(achievementService.update(authentication.getName(), category, id, request));
   }
 
   @DeleteMapping("/{category}/{id}")
   public ResponseEntity<Void> delete(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable("category") String category,
       @PathVariable("id") Long id) {
-    String username = resolveUsername(authHeader);
-    if (username == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-    String role = resolveRole(authHeader);
-    achievementService.delete(username, role, category, id);
+    achievementService.delete(authentication.getName(), category, id);
     return ResponseEntity.ok().build();
-  }
-
-  private String resolveUsername(String authHeader) {
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      return null;
-    }
-    try {
-      Claims claims = jwtService.parseToken(authHeader.substring(7));
-      return claims.getSubject();
-    } catch (JwtException ex) {
-      return null;
-    }
-  }
-
-  private String resolveRole(String authHeader) {
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      return null;
-    }
-    try {
-      Claims claims = jwtService.parseToken(authHeader.substring(7));
-      return claims.get("role", String.class);
-    } catch (JwtException ex) {
-      return null;
-    }
   }
 }

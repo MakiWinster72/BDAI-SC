@@ -141,28 +141,28 @@ public class AchievementService {
     }
   }
 
-  public AchievementRecordResponse getById(String username, String role, String category, Long id) {
+  public AchievementRecordResponse getById(String username, String category, Long id) {
     switch (requireCategory(category)) {
       case "contest":
-        return toResponse(loadContest(username, role, id));
+        return toResponse(loadContest(username, id));
       case "paper":
-        return toResponse(loadPaper(username, role, id));
+        return toResponse(loadPaper(username, id));
       case "journal":
-        return toResponse(loadJournal(username, role, id));
+        return toResponse(loadJournal(username, id));
       case "patent":
-        return toResponse(loadPatent(username, role, id));
+        return toResponse(loadPatent(username, id));
       case "certificate":
-        return toResponse(loadCertificate(username, role, id));
+        return toResponse(loadCertificate(username, id));
       case "research":
-        return toResponse(loadResearch(username, role, id));
+        return toResponse(loadResearch(username, id));
       case "works":
-        return toResponse(loadWorks(username, role, id));
+        return toResponse(loadWorks(username, id));
       case "doubleHundred":
-        return toResponse(loadDoubleHundred(username, role, id));
+        return toResponse(loadDoubleHundred(username, id));
       case "ieerTraining":
-        return toResponse(loadIeerTraining(username, role, id));
+        return toResponse(loadIeerTraining(username, id));
       case "sanSanXiang":
-        return toResponse(loadSanSanXiang(username, role, id));
+        return toResponse(loadSanSanXiang(username, id));
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -204,37 +204,37 @@ public class AchievementService {
     }
   }
 
-  public AchievementRecordResponse update(String username, String role, String category, Long id,
+  public AchievementRecordResponse update(String username, String category, Long id,
       AchievementRecordRequest request) {
     ensureDirectAchievementWriteAllowed(username);
-    return updateFromApprovedReview(username, role, category, id, request);
+    return updateFromApprovedReview(username, category, id, request);
   }
 
-  public AchievementRecordResponse updateFromApprovedReview(String username, String role, String category, Long id,
+  public AchievementRecordResponse updateFromApprovedReview(String username, String category, Long id,
       AchievementRecordRequest request) {
     Map<String, String> fields = safeFields(request.getFields());
     validateAchievementMedia(fields);
     switch (requireCategory(category)) {
       case "contest":
-        return toResponse(updateContest(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateContest(username, id, fields, request.getImageUrl()));
       case "paper":
-        return toResponse(updatePaper(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updatePaper(username, id, fields, request.getImageUrl()));
       case "journal":
-        return toResponse(updateJournal(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateJournal(username, id, fields, request.getImageUrl()));
       case "patent":
-        return toResponse(updatePatent(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updatePatent(username, id, fields, request.getImageUrl()));
       case "certificate":
-        return toResponse(updateCertificate(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateCertificate(username, id, fields, request.getImageUrl()));
       case "research":
-        return toResponse(updateResearch(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateResearch(username, id, fields, request.getImageUrl()));
       case "works":
-        return toResponse(updateWorks(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateWorks(username, id, fields, request.getImageUrl()));
       case "doubleHundred":
-        return toResponse(updateDoubleHundred(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateDoubleHundred(username, id, fields, request.getImageUrl()));
       case "ieerTraining":
-        return toResponse(updateIeerTraining(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateIeerTraining(username, id, fields, request.getImageUrl()));
       case "sanSanXiang":
-        return toResponse(updateSanSanXiang(username, role, id, fields, request.getImageUrl()));
+        return toResponse(updateSanSanXiang(username, id, fields, request.getImageUrl()));
       default:
         throw new IllegalArgumentException("无效的成就分类");
     }
@@ -252,38 +252,38 @@ public class AchievementService {
     }
   }
 
-  public void delete(String username, String role, String category, Long id) {
+  public void delete(String username, String category, Long id) {
     ensureDirectAchievementWriteAllowed(username);
     switch (requireCategory(category)) {
       case "contest":
-        achievementContestRepository.delete(loadContest(username, role, id));
+        achievementContestRepository.delete(loadContest(username, id));
         return;
       case "paper":
-        achievementPaperRepository.delete(loadPaper(username, role, id));
+        achievementPaperRepository.delete(loadPaper(username, id));
         return;
       case "journal":
-        achievementJournalRepository.delete(loadJournal(username, role, id));
+        achievementJournalRepository.delete(loadJournal(username, id));
         return;
       case "patent":
-        achievementPatentRepository.delete(loadPatent(username, role, id));
+        achievementPatentRepository.delete(loadPatent(username, id));
         return;
       case "certificate":
-        achievementCertificateRepository.delete(loadCertificate(username, role, id));
+        achievementCertificateRepository.delete(loadCertificate(username, id));
         return;
       case "research":
-        achievementResearchRepository.delete(loadResearch(username, role, id));
+        achievementResearchRepository.delete(loadResearch(username, id));
         return;
       case "works":
-        achievementWorksRepository.delete(loadWorks(username, role, id));
+        achievementWorksRepository.delete(loadWorks(username, id));
         return;
       case "doubleHundred":
-        achievementDoubleHundredRepository.delete(loadDoubleHundred(username, role, id));
+        achievementDoubleHundredRepository.delete(loadDoubleHundred(username, id));
         return;
       case "ieerTraining":
-        achievementIeerTrainingRepository.delete(loadIeerTraining(username, role, id));
+        achievementIeerTrainingRepository.delete(loadIeerTraining(username, id));
         return;
       case "sanSanXiang":
-        achievementSanSanXiangRepository.delete(loadSanSanXiang(username, role, id));
+        achievementSanSanXiangRepository.delete(loadSanSanXiang(username, id));
         return;
       default:
         throw new IllegalArgumentException("无效的成就分类");
@@ -566,82 +566,84 @@ public class AchievementService {
     return trimmed.isEmpty() ? "" : trimmed;
   }
 
-  private AchievementContest loadContest(String username, String role, Long id) {
+  private AchievementContest loadContest(String username, Long id) {
     AchievementContest contest = achievementContestRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, contest.getAuthor());
+    ensureOwner(username, contest.getAuthor());
     return contest;
   }
 
-  private AchievementPaper loadPaper(String username, String role, Long id) {
+  private AchievementPaper loadPaper(String username, Long id) {
     AchievementPaper paper = achievementPaperRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, paper.getAuthor());
+    ensureOwner(username, paper.getAuthor());
     return paper;
   }
 
-  private AchievementJournal loadJournal(String username, String role, Long id) {
+  private AchievementJournal loadJournal(String username, Long id) {
     AchievementJournal journal = achievementJournalRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, journal.getAuthor());
+    ensureOwner(username, journal.getAuthor());
     return journal;
   }
 
-  private AchievementPatent loadPatent(String username, String role, Long id) {
+  private AchievementPatent loadPatent(String username, Long id) {
     AchievementPatent patent = achievementPatentRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, patent.getAuthor());
+    ensureOwner(username, patent.getAuthor());
     return patent;
   }
 
-  private AchievementCertificate loadCertificate(String username, String role, Long id) {
+  private AchievementCertificate loadCertificate(String username, Long id) {
     AchievementCertificate certificate = achievementCertificateRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, certificate.getAuthor());
+    ensureOwner(username, certificate.getAuthor());
     return certificate;
   }
 
-  private AchievementResearch loadResearch(String username, String role, Long id) {
+  private AchievementResearch loadResearch(String username, Long id) {
     AchievementResearch research = achievementResearchRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, research.getAuthor());
+    ensureOwner(username, research.getAuthor());
     return research;
   }
 
-  private AchievementWorks loadWorks(String username, String role, Long id) {
+  private AchievementWorks loadWorks(String username, Long id) {
     AchievementWorks works = achievementWorksRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, works.getAuthor());
+    ensureOwner(username, works.getAuthor());
     return works;
   }
 
-  private AchievementDoubleHundred loadDoubleHundred(String username, String role, Long id) {
+  private AchievementDoubleHundred loadDoubleHundred(String username, Long id) {
     AchievementDoubleHundred doubleHundred = achievementDoubleHundredRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, doubleHundred.getAuthor());
+    ensureOwner(username, doubleHundred.getAuthor());
     return doubleHundred;
   }
 
-  private AchievementIeerTraining loadIeerTraining(String username, String role, Long id) {
+  private AchievementIeerTraining loadIeerTraining(String username, Long id) {
     AchievementIeerTraining ieerTraining = achievementIeerTrainingRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, ieerTraining.getAuthor());
+    ensureOwner(username, ieerTraining.getAuthor());
     return ieerTraining;
   }
 
-  private AchievementSanSanXiang loadSanSanXiang(String username, String role, Long id) {
+  private AchievementSanSanXiang loadSanSanXiang(String username, Long id) {
     AchievementSanSanXiang sanSanXiang = achievementSanSanXiangRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("成就不存在"));
-    ensureOwner(username, role, sanSanXiang.getAuthor());
+    ensureOwner(username, sanSanXiang.getAuthor());
     return sanSanXiang;
   }
 
-  private void ensureOwner(String username, String role, AppUser author) {
-    if ("ADMIN".equals(role)) {
+  private void ensureOwner(String username, AppUser author) {
+    AppUser currentUser = appUserRepository.findByUsername(username)
+        .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+    if (currentUser.getRole() == UserRole.ADMIN) {
       return;
     }
     if (!author.getUsername().equals(username)) {
-      throw new IllegalArgumentException("无权限操作该成就");
+      throw new AccessDeniedException("无权限操作该成就");
     }
   }
 
@@ -720,9 +722,9 @@ public class AchievementService {
     return achievementContestRepository.save(contest);
   }
 
-  private AchievementContest updateContest(String username, String role, Long id, Map<String, String> fields,
+  private AchievementContest updateContest(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementContest contest = loadContest(username, role, id);
+    AchievementContest contest = loadContest(username, id);
     String contestName = valueOf(fields, "contestName");
     if (!contestName.isEmpty()) {
       contest.setContestName(contestName);
@@ -767,9 +769,9 @@ public class AchievementService {
     return achievementPaperRepository.save(paper);
   }
 
-  private AchievementPaper updatePaper(String username, String role, Long id, Map<String, String> fields,
+  private AchievementPaper updatePaper(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementPaper paper = loadPaper(username, role, id);
+    AchievementPaper paper = loadPaper(username, id);
     String paperTitle = valueOf(fields, "paperTitle");
     if (!paperTitle.isEmpty()) {
       paper.setPaperTitle(paperTitle);
@@ -807,9 +809,9 @@ public class AchievementService {
     return achievementJournalRepository.save(journal);
   }
 
-  private AchievementJournal updateJournal(String username, String role, Long id, Map<String, String> fields,
+  private AchievementJournal updateJournal(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementJournal journal = loadJournal(username, role, id);
+    AchievementJournal journal = loadJournal(username, id);
     String workTitle = valueOf(fields, "workTitle");
     if (!workTitle.isEmpty()) {
       journal.setWorkTitle(workTitle);
@@ -847,9 +849,9 @@ public class AchievementService {
     return achievementPatentRepository.save(patent);
   }
 
-  private AchievementPatent updatePatent(String username, String role, Long id, Map<String, String> fields,
+  private AchievementPatent updatePatent(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementPatent patent = loadPatent(username, role, id);
+    AchievementPatent patent = loadPatent(username, id);
     String patentName = valueOf(fields, "patentName");
     if (!patentName.isEmpty()) {
       patent.setPatentName(patentName);
@@ -887,9 +889,9 @@ public class AchievementService {
     return achievementCertificateRepository.save(certificate);
   }
 
-  private AchievementCertificate updateCertificate(String username, String role, Long id, Map<String, String> fields,
+  private AchievementCertificate updateCertificate(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementCertificate certificate = loadCertificate(username, role, id);
+    AchievementCertificate certificate = loadCertificate(username, id);
     String certificateName = valueOf(fields, "certificateName");
     if (!certificateName.isEmpty()) {
       certificate.setCertificateName(certificateName);
@@ -925,9 +927,9 @@ public class AchievementService {
     return achievementResearchRepository.save(research);
   }
 
-  private AchievementResearch updateResearch(String username, String role, Long id, Map<String, String> fields,
+  private AchievementResearch updateResearch(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementResearch research = loadResearch(username, role, id);
+    AchievementResearch research = loadResearch(username, id);
     String projectName = valueOf(fields, "projectName");
     if (!projectName.isEmpty()) {
       research.setProjectName(projectName);
@@ -967,9 +969,9 @@ public class AchievementService {
     return achievementWorksRepository.save(works);
   }
 
-  private AchievementWorks updateWorks(String username, String role, Long id, Map<String, String> fields,
+  private AchievementWorks updateWorks(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementWorks works = loadWorks(username, role, id);
+    AchievementWorks works = loadWorks(username, id);
     String workName = valueOf(fields, "workName");
     if (!workName.isEmpty()) {
       works.setWorkName(workName);
@@ -1018,9 +1020,9 @@ public class AchievementService {
     return achievementDoubleHundredRepository.save(doubleHundred);
   }
 
-  private AchievementDoubleHundred updateDoubleHundred(String username, String role, Long id,
+  private AchievementDoubleHundred updateDoubleHundred(String username, Long id,
       Map<String, String> fields, String imageUrl) {
-    AchievementDoubleHundred doubleHundred = loadDoubleHundred(username, role, id);
+    AchievementDoubleHundred doubleHundred = loadDoubleHundred(username, id);
     String projectName = valueOf(fields, "projectName");
     if (!projectName.isEmpty()) {
       doubleHundred.setProjectName(projectName);
@@ -1100,9 +1102,9 @@ public class AchievementService {
     return achievementSanSanXiangRepository.save(sanSanXiang);
   }
 
-  private AchievementIeerTraining updateIeerTraining(String username, String role, Long id, Map<String, String> fields,
+  private AchievementIeerTraining updateIeerTraining(String username, Long id, Map<String, String> fields,
       String imageUrl) {
-    AchievementIeerTraining ieerTraining = loadIeerTraining(username, role, id);
+    AchievementIeerTraining ieerTraining = loadIeerTraining(username, id);
     String projectName = valueOf(fields, "projectName");
     if (!projectName.isEmpty()) {
       ieerTraining.setProjectName(projectName);
@@ -1123,9 +1125,9 @@ public class AchievementService {
     return achievementIeerTrainingRepository.save(ieerTraining);
   }
 
-  private AchievementSanSanXiang updateSanSanXiang(String username, String role, Long id,
+  private AchievementSanSanXiang updateSanSanXiang(String username, Long id,
       Map<String, String> fields, String imageUrl) {
-    AchievementSanSanXiang sanSanXiang = loadSanSanXiang(username, role, id);
+    AchievementSanSanXiang sanSanXiang = loadSanSanXiang(username, id);
     String projectName = valueOf(fields, "projectName");
     if (!projectName.isEmpty()) {
       sanSanXiang.setProjectName(projectName);

@@ -8,10 +8,7 @@ import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.service.AuditLogService;
 import com.gcsc.studentcenter.service.BackupService;
-import com.gcsc.studentcenter.service.JwtService;
 import com.gcsc.studentcenter.service.UserService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,7 +32,6 @@ import java.util.*;
 public class AdminController {
 
   private final UserService userService;
-  private final JwtService jwtService;
   private final BackupService backupService;
   private final AppUserRepository appUserRepository;
   private final AuditLogService auditLogService;
@@ -42,50 +39,28 @@ public class AdminController {
   @Value("${app.upload-dir:./uploads}")
   private String uploadDir;
 
-  public AdminController(UserService userService, JwtService jwtService, BackupService backupService,
+  public AdminController(UserService userService, BackupService backupService,
       AppUserRepository appUserRepository, AuditLogService auditLogService) {
     this.userService = userService;
-    this.jwtService = jwtService;
     this.backupService = backupService;
     this.appUserRepository = appUserRepository;
     this.auditLogService = auditLogService;
   }
 
-  private boolean isAdmin(String authHeader) {
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+  private boolean isAdmin(Authentication authentication) {
+    if (authentication == null || authentication.getName() == null) {
       return false;
     }
-    try {
-      Claims claims = jwtService.parseToken(authHeader.substring(7));
-      String username = claims.getSubject();
-      if (username == null) {
-        return false;
-      }
-      return appUserRepository.findByUsername(username)
-          .map(user -> user.getRole() == UserRole.ADMIN)
-          .orElse(false);
-    } catch (JwtException ex) {
-      return false;
-    }
-  }
-
-  private String extractUsername(String authHeader) {
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      return null;
-    }
-    try {
-      Claims claims = jwtService.parseToken(authHeader.substring(7));
-      return claims.getSubject();
-    } catch (JwtException ex) {
-      return null;
-    }
+    return appUserRepository.findByUsername(authentication.getName())
+        .map(user -> user.getRole() == UserRole.ADMIN)
+        .orElse(false);
   }
 
   @PostMapping("/users")
   public ResponseEntity<?> createUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @RequestBody CreateUserRequest request) {
-    if (!isAdmin(authHeader)) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -98,38 +73,38 @@ public class AdminController {
 
   @GetMapping("/users")
   public ResponseEntity<?> listUsers(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String search,
       @RequestParam(required = false) String role,
       @RequestParam(required = false) String className) {
-    if (!isAdmin(authHeader)) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
-    String currentUsername = extractUsername(authHeader);
+    String currentUsername = authentication.getName();
     return ResponseEntity.ok(userService.listUsersPaginated(page, size, search, role, className, currentUsername));
   }
 
   @GetMapping("/users/ids")
   public ResponseEntity<?> listAllUserIds(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @RequestParam(required = false) String search,
       @RequestParam(required = false) String role,
       @RequestParam(required = false) String className) {
-    if (!isAdmin(authHeader)) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
-    String currentUsername = extractUsername(authHeader);
+    String currentUsername = authentication.getName();
     return ResponseEntity.ok(userService.listAllUserIds(search, role, className, currentUsername));
   }
 
   @PutMapping("/users/{id}")
   public ResponseEntity<?> updateUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable Long id,
       @RequestBody UpdateUserRequest request) {
-    if (!isAdmin(authHeader)) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -142,9 +117,9 @@ public class AdminController {
 
   @DeleteMapping("/users/{id}")
   public ResponseEntity<?> deleteUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable Long id) {
-    if (!isAdmin(authHeader)) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -157,8 +132,8 @@ public class AdminController {
 
   @GetMapping("/classes")
   public ResponseEntity<?> listClasses(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
-    if (!isAdmin(authHeader)) {
+      Authentication authentication) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     List<String> classes = userService.getDistinctStudentClasses();
@@ -167,10 +142,10 @@ public class AdminController {
 
   @PutMapping("/teachers/{id}/assigned-classes")
   public ResponseEntity<?> updateTeacherAssignedClasses(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable Long id,
       @RequestBody Map<String, String> request) {
-    if (!isAdmin(authHeader)) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -184,9 +159,9 @@ public class AdminController {
 
   @GetMapping("/teachers/{id}/assigned-classes")
   public ResponseEntity<?> getTeacherAssignedClasses(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable Long id) {
-    if (!isAdmin(authHeader)) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -199,10 +174,10 @@ public class AdminController {
 
   @GetMapping("/backup/db")
   public ResponseEntity<?> backupDatabase(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       HttpServletRequest httpRequest) {
-    String username = extractUsername(authHeader);
-    if (!isAdmin(authHeader)) {
+    String username = authentication.getName();
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -227,11 +202,11 @@ public class AdminController {
 
   @PostMapping("/restore/db")
   public ResponseEntity<?> restoreDatabase(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @RequestParam("file") MultipartFile file,
       HttpServletRequest httpRequest) {
-    String username = extractUsername(authHeader);
-    if (!isAdmin(authHeader)) {
+    String username = authentication.getName();
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     if (file.isEmpty()) {
@@ -260,10 +235,10 @@ public class AdminController {
 
   @GetMapping("/backup/attachments")
   public ResponseEntity<?> backupAttachments(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       HttpServletRequest httpRequest) {
-    String username = extractUsername(authHeader);
-    if (!isAdmin(authHeader)) {
+    String username = authentication.getName();
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -291,11 +266,11 @@ public class AdminController {
 
   @PostMapping("/restore/attachments")
   public ResponseEntity<?> restoreAttachments(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @RequestParam("file") MultipartFile file,
       HttpServletRequest httpRequest) {
-    String username = extractUsername(authHeader);
-    if (!isAdmin(authHeader)) {
+    String username = authentication.getName();
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     if (file.isEmpty()) {
@@ -324,8 +299,8 @@ public class AdminController {
 
   @GetMapping("/storage-analysis")
   public ResponseEntity<?> storageAnalysis(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
-    if (!isAdmin(authHeader)) {
+      Authentication authentication) {
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
@@ -378,11 +353,11 @@ public class AdminController {
 
   @DeleteMapping("/storage/{userId}")
   public ResponseEntity<?> deleteStorage(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      Authentication authentication,
       @PathVariable Long userId,
       HttpServletRequest httpRequest) {
-    String username = extractUsername(authHeader);
-    if (!isAdmin(authHeader)) {
+    String username = authentication.getName();
+    if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
