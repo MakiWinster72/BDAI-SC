@@ -2,6 +2,11 @@ export const FIXED_COLLEGE = "大数据与人工智能学院";
 
 export const classYearOptions = Array.from({ length: 19 }, (_, index) => 2022 + index);
 
+export const studentSearchClassYearOptions = Array.from(
+  { length: 11 },
+  (_, index) => 2020 + index,
+);
+
 export const majorOptionsByCategory = {
   本科生: [
     "计算机科学与技术",

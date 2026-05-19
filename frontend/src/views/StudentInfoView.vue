@@ -89,257 +89,57 @@
     </header>
 
     <section class="info-shell student-right-stack">
-      <section v-show="!gridFullscreen" class="card student-filter-card">
-        <div class="student-filter-toolbar">
-          <div class="student-filter-intro">
-            <div class="info-section-title">搜索与筛选</div>
-          </div>
-          <div class="student-filter-search-wrap">
-            <input
-              v-model="filters.keyword"
-              class="info-input student-search"
-              type="text"
-              placeholder="搜索姓名 / 班别 / 学院 / 学号"
-            />
-          </div>
-          <div class="student-filter-toolbar-actions">
-            <button
-              v-if="hasActiveFilters"
-              class="student-filter-reset"
-              type="button"
-              @click="resetFilters"
-            >
-              清空筛选
-            </button>
-          </div>
-        </div>
-        <div v-if="!gridViewOpen" class="student-filter-body">
-          <div class="student-filter-grid">
-            <div class="student-filter-panel student-filter-field-year">
-              <div class="student-filter-panel-head">
-                <span class="info-label">年级</span>
-              </div>
-              <select v-model="filters.classYear" class="info-input">
-                <option value="">全部</option>
-                <option
-                  v-for="year in classYearOptions"
-                  :key="year"
-                  :value="String(year)"
-                >
-                  {{ year }}
-                </option>
-              </select>
-            </div>
-
-            <div class="student-filter-panel student-filter-field-category">
-              <div class="student-filter-panel-head">
-                <span class="info-label">学生类型</span>
-              </div>
-              <select v-model="filters.studentCategory" class="info-input">
-                <option value="">全部</option>
-                <option
-                  v-for="cat in studentCategoryOptions"
-                  :key="cat"
-                  :value="cat"
-                >
-                  {{ cat }}
-                </option>
-              </select>
-            </div>
-
-            <div class="student-filter-panel student-filter-field-major">
-              <div class="student-filter-panel-head">
-                <span class="info-label">专业</span>
-              </div>
-              <select v-model="filters.major" class="info-input" :disabled="!filters.studentCategory">
-                <option value="">全部</option>
-                <option
-                  v-for="major in availableMajors"
-                  :key="major"
-                  :value="major"
-                >
-                  {{ major }}
-                </option>
-              </select>
-            </div>
-
-            <div class="student-filter-panel student-filter-field-class">
-              <div class="student-filter-panel-head">
-                <span class="info-label">班级</span>
-              </div>
-              <select v-model="filters.classNo" class="info-input">
-                <option value="">全部</option>
-                <option
-                  v-for="n in 10"
-                  :key="n"
-                  :value="String(n)"
-                >
-                  {{ n }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div class="student-filter-meta">
-            <div class="student-filter-flags">
-              <label class="info-choice">
-                <input
-                  type="checkbox"
-                  :checked="filters.isHk"
-                  @change="toggleHmt('isHk')"
-                />
-                香港
-              </label>
-              <label class="info-choice">
-                <input
-                  type="checkbox"
-                  :checked="filters.isMo"
-                  @change="toggleHmt('isMo')"
-                />
-                澳门
-              </label>
-              <label class="info-choice">
-                <input
-                  type="checkbox"
-                  :checked="filters.isTw"
-                  @change="toggleHmt('isTw')"
-                />
-                台湾
-              </label>
-              <div class="student-special-filter">
-                <span class="info-label" style="margin-right: 6px;">特殊学生</span>
-                <select v-model="filters.specialStudentType" class="info-input">
-                  <option
-                    v-for="opt in specialStudentTypeOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                  >
-                    {{ opt.label }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="student-filter-status">
-              {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
-            </div>
-          </div>
-        </div>
-        <div v-if="gridViewOpen" class="student-grid-tabs">
-          <button
-            class="student-grid-tab student-grid-tab-add"
-            type="button"
-            @click="openGridFieldDialog"
-            title="选择字段"
-          >
-            +
-          </button>
-          <button
-            v-for="sheet in gridSheets"
-            :key="sheet.id"
-            class="student-grid-tab"
-            :class="{ active: sheet.id === gridActiveSheet }"
-            type="button"
-            @click="gridActiveSheet = sheet.id"
-          >
-            {{ sheet.label }}
-          </button>
-          <span v-if="gridLoading" class="student-grid-status">加载中...</span>
-          <span v-else class="student-grid-status"
-            >共 {{ gridActiveSheetData.rowData.length }} 条</span
-          >
-        </div>
-      </section>
+      <StudentFilterBar
+        v-show="!gridFullscreen"
+        :filters="filters"
+        :class-year-options="classYearOptions"
+        :student-category-options="studentCategoryOptions"
+        :available-majors="availableMajors"
+        :special-student-type-options="specialStudentTypeOptions"
+        :has-active-filters="hasActiveFilters"
+        :loading="loading"
+        :total-items="totalItems"
+        :grid-view-open="gridViewOpen"
+        :grid-loading="gridLoading"
+        :grid-sheets="gridSheets"
+        :grid-active-sheet="gridActiveSheet"
+        :grid-row-count="gridActiveSheetData.rowData.length"
+        @update-filter="updateStudentFilter"
+        @reset-filters="resetFilters"
+        @toggle-hmt="toggleHmt"
+        @open-grid-field-dialog="openGridFieldDialog"
+        @update-grid-active-sheet="updateGridActiveSheet"
+      />
 
       <section class="card student-results-card">
-        <div v-if="!gridViewOpen" class="student-results-header">
-          <div class="info-section-title">
-            筛选结果
-            <span v-if="hasActiveFilters" class="student-results-count">已筛选</span>
-          </div>
-          <div class="student-results-meta">
-            {{ loading ? "正在更新结果..." : `当前共 ${totalItems} 条学生记录` }}
-          </div>
-          <div class="student-results-actions">
-            <button
-              class="ghost-button"
-              type="button"
-              @click="selectCurrentPage"
-            >
-              选择本页
-            </button>
-            <button
-              class="ghost-button"
-              type="button"
-              :disabled="selectAllLoading"
-              @click="selectAllFiltered"
-            >
-              {{ selectAllLoading ? "选择中..." : "选择全部" }}
-            </button>
-          </div>
-        </div>
-        <div
+        <StudentGridPanel
           v-if="gridViewOpen"
-          ref="gridWrapRef"
-          class="student-grid-wrap"
-          :class="{ fullscreen: gridFullscreen }"
-        >
-          <AgGridVue
-            class="ag-theme-quartz student-grid"
-            :row-data="gridActiveSheetData.rowData"
-            :column-defs="gridActiveSheetData.colDefs"
-            :default-col-def="gridDefaultColDef"
-            :locale-text="gridLocaleText"
-            :locale-text-func="gridLocaleTextFunc"
-            :animate-rows="true"
-            :pagination="true"
-            :pagination-page-size="100"
-            :suppress-cell-focus="true"
-          />
-        </div>
-        <div v-else-if="loading" class="empty-tip student-results-loading">
-          加载学生信息中...
-        </div>
-        <div v-else-if="pagedStudents.length" class="student-list">
-          <div
-            v-for="item in pagedStudents"
-            :key="item.id"
-            class="student-row"
-            :class="{ selected: selectedIds.includes(item.id) }"
-            @click="openDetail(item)"
-          >
-            <input v-model="selectedIds" type="checkbox" :value="item.id" @click.stop />
-            <div class="student-avatar">
-              <ProtectedMediaImage v-if="item.avatarUrl" :src="resolveMediaUrl(item.avatarUrl)" :alt="item.name" />
-              <span v-else>{{ (item.name || '?')[0] }}</span>
-            </div>
-            <div class="student-main">
-              <div class="student-name-row">
-                <span class="student-name">{{ item.name }}</span>
-                <span class="student-no-inline">{{ item.studentNo }}</span>
-              </div>
-              <div class="student-meta">
-                {{ item.gradeYear }}级 {{ item.major }}{{ item.classNo }}班
-              </div>
-              <div v-if="item.isHk || item.isMo || item.isTw" class="student-hkmo-badge">
-                {{ getHkMoTwLabel(item) }}
-              </div>
-              <div v-if="item.specialStudentType" class="student-special-badge">
-                {{ getSpecialStudentTypeLabel(item.specialStudentType) }}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else class="empty-tip">没有匹配的学生。</div>
-
-        <div v-if="!gridViewOpen">
-          <PaginationBar
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :total-pages="totalPages"
-            :page-size-options="pageSizeOptions"
-            mode="full"
-          />
-        </div>
+          ref="gridPanelRef"
+          :row-data="gridActiveSheetData.rowData"
+          :column-defs="gridActiveSheetData.colDefs"
+          :default-col-def="gridDefaultColDef"
+          :locale-text="gridLocaleText"
+          :locale-text-func="gridLocaleTextFunc"
+          :fullscreen="gridFullscreen"
+        />
+        <StudentListPanel
+          v-else
+          v-model:selected-ids="selectedIds"
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :loading="loading"
+          :total-items="totalItems"
+          :has-active-filters="hasActiveFilters"
+          :select-all-loading="selectAllLoading"
+          :students="pagedStudents"
+          :total-pages="totalPages"
+          :page-size-options="pageSizeOptions"
+          :get-hk-mo-tw-label="getHkMoTwLabel"
+          :get-special-student-type-label="getSpecialStudentTypeLabel"
+          @select-current-page="selectCurrentPage"
+          @select-all-filtered="selectAllFiltered"
+          @open-detail="openDetail"
+        />
       </section>
     </section>
 
@@ -690,9 +490,6 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { AgGridVue } from "ag-grid-vue3";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
 import { useRouter, useRoute } from "vue-router";
 
 import harmonyFontUrl from "../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
@@ -706,14 +503,16 @@ import {
 import { listAchievements } from "../api/achievement";
 import MobileCapsule from "../components/MobileCapsule.vue";
 import StudentExportDialog from "../components/StudentExportDialog.vue";
+import StudentFilterBar from "../components/StudentFilterBar.vue";
+import StudentGridPanel from "../components/StudentGridPanel.vue";
+import StudentListPanel from "../components/StudentListPanel.vue";
 import { createAuditLog } from "../api/auditLog";
 import StudentProfileEditor from "../components/StudentProfileEditor.vue";
-import PaginationBar from "../components/PaginationBar.vue";
 import OverlayPanel from "../components/OverlayPanel.vue";
-import ProtectedMediaImage from "../components/ProtectedMediaImage.vue";
 import { navigateWithViewTransition } from "../utils/viewTransition";
 import { useDashboardShell } from "../composables/useDashboardShell";
 import { useToast } from "../composables/useToast";
+import { useStudentSearch } from "../composables/useStudentSearch";
 import { resolveMediaUrl } from "../utils/media";
 import { loadUser } from "../utils/userStorage";
 
@@ -748,7 +547,7 @@ const gridFieldDialogClosing = ref(false);
 const gridActiveSheet = ref("main");
 const gridFullscreen = ref(false);
 const gridViewConfirmOpen = ref(false);
-const gridWrapRef = ref(null);
+const gridPanelRef = ref(null);
 const gridHasFullDetail = ref(false);
 let gridRequestId = 0;
 const achievementsOpen = ref(false);
@@ -757,6 +556,26 @@ const sidebarOpen = ref(false);
 const activeCategory = ref("all");
 const mobileFilterOpen = ref(false);
 const selectMenuOpen = ref(false);
+const {
+  filters,
+  classYearOptions,
+  studentCategoryOptions,
+  specialStudentTypeOptions,
+  availableMajors,
+  hasActiveFilters,
+  toggleHmt,
+  resetFilters,
+  buildSearchParams,
+  getSpecialStudentTypeLabel,
+} = useStudentSearch();
+
+function updateStudentFilter({ key, value }) {
+  filters[key] = value;
+}
+
+function updateGridActiveSheet(sheetId) {
+  gridActiveSheet.value = sheetId;
+}
 
 // Mobile filter sheet drag to close
 const filterTouchStartY = ref(0);
@@ -836,16 +655,6 @@ function handleFilterTouchEnd() {
   filterDragTranslateY.value = 0;
 }
 
-const classYearOptions = Array.from({ length: 11 }, (_, index) => 2020 + index);
-const majorOptions = [
-  "计算机科学与技术",
-  "计算机科学与技术（实验区）",
-  "软件工程",
-  "电子商务",
-  "大数据管理与应用（佛山校区全学段）",
-  "大数据管理与应用（数字治理）",
-];
-
 const gridDefaultColDef = {
   sortable: true,
   filter: true,
@@ -912,64 +721,6 @@ const gridLocaleTextFunc = (key, defaultValue) => {
     return gridLocaleText[key];
   }
   return defaultValue;
-};
-
-const specialStudentTypeOptions = [
-  { value: "", label: "无" },
-  { value: "HIGH_CARE", label: "高关怀" },
-  { value: "ECONOMIC_SPECIAL", label: "经济困难>特殊困难" },
-  { value: "ECONOMIC_DIFFICULT", label: "经济困难>困难" },
-  { value: "ECONOMIC_GENERAL", label: "经济困难>一般困难" },
-  { value: "DISABILITY", label: "残疾" },
-  { value: "ORPHAN", label: "孤儿" },
-  { value: "ACADEMIC_DIFFICULTY", label: "学业困难" },
-];
-
-const specialStudentTypeLabelMap = {
-  HIGH_CARE: "高关怀",
-  ECONOMIC_SPECIAL: "经济困难>特殊困难",
-  ECONOMIC_DIFFICULT: "经济困难>困难",
-  ECONOMIC_GENERAL: "经济困难>一般困难",
-  DISABILITY: "残疾",
-  ORPHAN: "孤儿",
-  ACADEMIC_DIFFICULTY: "学业困难",
-};
-
-const filters = reactive({
-  classYear: "",
-  studentCategory: "",
-  major: "",
-  classNo: "",
-  isHk: false,
-  isMo: false,
-  isTw: false,
-  specialStudentType: "",
-  keyword: "",
-});
-
-const studentCategoryOptions = ["本科生", "研究生"];
-
-const majorOptionsByCategory = {
-  本科生: [
-    "计算机科学与技术",
-    "计算机科学与技术（实验区）",
-    "计算机科学与技术(中外联合培养项目班)",
-    "2025计算机科学与技术（中外联合培养项目班未赴国外学习）",
-    "软件工程",
-    "人工智能",
-    "电子商务",
-    "电子商务（大数据决策分析）",
-    "大数据管理与应用",
-    "大数据管理与应用（佛山校区全学段）",
-    "大数据管理与应用（数字治理）",
-  ],
-  研究生: [
-    "管理科学与工程",
-    "技术经济及管理",
-    "智能科学与技术",
-    "计算机技术",
-    "图书情报",
-  ],
 };
 
 const exportGroups = [
@@ -1115,25 +866,6 @@ const familyRows = computed(() => {
   ];
 });
 
-const availableMajors = computed(() => {
-  if (!filters.studentCategory) {
-    return [];
-  }
-  return majorOptionsByCategory[filters.studentCategory] || [];
-});
-
-const hasActiveFilters = computed(() => {
-  return Boolean(
-    filters.classYear ||
-    filters.studentCategory ||
-    filters.major ||
-    filters.classNo ||
-    filters.isHk || filters.isMo || filters.isTw ||
-    filters.specialStudentType ||
-    filters.keyword,
-  );
-});
-
 const pagedStudents = computed(() => students.value);
 const exportDisabled = computed(() => selectedIds.value.length === 0);
 const hasSelection = computed(() => selectedIds.value.length > 0);
@@ -1186,46 +918,6 @@ watch(
   },
   { deep: true },
 );
-
-// Clear major when student category changes (since major options depend on it)
-watch(() => filters.studentCategory, () => {
-  filters.major = "";
-});
-
-// HMT checkboxes - allow toggling off, mutual exclusion when selecting
-function toggleHmt(key) {
-  const others = key === 'isHk' ? ['isMo', 'isTw'] : key === 'isMo' ? ['isHk', 'isTw'] : ['isHk', 'isMo'];
-  if (filters[key]) {
-    // turning off - just uncheck this one
-    filters[key] = false;
-  } else {
-    // turning on - uncheck others first, then check this
-    others.forEach(k => { filters[k] = false; });
-    filters[key] = true;
-  }
-}
-
-// HMT mutually exclusive
-watch(() => filters.isHk, (val) => {
-  if (val) {
-    filters.isMo = false;
-    filters.isTw = false;
-  }
-});
-
-watch(() => filters.isMo, (val) => {
-  if (val) {
-    filters.isHk = false;
-    filters.isTw = false;
-  }
-});
-
-watch(() => filters.isTw, (val) => {
-  if (val) {
-    filters.isHk = false;
-    filters.isMo = false;
-  }
-});
 
 watch(currentPage, () => {
   if (!gridViewOpen.value) {
@@ -1360,7 +1052,7 @@ function closeGridViewConfirm() {
 }
 
 function toggleGridFullscreen() {
-  const el = gridWrapRef.value;
+  const el = gridPanelRef.value?.element;
   if (!el) {
     gridFullscreen.value = !gridFullscreen.value;
     return;
@@ -1491,10 +1183,6 @@ function saveViewProfile(payload) {
   return saveStudentProfileById(viewItem.value.id, payload);
 }
 
-function getSpecialStudentTypeLabel(type) {
-  return specialStudentTypeLabelMap[type] || type || "";
-}
-
 function getHkMoTwLabel(item) {
   const parts = [];
   if (item.isHk) parts.push("香港");
@@ -1578,53 +1266,6 @@ function buildClassName(item) {
   const safeMajor = item.classMajor || "";
   const safeNo = item.classNo ? `${item.classNo}班` : "";
   return `${safeYear}${safeMajor}${safeNo}`.trim();
-}
-
-function resetFilters() {
-  filters.classYear = "";
-  filters.studentCategory = "";
-  filters.major = "";
-  filters.classNo = "";
-  filters.isHk = false;
-  filters.isMo = false;
-  filters.isTw = false;
-  filters.specialStudentType = "";
-  filters.keyword = "";
-}
-
-function buildSearchParams(page, size) {
-  const params = {
-    page,
-    size,
-  };
-  if (filters.classYear) {
-    params.classYear = filters.classYear;
-  }
-  if (filters.studentCategory) {
-    params.studentCategory = filters.studentCategory;
-  }
-  if (filters.major) {
-    params.major = filters.major;
-  }
-  if (filters.classNo) {
-    params.classNo = Number(filters.classNo);
-  }
-  if (filters.isHk) {
-    params.isHk = true;
-  }
-  if (filters.isMo) {
-    params.isMo = true;
-  }
-  if (filters.isTw) {
-    params.isTw = true;
-  }
-  if (filters.specialStudentType) {
-    params.specialStudentType = filters.specialStudentType;
-  }
-  if (filters.keyword && filters.keyword.trim()) {
-    params.keyword = filters.keyword.trim();
-  }
-  return params;
 }
 
 function selectCurrentPage() {
@@ -2477,9 +2118,11 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
+<style>
 @import '../assets/styles/student-info-view.css';
+</style>
 
+<style scoped>
 /* Mobile capsule buttons — vertical icon+label layout matching AdminView */
 .capsule-action.is-filter {
   position: relative;

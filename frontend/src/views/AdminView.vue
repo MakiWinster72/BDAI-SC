@@ -1,7 +1,11 @@
 <script setup>
 import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
-import PaginationBar from "../components/PaginationBar.vue";
 import MobileCapsule from "../components/MobileCapsule.vue";
+import AdminBackupTab from "../components/AdminBackupTab.vue";
+import AdminUploadSettingsTab from "../components/AdminUploadSettingsTab.vue";
+import AdminReviewSettingsTab from "../components/AdminReviewSettingsTab.vue";
+import AdminSystemSettingsTab from "../components/AdminSystemSettingsTab.vue";
+import AdminUsersTab from "../components/AdminUsersTab.vue";
 import { useAchievementUploadSettings } from "../composables/useAchievementUploadSettings";
 import { useReviewSettings } from "../composables/useReviewSettings";
 import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses, getStorageAnalysis, deleteUserStorage } from "../api/admin";
@@ -246,6 +250,10 @@ function stepThreshold(delta) {
   }
 }
 
+function updateSystemSetting({ key, value }) {
+  systemSettings[key] = value;
+}
+
 async function handleSaveSystemSettings() {
   systemSettingsMsg.value = "";
   try {
@@ -342,29 +350,6 @@ const reviewForm = reactive({
   achievementReviewAutoApprove: reviewSettings.achievementReviewAutoApprove,
 });
 
-const imageSubtitle = computed(
-  () => `最多 ${form.imageMaxCount} 张 · 单张不超过 ${form.imageMaxSizeMb}MB`,
-);
-const attachmentSubtitle = computed(
-  () => `最多 ${form.attachmentMaxCount} 个 · 单个不超过 ${form.attachmentMaxSizeMb}MB`,
-);
-const supportingDocSubtitle = computed(
-  () => `最多 ${form.supportingDocMaxCount} 个 · 单个不超过 ${form.supportingDocMaxSizeMb}MB`,
-);
-const enabledPreviewTypes = computed(() =>
-  ATTACHMENT_TYPE_OPTIONS.map((item) => ({
-    ...item,
-    exts: parseExts(form[extFieldKey(item.key)]),
-  })).filter((item) => item.exts.length),
-);
-const attachmentTypeSummary = computed(() =>
-  enabledPreviewTypes.value.length
-    ? enabledPreviewTypes.value.map((item) => item.label).join(" / ")
-    : "暂无可用附件类型",
-);
-const activeLoading = computed(() =>
-  activeSection.value === "upload" ? uploadLoading.value : reviewLoading.value,
-);
 const activeSaving = computed(() =>
   activeSection.value === "upload" ? uploadSaving.value : reviewSaving.value,
 );
@@ -373,20 +358,6 @@ const activeErrorMessage = computed(() =>
     ? uploadErrorMessage.value
     : reviewErrorMessage.value,
 );
-
-function extFieldKey(typeKey) {
-  if (typeKey === "document") return "attachmentDocumentExts";
-  if (typeKey === "video") return "attachmentVideoExts";
-  if (typeKey === "image") return "attachmentImageExts";
-  return "attachmentArchiveExts";
-}
-
-function parseExts(value) {
-  return (value || "")
-    .split(",")
-    .map((item) => item.trim().toLowerCase().replace(/^\./, ""))
-    .filter(Boolean);
-}
 
 async function loadPage() {
   await Promise.all([fetchUploadSettings(), fetchReviewSettings(), fetchSystemSettings()]);
@@ -407,12 +378,20 @@ function syncFormFromSettings() {
   form.supportingDocMaxSizeMb = settings.supportingDocMaxSizeMb;
 }
 
+function updateUploadFormField({ key, value }) {
+  form[key] = value;
+}
+
 function syncReviewFormFromSettings() {
   reviewForm.profileReviewEnabled = reviewSettings.profileReviewEnabled;
   reviewForm.profileReviewAutoApprove = reviewSettings.profileReviewAutoApprove;
   reviewForm.achievementReviewEnabled = reviewSettings.achievementReviewEnabled;
   reviewForm.achievementReviewAutoApprove =
     reviewSettings.achievementReviewAutoApprove;
+}
+
+function updateReviewFormField({ key, value }) {
+  reviewForm[key] = value;
 }
 
 async function handleSubmit() {
@@ -835,843 +814,82 @@ watch([userSearch, userRoleFilter], () => {
     <Transition name="section-fade" mode="out-in">
       <div :key="activeSection" class="admin-content">
 
-        <!-- Upload Section -->
-        <div v-if="activeSection === 'upload'" class="upload-section">
-          <!-- Form Card -->
-          <div class="card admin-card">
-            <div class="card-header">
-              <div class="card-header-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">系统设置</div>
-                <h2 class="card-title">成果页面限制</h2>
-              </div>
-            </div>
-            <div class="card-body">
+        <AdminUploadSettingsTab
+          v-if="activeSection === 'upload'"
+          :form="form"
+          :attachment-type-options="ATTACHMENT_TYPE_OPTIONS"
+          :error-message="uploadErrorMessage"
+          :saving="uploadSaving"
+          @update-form-field="updateUploadFormField"
+          @reset="syncFormFromSettings"
+          @save="handleSubmit"
+        />
 
-              <!-- Image Block -->
-              <div class="setting-group">
-                <div class="setting-group-label">
-                  <span class="group-index">01</span>
-                  <span class="group-title">图片设置</span>
-                </div>
-                <div class="field-row">
-                  <div class="field-cell">
-                    <label class="field-label" for="img-count">最多上传图片数</label>
-                    <div class="input-wrap">
-                      <input
-                        id="img-count"
-                        v-model.number="form.imageMaxCount"
-                        class="text-input"
-                        type="number"
-                        min="1"
-                        max="9"
-                        aria-label="最多上传图片数"
-                      />
-                      <span class="input-unit">张</span>
-                    </div>
-                  </div>
-                  <div class="field-cell">
-                    <label class="field-label" for="img-size">单张图片最大大小</label>
-                    <div class="input-wrap">
-                      <input
-                        id="img-size"
-                        v-model.number="form.imageMaxSizeMb"
-                        class="text-input"
-                        type="number"
-                        min="1"
-                        max="200"
-                        aria-label="单张图片最大大小 MB"
-                      />
-                      <span class="input-unit">MB</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <AdminReviewSettingsTab
+          v-else-if="activeSection === 'review'"
+          :review-form="reviewForm"
+          :error-message="activeErrorMessage"
+          :saving="activeSaving"
+          @update-review-field="updateReviewFormField"
+          @reset="syncReviewFormFromSettings"
+          @save="handleReviewSubmit"
+        />
 
-              <!-- Attachment Block -->
-              <div class="setting-group">
-                <div class="setting-group-label">
-                  <span class="group-index">02</span>
-                  <span class="group-title">附件设置</span>
-                </div>
-                <div class="field-row">
-                  <div class="field-cell">
-                    <label class="field-label" for="att-count">最多上传附件数</label>
-                    <div class="input-wrap">
-                      <input
-                        id="att-count"
-                        v-model.number="form.attachmentMaxCount"
-                        class="text-input"
-                        type="number"
-                        min="1"
-                        max="20"
-                        aria-label="最多上传附件数"
-                      />
-                      <span class="input-unit">个</span>
-                    </div>
-                  </div>
-                  <div class="field-cell">
-                    <label class="field-label" for="att-size">单个附件最大大小</label>
-                    <div class="input-wrap">
-                      <input
-                        id="att-size"
-                        v-model.number="form.attachmentMaxSizeMb"
-                        class="text-input"
-                        type="number"
-                        min="1"
-                        max="200"
-                        aria-label="单个附件最大大小 MB"
-                      />
-                      <span class="input-unit">MB</span>
-                    </div>
-                  </div>
-                </div>
+        <AdminUsersTab
+          v-else-if="activeSection === 'users'"
+          v-model:user-search="userSearch"
+          v-model:user-role-filter="userRoleFilter"
+          :users="users"
+          :users-loading="usersLoading"
+          :users-error="usersError"
+          :user-total="userTotal"
+          :role-options="ROLE_OPTIONS"
+          :selected-user-ids="selectedUserIds"
+          :some-selected="someSelected"
+          :all-page-selected="allPageSelected"
+          :user-current-page="userCurrentPage"
+          :user-pages="userPages"
+          :get-role-label="getRoleLabel"
+          @open-add-user="openAddUserModal"
+          @select-all-page="selectAllPage"
+          @select-all-filtered="selectAllFiltered"
+          @clear-selection="selectedUserIds = new Set()"
+          @delete-selected="handleDeleteSelectedUsers"
+          @toggle-select-all-page="toggleSelectAllPage"
+          @toggle-user-select="toggleUserSelect"
+          @edit-user="openEditModal"
+          @update:user-current-page="loadUsers"
+        />
 
-                <div class="ext-section">
-                  <div class="ext-label-row">
-                    <label class="field-label">支持的附件后缀</label>
-                    <span class="field-hint">多个后缀用英文逗号隔开；留空则该类型不开放</span>
-                  </div>
-                  <div class="ext-grid">
-                    <label
-                      v-for="item in ATTACHMENT_TYPE_OPTIONS"
-                      :key="item.key"
-                      class="ext-card"
-                    >
-                      <div class="ext-card-head">
-                        <img class="ext-icon" :src="item.icon" alt="" aria-hidden="true" />
-                        <span class="ext-title">{{ item.label }}</span>
-                      </div>
-                      <input
-                        v-model="form[extFieldKey(item.key)]"
-                        class="ext-input"
-                        type="text"
-                        :aria-label="`${item.label}后缀`"
-                        :placeholder="item.key === 'document'
-                          ? 'docx, doc, pdf'
-                          : item.key === 'video'
-                            ? 'mp4, mov'
-                            : item.key === 'image'
-                              ? 'jpeg, jpg, png'
-                              : 'zip, rar, 7z'"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
+        <AdminBackupTab
+          v-else-if="activeSection === 'backup'"
+          :backup-form="backupForm"
+          :backup-loading="backupLoading"
+          :restore-loading="restoreLoading"
+          :storage-data="storageData"
+          :storage-loading="storageLoading"
+          :storage-error="storageError"
+          :storage-deleting="storageDeleting"
+          :storage-label="storageLabel"
+          :bar-width="barWidth"
+          @backup-db="handleBackupDb"
+          @backup-zip="handleBackupZip"
+          @sql-file-change="onSqlFileChange"
+          @zip-file-change="onZipFileChange"
+          @restore-db="handleRestore"
+          @restore-attachments="handleRestoreAttachments"
+          @refresh-storage="fetchStorageAnalysis"
+          @delete-storage="handleDeleteStorage"
+        />
 
-              <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
-                  <svg class="msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  {{ activeErrorMessage }}
-                </div>
-
-              <!-- Actions -->
-              <div class="card-actions">
-                <button
-                  class="btn btn-ghost"
-                  type="button"
-                  @click="syncFormFromSettings"
-                >
-                  重置
-                </button>
-                <button
-                  class="btn btn-primary"
-                  type="button"
-                  :disabled="activeSaving"
-                  @click="handleSubmit"
-                >
-                  <svg v-if="activeSaving" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                  </svg>
-                  {{ activeSaving ? "保存中…" : "保存设置" }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 证明资料 Card -->
-          <div class="card admin-card">
-            <div class="card-header">
-              <div class="card-header-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">系统设置</div>
-                <h2 class="card-title">证明资料</h2>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="setting-group">
-                <div class="field-row">
-                  <div class="field-cell">
-                    <label class="field-label" for="sd-count">最多上传数量</label>
-                    <div class="input-wrap">
-                      <input
-                        id="sd-count"
-                        v-model.number="form.supportingDocMaxCount"
-                        class="text-input"
-                        type="number"
-                        min="1"
-                        max="20"
-                        aria-label="证明资料最多上传数量"
-                      />
-                      <span class="input-unit">个</span>
-                    </div>
-                  </div>
-                  <div class="field-cell">
-                    <label class="field-label" for="sd-size">单个文件最大大小</label>
-                    <div class="input-wrap">
-                      <input
-                        id="sd-size"
-                        v-model.number="form.supportingDocMaxSizeMb"
-                        class="text-input"
-                        type="number"
-                        min="1"
-                        max="200"
-                        aria-label="证明资料单个文件最大大小 MB"
-                      />
-                      <span class="input-unit">MB</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button
-                  class="btn btn-primary"
-                  type="button"
-                  :disabled="activeSaving"
-                  @click="handleSubmit"
-                >
-                  <svg v-if="activeSaving" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                  </svg>
-                  {{ activeSaving ? "保存中…" : "保存设置" }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Review Section -->
-        <div v-else-if="activeSection === 'review'" class="admin-panel-single">
-          <div class="card admin-card">
-            <div class="card-header">
-              <div class="card-header-icon shield-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">审核入口</div>
-                <h2 class="card-title">审核策略设置</h2>
-              </div>
-            </div>
-            <div class="card-body toggle-list">
-
-              <!-- Profile Review -->
-              <div class="toggle-section">
-                <div class="toggle-section-label">
-                  <span class="group-index">01</span>
-                  <span class="group-title">个人信息</span>
-                </div>
-                <div class="toggle-row" :class="{ muted: !reviewForm.profileReviewEnabled }">
-                  <div class="toggle-copy">
-                    <span class="toggle-title">开启个人信息审核</span>
-                    <span class="toggle-hint">关闭后，学生提交个人信息会直接更新</span>
-                  </div>
-                  <label class="toggle-switch" :aria-label="`开启个人信息审核: ${reviewForm.profileReviewEnabled ? '已开启' : '已关闭'}`">
-                    <input
-                      v-model="reviewForm.profileReviewEnabled"
-                      type="checkbox"
-                      role="switch"
-                      :aria-checked="reviewForm.profileReviewEnabled"
-                    />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </div>
-                <div class="toggle-row" :class="{ muted: !reviewForm.profileReviewEnabled }">
-                  <div class="toggle-copy">
-                    <span class="toggle-title">默认通过</span>
-                    <span class="toggle-hint">开启审核但自动通过，保留审核流程入口与记录</span>
-                  </div>
-                  <label class="toggle-switch" :aria-label="`默认通过: ${reviewForm.profileReviewAutoApprove ? '已开启' : '已关闭'}`">
-                    <input
-                      v-model="reviewForm.profileReviewAutoApprove"
-                      type="checkbox"
-                      role="switch"
-                      :aria-checked="reviewForm.profileReviewAutoApprove"
-                      :disabled="!reviewForm.profileReviewEnabled"
-                    />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Achievement Review -->
-              <div class="toggle-section">
-                <div class="toggle-section-label">
-                  <span class="group-index">02</span>
-                  <span class="group-title">成就</span>
-                </div>
-                <div class="toggle-row" :class="{ muted: !reviewForm.achievementReviewEnabled }">
-                  <div class="toggle-copy">
-                    <span class="toggle-title">开启成就审核</span>
-                    <span class="toggle-hint">关闭后，新增和修改成就都会直接生效</span>
-                  </div>
-                  <label class="toggle-switch" :aria-label="`开启成就审核: ${reviewForm.achievementReviewEnabled ? '已开启' : '已关闭'}`">
-                    <input
-                      v-model="reviewForm.achievementReviewEnabled"
-                      type="checkbox"
-                      role="switch"
-                      :aria-checked="reviewForm.achievementReviewEnabled"
-                    />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </div>
-                <div class="toggle-row" :class="{ muted: !reviewForm.achievementReviewEnabled }">
-                  <div class="toggle-copy">
-                    <span class="toggle-title">默认通过</span>
-                    <span class="toggle-hint">开启审核但自动通过，适合先保留入口再平滑切换</span>
-                  </div>
-                  <label class="toggle-switch" :aria-label="`成就默认通过: ${reviewForm.achievementReviewAutoApprove ? '已开启' : '已关闭'}`">
-                    <input
-                      v-model="reviewForm.achievementReviewAutoApprove"
-                      type="checkbox"
-                      role="switch"
-                      :aria-checked="reviewForm.achievementReviewAutoApprove"
-                      :disabled="!reviewForm.achievementReviewEnabled"
-                    />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div v-if="activeErrorMessage" class="msg-banner error" role="alert">
-                  <svg class="msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  {{ activeErrorMessage }}
-                </div>
-
-              <!-- Actions -->
-              <div class="card-actions">
-                <button
-                  class="btn btn-ghost"
-                  type="button"
-                  @click="syncReviewFormFromSettings"
-                >
-                  重置
-                </button>
-                <button
-                  class="btn btn-primary"
-                  type="button"
-                  :disabled="activeSaving"
-                  @click="handleReviewSubmit"
-                >
-                  <svg v-if="activeSaving" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                  </svg>
-                  {{ activeSaving ? "保存中…" : "保存设置" }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Users Section -->
-        <div v-else-if="activeSection === 'users'" class="admin-panel-single">
-          <div class="card admin-card users-card">
-            <!-- Card Header -->
-            <div class="users-card-header">
-              <div class="users-card-meta">
-                <div class="users-card-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-                <div class="users-card-titles">
-                  <div class="card-kicker">用户管理</div>
-                  <h2 class="card-title">系统用户列表</h2>
-                </div>
-              </div>
-              <div class="users-count-badge">
-                <span class="count-num">{{ userTotal }}</span>
-                <span class="count-label">位用户</span>
-              </div>
-              <button
-                class="btn btn-primary"
-                type="button"
-                @click="openAddUserModal"
-              >
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                添加用户
-              </button>
-            </div>
-
-            <!-- Toolbar -->
-            <div class="users-toolbar">
-              <div class="search-wrap">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  v-model="userSearch"
-                  class="search-input"
-                  type="text"
-                  placeholder="搜索用户名、姓名、学号…"
-                  aria-label="搜索用户"
-                />
-              </div>
-              <select v-model="userRoleFilter" class="filter-select" aria-label="按角色筛选">
-                <option value="">全部角色</option>
-                <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-            </div>
-
-            <!-- Selection Actions -->
-            <Transition name="msg-fade">
-              <div v-show="someSelected" class="users-selection-bar">
-                <span class="selection-count">已选择 {{ selectedUserIds.size }} 个用户</span>
-                <button class="btn btn-ghost" type="button" @click="selectAllPage">
-                  本页
-                </button>
-                <button class="btn btn-ghost" type="button" @click="selectAllFiltered">
-                  全部
-                </button>
-                <button class="btn btn-ghost" type="button" @click="selectedUserIds = new Set()">
-                  取消
-                </button>
-                <button class="btn btn-danger-ghost" type="button" @click="handleDeleteSelectedUsers">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  删除
-                </button>
-              </div>
-            </Transition>
-
-            <!-- Table or States -->
-            <div class="users-content">
-              <div v-if="usersLoading" class="users-center-state">
-                <svg class="loading-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                </svg>
-                <span>加载中…</span>
-              </div>
-              <div v-else-if="usersError" class="users-center-state">
-                <svg class="state-icon error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <span>{{ usersError }}</span>
-              </div>
-              <div v-else-if="users.length === 0" class="users-center-state">
-                <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>暂无符合条件的用户</span>
-              </div>
-              <div v-else class="table-wrap">
-                <table class="users-table" aria-label="用户列表">
-                  <thead>
-                    <tr>
-                      <th scope="col" class="col-checkbox">
-                        <input
-                          type="checkbox"
-                          :checked="allPageSelected"
-                          :indeterminate="someSelected && !allPageSelected"
-                          aria-label="全选"
-                          @change="toggleSelectAllPage"
-                        />
-                      </th>
-                      <th scope="col" style="width: 130px;">用户名</th>
-                      <th scope="col" style="width: 100px;">显示名称</th>
-                      <th scope="col" style="width: 80px;">角色</th>
-                      <th scope="col" style="width: 120px;">学号</th>
-                      <th scope="col">班级</th>
-                      <th scope="col" style="width: 120px;">备注</th>
-                      <th scope="col" class="col-action"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="user in users" :key="user.id" class="user-row">
-                      <td class="col-checkbox">
-                        <input
-                          type="checkbox"
-                          :checked="selectedUserIds.has(user.id)"
-                          :aria-label="`选择 ${user.displayName}`"
-                          @change="toggleUserSelect(user.id)"
-                        />
-                      </td>
-                      <td class="td-mono">{{ user.username }}</td>
-                      <td>{{ user.displayName }}</td>
-                      <td>
-                        <span :class="['role-chip', 'role-' + user.role.toLowerCase()]">
-                          {{ getRoleLabel(user.role) }}
-                        </span>
-                      </td>
-                      <td class="td-mono">{{ user.studentNo || '—' }}</td>
-                      <td>{{ user.className || '—' }}</td>
-                      <td class="td-remark">{{ user.remark || '—' }}</td>
-                      <td class="td-action">
-                        <button class="icon-btn" @click.stop="openEditModal(user)" aria-label="编辑用户">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <PaginationBar
-              v-if="userPages > 1"
-              v-model:current-page="userCurrentPage"
-              :total-pages="userPages"
-              mode="simple"
-              @update:current-page="loadUsers"
-            />
-          </div>
-        </div>
-
-        <!-- Backup & Restore Section -->
-        <div v-else-if="activeSection === 'backup'" class="backup-panel">
-          <!-- Backup Card -->
-          <div class="admin-card backup-card">
-            <div class="card-header">
-              <div class="card-header-icon backup-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">数据安全</div>
-                <h2 class="card-title">备份</h2>
-              </div>
-            </div>
-            <div class="card-body backup-card-body">
-              <p class="backup-desc">导出 SQL 文件，包含用户、成就、审核策略等全部业务数据。</p>
-              <p class="backup-desc">导出 ZIP 压缩包，包含学生荣誉中上传的所有附件文件。</p>
-              <div class="backup-two-btns">
-                <button
-                  class="btn btn-primary backup-btn"
-                  :disabled="backupLoading"
-                  type="button"
-                  @click="handleBackupDb"
-                >
-                  <svg v-if="backupLoading" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                  </svg>
-                  <svg v-else class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  {{ backupLoading ? "生成中…" : "导出 SQL 文件" }}
-                </button>
-                <button
-                  class="btn btn-primary backup-btn"
-                  :disabled="backupLoading"
-                  type="button"
-                  @click="handleBackupZip"
-                >
-                  <svg v-if="backupLoading" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                  </svg>
-                  <svg v-else class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  {{ backupLoading ? "打包中…" : "导出 ZIP 文件" }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Restore Card -->
-          <div class="admin-card restore-card">
-            <div class="card-header">
-              <div class="card-header-icon restore-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">数据安全</div>
-                <h2 class="card-title">恢复</h2>
-              </div>
-            </div>
-            <div class="card-body restore-card-body">
-              <div class="restore-warning">
-                <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <span>数据库恢复为全覆盖，会覆盖现有数据；附件恢复为增量补充，缺失文件补回，多余文件保留。</span>
-              </div>
-              <div class="restore-two-items">
-                <!-- Restore DB -->
-                <div class="restore-item">
-                  <div class="restore-item-label">恢复数据库</div>
-                  <div class="restore-item-row">
-                    <div class="file-input-wrap">
-                      <input
-                        id="sql-file"
-                        type="file"
-                        accept=".sql"
-                        class="file-input"
-                        aria-label="选择 SQL 备份文件"
-                        @change="onSqlFileChange"
-                      />
-                      <label for="sql-file" class="file-label">
-                        <svg class="file-label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span class="file-label-text">{{ backupForm.sqlFile ? backupForm.sqlFile.name : "选择 .sql 文件" }}</span>
-                      </label>
-                    </div>
-                    <button
-                      class="btn btn-danger restore-btn"
-                      :disabled="restoreLoading || !backupForm.sqlFile"
-                      type="button"
-                      @click="handleRestore"
-                    >
-                      <svg v-if="restoreLoading" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                      </svg>
-                      {{ restoreLoading ? "恢复中…" : "恢复" }}
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Restore Attachments -->
-                <div class="restore-item">
-                  <div class="restore-item-label">恢复附件</div>
-                  <div class="restore-item-row">
-                    <div class="file-input-wrap">
-                      <input
-                        id="zip-file"
-                        type="file"
-                        accept=".zip"
-                        class="file-input"
-                        aria-label="选择附件压缩包"
-                        @change="onZipFileChange"
-                      />
-                      <label for="zip-file" class="file-label">
-                        <svg class="file-label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                        </svg>
-                        <span class="file-label-text">{{ backupForm.zipFile ? backupForm.zipFile.name : "选择 zip 文件" }}</span>
-                      </label>
-                    </div>
-                    <button
-                      class="btn btn-danger restore-btn"
-                      :disabled="restoreLoading || !backupForm.zipFile"
-                      type="button"
-                      @click="handleRestoreAttachments"
-                    >
-                      <svg v-if="restoreLoading" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                      </svg>
-                      {{ restoreLoading ? "恢复中…" : "恢复" }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Storage Analysis Card -->
-          <div class="admin-card storage-card">
-            <div class="card-header">
-              <div class="card-header-icon storage-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v1m3-2v2m3-3v3" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">存储分析</div>
-                <h2 class="card-title">用户附件占用</h2>
-              </div>
-              <button
-                class="btn btn-ghost storage-refresh-btn"
-                type="button"
-                :disabled="storageLoading"
-                @click="fetchStorageAnalysis"
-              >
-                <svg v-if="storageLoading" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                </svg>
-                <svg v-else class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                刷新
-              </button>
-            </div>
-            <div class="card-body storage-card-body">
-              <!-- Summary -->
-              <div v-if="storageData" class="storage-summary">
-                <div class="storage-summary-item">
-                  <span class="storage-summary-label">总占用</span>
-                  <span class="storage-summary-value">{{ storageData.totalFormatted }}</span>
-                </div>
-                <div class="storage-summary-item">
-                  <span class="storage-summary-label">用户数</span>
-                  <span class="storage-summary-value">{{ storageData.totalUsers }} 个</span>
-                </div>
-              </div>
-
-              <!-- Loading -->
-              <div v-if="storageLoading" class="storage-center-state">
-                <svg class="loading-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                </svg>
-                <span>扫描中…</span>
-              </div>
-
-              <!-- Error -->
-              <div v-else-if="storageError" class="storage-center-state">
-                <span>{{ storageError }}</span>
-              </div>
-
-              <!-- Empty -->
-              <div v-else-if="!storageData || !storageData.entries.length" class="storage-center-state">
-                <span>暂无数据，点击"刷新"开始扫描</span>
-              </div>
-
-              <!-- Bar Chart -->
-              <div v-else class="storage-chart">
-                <div
-                  v-for="(item, idx) in storageData.entries"
-                  :key="item.userId"
-                  class="storage-bar-row"
-                  :class="{ 'storage-bar-row--odd': idx % 2 === 1 }"
-                >
-                  <div class="storage-bar-label">
-                    <span class="storage-bar-displayname">{{ storageLabel(item) }}</span>
-                    <span v-if="item.displayName" class="storage-bar-username">{{ item.username }}</span>
-                  </div>
-                  <div class="storage-bar-track-wrap">
-                    <div
-                      class="storage-bar-fill"
-                      :style="{ width: barWidth(item.sizeBytes, storageData.entries[0].sizeBytes) }"
-                    ></div>
-                  </div>
-                  <span class="storage-bar-size">{{ item.sizeFormatted }}</span>
-                  <button
-                    class="storage-delete-btn"
-                    type="button"
-                    :disabled="storageDeleting.has(item.userId)"
-                    :aria-label="'删除' + storageLabel(item) + '的附件'"
-                    @click="handleDeleteStorage(item)"
-                  >
-                    <svg v-if="storageDeleting.has(item.userId)" class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
-                    </svg>
-                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Other Section -->
-        <div v-else-if="activeSection === 'other'" class="admin-panel-single">
-          <div class="card admin-card">
-            <div class="card-header">
-              <div class="card-header-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-              </div>
-              <div>
-                <div class="card-kicker">系统</div>
-                <h2 class="card-title">其他设置</h2>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="toggle-section">
-                <div class="toggle-row">
-                  <div class="toggle-copy">
-                    <span class="toggle-title">开放注册</span>
-                    <span class="toggle-hint">关闭后，用户将无法自行注册账号</span>
-                  </div>
-                  <label class="toggle-switch" :aria-label="`开放注册: ${systemSettings.allowRegistration ? '已开启' : '已关闭'}`">
-                    <input
-                      v-model="systemSettings.allowRegistration"
-                      type="checkbox"
-                      role="switch"
-                      :aria-checked="systemSettings.allowRegistration"
-                      @change="handleSaveSystemSettings"
-                    />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </div>
-                <div class="toggle-row">
-                  <div class="toggle-copy">
-                    <span class="toggle-title">待处理自动滞后</span>
-                    <span class="toggle-hint">超过指定天数未处理的请求自动移入已滞后标签</span>
-                  </div>
-                  <div class="stepper-wrap">
-                    <button
-                      class="stepper-btn"
-                      type="button"
-                      aria-label="减少天数"
-                      :disabled="systemSettings.delayedThresholdDays <= 1"
-                      @click="stepThreshold(-1)"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14" /></svg>
-                    </button>
-                    <input
-                      v-model.number="systemSettings.delayedThresholdDays"
-                      class="stepper-input"
-                      type="number"
-                      min="1"
-                      max="30"
-                      aria-label="待处理自动滞后天数"
-                      @change="handleSaveSystemSettings"
-                    />
-                    <button
-                      class="stepper-btn"
-                      type="button"
-                      aria-label="增加天数"
-                      :disabled="systemSettings.delayedThresholdDays >= 30"
-                      @click="stepThreshold(1)"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                    </button>
-                    <span class="stepper-unit">天</span>
-                  </div>
-                </div>
-              </div>
-              <Transition name="msg-fade">
-                <div v-if="systemSettingsMsg" :class="['msg-banner', 'success']" role="status">{{ systemSettingsMsg }}</div>
-              </Transition>
-            </div>
-          </div>
-        </div>
+        <AdminSystemSettingsTab
+          v-else-if="activeSection === 'other'"
+          :settings="systemSettings"
+          :message="systemSettingsMsg"
+          @update-setting="updateSystemSetting"
+          @save="handleSaveSystemSettings"
+          @step-threshold="stepThreshold"
+        />
 
       </div>
     </Transition>
@@ -1898,9 +1116,11 @@ watch([userSearch, userRoleFilter], () => {
   </main>
 </template>
 
-<style scoped>
+<style>
 @import '../assets/styles/admin-view.css';
+</style>
 
+<style scoped>
 .add-user-layout {
   position: fixed;
   top: 50%;
