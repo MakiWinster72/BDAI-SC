@@ -76,8 +76,11 @@ const detailComponentProps = computed(() => {
   return baseProps;
 });
 
-function openAttachmentPreview(url) {
-  emit("preview", [url], 0);
+function openAttachmentPreview(file) {
+  emit("preview", [file.rawUrl || file.url], 0, {
+    name: file.name,
+    mediaType: file.mediaType,
+  });
 }
 </script>
 
@@ -160,14 +163,14 @@ function openAttachmentPreview(url) {
                 isPdfFile(file)
               "
               class="attachment-link"
-              @click="openAttachmentPreview(file.url)"
+              @click="openAttachmentPreview(file)"
             >
               预览
             </button>
             <button
               v-else-if="isAllowedImage(file)"
               class="attachment-link"
-              @click="openAttachmentPreview(file.url)"
+              @click="openAttachmentPreview(file)"
             >
               预览
             </button>

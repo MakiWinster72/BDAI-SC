@@ -1,0 +1,138 @@
+.add-user-layout {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  z-index: 1011;
+}
+
+.add-user-modal {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 480px;
+}
+
+.add-user-example-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 280px;
+  padding: 16px;
+  padding-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.example-image-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.example-image-label {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-weight: 600;
+}
+
+.example-image-item img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 12, 114, 0.1);
+  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.12);
+}
+
+.class-select-hint {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+}
+
+.assigned-classes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.assigned-class-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.remove-class-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-sub);
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.remove-class-btn:hover {
+  color: var(--danger);
+}
+
+.add-class-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.class-year-input {
+  width: 90px;
+}
+
+.class-category-select {
+  width: 100px;
+}
+
+.class-major-select {
+  flex: 1;
+  min-width: 160px;
+}
+
+.class-no-input {
+  width: 70px;
+}
+
+.add-class-btn {
+  padding: 6px 12px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.add-class-btn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .add-user-layout {
+    width: calc(100vw - 32px);
+    max-width: 480px;
+  }
+  .add-user-example-panel {
+    display: none;
+  }
+  .add-user-modal {
+    width: 100% !important;
+  }
+}

@@ -22,6 +22,10 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  studentNoEditable: {
+    type: Boolean,
+    default: false,
+  },
 });
 </script>
 
@@ -46,7 +50,7 @@ defineProps({
           class="info-input"
           type="text"
           placeholder="请输入学号"
-          disabled
+          :disabled="!studentNoEditable || !isEditing"
         />
       </label>
       <label class="field-card">

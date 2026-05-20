@@ -162,6 +162,55 @@ export function isMediaPdf(url) {
   return ['pdf'].includes(resolveMediaTypeByExtension(url));
 }
 
+/**
+ * 推断预览类型（支持 blob URL：需结合文件名 / mediaType）
+ * @param {string} url
+ * @param {{ name?: string, mediaType?: string }} [hint]
+ * @returns {'video' | 'document' | 'sheet' | 'pdf' | 'image'}
+ */
+export function resolvePreviewKind(url, hint = {}) {
+  const tokens = [
+    resolveMediaTypeByExtension(url),
+    resolveMediaTypeByExtension(hint.name || ''),
+    (hint.mediaType || "").toLowerCase(),
+  ].filter(Boolean);
+
+  for (const token of tokens) {
+    const kind = previewKindFromToken(token);
+    if (kind) {
+      return kind;
+    }
+  }
+  return "image";
+}
+
+function previewKindFromToken(token) {
+  const value = token.toLowerCase();
+  if (value.includes("pdf")) {
+    return "pdf";
+  }
+  if (
+    value.includes("video") ||
+    ["mp4", "mov", "webm"].includes(value)
+  ) {
+    return "video";
+  }
+  if (["doc", "docx"].includes(value) || value.includes("word")) {
+    return "document";
+  }
+  if (
+    ["xls", "xlsx"].includes(value) ||
+    value.includes("excel") ||
+    (value.includes("sheet") && !value.includes("spreadsheet"))
+  ) {
+    return "sheet";
+  }
+  if (value.includes("spreadsheet") || value.includes("excel")) {
+    return "sheet";
+  }
+  return null;
+}
+
 // ── 文件对象类型检测 ───────────────────────────────────
 
 /** @param {{ name: string }} file */

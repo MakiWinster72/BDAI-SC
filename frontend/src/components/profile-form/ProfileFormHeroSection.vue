@@ -16,6 +16,10 @@ const props = defineProps({
     type: Function,
     required: true,
   },
+  avatarPlaceholder: {
+    type: String,
+    default: "点击设置头像",
+  },
 });
 
 const { avatarInput, triggerAvatarUpload, handleAvatarChange } = useProfileAvatarUpload({
@@ -44,7 +48,7 @@ async function onAvatarChange(event) {
         :src="resolveMediaUrl(info.avatarUrl)"
         alt="头像"
       />
-      <span v-else>点击设置头像</span>
+      <span v-else>{{ avatarPlaceholder }}</span>
       <input
         ref="avatarInput"
         type="file"
@@ -55,7 +59,12 @@ async function onAvatarChange(event) {
     </button>
     <div class="info-hero-text">
       <div class="info-hero-title">基础信息</div>
-      <div class="info-hero-subtitle">请使用真实照片，确保五官清晰。</div>
+      <div class="info-hero-subtitle">
+        <slot name="subtitle">请使用真实照片，确保五官清晰。</slot>
+      </div>
+    </div>
+    <div v-if="$slots.actions" class="info-actions">
+      <slot name="actions" />
     </div>
   </div>
 </template>

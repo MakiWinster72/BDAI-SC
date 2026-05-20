@@ -5,7 +5,7 @@
     </header>
 
     <section class="info-shell" :class="{ 'info-shell-editing': isEditing }">
-      <MyInfoHeroSection
+      <ProfileFormHeroSection
         :info="info"
         :is-editing="isEditing"
         :upload-file="uploadProfileAvatar"
@@ -41,7 +41,7 @@
         </transition>
       </div>
 
-      <MyInfoSchoolSection
+      <ProfileFormSchoolSection
         :info="info"
         :is-editing="isEditing"
         :today="today"
@@ -49,13 +49,13 @@
         :class-major-options="classMajorOptions"
       />
 
-      <MyInfoIdentitySection
+      <ProfileFormIdentitySection
         :info="info"
         :is-editing="isEditing"
         :today="today"
       />
 
-      <MyInfoDormSection
+      <ProfileFormDormSection
         :info="info"
         :is-editing="isEditing"
         :dorm-building-options="dormBuildingOptions"
@@ -63,7 +63,7 @@
         :dorm-room-disabled="dormRoomDisabled"
       />
 
-      <MyInfoPartySection
+      <ProfileFormPartySection
         :info="info"
         :is-editing="isEditing"
         :today="today"
@@ -79,19 +79,21 @@
         :full-member-disabled="fullMemberDisabled"
       />
 
-      <MyInfoEducationSection
+      <ProfileFormEducationSection
         :items="educationItems"
         :is-editing="isEditing"
         :today="today"
       />
 
-      <MyInfoCadreSection
+      <ProfileFormCadreSection
         :items="cadreItems"
         :is-editing="isEditing"
         :today="today"
       />
 
-      <MyInfoFamilySection :info="info" :is-editing="isEditing" />
+      <ProfileFormFamilySection :info="info" :is-editing="isEditing" />
+
+      <ProfileFormSpecialStudentSection :info="info" :is-editing="isEditing" />
 
     </section>
     <MobileCapsule @open-sidebar="openDashboardSidebar">
@@ -122,17 +124,18 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref, onMounted, watch } from "vue";
+import { reactive, computed, ref, onMounted } from "vue";
 import ExportPdfButton from "@/components/ExportPdfButton.vue";
 import MobileCapsule from "@/components/MobileCapsule.vue";
-import MyInfoHeroSection from "@/components/my-info/MyInfoHeroSection.vue";
-import MyInfoIdentitySection from "@/components/my-info/MyInfoIdentitySection.vue";
-import MyInfoDormSection from "@/components/my-info/MyInfoDormSection.vue";
-import MyInfoSchoolSection from "@/components/my-info/MyInfoSchoolSection.vue";
-import MyInfoPartySection from "@/components/my-info/MyInfoPartySection.vue";
-import MyInfoEducationSection from "@/components/my-info/MyInfoEducationSection.vue";
-import MyInfoCadreSection from "@/components/my-info/MyInfoCadreSection.vue";
-import MyInfoFamilySection from "@/components/my-info/MyInfoFamilySection.vue";
+import ProfileFormHeroSection from "@/components/profile-form/ProfileFormHeroSection.vue";
+import ProfileFormIdentitySection from "@/components/profile-form/ProfileFormIdentitySection.vue";
+import ProfileFormDormSection from "@/components/profile-form/ProfileFormDormSection.vue";
+import ProfileFormSchoolSection from "@/components/profile-form/ProfileFormSchoolSection.vue";
+import ProfileFormPartySection from "@/components/profile-form/ProfileFormPartySection.vue";
+import ProfileFormEducationSection from "@/components/profile-form/ProfileFormEducationSection.vue";
+import ProfileFormCadreSection from "@/components/profile-form/ProfileFormCadreSection.vue";
+import ProfileFormFamilySection from "@/components/profile-form/ProfileFormFamilySection.vue";
+import ProfileFormSpecialStudentSection from "@/components/profile-form/ProfileFormSpecialStudentSection.vue";
 import {
   FIXED_COLLEGE,
   majorOptionsByCategory,
@@ -142,27 +145,22 @@ import { getStudentProfile, saveStudentProfile } from "@/api/profile";
 import { uploadMedia } from "@/api/upload";
 import { useUploadProgress } from "@/composables/useUploadProgress";
 import {
-  buildCadrePayload,
-  buildEducationPayload,
   createProfileExperienceRows,
   createProfileInfo,
   isCadreRowEmpty,
   isEducationRowEmpty,
-  normalizeCadreExperiences,
-  normalizeEducationExperiences,
 } from "@/composables/useProfileFormModel";
+import { useProfileApplier } from "@/composables/useProfileApplier";
+import { useProfileCategoryWatch } from "@/composables/useProfileCategoryWatch";
+import { useProfileDormFields } from "@/composables/useProfileDormFields";
+import { useProfilePartyFields } from "@/composables/useProfilePartyFields";
+import { useProfileSnapshot } from "@/composables/useProfileSnapshot";
 import { resolveMediaUrl } from "@/utils/media";
-import {
-  buildClassName,
-  buildDormRoom,
-  buildAddress,
-  parseAddressToRegion,
-  parseDormRoom,
-} from "@/utils/profile";
+import { getProfileTodayString } from "@/utils/profileFormDate";
+import { buildProfileSavePayload } from "@/utils/profilePayload";
 import { useDashboardShell } from "@/composables/useDashboardShell";
 import { useNotifications } from "@/composables/useNotifications";
 import { useReviewSettings } from "@/composables/useReviewSettings";
-import { useProfilePartyFields } from "@/composables/useProfilePartyFields";
 import { useToast } from "@/composables/useToast";
 import { loadUser } from "@/utils/userStorage";
 
@@ -170,7 +168,7 @@ const { openSidebar: openDashboardSidebar } = useDashboardShell();
 
 const profile = reactive({ ...loadUser(), college: FIXED_COLLEGE });
 const isEditing = ref(false);
-const today = getTodayString();
+const today = getProfileTodayString();
 const originalProfileData = ref(null);
 const savedProfileData = ref(null);
 const {
@@ -279,53 +277,34 @@ const saveActionLabel = computed(() => {
     : "保存";
 });
 
-const dormBuildingOptions = computed(() => {
-  if (info.dormCampus === "佛山校区") {
-    return [
-      ...Array.from({ length: 21 }, (_, index) => {
-        const label = `${index + 1}号楼`;
-        return { label, value: label };
-      }),
-      { label: "有为9栋", value: "有为9栋" },
-      { label: "有为21栋", value: "有为21栋" },
-      {
-        label: "教师公寓（请选择校外居住）",
-        value: "教师公寓",
-        disabled: true,
-      },
-    ];
-  }
-  if (info.dormCampus === "广州校区") {
-    return [
-      ...Array.from({ length: 16 }, (_, index) => {
-        const label = `${index + 17}号楼`;
-        return { label, value: label };
-      }),
-      { label: "凌云楼", value: "凌云楼" },
-      { label: "揽月楼", value: "揽月楼" },
-      { label: "丽枫酒店", value: "丽枫酒店" },
-    ];
-  }
-  return [];
-});
 const { educationItems, cadreItems } = createProfileExperienceRows();
 
-function getTodayString() {
-  const now = new Date();
-  const offsetMs = now.getTimezoneOffset() * 60 * 1000;
-  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
-}
+const classMajorOptions = computed(
+  () => majorOptionsByCategory[info.studentCategory] || [],
+);
 
-const classMajorOptions = computed(() => {
-  return majorOptionsByCategory[info.studentCategory] || [];
+const {
+  dormBuildingOptions,
+  dormBuildingDisabled,
+  dormRoomDisabled,
+} = useProfileDormFields(info, isEditing);
+
+useProfileCategoryWatch(info);
+
+const { applyProfileResponse: applyProfileFromApi } = useProfileApplier({
+  info,
+  educationItems,
+  cadreItems,
 });
 
-const dormBuildingDisabled = computed(
-  () => !isEditing.value || info.offCampusLiving || !info.dormCampus,
-);
-const dormRoomDisabled = computed(
-  () => dormBuildingDisabled.value || !info.dormBuilding,
-);
+const { buildPdfStudentSnapshot, buildCurrentProfileState } = useProfileSnapshot({
+  info,
+  profile,
+  educationItems,
+  cadreItems,
+  isEducationRowEmpty,
+  isCadreRowEmpty,
+});
 
 
 function enterEdit() {
@@ -359,105 +338,12 @@ async function confirmEdit() {
     hasSavedProfileBefore.value &&
     reviewSettings.profileReviewEnabled &&
     !isReviewer.value;
-  const className = buildClassName(
-    info.classYear,
-    info.classMajor,
-    info.classNo,
-    info.className,
-  );
-  const address = buildAddress(
-    info.addressProvince,
-    info.addressCity,
-    info.addressCounty,
-    info.addressDetail,
-    info.address,
-  );
-  const offCampusAddress = buildAddress(
-    info.offCampusProvince,
-    info.offCampusCity,
-    info.offCampusCounty,
-    info.offCampusDetail,
-    info.offCampusAddress,
-  );
-  const dormRoom = buildDormRoom(
-    info.dormFloor,
-    info.dormRoomNo,
-    info.dormRoom,
-  );
-  const educationExperiences = buildEducationPayload(educationItems);
-  const cadreExperiences = buildCadrePayload(cadreItems);
-  const payload = {
-    fullName: info.name,
-    avatarUrl: info.avatarUrl,
-    studentNo: info.studentNo,
-    classYear: info.classYear || null,
-    classMajor: info.classMajor,
-    classNo: info.classNo,
-    className,
-    college: FIXED_COLLEGE,
-    enrollmentDate: info.enrollmentDate || null,
-    studentCategory: info.studentCategory,
-    ethnicity: info.ethnicity,
-    politicalStatus: info.politicalStatus,
-    dormCampus: info.dormCampus,
-    dormBuilding: info.dormBuilding,
-    dormRoom,
-    offCampusLiving: info.offCampusLiving,
-    offCampusAddress,
-    classTeacher: info.classTeacher,
-    counselor: info.counselor,
-    phone: info.phone,
-    backupContact: info.backupContact,
-    address,
-    idType: info.idType,
-    idNo: info.idNo,
-    birthDate: info.birthDate || null,
-    nativePlace: info.nativePlace,
-    leagueNo: info.leagueNo,
-    leagueApplicationDate: info.leagueApplicationDate || null,
-    leagueJoinDate: info.leagueJoinDate || null,
-    leagueJoined: info.leagueJoined,
-    leagueDeveloping: info.leagueDeveloping,
-    partyApplied: info.partyApplied,
-    notDeveloped: info.notDeveloped,
-    applicationDate: info.applicationDate || null,
-    activistDate: info.activistDate || null,
-    activistDeveloping: info.activistDeveloping,
-    partyTrainingDate: info.partyTrainingDate || null,
-    partyTrainingPending: info.partyTrainingPending,
-    developmentTargetDate: info.developmentTargetDate || null,
-    developmentTargetDeveloping: info.developmentTargetDeveloping,
-    probationaryMemberDate: info.probationaryMemberDate || null,
-    probationaryDeveloping: info.probationaryDeveloping,
-    fullMemberDate: info.fullMemberDate || null,
-    fullMemberDeveloping: info.fullMemberDeveloping,
-    emergencyPhone: info.emergencyPhone,
-    emergencyRelation: info.emergencyRelation,
-    fatherName: info.fatherName,
-    fatherPhone: info.fatherPhone,
-    fatherWorkUnit: info.fatherWorkUnit,
-    fatherTitle: info.fatherTitle,
-    motherName: info.motherName,
-    motherPhone: info.motherPhone,
-    motherWorkUnit: info.motherWorkUnit,
-    motherTitle: info.motherTitle,
-    isHk: info.isHk,
-    isMo: info.isMo,
-    isTw: info.isTw,
-    specialStudent: info.specialStudent,
-    specialStudentType: info.specialStudentType || "",
-    specialStudentRemark: info.specialStudentRemark || "",
-    educationExperiences,
-    cadreExperiences,
-  };
-  if (info.offCampusLiving) {
-    payload.dormCampus = null;
-    payload.dormBuilding = null;
-    payload.dormRoom = null;
-  } else {
-    payload.offCampusAddress = null;
-  }
-  sanitizePartyPayload(payload);
+  const payload = buildProfileSavePayload({
+    info,
+    educationItems,
+    cadreItems,
+    sanitizePartyPayload,
+  });
   const changes = buildProfileChanges(originalProfileData.value, payload);
   try {
     if (requiresReview) {
@@ -483,182 +369,6 @@ async function confirmEdit() {
   } catch (err) {
     console.error(err);
   }
-}
-
-function buildPdfStudentSnapshot() {
-  const studentName =
-    info.name || profile.displayName || profile.username || "";
-  const studentNo = info.studentNo || profile.studentNo || "";
-  const className = buildClassName(
-    info.classYear,
-    info.classMajor,
-    info.classNo,
-    info.className,
-  );
-  const addressText = buildAddress(
-    info.addressProvince,
-    info.addressCity,
-    info.addressCounty,
-    info.addressDetail,
-    info.address,
-  );
-  const offCampusAddress = buildAddress(
-    info.offCampusProvince,
-    info.offCampusCity,
-    info.offCampusCounty,
-    info.offCampusDetail,
-    info.offCampusAddress,
-  );
-  const educationExperiences = buildEducationPayload(educationItems);
-  const cadreExperiences = buildCadrePayload(cadreItems);
-  return {
-    fullName: studentName,
-    studentNo,
-    classYear: info.classYear,
-    classMajor: info.classMajor,
-    classNo: info.classNo,
-    className,
-    college: info.college,
-    enrollmentDate: info.enrollmentDate,
-    studentCategory: info.studentCategory,
-    classTeacher: info.classTeacher,
-    counselor: info.counselor,
-    ethnicity: info.ethnicity,
-    politicalStatus: info.politicalStatus,
-    phone: info.phone,
-    backupContact: info.backupContact,
-    idType: info.idType,
-    idNo: info.idNo,
-    birthDate: info.birthDate,
-    nativePlace: info.nativePlace,
-    address: addressText,
-    dormCampus: info.dormCampus,
-    dormBuilding: info.dormBuilding,
-    dormRoom: info.dormRoom,
-    offCampusLiving: info.offCampusLiving,
-    offCampusAddress,
-    emergencyPhone: info.emergencyPhone,
-    emergencyRelation: info.emergencyRelation,
-    fatherName: info.fatherName,
-    fatherPhone: info.fatherPhone,
-    fatherWorkUnit: info.fatherWorkUnit,
-    fatherTitle: info.fatherTitle,
-    motherName: info.motherName,
-    motherPhone: info.motherPhone,
-    motherWorkUnit: info.motherWorkUnit,
-    motherTitle: info.motherTitle,
-    leagueNo: info.leagueNo,
-    leagueApplicationDate: info.leagueApplicationDate,
-    leagueJoinDate: info.leagueJoinDate,
-    leagueJoined: info.leagueJoined,
-    leagueDeveloping: info.leagueDeveloping,
-    partyApplied: info.partyApplied,
-    notDeveloped: info.notDeveloped,
-    applicationDate: info.applicationDate,
-    activistDate: info.activistDate,
-    activistDeveloping: info.activistDeveloping,
-    partyTrainingDate: info.partyTrainingDate,
-    partyTrainingPending: info.partyTrainingPending,
-    developmentTargetDate: info.developmentTargetDate,
-    developmentTargetDeveloping: info.developmentTargetDeveloping,
-    probationaryMemberDate: info.probationaryMemberDate,
-    probationaryDeveloping: info.probationaryDeveloping,
-    fullMemberDate: info.fullMemberDate,
-    fullMemberDeveloping: info.fullMemberDeveloping,
-    isHk: info.isHk,
-    isMo: info.isMo,
-    isTw: info.isTw,
-    specialStudent: info.specialStudent,
-    specialStudentType: info.specialStudentType,
-    specialStudentRemark: info.specialStudentRemark,
-    educationExperiences,
-    cadreExperiences,
-    avatarUrl: profile.avatarUrl,
-  };
-}
-
-function buildCurrentProfileState() {
-  return {
-    fullName: info.name,
-    avatarUrl: info.avatarUrl,
-    studentNo: info.studentNo,
-    classYear: info.classYear || null,
-    classMajor: info.classMajor,
-    classNo: info.classNo,
-    className: buildClassName(
-      info.classYear,
-      info.classMajor,
-      info.classNo,
-      info.className,
-    ),
-    college: info.college,
-    enrollmentDate: info.enrollmentDate || null,
-    studentCategory: info.studentCategory,
-    ethnicity: info.ethnicity,
-    politicalStatus: info.politicalStatus,
-    dormCampus: info.dormCampus,
-    dormBuilding: info.dormBuilding,
-    dormRoom: buildDormRoom(info.dormFloor, info.dormRoomNo, info.dormRoom),
-    offCampusLiving: info.offCampusLiving,
-    offCampusAddress: buildAddress(
-      info.offCampusProvince,
-      info.offCampusCity,
-      info.offCampusCounty,
-      info.offCampusDetail,
-      info.offCampusAddress,
-    ),
-    classTeacher: info.classTeacher,
-    counselor: info.counselor,
-    phone: info.phone,
-    backupContact: info.backupContact,
-    address: buildAddress(
-      info.addressProvince,
-      info.addressCity,
-      info.addressCounty,
-      info.addressDetail,
-      info.address,
-    ),
-    idType: info.idType,
-    idNo: info.idNo,
-    birthDate: info.birthDate || null,
-    nativePlace: info.nativePlace,
-    leagueNo: info.leagueNo,
-    leagueApplicationDate: info.leagueApplicationDate || null,
-    leagueJoinDate: info.leagueJoinDate || null,
-    leagueJoined: info.leagueJoined,
-    leagueDeveloping: info.leagueDeveloping,
-    partyApplied: info.partyApplied,
-    notDeveloped: info.notDeveloped,
-    applicationDate: info.applicationDate || null,
-    activistDate: info.activistDate || null,
-    activistDeveloping: info.activistDeveloping,
-    partyTrainingDate: info.partyTrainingDate || null,
-    partyTrainingPending: info.partyTrainingPending,
-    developmentTargetDate: info.developmentTargetDate || null,
-    developmentTargetDeveloping: info.developmentTargetDeveloping,
-    probationaryMemberDate: info.probationaryMemberDate || null,
-    probationaryDeveloping: info.probationaryDeveloping,
-    fullMemberDate: info.fullMemberDate || null,
-    fullMemberDeveloping: info.fullMemberDeveloping,
-    emergencyPhone: info.emergencyPhone,
-    emergencyRelation: info.emergencyRelation,
-    fatherName: info.fatherName,
-    fatherPhone: info.fatherPhone,
-    fatherWorkUnit: info.fatherWorkUnit,
-    fatherTitle: info.fatherTitle,
-    motherName: info.motherName,
-    motherPhone: info.motherPhone,
-    motherWorkUnit: info.motherWorkUnit,
-    motherTitle: info.motherTitle,
-    isHk: info.isHk,
-    isMo: info.isMo,
-    isTw: info.isTw,
-    specialStudent: info.specialStudent,
-    specialStudentType: info.specialStudentType,
-    specialStudentRemark: info.specialStudentRemark,
-    educationExperiences: buildEducationPayload(educationItems),
-    cadreExperiences: buildCadrePayload(cadreItems),
-  };
 }
 
 function buildProfileChanges(previousState, nextState) {
@@ -795,87 +505,11 @@ function stringifyProfileChangeValue(value) {
   return text || "-";
 }
 
-function applyProfileResponse(data, options = {}) {
+function handleProfileApplied(data, options = {}) {
   if (!data) {
     return;
   }
   const { syncSavedProfile = true } = options;
-  info.name = data.fullName || data.displayName || "";
-  info.avatarUrl = data.avatarUrl || profile.avatarUrl || "";
-  info.studentNo = data.studentNo || profile.studentNo || "";
-  info.classYear = data.classYear || new Date().getFullYear();
-  info.classMajor = data.classMajor || "";
-  info.classNo = data.classNo ?? 1;
-  info.className = data.className || "";
-  info.college = FIXED_COLLEGE;
-  info.enrollmentDate = data.enrollmentDate || "";
-  info.studentCategory = data.studentCategory || "";
-  info.ethnicity = data.ethnicity || "";
-  info.politicalStatus = data.politicalStatus || "";
-  info.dormCampus = data.dormCampus || "";
-  info.dormBuilding = data.dormBuilding || "";
-  info.dormRoom = data.dormRoom || "";
-  const parsedDormRoom = parseDormRoom(info.dormRoom);
-  info.dormFloor = parsedDormRoom.floor;
-  info.dormRoomNo = parsedDormRoom.roomNo;
-  info.offCampusLiving = Boolean(data.offCampusLiving);
-  info.offCampusAddress = data.offCampusAddress || "";
-  const parsedOffCampusAddress = parseAddressToRegion(info.offCampusAddress);
-  info.offCampusProvince = parsedOffCampusAddress.province;
-  info.offCampusCity = parsedOffCampusAddress.city;
-  info.offCampusCounty = parsedOffCampusAddress.county;
-  info.offCampusDetail = parsedOffCampusAddress.detail;
-  info.classTeacher = data.classTeacher || "";
-  info.counselor = data.counselor || "";
-  info.phone = data.phone || "";
-  info.backupContact = data.backupContact || "";
-  info.address = data.address || "";
-  const parsedAddress = parseAddressToRegion(info.address);
-  info.addressProvince = parsedAddress.province;
-  info.addressCity = parsedAddress.city;
-  info.addressCounty = parsedAddress.county;
-  info.addressDetail = parsedAddress.detail;
-  info.idType = data.idType || "居民身份证";
-  info.idNo = data.idNo || "";
-  info.birthDate = data.birthDate || "";
-  info.nativePlace = data.nativePlace || "";
-  info.leagueNo = data.leagueNo || "";
-  info.leagueApplicationDate = data.leagueApplicationDate || "";
-  info.leagueJoinDate = data.leagueJoinDate || "";
-  info.leagueJoined = Boolean(data.leagueJoined);
-  info.leagueDeveloping = Boolean(data.leagueDeveloping);
-  info.partyApplied = Boolean(data.partyApplied);
-  info.notDeveloped = Boolean(data.notDeveloped);
-  info.applicationDate = data.applicationDate || "";
-  info.activistDate = data.activistDate || "";
-  info.activistDeveloping = Boolean(data.activistDeveloping);
-  info.partyTrainingDate = data.partyTrainingDate || "";
-  info.partyTrainingPending = Boolean(data.partyTrainingPending);
-  info.developmentTargetDate = data.developmentTargetDate || "";
-  info.developmentTargetDeveloping = Boolean(data.developmentTargetDeveloping);
-  info.probationaryMemberDate = data.probationaryMemberDate || "";
-  info.probationaryDeveloping = Boolean(data.probationaryDeveloping);
-  info.fullMemberDate = data.fullMemberDate || "";
-  info.fullMemberDeveloping = Boolean(data.fullMemberDeveloping);
-  info.emergencyPhone = data.emergencyPhone || "";
-  info.emergencyRelation = data.emergencyRelation || "";
-  info.fatherName = data.fatherName || "";
-  info.fatherPhone = data.fatherPhone || "";
-  info.fatherWorkUnit = data.fatherWorkUnit || "";
-  info.fatherTitle = data.fatherTitle || "";
-  info.motherName = data.motherName || "";
-  info.motherPhone = data.motherPhone || "";
-  info.motherWorkUnit = data.motherWorkUnit || "";
-  info.motherTitle = data.motherTitle || "";
-  info.isHk = Boolean(data.isHk);
-  info.isMo = Boolean(data.isMo);
-  info.isTw = Boolean(data.isTw);
-  info.specialStudent = Boolean(data.specialStudent);
-  info.specialStudentType = data.specialStudentType || "";
-  info.specialStudentRemark = data.specialStudentRemark || "";
-  applyEducationExperiences(data.educationExperiences);
-  applyCadreExperiences(data.cadreExperiences);
-
   profile.displayName = data.displayName || profile.displayName;
   profile.username = data.username || profile.username;
   profile.avatarUrl = data.avatarUrl || profile.avatarUrl;
@@ -887,20 +521,17 @@ function applyProfileResponse(data, options = {}) {
     savedProfileData.value = data;
     originalProfileData.value = data;
   }
-
   saveUser(profile);
 }
 
-function applyEducationExperiences(rawItems) {
-  educationItems.splice(
-    0,
-    educationItems.length,
-    ...normalizeEducationExperiences(rawItems),
-  );
-}
-
-function applyCadreExperiences(rawItems) {
-  cadreItems.splice(0, cadreItems.length, ...normalizeCadreExperiences(rawItems));
+function applyProfileResponse(data, options = {}) {
+  applyProfileFromApi(data, {
+    ...options,
+    classYearFallback: "current-year",
+    avatarUrlFallback: profile.avatarUrl || "",
+    studentNoFallback: profile.studentNo || "",
+    onApplied: handleProfileApplied,
+  });
 }
 
 function saveUser(data) {
@@ -925,59 +556,6 @@ onMounted(async () => {
     console.error(err);
   }
 });
-
-watch(
-  () => info.offCampusLiving,
-  (next) => {
-    if (next) {
-      info.dormCampus = "";
-      info.dormBuilding = "";
-      info.dormRoom = "";
-      info.dormFloor = "";
-      info.dormRoomNo = "";
-    } else {
-      info.offCampusAddress = "";
-      info.offCampusProvince = "";
-      info.offCampusCity = "";
-      info.offCampusCounty = "";
-      info.offCampusDetail = "";
-    }
-  },
-);
-
-watch(
-  () => info.studentCategory,
-  (category) => {
-    if (!majorOptionsByCategory[category]) {
-      info.classMajor = "";
-      return;
-    }
-    if (!majorOptionsByCategory[category].includes(info.classMajor)) {
-      info.classMajor = "";
-    }
-    if (category === "研究生") {
-      info.classNo = 1;
-    }
-  },
-);
-
-watch(
-  () => info.dormCampus,
-  () => {
-    if (!info.dormCampus) {
-      info.dormBuilding = "";
-      return;
-    }
-    const exists = dormBuildingOptions.value.some(
-      (item) => item.value === info.dormBuilding && !item.disabled,
-    );
-    if (!exists) {
-      info.dormBuilding = "";
-    }
-  },
-);
-
-
 </script>
 
 <style scoped>
