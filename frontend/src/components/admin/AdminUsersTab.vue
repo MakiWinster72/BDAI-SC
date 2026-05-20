@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import PaginationBar from "./PaginationBar.vue";
+import PaginationBar from "@/components/PaginationBar.vue";
 
 const props = defineProps({
   users: {

@@ -2,87 +2,22 @@
   <main class="dashboard-right">
     <MobileCapsule @open-sidebar="openDashboardSidebar">
       <template #right>
-        <button class="capsule-action student-capsule-btn is-filter" type="button" @click="openMobileFilter">
-          <span class="capsule-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
-            </svg>
-          </span>
-          <span class="student-capsule-label">筛选</span>
-          <span v-if="hasActiveFilters" class="capsule-filter-dot"></span>
-        </button>
-        <button class="capsule-action student-capsule-btn hide-on-mobile" type="button" @click="toggleGridView">
-          <span class="capsule-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7"/>
-              <rect x="14" y="3" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/>
-            </svg>
-          </span>
-          <span class="student-capsule-label">{{ gridViewOpen ? "列表" : "表格" }}</span>
-        </button>
-        <button
-          v-if="gridViewOpen"
-          class="capsule-action student-capsule-btn hide-on-mobile"
-          :class="{ 'capsule-active': gridFullscreen }"
-          type="button"
-          @click="toggleGridFullscreen"
-        >
-          <span class="capsule-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
-            </svg>
-          </span>
-          <span class="student-capsule-label">{{ gridFullscreen ? "退出" : "全屏" }}</span>
-        </button>
-        <button
-          v-if="!gridViewOpen"
-          class="capsule-action student-capsule-btn"
-          :class="{ 'capsule-active': selectMenuOpen }"
-          type="button"
-          aria-label="选择学生"
-          @click.stop="toggleSelectMenu"
-        >
-          <span class="capsule-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <path d="M9 12l2 2 4-4"/>
-            </svg>
-          </span>
-          <span class="student-capsule-label">选择</span>
-        </button>
+        <StudentInfoCapsuleToolbar
+          :has-active-filters="hasActiveFilters"
+          :grid-view-open="gridViewOpen"
+          :grid-fullscreen="gridFullscreen"
+          :select-menu-open="selectMenuOpen"
+          :select-all-loading="selectAllLoading"
+          @open-filter="openMobileFilter"
+          @toggle-grid="toggleGridView"
+          @toggle-fullscreen="toggleGridFullscreen"
+          @toggle-select-menu="toggleSelectMenu"
+          @close-select-menu="selectMenuOpen = false"
+          @select-page="handleSelectPage"
+          @select-all="handleSelectAll"
+        />
       </template>
     </MobileCapsule>
-
-    <Teleport to="body">
-      <Transition name="select-float">
-        <div v-if="selectMenuOpen && !gridViewOpen" class="select-float-menu" @click.stop>
-          <button
-            class="select-float-btn"
-            type="button"
-            @click="handleSelectPage"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
-            </svg>
-            选择本页
-          </button>
-          <button
-            class="select-float-btn"
-            type="button"
-            :disabled="selectAllLoading"
-            @click="handleSelectAll"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
-            {{ selectAllLoading ? "选择中..." : "选择全部" }}
-          </button>
-        </div>
-      </Transition>
-    </Teleport>
 
     <header class="feed-header">
       <h1 class="feed-title">学生信息</h1>
@@ -118,7 +53,7 @@
           :row-data="gridActiveSheetData.rowData"
           :column-defs="gridActiveSheetData.colDefs"
           :default-col-def="gridDefaultColDef"
-          :locale-text="gridLocaleText"
+          :locale-text="gridLocaleTextMap"
           :locale-text-func="gridLocaleTextFunc"
           :fullscreen="gridFullscreen"
         />
@@ -143,315 +78,70 @@
       </section>
     </section>
 
-    <!-- Floating action buttons -->
-    <div ref="floatingRef" class="floating-actions">
-      <Transition name="floating-action">
-        <button
-          v-if="hasSelection"
-          class="floating-btn floating-btn-cancel"
-          type="button"
-          @click="cancelSelection"
-        >
-          取消选择
-        </button>
-      </Transition>
-      <button
-        v-if="hasSelection"
-        class="floating-btn floating-btn-export"
-        type="button"
-        @click="openExportDialog"
-      >
-        {{ exportLabel }}
-      </button>
-    </div>
+    <StudentFloatingExportActions
+      :visible="hasSelection"
+      :export-label="exportLabel"
+      :bottom="floatingBottom"
+      @cancel="cancelSelection"
+      @export="openExportDialog"
+    />
 
-    <OverlayPanel
+    <StudentGridFieldDialog
       :open="gridFieldDialogOpen"
       :closing="gridFieldDialogClosing"
-      title="选择显示字段"
-      aria-label="选择显示字段"
-      size="wide"
+      :export-selections="exportSelections"
+      :export-groups="exportGroups"
+      :family-rows="familyRows"
+      :is-all-selected="isAllSelected"
+      :is-group-checked="isGroupChecked"
       @close="closeGridFieldDialog"
-    >
-      <template #header>
-        <div class="overlay-custom-header">
-          <span class="overlay-custom-title">选择显示字段</span>
-          <label class="export-all-toggle">
-            <input
-              type="checkbox"
-              :checked="isAllSelected"
-              @change="toggleAllSelections($event.target.checked)"
-            />
-            <span>全选</span>
-          </label>
-        </div>
-      </template>
-      <div class="export-dialog-body">
-        <div v-for="group in exportGroups" :key="group.id" class="export-group">
-          <label class="export-group-title">
-            <span>{{ group.label }}</span>
-            <input
-              type="checkbox"
-              :checked="isGroupChecked(group)"
-              @change="toggleGroupSelection(group, $event.target.checked)"
-            />
-          </label>
-          <div class="export-group-options">
-            <template v-if="group.id === 'family'">
-              <div
-                v-for="(row, index) in familyRows"
-                :key="`grid-family-row-${index}`"
-                class="export-option-row"
-              >
-                <label
-                  v-for="field in row"
-                  :key="field.key"
-                  class="export-option"
-                >
-                  <input
-                    v-model="exportSelections[field.key]"
-                    type="checkbox"
-                  />
-                  <span>{{ field.label }}</span>
-                </label>
-              </div>
-            </template>
-            <template v-else>
-              <label
-                v-for="field in group.fields"
-                :key="field.key"
-                class="export-option"
-              >
-                <input v-model="exportSelections[field.key]" type="checkbox" />
-                <span>{{ field.label }}</span>
-              </label>
-            </template>
-          </div>
-        </div>
-      </div>
-    </OverlayPanel>
+      @toggle-all="toggleAllSelections"
+      @toggle-group="toggleGroupSelection"
+    />
 
-    <!-- Mobile Filter Sheet -->
-    <Teleport to="body">
-      <div v-if="mobileFilterOpen" class="sheet-overlay open" @click.self="closeMobileFilter">
-        <div class="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="筛选" :style="filterSheetStyle">
-          <div
-            class="mobile-filter-handle"
-            @touchstart="handleFilterTouchStart"
-            @touchmove="handleFilterTouchMove"
-            @touchend="handleFilterTouchEnd"
-          ></div>
-          <header
-            class="mobile-filter-header"
-            @touchstart="handleFilterTouchStart"
-            @touchmove="handleFilterTouchMove"
-            @touchend="handleFilterTouchEnd"
-          >
-            <h2 class="mobile-filter-title">筛选学生</h2>
-            <button class="mobile-filter-close" type="button" @click="closeMobileFilter">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12"/>
-              </svg>
-            </button>
-          </header>
-          <div class="mobile-filter-body">
-            <div class="mobile-filter-section">
-              <label class="mobile-filter-label">关键词搜索</label>
-              <div class="mobile-filter-search">
-                <svg class="mobile-filter-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                </svg>
-                <input
-                  v-model="filters.keyword"
-                  class="mobile-filter-input"
-                  type="text"
-                  placeholder="姓名、学号、班级..."
-                />
-              </div>
-            </div>
+    <StudentMobileFilterSheet
+      :open="mobileFilterOpen"
+      :sheet-style="filterSheetStyle"
+      :filters="filters"
+      :class-year-options="classYearOptions"
+      :student-category-options="studentCategoryOptions"
+      :available-majors="availableMajors"
+      :special-student-type-options="specialStudentTypeOptions"
+      @close="closeMobileFilter"
+      @reset="resetMobileFilters"
+      @touchstart="handleFilterTouchStart"
+      @touchmove="handleFilterTouchMove"
+      @touchend="handleFilterTouchEnd"
+    />
 
-            <div class="mobile-filter-row">
-              <div class="mobile-filter-section half">
-                <label class="mobile-filter-label">年级</label>
-                <div class="mobile-filter-select-wrap">
-                  <select v-model="filters.classYear" class="mobile-filter-select">
-                    <option value="">全部年级</option>
-                    <option v-for="year in classYearOptions" :key="year" :value="String(year)">{{ year }}级</option>
-                  </select>
-                  <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 9l6 6 6-6"/>
-                  </svg>
-                </div>
-              </div>
-              <div class="mobile-filter-section half">
-                <label class="mobile-filter-label">班级</label>
-                <div class="mobile-filter-select-wrap">
-                  <select v-model="filters.classNo" class="mobile-filter-select">
-                    <option value="">全部班级</option>
-                    <option v-for="n in 10" :key="n" :value="String(n)">{{ n }}班</option>
-                  </select>
-                  <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 9l6 6 6-6"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
+    <StudentDetailDrawer
+      ref="detailDrawerRef"
+      :open="viewOpen"
+      :closing="viewClosing"
+      :loading="viewLoading"
+      :student="viewItem"
+      :editing="detailEditing"
+      :can-edit="profile.role === 'ADMIN'"
+      :achievements-open="achievementsOpen"
+      :achievements-closing="achievementsClosing"
+      :resolve-media-url="resolveMediaUrl"
+      :save-profile="saveViewProfile"
+      @close="closeView"
+      @saved="handleViewProfileSaved"
+      @open-achievements="openAchievements"
+      @export-pdf="handleExportPdf"
+      @start-edit="detailEditing = true"
+      @cancel-edit="handleCancelEdit"
+      @save="handleSaveProfile"
+    />
 
-            <div class="mobile-filter-section">
-              <label class="mobile-filter-label">学生类型</label>
-              <div class="mobile-filter-select-wrap">
-                <select v-model="filters.studentCategory" class="mobile-filter-select">
-                  <option value="">全部类型</option>
-                  <option v-for="cat in studentCategoryOptions" :key="cat" :value="cat">{{ cat }}</option>
-                </select>
-                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-            </div>
-
-            <div class="mobile-filter-section">
-              <label class="mobile-filter-label">专业</label>
-              <div class="mobile-filter-select-wrap">
-                <select v-model="filters.major" class="mobile-filter-select" :disabled="!filters.studentCategory">
-                  <option value="">全部专业</option>
-                  <option v-for="major in availableMajors" :key="major" :value="major">{{ major }}</option>
-                </select>
-                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-            </div>
-
-            <div class="mobile-filter-section">
-              <label class="mobile-filter-label">港澳台学生</label>
-              <div class="mobile-filter-chips">
-                <label class="mobile-filter-chip" :class="{ active: filters.isHk }" @click.prevent="filters.isHk = !filters.isHk">
-                  <input :checked="filters.isHk" type="radio" name="hkmo" hidden />
-                  <span>香港</span>
-                </label>
-                <label class="mobile-filter-chip" :class="{ active: filters.isMo }" @click.prevent="filters.isMo = !filters.isMo">
-                  <input :checked="filters.isMo" type="radio" name="hkmo" hidden />
-                  <span>澳门</span>
-                </label>
-                <label class="mobile-filter-chip" :class="{ active: filters.isTw }" @click.prevent="filters.isTw = !filters.isTw">
-                  <input :checked="filters.isTw" type="radio" name="hkmo" hidden />
-                  <span>台湾</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="mobile-filter-section">
-              <label class="mobile-filter-label">特殊学生</label>
-              <div class="mobile-filter-select-wrap">
-                <select v-model="filters.specialStudentType" class="mobile-filter-select">
-                  <option value="">无</option>
-                  <option v-for="opt in specialStudentTypeOptions.slice(1)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
-                <svg class="mobile-filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="mobile-filter-footer">
-            <button class="mobile-filter-reset" type="button" @click="resetMobileFilters">重置</button>
-            <button class="mobile-filter-apply" type="button" @click="closeMobileFilter">完成</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <transition name="publisher-backdrop">
-      <div
-        v-if="viewOpen"
-        class="student-detail-backdrop"
-        @click="closeView"
-      ></div>
-    </transition>
-    <section
-      class="student-detail-view"
-      :class="{
-        open: viewOpen,
-        closing: viewClosing,
-        split: achievementsOpen || achievementsClosing,
-      }"
-      :aria-hidden="!viewOpen"
-    >
-      <div class="student-detail-handle"></div>
-      <header class="student-detail-header">
-        <div class="student-detail-title">学生详情</div>
-        <button class="student-detail-close" type="button" @click="closeView">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-      </header>
-      <div v-if="viewLoading" class="empty-tip">加载中...</div>
-      <StudentProfileEditor
-        v-else-if="viewItem"
-        ref="profileEditorRef"
-        :student="viewItem"
-        :resolve-media-url="resolveMediaUrl"
-        :save-profile="saveViewProfile"
-        :can-edit="profile.role === 'ADMIN'"
-        :show-achievements="true"
-        :editing="detailEditing"
-        @saved="handleViewProfileSaved"
-        @open-achievements="openAchievements"
-        @start-edit="detailEditing = true"
-        @cancel-edit="detailEditing = false"
-      />
-      <div v-if="!viewLoading && viewItem" class="student-detail-capsule">
-        <template v-if="!detailEditing">
-          <button class="capsule-action" type="button" @click="openAchievements">
-            成果
-          </button>
-          <button class="capsule-action" type="button" @click="handleExportPdf">
-            PDF
-          </button>
-          <button class="capsule-action" type="button" @click="detailEditing = true">
-            编辑
-          </button>
-        </template>
-        <template v-else>
-          <button class="capsule-action" type="button" @click="handleCancelEdit">
-            取消
-          </button>
-          <button class="capsule-action capsule-action-primary" type="button" @click="handleSaveProfile">
-            保存
-          </button>
-        </template>
-      </div>
-    </section>
-
-    <section
-      class="student-achievements-view"
-      :class="{ open: achievementsOpen, closing: achievementsClosing }"
-      :aria-hidden="!achievementsOpen"
-    >
-      <div class="student-detail-handle"></div>
-      <header class="student-detail-header">
-        <div class="student-detail-title">个人成就</div>
-        <button
-          class="student-detail-close"
-          type="button"
-          @click="closeAchievements"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-      </header>
-      <div class="student-achievements-body" v-if="viewItem">
-        <iframe
-          class="student-achievements-frame"
-          :key="achievementUrl"
-          :src="achievementUrl"
-          title="学生个人成就"
-        ></iframe>
-      </div>
-    </section>
+    <StudentAchievementsPanel
+      :open="achievementsOpen"
+      :closing="achievementsClosing"
+      :achievement-url="achievementUrl"
+      :has-student="Boolean(viewItem)"
+      @close="closeAchievements"
+    />
 
     <StudentExportDialog
       :open="exportDialogOpen"
@@ -462,76 +152,64 @@
       @export-success="handleStudentExportSuccess"
     />
 
-    <div
-      :class="['sheet-overlay', { open: gridViewConfirmOpen }]"
-      @click.self="closeGridViewConfirm"
-    >
-      <div class="sheet-modal" @click.stop>
-        <header class="sheet-modal-header">
-          <div class="sheet-modal-title">提示</div>
-        </header>
-        <div class="sheet-modal-body">
-          当前学生数量为 {{ totalItems }} 人，表格视图加载大量数据可能会造成卡顿。<br />
-          建议使用导出功能下载表格查看。<br />
-          是否继续切换到表格视图？
-        </div>
-        <div class="sheet-modal-actions">
-          <button class="ghost-button" type="button" @click="closeGridViewConfirm">
-            取消
-          </button>
-          <button class="action-button" type="button" @click="confirmGridView">
-            继续
-          </button>
-        </div>
-      </div>
-    </div>
+    <StudentGridViewConfirmSheet
+      :open="gridViewConfirmOpen"
+      :total-items="totalItems"
+      @close="closeGridViewConfirm"
+      @confirm="confirmGridView"
+    />
   </main>
 </template>
 
-<script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { useRouter, useRoute } from "vue-router";
-
-import harmonyFontUrl from "@/assets/fonts/HarmonyOS_Sans_SC_Regular.ttf?url";
-import harmonyFontBlackUrl from "@/assets/fonts/HarmonyOS_Sans_SC_Black.ttf?url";
-import { getMenuLocation, isMenuEnabled } from "@/constants/menu";
+<script setup>import { computed, onMounted, onUnmounted, reactive, ref, watch, nextTick } from "vue";
+import { useRoute } from "vue-router";
+import MobileCapsule from "@/components/MobileCapsule.vue";
+import StudentExportDialog from "@/components/StudentExportDialog.vue";
+import StudentFilterBar from "@/components/student-info/StudentFilterBar.vue";
+import StudentGridPanel from "@/components/student-info/StudentGridPanel.vue";
+import StudentListPanel from "@/components/student-info/StudentListPanel.vue";
+import StudentAchievementsPanel from "@/components/student-info/StudentAchievementsPanel.vue";
+import StudentDetailDrawer from "@/components/student-info/StudentDetailDrawer.vue";
+import StudentFloatingExportActions from "@/components/student-info/StudentFloatingExportActions.vue";
+import StudentGridFieldDialog from "@/components/student-info/StudentGridFieldDialog.vue";
+import StudentGridViewConfirmSheet from "@/components/student-info/StudentGridViewConfirmSheet.vue";
+import StudentInfoCapsuleToolbar from "@/components/student-info/StudentInfoCapsuleToolbar.vue";
+import StudentMobileFilterSheet from "@/components/student-info/StudentMobileFilterSheet.vue";
+import { createAuditLog } from "@/api/auditLog";
 import {
   getStudentProfileById,
   saveStudentProfileById,
   searchStudentProfiles,
 } from "@/api/profile";
-import MobileCapsule from "@/components/MobileCapsule.vue";
-import StudentExportDialog from "@/components/StudentExportDialog.vue";
-import StudentFilterBar from "@/components/StudentFilterBar.vue";
-import StudentGridPanel from "@/components/StudentGridPanel.vue";
-import StudentListPanel from "@/components/StudentListPanel.vue";
-import { createAuditLog } from "@/api/auditLog";
-import StudentProfileEditor from "@/components/StudentProfileEditor.vue";
-import OverlayPanel from "@/components/OverlayPanel.vue";
-import { navigateWithViewTransition } from "@/utils/viewTransition";
 import { useDashboardShell } from "@/composables/useDashboardShell";
-import { useToast } from "@/composables/useToast";
+import { useMobileFilterSheet } from "@/composables/useMobileFilterSheet";
+import { useStudentExportFields } from "@/composables/useStudentExportFields";
 import { useStudentSearch } from "@/composables/useStudentSearch";
-import { resolveMediaUrl } from "@/utils/media";
-import { loadUser } from "@/utils/userStorage";
+import { useToast } from "@/composables/useToast";
 import {
-  ACHIEVEMENT_EXPORT_CATEGORIES,
+  gridDefaultColDef,
+  gridLocaleTextFunc,
+  gridLocaleTextMap,
+} from "@/config/studentGridConfig";
+import {
   buildPreviewSheets,
   checkStudentProfileNeedsDetail,
-  createExportSelections,
-  exportGroups,
-  familyRows,
   fetchAchievementsForStudents,
   getSelectedExportKeys,
 } from "@/utils/studentProfileExport";
+import {
+  buildStudentClassName,
+  getHkMoTwLabel,
+  mapStudentListItem,
+} from "@/utils/studentListDisplay";
+import { resolveMediaUrl } from "@/utils/media";
+import { loadUser } from "@/utils/userStorage";
 
-const router = useRouter();
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 const { success: toastSuccess } = useToast();
 
 const profile = reactive(loadUser());
-const activeMenu = ref("student-info");
 const selectedIds = ref([]);
 const currentPage = ref(1);
 const pageInput = ref(null);
@@ -561,10 +239,9 @@ const gridHasFullDetail = ref(false);
 let gridRequestId = 0;
 const achievementsOpen = ref(false);
 const achievementsClosing = ref(false);
-const sidebarOpen = ref(false);
-const activeCategory = ref("all");
-const mobileFilterOpen = ref(false);
 const selectMenuOpen = ref(false);
+const detailEditing = ref(false);
+const detailDrawerRef = ref(null);
 const {
   filters,
   classYearOptions,
@@ -578,20 +255,29 @@ const {
   getSpecialStudentTypeLabel,
 } = useStudentSearch();
 
-function updateStudentFilter({ key, value }) {
-  filters[key] = value;
-}
+const {
+  open: mobileFilterOpen,
+  sheetStyle: filterSheetStyle,
+  openSheet: openMobileFilter,
+  closeSheet: closeMobileFilter,
+  handleTouchStart: handleFilterTouchStart,
+  handleTouchMove: handleFilterTouchMove,
+  handleTouchEnd: handleFilterTouchEnd,
+} = useMobileFilterSheet();
 
-function updateGridActiveSheet(sheetId) {
-  gridActiveSheet.value = sheetId;
-}
+const {
+  exportSelections,
+  exportGroups,
+  familyRows,
+  isAllSelected,
+  isGroupChecked,
+  toggleGroupSelection,
+  toggleAllSelections,
+} = useStudentExportFields();
 
-// Mobile filter sheet drag to close
-const filterTouchStartY = ref(0);
-const filterTouchCurrentY = ref(0);
-const filterIsDragging = ref(false);
-const filterDragTranslateY = ref(0);
-const FILTER_DRAG_THRESHOLD = 80;
+function resetMobileFilters() {
+  resetFilters();
+}
 
 function toggleSelectMenu() {
   selectMenuOpen.value = !selectMenuOpen.value;
@@ -611,128 +297,13 @@ function handleSelectAll() {
   selectAllFiltered();
 }
 
-function onDocumentClick(e) {
-  if (!selectMenuOpen.value) return;
-  const menu = document.querySelector(".select-float-menu");
-  if (menu && !menu.contains(e.target)) {
-    closeSelectMenu();
-  }
+function updateStudentFilter({ key, value }) {
+  filters[key] = value;
 }
 
-function openMobileFilter() {
-  mobileFilterOpen.value = true;
-  document.body.style.overflow = "hidden";
+function updateGridActiveSheet(sheetId) {
+  gridActiveSheet.value = sheetId;
 }
-
-function closeMobileFilter() {
-  mobileFilterOpen.value = false;
-  document.body.style.overflow = "";
-}
-
-function resetMobileFilters() {
-  resetFilters();
-}
-
-const filterSheetStyle = computed(() => ({
-  transform: filterDragTranslateY.value > 0
-    ? `translateY(${filterDragTranslateY.value}px) scale(${1 - filterDragTranslateY.value / 2000})`
-    : "",
-  transition: filterIsDragging.value ? "none" : "",
-  "transform-origin": "bottom center",
-}));
-
-function handleFilterTouchStart(e) {
-  filterTouchStartY.value = e.touches[0].clientY;
-  filterTouchCurrentY.value = filterTouchStartY.value;
-  filterIsDragging.value = true;
-}
-
-function handleFilterTouchMove(e) {
-  if (!filterIsDragging.value) return;
-  const delta = e.touches[0].clientY - filterTouchStartY.value;
-  if (delta > 0) {
-    filterDragTranslateY.value = delta;
-  }
-}
-
-function handleFilterTouchEnd() {
-  if (!filterIsDragging.value) return;
-  if (filterDragTranslateY.value > FILTER_DRAG_THRESHOLD) {
-    closeMobileFilter();
-  }
-  filterIsDragging.value = false;
-  filterDragTranslateY.value = 0;
-}
-
-const gridDefaultColDef = {
-  sortable: true,
-  filter: true,
-  resizable: true,
-  minWidth: 90,
-  flex: 1,
-};
-
-const gridLocaleText = {
-  // 过滤器与菜单
-  page: "页",
-  more: "更多",
-  to: "至",
-  of: "共",
-  next: "下一页",
-  last: "末页",
-  first: "首页",
-  previous: "上一页",
-  loadingOoo: "加载中...",
-  selectAll: "全选",
-  searchOoo: "搜索...",
-  blank: "空值",
-  notBlank: "非空",
-  filterOoo: "筛选...",
-  applyFilter: "应用筛选",
-  equals: "等于",
-  notEqual: "不等于",
-  contains: "包含",
-  notContains: "不包含",
-  startsWith: "以...开头",
-  endsWith: "以...结尾",
-  lessThan: "小于",
-  greaterThan: "大于",
-  lessThanOrEqual: "小于等于",
-  greaterThanOrEqual: "大于等于",
-  inRange: "范围",
-  setFilter: "集合筛选",
-  columns: "列",
-  filters: "筛选",
-  reset: "重置",
-  group: "分组",
-  rowGroupColumnsEmptyMessage: "拖拽列到这里进行分组",
-  pivotColumnsEmptyMessage: "拖拽列到这里进行透视",
-  noRowsToShow: "暂无数据",
-  // TODO: 翻译“Page Size”
-  // 聚合
-  sum: "求和",
-  min: "最小值",
-  max: "最大值",
-  none: "无",
-  count: "计数",
-  avg: "平均值",
-  // 其他
-  copy: "复制",
-  copyWithHeaders: "复制（含表头）",
-  paste: "粘贴",
-  export: "导出",
-  csvExport: "导出 CSV",
-  excelExport: "导出 Excel",
-};
-
-const gridLocaleTextFunc = (key, defaultValue) => {
-  if (key in gridLocaleText) {
-    return gridLocaleText[key];
-  }
-  return defaultValue;
-};
-
-const exportSelections = reactive(createExportSelections());
 
 const pagedStudents = computed(() => students.value);
 const exportDisabled = computed(() => selectedIds.value.length === 0);
@@ -817,22 +388,7 @@ async function fetchStudents() {
     const { data } = await searchStudentProfiles(
       buildSearchParams(currentPage.value, pageSize.value),
     );
-    students.value = (data?.items || []).map((item) => ({
-      id: item.id,
-      name: item.fullName || "未命名",
-      avatarUrl: item.avatarUrl || "",
-      className: buildClassName(item),
-      gradeYear: item.classYear || "",
-      college: item.college || "",
-      major: item.classMajor || "",
-      classNo: item.classNo || "",
-      studentNo: item.studentNo || "",
-      isHk: item.isHk || false,
-      isMo: item.isMo || false,
-      isTw: item.isTw || false,
-      specialStudent: item.specialStudent || false,
-      specialStudentType: item.specialStudentType || "",
-    }));
+    students.value = (data?.items || []).map(mapStudentListItem);
     totalPages.value = Math.max(1, data?.totalPages || 1);
     totalItems.value = data?.total || 0;
   } catch {
@@ -1051,13 +607,6 @@ function saveViewProfile(payload) {
   return saveStudentProfileById(viewItem.value.id, payload);
 }
 
-function getHkMoTwLabel(item) {
-  const parts = [];
-  if (item.isHk) parts.push("香港");
-  if (item.isMo) parts.push("澳门");
-  if (item.isTw) parts.push("台湾");
-  return parts.join(" / ");
-}
 
 function handleViewProfileSaved(data) {
   if (!data) {
@@ -1065,7 +614,7 @@ function handleViewProfileSaved(data) {
   }
   detailEditing.value = false;
   viewItem.value = data;
-  const nextClassName = buildClassName(data);
+  const nextClassName = buildStudentClassName(data);
   students.value = students.value.map((item) => {
     if (String(item.id) !== String(data.id)) {
       return item;
@@ -1089,7 +638,6 @@ function handleViewProfileSaved(data) {
 }
 
 onMounted(async () => {
-  document.addEventListener("click", onDocumentClick);
   const keywordParam = route.query.keyword;
   if (keywordParam && typeof keywordParam === "string") {
     filters.keyword = keywordParam;
@@ -1121,19 +669,6 @@ function formatDateOrEmpty(dateValue, statusFlag, statusText) {
     return statusText;
   }
   return dateValue || "";
-}
-
-function buildClassName(item) {
-  if (!item) {
-    return "";
-  }
-  if (item.className) {
-    return item.className;
-  }
-  const safeYear = item.classYear ? `${item.classYear}级` : "";
-  const safeMajor = item.classMajor || "";
-  const safeNo = item.classNo ? `${item.classNo}班` : "";
-  return `${safeYear}${safeMajor}${safeNo}`.trim();
 }
 
 function selectCurrentPage() {
@@ -1173,10 +708,6 @@ async function selectAllFiltered() {
   }
 }
 
-const achievementEntries = computed(() => [
-  { key: "all", label: "全部" },
-  ...ACHIEVEMENT_EXPORT_CATEGORIES,
-]);
 
 const gridSelectedKeys = computed(() => getSelectedExportKeys(exportSelections));
 const gridSheets = computed(() =>
@@ -1244,33 +775,6 @@ async function handleStudentExportSuccess() {
   }
 }
 
-function isGroupSelected(group) {
-  return group.fields.every((field) => exportSelections[field.key]);
-}
-
-function isGroupChecked(group) {
-  return isGroupSelected(group);
-}
-
-const isAllSelected = computed(() =>
-  exportGroups.every((group) =>
-    group.fields.every((field) => exportSelections[field.key]),
-  ),
-);
-
-function toggleGroupSelection(group, checked) {
-  group.fields.forEach((field) => {
-    exportSelections[field.key] = checked;
-  });
-}
-
-function toggleAllSelections(checked) {
-  exportGroups.forEach((group) => {
-    group.fields.forEach((field) => {
-      exportSelections[field.key] = checked;
-    });
-  });
-}
 
 async function loadExportRows(limit) {
   const ids =
@@ -1290,125 +794,20 @@ async function loadExportRows(limit) {
   return results.filter(Boolean);
 }
 
-function formatEducationText(items) {
-  if (!Array.isArray(items) || items.length === 0) {
-    return "";
-  }
-  return items
-    .filter(Boolean)
-    .map((item) => {
-      const start = item.startDate || "";
-      const end = item.isCurrent ? "至今" : item.endDate || "";
-      const period = [start, end].filter(Boolean).join("~");
-      const parts = [
-        period,
-        item.schoolName || "",
-        item.educationLevel || "",
-        item.witness || "",
-      ].filter(Boolean);
-      return parts.join(" / ");
-    })
-    .filter(Boolean)
-    .join(" | ");
-}
-
-const roleLabelMap = {
-  STUDENT: "学生",
-  TEACHER: "教师",
-  ADMIN: "管理员",
-};
-
-const roleLabel = computed(() => roleLabelMap[profile.role] || "学生");
-const avatarText = computed(() => {
-  const name = profile.displayName || profile.username || "同学";
-  return name.slice(0, 1).toUpperCase();
-});
-
-const activeCategoryIndex = computed(() => {
-  const index = achievementEntries.value.findIndex(
-    (entry) => entry.key === activeCategory.value,
-  );
-  return index === -1 ? 0 : index;
-});
-
-const drawerIndicatorStyle = computed(() => ({
-  transform: `translateY(calc(${activeCategoryIndex.value} * (var(--drawer-item-height) + var(--drawer-item-gap))))`,
-}));
-
-function handleMenuClick(key) {
-  if (!isMenuEnabled(key)) {
-    return;
-  }
-  if (key === "achievements") {
-    navigateWithViewTransition(router, getMenuLocation(key));
-    return;
-  }
-  navigateWithViewTransition(router, getMenuLocation(key));
-}
-
-function toggleAchievements() {
-  if (!isMenuEnabled("achievements")) {
-    return;
-  }
-  achievementsOpen.value = !achievementsOpen.value;
-  activeMenu.value = "achievements";
-  if (achievementsOpen.value) {
-    handleAchievementEntry("all");
-  }
-}
-
-function handleAchievementEntry(key) {
-  if (!isMenuEnabled("achievements")) {
-    return;
-  }
-  const safeKey = achievementEntries.value.some((entry) => entry.key === key)
-    ? key
-    : "all";
-  activeCategory.value = safeKey;
-  achievementsOpen.value = true;
-  activeMenu.value = "achievements";
-  sidebarOpen.value = false;
-  navigateWithViewTransition(router, {
-    path: "/achievements",
-    query: { category: safeKey },
-  });
-}
-
-function openSidebar() {
-  sidebarOpen.value = true;
-}
-
-function closeSidebar() {
-  sidebarOpen.value = false;
-}
-
-function goToSettings() {
-  navigateWithViewTransition(router, "/settings");
-}
-
 function handleExportPdf() {
-  if (profileEditorRef.value?.triggerPdfExport) {
-    profileEditorRef.value.triggerPdfExport();
-  }
+  detailDrawerRef.value?.triggerPdfExport?.();
 }
 
 function handleSaveProfile() {
-  if (profileEditorRef.value?.triggerSave) {
-    profileEditorRef.value.triggerSave();
-  }
+  detailDrawerRef.value?.triggerSave?.();
 }
 
 function handleCancelEdit() {
-  if (profileEditorRef.value?.cancelEdit) {
-    profileEditorRef.value.cancelEdit();
-  }
+  detailDrawerRef.value?.cancelEdit?.();
   detailEditing.value = false;
 }
 
-const floatingRef = ref(null);
 const floatingBottom = ref("24px");
-const detailEditing = ref(false);
-const profileEditorRef = ref(null);
 
 function updateFloatingBottom() {
   const footer = document.querySelector(".dashboard-footer-wrap");
@@ -1429,7 +828,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  document.removeEventListener("click", onDocumentClick);
   window.removeEventListener("scroll", updateFloatingBottom);
   window.removeEventListener("resize", updateFloatingBottom);
 });
@@ -1440,473 +838,5 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
-/* Mobile capsule buttons — vertical icon+label layout matching AdminView */
-.capsule-action.is-filter {
-  position: relative;
-}
-
-.student-capsule-btn {
-  flex-shrink: 0;
-  flex-direction: column;
-  gap: 1px;
-  color: var(--primary);
-  padding: 6px clamp(3px, 2.2vw, 10px);
-  border: 1px solid rgba(100, 12, 114, 0.12);
-}
-.student-capsule-btn .capsule-icon {
-  flex-shrink: 0;
-}
-
-.student-capsule-label {
-  font-size: 9px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.02em;
-}
-
-.capsule-filter-dot {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--primary, #e74c3c);
-}
-
-/* Mobile filter sheet - bottom sheet style */
-.mobile-filter-sheet {
-  position: fixed;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  top: auto;
-  max-width: 100%;
-  max-height: 80vh;
-  margin: 0 auto;
-  background: var(--card, #fff);
-  border-radius: 24px;
-  display: flex;
-  flex-direction: column;
-  animation: sheet-slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
-  will-change: transform;
-}
-
-@keyframes sheet-slide-up {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-.mobile-filter-handle {
-  width: 36px;
-  height: 4px;
-  background: var(--line, #ddd);
-  border-radius: 2px;
-  margin: 12px auto;
-  flex-shrink: 0;
-}
-
-.mobile-filter-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px 16px;
-  border-bottom: 1px solid var(--line, #f0f0f0);
-  flex-shrink: 0;
-}
-
-.mobile-filter-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text, #1a1a1a);
-  margin: 0;
-}
-
-.mobile-filter-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--bg-secondary, #f5f5f5);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary, #666);
-  cursor: pointer;
-}
-
-.mobile-filter-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-.mobile-filter-row {
-  display: flex;
-  gap: 12px;
-}
-
-.mobile-filter-section {
-  margin-bottom: 20px;
-}
-
-.mobile-filter-section.half {
-  flex: 1;
-}
-
-.mobile-filter-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary, #888);
-  margin-bottom: 8px;
-  display: block;
-}
-
-.mobile-filter-search {
-  position: relative;
-}
-
-.mobile-filter-search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary, #aaa);
-}
-
-.mobile-filter-input {
-  width: 100%;
-  height: 44px;
-  padding: 0 14px 0 40px;
-  border: 1px solid var(--line, #e5e5e5);
-  border-radius: 12px;
-  font-size: 15px;
-  background: var(--bg-secondary, #f8f8f8);
-  color: var(--text, #1a1a1a);
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.mobile-filter-input:focus {
-  outline: none;
-  border-color: var(--primary, var(--primary));
-  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
-  background: var(--card, #fff);
-}
-
-.mobile-filter-select-wrap {
-  position: relative;
-}
-
-.mobile-filter-select {
-  width: 100%;
-  height: 44px;
-  padding: 0 36px 0 14px;
-  border: 1px solid var(--line, #e5e5e5);
-  border-radius: 12px;
-  font-size: 15px;
-  background: var(--bg-secondary, #f8f8f8);
-  color: var(--text, #1a1a1a);
-  appearance: none;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.mobile-filter-select:focus {
-  outline: none;
-  border-color: var(--primary, var(--primary));
-  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
-  background: var(--card, #fff);
-}
-
-.mobile-filter-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.mobile-filter-select-arrow {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary, #aaa);
-  pointer-events: none;
-}
-
-.mobile-filter-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.mobile-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 16px;
-  background: var(--bg-secondary, #f0f0f0);
-  border-radius: 20px;
-  font-size: 14px;
-  color: var(--text-secondary, #666);
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-
-.mobile-filter-chip:hover {
-  background: var(--bg-secondary, #e8e8e8);
-}
-
-.mobile-filter-chip.active {
-  background: var(--primary, var(--primary));
-  color: #fff;
-}
-
-.mobile-filter-footer {
-  display: flex;
-  gap: 12px;
-  padding: 16px 20px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--line, #f0f0f0);
-  border-radius: 0 0 24px 24px;
-  flex-shrink: 0;
-  background: var(--card, #fff);
-}
-
-.mobile-filter-reset {
-  flex: 0 0 auto;
-  height: 46px;
-  padding: 0 20px;
-  border: 1px solid var(--line, #e5e5e5);
-  border-radius: 23px;
-  background: var(--card, #fff);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-secondary, #666);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-
-.mobile-filter-reset:hover {
-  border-color: var(--text-secondary, #999);
-  color: var(--text, #333);
-}
-
-.mobile-filter-apply {
-  flex: 1;
-  height: 46px;
-  border: none;
-  border-radius: 23px;
-  background: linear-gradient(135deg, var(--primary, var(--primary)) 0%, var(--primary-dark, var(--primary-dark)) 100%);
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px rgba(100, 12, 114, 0.3);
-}
-
-.mobile-filter-apply:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(100, 12, 114, 0.4);
-}
-
-.mobile-filter-apply:active {
-  transform: translateY(0);
-}
-
-/* Floating select menu - right side, selection actions */
-.select-float-menu {
-  position: fixed;
-  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
-  right: 20px;
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  z-index: 56;
-}
-
-.select-float-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid rgba(100, 12, 114, 0.15);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--primary);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(100, 12, 114, 0.1);
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.select-float-btn:hover {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: var(--primary);
-  box-shadow: 0 4px 16px rgba(100, 12, 114, 0.15);
-}
-
-.select-float-btn:active {
-  transform: scale(0.96);
-}
-
-.select-float-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Transition */
-.select-float-enter-active {
-  transition:
-    opacity 0.22s ease,
-    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.select-float-leave-active {
-  transition:
-    opacity 0.18s ease,
-    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.select-float-enter-from {
-  opacity: 0;
-  transform: translateY(8px) scale(0.94);
-}
-
-.select-float-leave-to {
-  opacity: 0;
-  transform: translateY(4px) scale(0.96);
-}
-
-/* Hide desktop filter and results actions on mobile */
-@media (max-width: 768px) {
-  .student-filter-card {
-    display: none;
-  }
-  .student-results-actions {
-    display: none;
-  }
-}
-
-/* Mobile capsule: hide grid/fullscreen buttons, wrap filter & select */
-@media (max-width: 768px) {
-  .capsule-right {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 8px 12px 8px 4px;
-  }
-
-  .hide-on-mobile {
-    display: none !important;
-  }
-
-  .student-capsule-btn {
-    flex-direction: row;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 999px;
-  }
-
-  .student-capsule-label {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0;
-  }
-
-  .student-capsule-btn .capsule-icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .student-capsule-btn .capsule-icon svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.student-results-meta {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .student-results-meta {
-    display: block;
-    font-size: 13px;
-    color: var(--text-sub);
-    padding: 0 0 12px;
-  }
-}
-
-/* Student detail capsule - hidden on desktop */
-.student-detail-capsule {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .student-detail-capsule {
-    position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--card);
-    backdrop-filter: blur(15px) saturate(140%);
-    -webkit-backdrop-filter: blur(15px) saturate(140%);
-    border-radius: 50px;
-    border: 2px solid rgba(100, 12, 114, 0.15);
-    box-shadow: 0 4px 20px rgba(100, 12, 114, 0.15);
-    z-index: 56;
-  }
-
-  .student-detail-capsule .capsule-action {
-    height: 36px;
-    padding: 0 16px;
-    border-radius: 999px;
-    border: none;
-    background: transparent;
-    color: var(--primary);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .student-detail-capsule .capsule-action:active {
-    transform: scale(0.95);
-  }
-
-  .student-detail-capsule .capsule-action-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(100, 12, 114, 0.25);
-  }
-}
-
-/* Student profile editor bottom padding for capsule */
-@media (max-width: 768px) {
-  .info-shell.student-profile-editor {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-  }
-}
+@import "@/assets/styles/student-info-view-scoped.css";
 </style>

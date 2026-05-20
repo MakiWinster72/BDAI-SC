@@ -30,6 +30,7 @@ backend/uploads/
 
 # Maven
 target/
+.m2/
 
 # Gradle
 .gradle/

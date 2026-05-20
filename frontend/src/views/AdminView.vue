@@ -1,11 +1,11 @@
 <script setup>
 import { computed, onMounted, reactive, ref, shallowRef, watch } from "vue";
 import MobileCapsule from "@/components/MobileCapsule.vue";
-import AdminBackupTab from "@/components/AdminBackupTab.vue";
-import AdminUploadSettingsTab from "@/components/AdminUploadSettingsTab.vue";
-import AdminReviewSettingsTab from "@/components/AdminReviewSettingsTab.vue";
-import AdminSystemSettingsTab from "@/components/AdminSystemSettingsTab.vue";
-import AdminUsersTab from "@/components/AdminUsersTab.vue";
+import AdminBackupTab from "@/components/admin/AdminBackupTab.vue";
+import AdminUploadSettingsTab from "@/components/admin/AdminUploadSettingsTab.vue";
+import AdminReviewSettingsTab from "@/components/admin/AdminReviewSettingsTab.vue";
+import AdminSystemSettingsTab from "@/components/admin/AdminSystemSettingsTab.vue";
+import AdminUsersTab from "@/components/admin/AdminUsersTab.vue";
 import { useAchievementUploadSettings } from "@/composables/useAchievementUploadSettings";
 import { useReviewSettings } from "@/composables/useReviewSettings";
 import { getUserList, updateUser, deleteUser, createUser, getAllUserIds, getSystemSettings, updateSystemSettings, downloadBackupDb, restoreBackupDb, downloadBackupAttachments, restoreBackupAttachments, updateTeacherAssignedClasses, getStorageAnalysis, deleteUserStorage } from "@/api/admin";
