@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import AchievementReviewSnapshotCard from "@/components/AchievementReviewSnapshotCard.vue";
 import StudentProfileEditor from "@/components/StudentProfileEditor.vue";
 import { API_BASE } from "@/api/request";
-import { useNotifications } from "@/composables/useNotifications";
+import { useNotifications, formatNotificationEntryNumber } from "@/composables/useNotifications";
 import { searchStudentProfiles, getStudentProfileById } from "@/api/profile";
 import { uploadMedia } from "@/api/upload";
 import { useUploadProgress } from "@/composables/useUploadProgress";
@@ -74,6 +74,7 @@ const canViewStudentInfo = computed(() => {
 const isSelectedUnread = computed(() =>
   selectedEntry.value && !readIds.has(getEntryReadKey(selectedEntry.value)),
 );
+const selectedEntryNumber = computed(() => formatNotificationEntryNumber(selectedEntry.value));
 function toggleUnreadRead() {
   if (!selectedEntry.value) return;
   if (isSelectedUnread.value) {
@@ -413,6 +414,7 @@ async function handleRemoveSupportingDoc(index) {
           <div class="notif-detail-top">
             <div class="notif-detail-badges">
               <span class="notif-badge" :class="selectedEntry.badgeClass">{{ selectedEntry.badgeText }}</span>
+              <span v-if="selectedEntryNumber" class="notif-detail-number">编号 {{ selectedEntryNumber }}</span>
               <time class="notif-time">{{ selectedEntry.timeText }}</time>
               <button class="notif-btn-toggle-read" type="button" @click="toggleUnreadRead">
                 {{ isSelectedUnread ? '标记已读' : '标记未读' }}

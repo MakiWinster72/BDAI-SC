@@ -421,6 +421,54 @@
   gap: 10px;
 }
 
+.menu-notification-search {
+  position: relative;
+  margin-bottom: 2px;
+}
+
+.menu-notification-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-sub);
+  pointer-events: none;
+}
+
+.menu-notification-search-input {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px 8px 36px;
+  border: 1.5px solid rgba(100, 12, 114, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text-main);
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.menu-notification-search-input::placeholder {
+  color: var(--text-sub);
+}
+
+.menu-notification-search-input:focus {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 3px rgba(100, 12, 114, 0.1);
+}
+
+.menu-notification-number {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-sub);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 .menu-notification-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

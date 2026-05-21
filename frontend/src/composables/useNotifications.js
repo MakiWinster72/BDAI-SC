@@ -360,6 +360,40 @@ function buildNotificationEntry(notification) {
   };
 }
 
+export function formatNotificationEntryNumber(entry) {
+  if (!entry || entry.source !== "review-request") {
+    return "";
+  }
+  const id = entry.sourceId ?? entry.id;
+  if (id === null || id === undefined || id === "") {
+    return "";
+  }
+  return `#${id}`;
+}
+
+export function entryMatchesNotificationSearch(entry, rawQuery) {
+  const query = String(rawQuery || "").trim();
+  if (!query) {
+    return true;
+  }
+  const normalized = query.toLowerCase();
+  const textFields = [entry.title, entry.content, entry.summary, entry.meta, entry.reason]
+    .filter((value) => value !== null && value !== undefined && value !== "")
+    .map((value) => String(value).toLowerCase());
+  if (textFields.some((text) => text.includes(normalized))) {
+    return true;
+  }
+  if (entry.source !== "review-request") {
+    return false;
+  }
+  const idStr = String(entry.sourceId ?? entry.id ?? "");
+  const numQuery = query.replace(/^#/, "").trim();
+  if (!numQuery || !idStr) {
+    return false;
+  }
+  return idStr.includes(numQuery) || `#${idStr}`.toLowerCase().includes(normalized);
+}
+
 export function classifyNotificationCategory({ status, createdAt, source }) {
   if (source === "notification") {
     return "system";

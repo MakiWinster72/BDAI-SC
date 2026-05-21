@@ -301,6 +301,14 @@
   font-size: 12px;
 }
 
+.notif-detail-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 .notif-detail-actions {
   display: flex;
   align-items: center;

@@ -102,6 +102,18 @@
           key="notifications-panel"
           class="menu-panel menu-notification-list"
         >
+          <div class="menu-notification-search">
+            <svg class="menu-notification-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              v-model="notificationSearchQuery"
+              class="menu-notification-search-input"
+              type="search"
+              placeholder="搜索编号、标题或内容"
+              aria-label="搜索通知"
+            />
+          </div>
           <button
             v-for="entry in filteredNotificationEntries"
             :key="getEntryReadKey(entry)"
@@ -115,6 +127,9 @@
           >
             <div class="menu-notification-head">
               <span class="menu-notification-badge" :class="entry.badgeClass">{{ entry.badgeText }}</span>
+              <span v-if="formatNotificationEntryNumber(entry)" class="menu-notification-number">
+                {{ formatNotificationEntryNumber(entry) }}
+              </span>
               <time class="menu-notification-time">{{ entry.timeText }}</time>
               <span
                 v-if="!readIds.has(getEntryReadKey(entry))"
@@ -126,7 +141,7 @@
             <p class="menu-notification-content">{{ entry.content }}</p>
           </button>
           <div v-if="!filteredNotificationEntries.length" class="menu-notification-empty">
-            暂无通知
+            {{ notificationSearchQuery.trim() ? '无匹配通知' : '暂无通知' }}
           </div>
         </div>
 
@@ -184,7 +199,11 @@
 <script setup>
 import { computed, nextTick, onMounted, onUpdated, ref, toRefs, watch } from "vue";
 import { filterMenuItemsByRole, isMenuEnabled } from "@/constants/menu";
-import { useNotifications } from "@/composables/useNotifications";
+import {
+  useNotifications,
+  formatNotificationEntryNumber,
+  entryMatchesNotificationSearch,
+} from "@/composables/useNotifications";
 
 const props = defineProps({
   profile: {
@@ -298,12 +317,18 @@ const notificationCategories = [
   { key: "rejected", label: "已驳回" },
 ];
 
+const notificationSearchQuery = ref("");
+
 const filteredNotificationEntries = computed(() => {
   const cat = notificationActiveCategory.value;
-  if (cat === "unread") {
-    return inboxEntries.value.filter((e) => !readIds.has(getEntryReadKey(e)));
+  let entries = cat === "unread"
+    ? inboxEntries.value.filter((e) => !readIds.has(getEntryReadKey(e)))
+    : inboxEntries.value.filter((e) => e.categoryKey === cat);
+  const query = notificationSearchQuery.value.trim();
+  if (query) {
+    entries = entries.filter((entry) => entryMatchesNotificationSearch(entry, query));
   }
-  return inboxEntries.value.filter((e) => e.categoryKey === cat);
+  return entries;
 });
 
 const currentPanel = ref("menu");
