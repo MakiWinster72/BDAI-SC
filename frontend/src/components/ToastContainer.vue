@@ -1,8 +1,20 @@
 <script setup>
 import { Teleport } from 'vue'
 import { useToast } from '@/composables/useToast'
+import { browserIconSrc, osIconSrc } from '@/utils/loginDeviceIcons'
 
 const { toasts, removeToast } = useToast()
+
+function formatLastLoginTime(isoString) {
+  if (!isoString) return '未知时间'
+  return new Date(isoString).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 const ICONS = {
   success: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
@@ -32,7 +44,32 @@ const ICONS = {
             aria-hidden="true"
             v-html="ICONS[item.type] || ICONS.info"
           />
-          <span class="toast-msg">{{ item.message }}</span>
+          <div v-if="item.lastLogin" class="toast-msg toast-last-login">
+            <span class="toast-last-login-label">{{ item.message }}</span>
+            <span class="toast-last-login-row">
+              <span class="toast-device-icons" aria-label="设备">
+                <img
+                  v-if="browserIconSrc(item.lastLogin.browser)"
+                  class="toast-device-icon"
+                  :src="browserIconSrc(item.lastLogin.browser)"
+                  :alt="item.lastLogin.browser || '浏览器'"
+                  :title="item.lastLogin.browser || '浏览器'"
+                />
+                <img
+                  v-if="osIconSrc(item.lastLogin.os)"
+                  class="toast-device-icon"
+                  :src="osIconSrc(item.lastLogin.os)"
+                  :alt="item.lastLogin.os || '系统'"
+                  :title="item.lastLogin.os || '系统'"
+                />
+              </span>
+              <span class="toast-last-login-sep">·</span>
+              <span>{{ item.lastLogin.ipAddress || '未知IP' }}</span>
+              <span class="toast-last-login-sep">·</span>
+              <span>{{ formatLastLoginTime(item.lastLogin.loginTime) }}</span>
+            </span>
+          </div>
+          <span v-else class="toast-msg">{{ item.message }}</span>
           <div v-if="item.progress !== null && item.progress !== undefined" class="toast-progress-wrap">
             <div class="toast-progress-bar" :style="{ width: Math.max(0, Math.min(100, item.progress)) + '%' }"></div>
           </div>
@@ -118,6 +155,44 @@ const ICONS = {
 .toast-msg {
   flex: 1;
   word-break: break-word;
+}
+
+.toast-last-login {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toast-last-login-label {
+  font-weight: 700;
+}
+
+.toast-last-login-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 12.5px;
+  opacity: 0.92;
+}
+
+.toast-device-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toast-device-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.toast-last-login-sep {
+  opacity: 0.45;
+  user-select: none;
 }
 
 .toast-close {

@@ -67,7 +67,13 @@ public class LoginHistoryService {
       return Optional.empty();
     }
     LoginHistory lh = secondLast.get();
-    return Optional.of(new LastLoginInfo(lh.getIpAddress(), lh.getDeviceName(), lh.getLoginTime()));
+    String ua = lh.getUserAgent();
+    return Optional.of(new LastLoginInfo(
+        lh.getIpAddress(),
+        lh.getDeviceName(),
+        parseBrowser(ua),
+        parseOs(ua),
+        lh.getLoginTime()));
   }
 
   public Page<LoginHistoryResponse> getLoginHistory(String username, int page, int size) {

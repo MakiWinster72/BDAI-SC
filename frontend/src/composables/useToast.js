@@ -5,9 +5,9 @@ let nextId = 1
 const DURATION = 4500
 
 export function useToast() {
-  function addToast({ type = 'info', message, duration = DURATION, progress = null }) {
+  function addToast({ type = 'info', message, duration = DURATION, progress = null, lastLogin = null }) {
     const id = nextId++
-    toasts.push({ id, type, message, progress })
+    toasts.push({ id, type, message, progress, lastLogin })
     if (progress === null && duration > 0) {
       setTimeout(() => removeToast(id), duration)
     }
@@ -34,6 +34,11 @@ export function useToast() {
 
   function info(message, duration) {
     return addToast({ type: 'info', message, duration })
+  }
+
+  /** 上次登录提示：浏览器/系统用图标展示 */
+  function lastLogin(info, duration) {
+    return addToast({ type: 'info', message: '上次登录', lastLogin: info, duration })
   }
 
   function warn(message, duration) {
@@ -63,6 +68,7 @@ export function useToast() {
     info,
     warn,
     progress,
+    lastLogin,
     toast,
   }
 }

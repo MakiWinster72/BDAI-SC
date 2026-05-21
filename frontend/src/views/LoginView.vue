@@ -291,6 +291,7 @@ import { useRoute, useRouter } from "vue-router";
 import { getCaptcha, login } from "@/api/auth";
 import { getSystemSettings } from "@/api/admin";
 import { useToast } from "@/composables/useToast";
+import { parseBrowserOsFromDeviceName } from "@/utils/loginDeviceIcons";
 
 const route = useRoute();
 const router = useRouter();
@@ -386,9 +387,14 @@ async function handleLogin() {
     feedback.type = "success";
 
     if (data.lastLoginInfo) {
-      const { ipAddress, deviceName, loginTime } = data.lastLoginInfo;
-      const time = loginTime ? new Date(loginTime).toLocaleString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "未知";
-      toast.info(`上次登录：${deviceName || "未知设备"} · ${ipAddress || "未知IP"} · ${time}`);
+      const { ipAddress, deviceName, browser, os, loginTime } = data.lastLoginInfo;
+      const parsed = parseBrowserOsFromDeviceName(deviceName);
+      toast.lastLogin({
+        ipAddress: ipAddress || "",
+        browser: browser || parsed.browser,
+        os: os || parsed.os,
+        loginTime,
+      });
     } else {
       toast.info("欢迎使用！请先去「个人信息」填写你的个人资料～");
     }

@@ -221,6 +221,7 @@ import { useDashboardShell } from "@/composables/useDashboardShell";
 import { useToast } from "@/composables/useToast";
 import { resolveMediaUrl } from "@/utils/media";
 import { loadUser } from "@/utils/userStorage";
+import { browserIconSrc, osIconSrc } from "@/utils/loginDeviceIcons";
 
 const router = useRouter();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
@@ -373,35 +374,6 @@ function formatTime(dateStr) {
   const date = new Date(dateStr);
   const pad = (n) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-const ICON_BASE = "/assets/icons";
-
-const BROWSER_ICON_MAP = {
-  Chrome: "Chrome",
-  Safari: "Safari",
-  Firefox: "Firefox",
-  Edge: "Edge",
-  Opera: "opera",
-  Brave: "brave",
-};
-
-const OS_ICON_MAP = {
-  Windows: "Windows",
-  macOS: "macos",
-  Linux: "linux",
-  Android: "android",
-  iOS: "macos",
-};
-
-function browserIconSrc(browser) {
-  const file = BROWSER_ICON_MAP[browser];
-  return file ? `${ICON_BASE}/${file}.svg` : "";
-}
-
-function osIconSrc(os) {
-  const file = OS_ICON_MAP[os];
-  return file ? `${ICON_BASE}/${file}.svg` : "";
 }
 
 function cancelPasswordChange() {
