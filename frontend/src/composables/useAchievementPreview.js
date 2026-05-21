@@ -20,6 +20,14 @@ export function useAchievementPreview() {
   const previewWorkbook = ref(null);
   const slideDirection = ref("right");
   const previewHint = ref({});
+  let pdfBlobUrl = null;
+
+  function revokePdfBlob() {
+    if (pdfBlobUrl) {
+      URL.revokeObjectURL(pdfBlobUrl);
+      pdfBlobUrl = null;
+    }
+  }
 
   async function loadDocumentPreview(url) {
     previewLoading.value = true;
@@ -49,8 +57,11 @@ export function useAchievementPreview() {
 
   async function loadPdfPreview(url) {
     previewLoading.value = true;
+    revokePdfBlob();
     try {
-      previewContent.value = await renderPdf(url);
+      const { html, blobUrl } = await renderPdf(url);
+      pdfBlobUrl = blobUrl;
+      previewContent.value = html;
     } catch {
       previewContent.value = errorHtml("pdf-error", "加载失败");
     } finally {
@@ -98,6 +109,9 @@ export function useAchievementPreview() {
     previewContent.value = "";
     previewLoading.value = false;
     previewWorkbook.value = null;
+    if (previewType.value === "pdf") {
+      revokePdfBlob();
+    }
 
     const kind = resolvePreviewKind(url, previewHint.value);
     if (kind === "video") {
@@ -135,6 +149,7 @@ export function useAchievementPreview() {
     previewVisible.value = false;
     document.body.style.overflow = "";
     previewHint.value = {};
+    revokePdfBlob();
   }
 
   function previewPrev() {
@@ -183,7 +198,7 @@ export function useAchievementPreview() {
   });
 
   onBeforeUnmount(() => {
-    document.body.style.overflow = "";
+    hidePreview();
     if (window.__switchSheet) {
       delete window.__switchSheet;
     }

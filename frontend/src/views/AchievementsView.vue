@@ -4,14 +4,14 @@
       <h1 class="feed-title">个人成果</h1>
     </header>
 
-    <div v-if="!filteredAchievements.length" class="empty-tip">
-      {{ emptyMessage }}
+    <div v-if="!list.filteredAchievements.length" class="empty-tip">
+      {{ list.emptyMessage }}
     </div>
     <div v-if="errorMessage" class="form-tip">{{ errorMessage }}</div>
 
     <section class="achievement-list">
       <article
-        v-for="item in filteredAchievements"
+        v-for="item in list.filteredAchievements"
         :key="item.id"
         class="achievement-card"
         :class="{
@@ -22,7 +22,7 @@
           'achievement-card-research': item.category === 'research',
           'achievement-card-works': item.category === 'works',
         }"
-        @click="openDetail(item)"
+        @click="view.openDetail(item)"
       >
         <div class="achievement-card-image">
           <img v-if="item.image" :src="item.image" alt="成就图片" />
@@ -35,14 +35,14 @@
     <button
       class="achievement-add"
       type="button"
-      :aria-label="addButtonLabel"
-      @click="openEditorForCategory"
+      :aria-label="list.addButtonLabel"
+      @click="editor.openEditorForCategory"
     >
       <span aria-hidden="true">+</span>
     </button>
 
     <MobileCapsule
-      :hidden="editorOpen || viewOpen"
+      :hidden="editor.editorOpen || view.viewOpen"
       @open-sidebar="openDashboardSidebar"
     >
       <template #right>
@@ -50,8 +50,8 @@
           class="capsule-action capsule-primary"
           role="button"
           tabindex="0"
-          :aria-label="addButtonLabel"
-          @click="openEditorForCategory"
+          :aria-label="list.addButtonLabel"
+          @click="editor.openEditorForCategory"
         >
           +
         </div>
@@ -59,10 +59,10 @@
     </MobileCapsule>
 
     <AchievementViewPanel
-      v-if="viewOpen || viewClosing"
-      :view-closing="viewClosing"
-      :view-exit-up="viewExitUp"
-      :view-loading="viewLoading"
+      v-if="view.viewOpen || view.viewClosing"
+      :view-closing="view.viewClosing"
+      :view-exit-up="view.viewExitUp"
+      :view-loading="view.viewLoading"
       :view-item="viewItem"
       :attachment-icon="attachmentIcon"
       :is-video-file="isVideoFile"
@@ -71,58 +71,58 @@
       :is-pdf-file="isPdfFile"
       :is-allowed-image="isAllowedImage"
       :is-pptx-file="isPptxFile"
-      @close="closeView"
-      @preview="(urls, index, hint) => showPreview(urls, index, hint)"
+      @close="view.closeView"
+      @preview="(urls, index, hint) => preview.showPreview(urls, index, hint)"
       @download="downloadAttachment"
-      @edit="editFromView"
-      @delete="openDelete"
+      @edit="view.editFromView"
+      @delete="view.openDelete"
     />
 
     <AchievementEditorSheet
-      v-if="editorOpen"
-      :edit-id="editId"
-      :form="form"
-      :image-previews="imagePreviews"
-      :hint-collapsed="hintCollapsed"
-      :active-category-hint="activeCategoryHint"
-      :active-form-config="activeFormConfig"
-      :category-options="categoryOptions"
-      :attachment-previews="attachmentPreviews"
+      v-if="editor.editorOpen"
+      :edit-id="editor.editId"
+      :form="editor.form"
+      :image-previews="editor.imagePreviews"
+      :hint-collapsed="editor.hintCollapsed"
+      :active-category-hint="editor.activeCategoryHint"
+      :active-form-config="editor.activeFormConfig"
+      :category-options="list.categoryOptions"
+      :attachment-previews="editor.attachmentPreviews"
       :attachment-icon="attachmentIcon"
-      :image-max-count="imageMaxCount"
-      :attachment-max-count="attachmentMaxCount"
-      :media-limit-label="mediaLimitLabel"
-      :attachment-limit-label="attachmentLimitLabel"
-      :enabled-attachment-types="enabledAttachmentTypes"
-      @close="closeEditor"
-      @save="saveAchievement"
+      :image-max-count="editor.imageMaxCount"
+      :attachment-max-count="editor.attachmentMaxCount"
+      :media-limit-label="editor.mediaLimitLabel"
+      :attachment-limit-label="editor.attachmentLimitLabel"
+      :enabled-attachment-types="editor.enabledAttachmentTypes"
+      @close="editor.closeEditor"
+      @save="editor.saveAchievement"
       @toggle-hint="toggleEditorHint"
-      @trigger-image="triggerImage"
-      @trigger-attachment="triggerAttachment"
-      @select-image="selectEditorImage"
-      @remove-image="removeImage"
-      @remove-attachment="removeAttachment"
+      @trigger-image="editor.triggerImage"
+      @trigger-attachment="editor.triggerAttachment"
+      @select-image="editor.selectEditorImage"
+      @remove-image="editor.removeImage"
+      @remove-attachment="editor.removeAttachment"
     />
 
     <AchievementPreviewViewer
-      v-if="previewVisible"
-      :preview-images="previewImages"
-      :preview-index="previewIndex"
-      :preview-type="previewType"
-      :preview-content="previewContent"
-      :preview-loading="previewLoading"
-      :slide-direction="slideDirection"
-      @hide="hidePreview"
-      @prev="previewPrev"
-      @next="previewNext"
-      @dot="goToPreviewDot"
+      v-if="preview.previewVisible"
+      :preview-images="preview.previewImages"
+      :preview-index="preview.previewIndex"
+      :preview-type="preview.previewType"
+      :preview-content="preview.previewContent"
+      :preview-loading="preview.previewLoading"
+      :slide-direction="preview.slideDirection"
+      @hide="preview.hidePreview"
+      @prev="preview.previewPrev"
+      @next="preview.previewNext"
+      @dot="preview.goToPreviewDot"
     />
 
     <AchievementDeleteDialog
-      :delete-dialog-open="deleteDialogOpen"
-      :delete-busy="deleteBusy"
-      @close="closeDelete"
-      @confirm="confirmDelete"
+      :delete-dialog-open="view.deleteDialogOpen"
+      :delete-busy="view.deleteBusy"
+      @close="view.closeDelete"
+      @confirm="view.confirmDelete"
     />
 
     <input
@@ -131,7 +131,7 @@
       accept=".jpeg,.jpg,.png,.heif,image/jpeg,image/png,image/heif"
       multiple
       hidden
-      @change="onImageChange"
+      @change="editor.onImageChange"
     />
     <input
       ref="attachmentInputEl"
@@ -139,13 +139,13 @@
       accept=".docx,.doc,.pdf,.xls,.xlsx,.zip,.rar,.7z,.pptx,.ppt,.mp4,.mov,.jpeg,.jpg,.png,.heif,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,video/mp4,video/quicktime,image/jpeg,image/png,image/heif"
       multiple
       hidden
-      @change="onAttachmentChange"
+      @change="editor.onAttachmentChange"
     />
   </main>
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref, toRefs, watch } from "vue";
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import MobileCapsule from "@/components/MobileCapsule.vue";
 import AchievementCardBody from "@/components/AchievementCardBody.vue";
@@ -196,109 +196,46 @@ const { uploadLimitConfig, setUploadLimits, isAllowedImage, imageInput, attachme
 const imageInputEl = ref(null);
 const attachmentInputEl = ref(null);
 
-const listApi = useAchievementList({
+const listResult = useAchievementList({
   route,
   router,
   errorMessage,
   uploadLimitConfig,
 });
-const {
-  filteredAchievements,
-  emptyMessage,
-  addButtonLabel,
-  categoryOptions,
-} = toRefs(listApi);
-const { fetchAchievements, syncCategoryFromRoute } = listApi;
+const list = reactive(listResult);
 
 const viewItem = ref(null);
 
-const previewApi = useAchievementPreview();
-const {
-  previewImages,
-  previewIndex,
-  previewVisible,
-  previewType,
-  previewContent,
-  previewLoading,
-  slideDirection,
-} = toRefs(previewApi);
-const {
-  showPreview,
-  hidePreview,
-  previewPrev,
-  previewNext,
-  goToPreviewDot,
-  bindSheetSwitcher,
-} = previewApi;
+const preview = reactive(useAchievementPreview());
 
-const editorApi = useAchievementEditor({
-  profile,
-  reviewSettings,
-  submitAchievementReviewRequest,
-  achievements: listApi.achievements,
-  viewItem,
-  activeCategory: listApi.activeCategory,
-  activeStudentQuery: listApi.activeStudentQuery,
-  errorMessage,
-  fetchAchievements,
-  uploadLimitConfig,
-  uploadHelpers,
-});
-const {
-  editorOpen,
-  editId,
-  hintCollapsed,
-  imagePreviews,
-  imageMaxCount,
-  attachmentMaxCount,
-  mediaLimitLabel,
-  attachmentLimitLabel,
-  attachmentPreviews,
-  activeCategoryHint,
-  activeFormConfig,
-  enabledAttachmentTypes,
-} = toRefs(editorApi);
-const {
-  form,
-  openEditorForCategory,
-  closeEditor,
-  openEditorFromItem,
-  saveAchievement,
-  triggerImage,
-  triggerAttachment,
-  onImageChange,
-  onAttachmentChange,
-  selectEditorImage,
-  removeImage,
-  removeAttachment,
-} = editorApi;
+const editor = reactive(
+  useAchievementEditor({
+    profile,
+    reviewSettings,
+    submitAchievementReviewRequest,
+    achievements: listResult.achievements,
+    viewItem,
+    activeCategory: listResult.activeCategory,
+    activeStudentQuery: listResult.activeStudentQuery,
+    errorMessage,
+    fetchAchievements: () => list.fetchAchievements(),
+    uploadLimitConfig,
+    uploadHelpers,
+  }),
+);
 
-const viewApi = useAchievementView({
-  achievements: listApi.achievements,
-  errorMessage,
-  findPendingAchievementReview,
-  onEditFromView: openEditorFromItem,
-  viewItem,
-});
-const {
-  viewOpen,
-  viewClosing,
-  viewExitUp,
-  viewLoading,
-  deleteDialogOpen,
-  deleteBusy,
-} = toRefs(viewApi);
-const {
-  openDetail,
-  closeView,
-  editFromView,
-  openDelete,
-  closeDelete,
-  confirmDelete,
-} = viewApi;
+const view = reactive(
+  useAchievementView({
+    achievements: listResult.achievements,
+    errorMessage,
+    findPendingAchievementReview,
+    onEditFromView: (item) => editor.openEditorFromItem(item),
+    viewItem,
+  }),
+);
 
 function toggleEditorHint() {
-  hintCollapsed.value = !hintCollapsed.value;
+  editor.hintCollapsed = !editor.hintCollapsed;
 }
 
 watch(imageInputEl, (el) => {
@@ -332,7 +269,7 @@ function handleUploadSettingsUpdated(event) {
 }
 
 onMounted(() => {
-  syncCategoryFromRoute();
+  list.syncCategoryFromRoute();
   fetchReviewSettings().catch(() => {});
   fetchAchievementUploadSettings().then(() => {
     setUploadLimits({
@@ -346,8 +283,8 @@ onMounted(() => {
       attachmentArchiveExts: achievementUploadSettings.attachmentArchiveExts,
     });
   });
-  fetchAchievements();
-  bindSheetSwitcher();
+  list.fetchAchievements();
+  preview.bindSheetSwitcher();
   window.addEventListener(
     "achievement-upload-settings-updated",
     handleUploadSettingsUpdated,
@@ -355,6 +292,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  preview.hidePreview();
   revokePrivateMediaObjectUrls();
   window.removeEventListener(
     "achievement-upload-settings-updated",
@@ -365,8 +303,8 @@ onBeforeUnmount(() => {
 watch(
   () => [route.query.category, route.query.studentNo, route.query.studentName],
   () => {
-    syncCategoryFromRoute();
-    fetchAchievements();
+    list.syncCategoryFromRoute();
+    list.fetchAchievements();
   },
 );
 </script>
