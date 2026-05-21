@@ -61,9 +61,8 @@ public class AuthController {
   public ResponseEntity<AuthResponse> login(
       @Valid @RequestBody LoginRequest request,
       HttpServletRequest httpRequest) {
-    String ipAddress = resolveIpAddress(httpRequest);
     String userAgent = httpRequest.getHeader("User-Agent");
-    return ResponseEntity.ok(authService.login(request, ipAddress, userAgent));
+    return ResponseEntity.ok(authService.login(request, httpRequest, userAgent));
   }
 
   @GetMapping("/login-history")
@@ -88,15 +87,4 @@ public class AuthController {
     return ResponseEntity.ok().build();
   }
 
-  private String resolveIpAddress(HttpServletRequest request) {
-    String xForwardedFor = request.getHeader("X-Forwarded-For");
-    if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-      return xForwardedFor.split(",")[0].trim();
-    }
-    String xRealIp = request.getHeader("X-Real-IP");
-    if (xRealIp != null && !xRealIp.isBlank()) {
-      return xRealIp;
-    }
-    return request.getRemoteAddr();
-  }
 }

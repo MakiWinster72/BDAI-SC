@@ -8,6 +8,8 @@ import com.gcsc.studentcenter.dto.*;
 import com.gcsc.studentcenter.entity.AchievementReviewRequest;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AchievementReviewRequestRepository;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class AchievementReviewRequestService {
   private final UserService userService;
   private final NotificationReadStateService notificationReadStateService;
   private final ObjectMapper objectMapper;
+  private final AuditLogRecorder auditLogRecorder;
 
   public AchievementReviewRequestService(
       AchievementReviewRequestRepository achievementReviewRequestRepository,
@@ -36,7 +39,8 @@ public class AchievementReviewRequestService {
       ReviewSettingsService reviewSettingsService,
       UserService userService,
       NotificationReadStateService notificationReadStateService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      AuditLogRecorder auditLogRecorder) {
     this.achievementReviewRequestRepository = achievementReviewRequestRepository;
     this.appUserRepository = appUserRepository;
     this.achievementService = achievementService;
@@ -44,6 +48,7 @@ public class AchievementReviewRequestService {
     this.userService = userService;
     this.notificationReadStateService = notificationReadStateService;
     this.objectMapper = objectMapper;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   @Transactional(readOnly = true)
@@ -151,8 +156,13 @@ public class AchievementReviewRequestService {
     entity.setCreatedAt(now);
     entity.setUpdatedAt(now);
     AchievementReviewRequest saved = achievementReviewRequestRepository.save(entity);
+    auditLogRecorder.record(username, AuditActions.SUBMIT_ACHIEVEMENT_REVIEW,
+        "提交了成就审核请求 #" + saved.getId() + "（" + category + " / " + action + "）");
+
     if (reviewSettingsService.isAchievementReviewAutoApprove()) {
       AchievementReviewRequest applied = applyApprovedRequest(saved, null);
+      auditLogRecorder.record(username, AuditActions.AUTO_APPROVE_ACHIEVEMENT,
+          "自动通过了成就审核请求 #" + applied.getId());
       return toResponse(applied, isRead(username, applied.getId()));
     }
     return toResponse(saved, isRead(username, saved.getId()));
@@ -203,6 +213,8 @@ public class AchievementReviewRequestService {
     if (!request.getRequester().getUsername().equals(username)) {
       throw new IllegalArgumentException("只能取消自己的申请");
     }
+    auditLogRecorder.record(username, AuditActions.CANCEL_ACHIEVEMENT_REVIEW,
+        "撤销了成就审核请求 #" + requestId);
     achievementReviewRequestRepository.delete(request);
   }
 

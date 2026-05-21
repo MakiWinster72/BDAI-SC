@@ -6,7 +6,8 @@ import com.gcsc.studentcenter.dto.UserListItemResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.UserRole;
 import com.gcsc.studentcenter.repository.AppUserRepository;
-import com.gcsc.studentcenter.service.AuditLogService;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.service.BackupService;
 import com.gcsc.studentcenter.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,17 +35,17 @@ public class AdminController {
   private final UserService userService;
   private final BackupService backupService;
   private final AppUserRepository appUserRepository;
-  private final AuditLogService auditLogService;
+  private final AuditLogRecorder auditLogRecorder;
 
   @Value("${app.upload-dir:./uploads}")
   private String uploadDir;
 
   public AdminController(UserService userService, BackupService backupService,
-      AppUserRepository appUserRepository, AuditLogService auditLogService) {
+      AppUserRepository appUserRepository, AuditLogRecorder auditLogRecorder) {
     this.userService = userService;
     this.backupService = backupService;
     this.appUserRepository = appUserRepository;
-    this.auditLogService = auditLogService;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   private boolean isAdmin(Authentication authentication) {
@@ -59,12 +60,18 @@ public class AdminController {
   @PostMapping("/users")
   public ResponseEntity<?> createUser(
       Authentication authentication,
+      HttpServletRequest httpRequest,
       @RequestBody CreateUserRequest request) {
     if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
       var user = userService.createUser(request);
+      auditLogRecorder.record(
+          authentication.getName(),
+          AuditActions.CREATE_USER,
+          "创建了用户 " + user.getUsername() + "（" + user.getDisplayName() + "）",
+          httpRequest);
       return ResponseEntity.ok(new UserListItemResponse(user));
     } catch (RuntimeException e) {
       return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -102,6 +109,7 @@ public class AdminController {
   @PutMapping("/users/{id}")
   public ResponseEntity<?> updateUser(
       Authentication authentication,
+      HttpServletRequest httpRequest,
       @PathVariable Long id,
       @RequestBody UpdateUserRequest request) {
     if (!isAdmin(authentication)) {
@@ -109,6 +117,11 @@ public class AdminController {
     }
     try {
       var user = userService.updateUser(id, request);
+      auditLogRecorder.record(
+          authentication.getName(),
+          AuditActions.UPDATE_USER,
+          "更新了用户 #" + id + "（" + user.getUsername() + "，角色 " + user.getRole() + "）",
+          httpRequest);
       return ResponseEntity.ok(Map.of("success", true, "data", new UserListItemResponse(user)));
     } catch (RuntimeException e) {
       return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -118,12 +131,21 @@ public class AdminController {
   @DeleteMapping("/users/{id}")
   public ResponseEntity<?> deleteUser(
       Authentication authentication,
+      HttpServletRequest httpRequest,
       @PathVariable Long id) {
     if (!isAdmin(authentication)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     try {
+      String deletedUsername = appUserRepository.findById(id)
+          .map(AppUser::getUsername)
+          .orElse("id=" + id);
       userService.deleteUser(id);
+      auditLogRecorder.record(
+          authentication.getName(),
+          AuditActions.DELETE_USER,
+          "删除了用户 #" + id + "（" + deletedUsername + "）",
+          httpRequest);
       return ResponseEntity.ok(Map.of("success", true));
     } catch (RuntimeException e) {
       return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -143,6 +165,7 @@ public class AdminController {
   @PutMapping("/teachers/{id}/assigned-classes")
   public ResponseEntity<?> updateTeacherAssignedClasses(
       Authentication authentication,
+      HttpServletRequest httpRequest,
       @PathVariable Long id,
       @RequestBody Map<String, String> request) {
     if (!isAdmin(authentication)) {
@@ -151,6 +174,11 @@ public class AdminController {
     try {
       String assignedClasses = request.get("assignedClasses");
       var user = userService.setTeacherAssignedClasses(id, assignedClasses);
+      auditLogRecorder.record(
+          authentication.getName(),
+          AuditActions.UPDATE_TEACHER_CLASSES,
+          "更新了教师 #" + id + "（" + user.getUsername() + "）负责班级",
+          httpRequest);
       return ResponseEntity.ok(Map.of("success", true, "assignedClasses", user.getAssignedClasses()));
     } catch (RuntimeException e) {
       return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -182,8 +210,7 @@ public class AdminController {
     }
     try {
       byte[] sqlContent = backupService.dumpDatabase();
-      auditLogService.log(username, "BACKUP_DB", "导出数据库备份",
-          auditLogService.resolveIpAddress(httpRequest));
+      auditLogRecorder.record(username, AuditActions.BACKUP_DB, "导出数据库备份", httpRequest);
       ByteArrayResource resource = new ByteArrayResource(sqlContent);
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -221,8 +248,7 @@ public class AdminController {
     try {
       byte[] sqlContent = file.getBytes();
       backupService.restoreDatabase(sqlContent);
-      auditLogService.log(username, "RESTORE_DB", "恢复数据库备份",
-          auditLogService.resolveIpAddress(httpRequest));
+      auditLogRecorder.record(username, AuditActions.RESTORE_DB, "恢复数据库备份", httpRequest);
       return ResponseEntity.ok(Map.of("success", true, "message", "数据库恢复成功"));
     } catch (RuntimeException e) {
       return ResponseEntity.internalServerError()
@@ -246,8 +272,7 @@ public class AdminController {
       if (zipContent.length == 0) {
         return ResponseEntity.ok(Map.of("success", false, "message", "附件目录为空，无需导出"));
       }
-      auditLogService.log(username, "BACKUP_ATTACHMENTS", "导出附件备份",
-          auditLogService.resolveIpAddress(httpRequest));
+      auditLogRecorder.record(username, AuditActions.BACKUP_ATTACHMENTS, "导出附件备份", httpRequest);
       ByteArrayResource resource = new ByteArrayResource(zipContent);
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -285,8 +310,7 @@ public class AdminController {
     try {
       byte[] zipContent = file.getBytes();
       backupService.restoreAttachments(zipContent);
-      auditLogService.log(username, "RESTORE_ATTACHMENTS", "恢复附件备份",
-          auditLogService.resolveIpAddress(httpRequest));
+      auditLogRecorder.record(username, AuditActions.RESTORE_ATTACHMENTS, "恢复附件备份", httpRequest);
       return ResponseEntity.ok(Map.of("success", true, "message", "附件恢复成功"));
     } catch (RuntimeException e) {
       return ResponseEntity.internalServerError()
@@ -373,9 +397,11 @@ public class AdminController {
       }
       long size = folderSize(userDir);
       deleteFolder(userDir);
-      auditLogService.log(username, "DELETE_STORAGE",
+      auditLogRecorder.record(
+          username,
+          AuditActions.DELETE_STORAGE,
           "删除用户 #" + userId + " 的附件文件夹 (" + formatSize(size) + ")",
-          auditLogService.resolveIpAddress(httpRequest));
+          httpRequest);
       return ResponseEntity.ok(Map.of(
           "success", true,
           "message", "已删除 " + formatSize(size) + " 的附件"));

@@ -3,6 +3,8 @@ package com.gcsc.studentcenter.service;
 import com.gcsc.studentcenter.dto.AchievementRecordRequest;
 import com.gcsc.studentcenter.dto.AchievementRecordResponse;
 import com.gcsc.studentcenter.entity.*;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class AchievementService {
   private final AchievementSanSanXiangRepository achievementSanSanXiangRepository;
   private final AchievementUploadSettingsService achievementUploadSettingsService;
   private final ReviewSettingsService reviewSettingsService;
+  private final AuditLogRecorder auditLogRecorder;
 
   public AchievementService(
       AppUserRepository appUserRepository,
@@ -45,7 +48,8 @@ public class AchievementService {
       AchievementIeerTrainingRepository achievementIeerTrainingRepository,
       AchievementSanSanXiangRepository achievementSanSanXiangRepository,
       AchievementUploadSettingsService achievementUploadSettingsService,
-      ReviewSettingsService reviewSettingsService) {
+      ReviewSettingsService reviewSettingsService,
+      AuditLogRecorder auditLogRecorder) {
     this.appUserRepository = appUserRepository;
     this.achievementContestRepository = achievementContestRepository;
     this.achievementPaperRepository = achievementPaperRepository;
@@ -59,6 +63,7 @@ public class AchievementService {
     this.achievementSanSanXiangRepository = achievementSanSanXiangRepository;
     this.achievementUploadSettingsService = achievementUploadSettingsService;
     this.reviewSettingsService = reviewSettingsService;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   public List<AchievementRecordResponse> list(
@@ -170,7 +175,10 @@ public class AchievementService {
 
   public AchievementRecordResponse create(String username, String category, AchievementRecordRequest request) {
     ensureDirectAchievementWriteAllowed(username);
-    return createFromApprovedReview(username, category, request);
+    AchievementRecordResponse response = createFromApprovedReview(username, category, request);
+    auditLogRecorder.record(username, AuditActions.DIRECT_CREATE_ACHIEVEMENT,
+        "直接创建了成就（" + category + " / #" + response.getId() + "）");
+    return response;
   }
 
   public AchievementRecordResponse createFromApprovedReview(String username, String category, AchievementRecordRequest request) {
@@ -207,7 +215,10 @@ public class AchievementService {
   public AchievementRecordResponse update(String username, String category, Long id,
       AchievementRecordRequest request) {
     ensureDirectAchievementWriteAllowed(username);
-    return updateFromApprovedReview(username, category, id, request);
+    AchievementRecordResponse response = updateFromApprovedReview(username, category, id, request);
+    auditLogRecorder.record(username, AuditActions.DIRECT_UPDATE_ACHIEVEMENT,
+        "直接更新了成就（" + category + " / #" + id + "）");
+    return response;
   }
 
   public AchievementRecordResponse updateFromApprovedReview(String username, String category, Long id,
@@ -254,6 +265,8 @@ public class AchievementService {
 
   public void delete(String username, String category, Long id) {
     ensureDirectAchievementWriteAllowed(username);
+    auditLogRecorder.record(username, AuditActions.DIRECT_DELETE_ACHIEVEMENT,
+        "直接删除了成就（" + category + " / #" + id + "）");
     switch (requireCategory(category)) {
       case "contest":
         achievementContestRepository.delete(loadContest(username, id));

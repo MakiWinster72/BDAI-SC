@@ -49,7 +49,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "export-success"]);
 
 const exportSelections = reactive(createExportSelections());
 const exporting = ref(false);
@@ -329,8 +329,13 @@ async function handleConfirm() {
     } else {
       await exportStudentRowsToExcel(safeRows, selectedKeys);
     }
+    const payload = {
+      format: exportFormat.value === "pdf" ? "pdf" : "excel",
+      count: safeRows.length,
+    };
+    emit("export-success", payload);
     if (props.onExportSuccess) {
-      props.onExportSuccess();
+      props.onExportSuccess(payload);
     }
     requestClose();
   } catch (error) {

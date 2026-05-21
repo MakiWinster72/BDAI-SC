@@ -8,6 +8,8 @@ import com.gcsc.studentcenter.dto.AchievementUploadSettingsResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.SystemSetting;
 import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.SystemSettingRepository;
 import org.springframework.stereotype.Service;
@@ -49,14 +51,17 @@ public class AchievementUploadSettingsService {
   private final SystemSettingRepository systemSettingRepository;
   private final AppUserRepository appUserRepository;
   private final ObjectMapper objectMapper;
+  private final AuditLogRecorder auditLogRecorder;
 
   public AchievementUploadSettingsService(
       SystemSettingRepository systemSettingRepository,
       AppUserRepository appUserRepository,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      AuditLogRecorder auditLogRecorder) {
     this.systemSettingRepository = systemSettingRepository;
     this.appUserRepository = appUserRepository;
     this.objectMapper = objectMapper;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   @Transactional(readOnly = true)
@@ -128,6 +133,10 @@ public class AchievementUploadSettingsService {
     systemSetting.setSettingValue(writeSettingsMap(payload));
     systemSetting.setUpdatedAt(LocalDateTime.now());
     systemSettingRepository.save(systemSetting);
+
+    auditLogRecorder.record(operatorUsername, AuditActions.UPDATE_UPLOAD_SETTINGS,
+        "更新了成就上传限制：图片最多 " + settings.imageMaxCount + " 张 / "
+            + settings.imageMaxSizeMb + "MB，附件最多 " + settings.attachmentMaxCount + " 个");
 
     return toResponse(settings);
   }

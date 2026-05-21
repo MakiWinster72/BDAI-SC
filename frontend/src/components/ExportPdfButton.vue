@@ -11,6 +11,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { recordAuditEvent } from "@/api/auditLog";
 import { useStudentPdfExport } from "@/composables/useStudentPdfExport";
 
 const props = defineProps({
@@ -72,6 +73,12 @@ async function handleExport() {
       onComplete: (success) => {
         console.log("[ExportPdfButton] onComplete called, success=", success);
         try {
+          if (success) {
+            recordAuditEvent({
+              action: "EXPORT_STUDENT_PDF",
+              detail: "导出了 1 名学生的 PDF 简历",
+            }).catch(() => {});
+          }
           if (success && props.onExportComplete) {
             console.log("[ExportPdfButton] calling onExportComplete");
             props.onExportComplete();

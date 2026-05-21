@@ -24,6 +24,8 @@ import com.gcsc.studentcenter.entity.CadreExperience;
 import com.gcsc.studentcenter.entity.EducationExperience;
 import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.StudentProfileRepository;
 
@@ -35,14 +37,17 @@ public class StudentProfileService {
   private final StudentProfileRepository studentProfileRepository;
   private final AppUserRepository appUserRepository;
   private final ReviewSettingsService reviewSettingsService;
+  private final AuditLogRecorder auditLogRecorder;
 
   public StudentProfileService(
       StudentProfileRepository studentProfileRepository,
       AppUserRepository appUserRepository,
-      ReviewSettingsService reviewSettingsService) {
+      ReviewSettingsService reviewSettingsService,
+      AuditLogRecorder auditLogRecorder) {
     this.studentProfileRepository = studentProfileRepository;
     this.appUserRepository = appUserRepository;
     this.reviewSettingsService = reviewSettingsService;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   @Transactional(readOnly = true)
@@ -77,6 +82,8 @@ public class StudentProfileService {
         });
 
     StudentProfile saved = saveProfileInternal(user, profile, request);
+    auditLogRecorder.record(username, AuditActions.DIRECT_UPDATE_PROFILE,
+        "直接更新了本人档案（用户 #" + user.getId() + "）");
     return toResponse(user, saved);
   }
 
@@ -106,6 +113,8 @@ public class StudentProfileService {
         .orElseThrow(() -> new IllegalArgumentException("学生档案不存在"));
     AppUser user = profile.getUser();
     StudentProfile saved = saveProfileInternal(user, profile, request);
+    auditLogRecorder.record(operatorUsername, AuditActions.ADMIN_UPDATE_PROFILE,
+        "管理员直接更新了学生档案 #" + id + "（" + user.getUsername() + "）");
     return toResponse(user, saved);
   }
 

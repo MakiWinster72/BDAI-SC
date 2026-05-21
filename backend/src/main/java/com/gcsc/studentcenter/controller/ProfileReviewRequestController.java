@@ -4,7 +4,8 @@ import com.gcsc.studentcenter.dto.ProfileReviewDecisionRequest;
 import com.gcsc.studentcenter.dto.ProfileReviewRequestResponse;
 import com.gcsc.studentcenter.dto.ProfileReviewSubmitRequest;
 import com.gcsc.studentcenter.dto.SupportingDocumentsRequest;
-import com.gcsc.studentcenter.service.AuditLogService;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.service.ProfileReviewRequestService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +20,12 @@ import java.util.Map;
 public class ProfileReviewRequestController {
 
   private final ProfileReviewRequestService profileReviewRequestService;
-  private final AuditLogService auditLogService;
+  private final AuditLogRecorder auditLogRecorder;
 
   public ProfileReviewRequestController(ProfileReviewRequestService profileReviewRequestService,
-      AuditLogService auditLogService) {
+      AuditLogRecorder auditLogRecorder) {
     this.profileReviewRequestService = profileReviewRequestService;
-    this.auditLogService = auditLogService;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   /**
@@ -53,9 +54,11 @@ public class ProfileReviewRequestController {
       @PathVariable("id") Long id,
       HttpServletRequest httpRequest) {
     var response = profileReviewRequestService.approve(id, authentication.getName());
-    auditLogService.log(authentication.getName(), "APPROVE_PROFILE",
+    auditLogRecorder.record(
+        authentication.getName(),
+        AuditActions.APPROVE_PROFILE,
         "通过了个人信息审核请求 #" + id,
-        auditLogService.resolveIpAddress(httpRequest));
+        httpRequest);
     return ResponseEntity.ok(response);
   }
 
@@ -66,9 +69,11 @@ public class ProfileReviewRequestController {
       @RequestBody ProfileReviewDecisionRequest request,
       HttpServletRequest httpRequest) {
     var response = profileReviewRequestService.reject(id, authentication.getName(), request);
-    auditLogService.log(authentication.getName(), "REJECT_PROFILE",
+    auditLogRecorder.record(
+        authentication.getName(),
+        AuditActions.REJECT_PROFILE,
         "驳回了个人信息审核请求 #" + id + "，理由：" + request.getReason(),
-        auditLogService.resolveIpAddress(httpRequest));
+        httpRequest);
     return ResponseEntity.ok(response);
   }
 

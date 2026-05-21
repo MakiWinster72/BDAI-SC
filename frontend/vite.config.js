@@ -22,11 +22,37 @@ export default defineConfig(({ mode }) => {
           target: `http://127.0.0.1:${env.BDAI_SC_BACKEND_PORT || env.VITE_BACKEND_PORT || '8080'}`,
           changeOrigin: true,
           xfwd: true,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const raw =
+                req.headers['x-forwarded-for'] ||
+                req.socket?.remoteAddress ||
+                req.connection?.remoteAddress
+              if (!raw) return
+              const ip = String(raw).split(',')[0].trim().replace(/^::ffff:/, '')
+              if (!ip) return
+              proxyReq.setHeader('X-Forwarded-For', ip)
+              proxyReq.setHeader('X-Real-IP', ip)
+            })
+          },
         },
         '/uploads': {
           target: `http://127.0.0.1:${env.BDAI_SC_BACKEND_PORT || env.VITE_BACKEND_PORT || '8080'}`,
           changeOrigin: true,
           xfwd: true,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const raw =
+                req.headers['x-forwarded-for'] ||
+                req.socket?.remoteAddress ||
+                req.connection?.remoteAddress
+              if (!raw) return
+              const ip = String(raw).split(',')[0].trim().replace(/^::ffff:/, '')
+              if (!ip) return
+              proxyReq.setHeader('X-Forwarded-For', ip)
+              proxyReq.setHeader('X-Real-IP', ip)
+            })
+          },
         },
       },
     },

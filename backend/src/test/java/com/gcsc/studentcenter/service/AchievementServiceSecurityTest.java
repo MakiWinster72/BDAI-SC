@@ -18,6 +18,7 @@ import com.gcsc.studentcenter.repository.AchievementPatentRepository;
 import com.gcsc.studentcenter.repository.AchievementResearchRepository;
 import com.gcsc.studentcenter.repository.AchievementSanSanXiangRepository;
 import com.gcsc.studentcenter.repository.AchievementWorksRepository;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import java.util.Map;
 import java.util.Optional;
@@ -71,6 +72,9 @@ class AchievementServiceSecurityTest {
   @Mock
   private ReviewSettingsService reviewSettingsService;
 
+  @Mock
+  private AuditLogRecorder auditLogRecorder;
+
   private AchievementService achievementService;
 
   @BeforeEach
@@ -88,7 +92,8 @@ class AchievementServiceSecurityTest {
         achievementIeerTrainingRepository,
         achievementSanSanXiangRepository,
         achievementUploadSettingsService,
-        reviewSettingsService);
+        reviewSettingsService,
+        auditLogRecorder);
   }
 
   @Test

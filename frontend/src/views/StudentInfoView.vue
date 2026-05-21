@@ -180,7 +180,7 @@ import StudentGridFieldDialog from "@/components/student-info/StudentGridFieldDi
 import StudentGridViewConfirmSheet from "@/components/student-info/StudentGridViewConfirmSheet.vue";
 import StudentInfoCapsuleToolbar from "@/components/student-info/StudentInfoCapsuleToolbar.vue";
 import StudentMobileFilterSheet from "@/components/student-info/StudentMobileFilterSheet.vue";
-import { createAuditLog } from "@/api/auditLog";
+import { recordAuditEvent } from "@/api/auditLog";
 import {
   getStudentProfileById,
   saveStudentProfileById,
@@ -775,13 +775,12 @@ function closeExportDialog() {
   exportDialogOpen.value = false;
 }
 
-async function handleStudentExportSuccess() {
-  toastSuccess('学生信息已导出');
-  try {
-    await createAuditLog({ action: 'EXPORT_STUDENTS', detail: '导出学生信息' });
-  } catch (e) {
-    // Silently ignore — export succeeded regardless
-  }
+async function handleStudentExportSuccess({ format = "excel", count = 0 } = {}) {
+  toastSuccess("学生信息已导出");
+  const formatLabel = format === "pdf" ? "PDF" : "Excel";
+  const action = format === "pdf" ? "EXPORT_STUDENT_PDF" : "EXPORT_STUDENTS";
+  const detail = `导出了 ${count} 名学生的${formatLabel} 档案`;
+  recordAuditEvent({ action, detail }).catch(() => {});
 }
 
 

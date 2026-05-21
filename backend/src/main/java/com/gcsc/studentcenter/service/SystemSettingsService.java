@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.SystemSetting;
 import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.SystemSettingRepository;
 import org.springframework.stereotype.Service;
@@ -23,14 +25,17 @@ public class SystemSettingsService {
   private final SystemSettingRepository systemSettingRepository;
   private final AppUserRepository appUserRepository;
   private final ObjectMapper objectMapper;
+  private final AuditLogRecorder auditLogRecorder;
 
   public SystemSettingsService(
       SystemSettingRepository systemSettingRepository,
       AppUserRepository appUserRepository,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      AuditLogRecorder auditLogRecorder) {
     this.systemSettingRepository = systemSettingRepository;
     this.appUserRepository = appUserRepository;
     this.objectMapper = objectMapper;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   @Transactional(readOnly = true)
@@ -67,7 +72,12 @@ public class SystemSettingsService {
     systemSetting.setUpdatedAt(LocalDateTime.now());
     systemSettingRepository.save(systemSetting);
 
-    return getSettings();
+    Map<String, Object> result = getSettings();
+    auditLogRecorder.record(operatorUsername, AuditActions.UPDATE_SYSTEM_SETTINGS,
+        "更新了系统设置：开放注册=" + result.get("allowRegistration")
+            + "，迟交阈值天数=" + result.get("delayedThresholdDays"));
+
+    return result;
   }
 
   @Transactional(readOnly = true)

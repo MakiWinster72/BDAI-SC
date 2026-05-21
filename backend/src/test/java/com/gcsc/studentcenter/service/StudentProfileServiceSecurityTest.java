@@ -12,6 +12,7 @@ import com.gcsc.studentcenter.dto.StudentSearchItemResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.StudentProfileRepository;
 import java.util.List;
@@ -38,6 +39,9 @@ class StudentProfileServiceSecurityTest {
   @Mock
   private ReviewSettingsService reviewSettingsService;
 
+  @Mock
+  private AuditLogRecorder auditLogRecorder;
+
   private StudentProfileService studentProfileService;
 
   @BeforeEach
@@ -45,7 +49,8 @@ class StudentProfileServiceSecurityTest {
     studentProfileService = new StudentProfileService(
         studentProfileRepository,
         appUserRepository,
-        reviewSettingsService);
+        reviewSettingsService,
+        auditLogRecorder);
   }
 
   @Test

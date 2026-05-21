@@ -24,6 +24,8 @@ spring:
 server:
   address: "${BDAI_SC_BACKEND_HOST:0.0.0.0}"
   port: ${BDAI_SC_BACKEND_PORT:8080}
+  # 识别 X-Forwarded-For / X-Real-IP（Vite proxy、Nginx 反代）
+  forward-headers-strategy: framework
 
 app:
   site-url: "${BDAI_SC_SITE_URL:http://localhost:5173}"

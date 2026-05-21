@@ -9,8 +9,12 @@ import com.gcsc.studentcenter.dto.UserProfileResponse;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.StudentProfile;
 import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.StudentProfileRepository;
+import com.gcsc.studentcenter.util.ClientIpResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +33,8 @@ public class AuthService {
   private final JwtService jwtService;
   private final LoginHistoryService loginHistoryService;
   private final CaptchaService captchaService;
+  private final AuditLogRecorder auditLogRecorder;
+  private final ClientIpResolver clientIpResolver;
 
   public AuthService(
       AppUserRepository appUserRepository,
@@ -36,13 +42,17 @@ public class AuthService {
       PasswordEncoder passwordEncoder,
       JwtService jwtService,
       LoginHistoryService loginHistoryService,
-      CaptchaService captchaService) {
+      CaptchaService captchaService,
+      AuditLogRecorder auditLogRecorder,
+      ClientIpResolver clientIpResolver) {
     this.appUserRepository = appUserRepository;
     this.studentProfileRepository = studentProfileRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.loginHistoryService = loginHistoryService;
     this.captchaService = captchaService;
+    this.auditLogRecorder = auditLogRecorder;
+    this.clientIpResolver = clientIpResolver;
   }
 
   @Transactional
@@ -75,6 +85,7 @@ public class AuthService {
     user.setCollege(FIXED_COLLEGE);
     user.setCreatedAt(LocalDateTime.now());
     AppUser savedUser = appUserRepository.save(user);
+    auditLogRecorder.record(savedUser.getUsername(), AuditActions.REGISTER, "新用户注册");
 
     StudentProfile profile = new StudentProfile();
     profile.setUser(savedUser);
@@ -102,7 +113,7 @@ public class AuthService {
         null);
   }
 
-  public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
+  public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest, String userAgent) {
     captchaService.validateCaptcha(request.getCaptchaId(), request.getCaptchaCode());
 
     String username = request.getUsername().trim();
@@ -113,16 +124,21 @@ public class AuthService {
       throw new IllegalArgumentException("用户名格式不正确");
     }
 
-    AppUser user = appUserRepository.findByUsername(username)
-        .orElseThrow(() -> new IllegalArgumentException("用户名或密码错误"));
+    AppUser user = appUserRepository.findByUsername(username).orElse(null);
+    if (user == null) {
+      recordLoginFailed(username, httpRequest, "登录失败：用户不存在");
+      throw new IllegalArgumentException("用户名或密码错误");
+    }
 
     if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+      recordLoginFailed(username, httpRequest, "登录失败：密码错误");
       throw new IllegalArgumentException("用户名或密码错误");
     }
     UserRole role = roleOrDefault(user);
     String token = jwtService.generateToken(user.getUsername(), user.getDisplayName(), role.name());
     String avatarUrl = resolveAvatarUrl(user);
 
+    String ipAddress = clientIpResolver.resolve(httpRequest);
     LastLoginInfo lastLoginInfo = loginHistoryService.getPreviousLogin(username).orElse(null);
     loginHistoryService.recordLogin(username, ipAddress, userAgent);
 
@@ -155,6 +171,10 @@ public class AuthService {
         avatarUrl);
   }
 
+  private void recordLoginFailed(String username, HttpServletRequest httpRequest, String detail) {
+    auditLogRecorder.record(username, AuditActions.LOGIN_FAILED, detail, httpRequest);
+  }
+
   public void changePassword(String username, ChangePasswordRequest request) {
     AppUser user = appUserRepository.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
@@ -165,6 +185,7 @@ public class AuthService {
 
     user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
     appUserRepository.save(user);
+    auditLogRecorder.record(username, AuditActions.CHANGE_PASSWORD, "修改登录密码");
   }
 
   private String resolveAvatarUrl(AppUser user) {

@@ -5,7 +5,8 @@ import com.gcsc.studentcenter.dto.AchievementReviewRequestResponse;
 import com.gcsc.studentcenter.dto.AchievementReviewSubmitRequest;
 import com.gcsc.studentcenter.dto.SupportingDocumentsRequest;
 import com.gcsc.studentcenter.service.AchievementReviewRequestService;
-import com.gcsc.studentcenter.service.AuditLogService;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,12 +20,12 @@ import java.util.Map;
 public class AchievementReviewRequestController {
 
   private final AchievementReviewRequestService achievementReviewRequestService;
-  private final AuditLogService auditLogService;
+  private final AuditLogRecorder auditLogRecorder;
 
   public AchievementReviewRequestController(AchievementReviewRequestService achievementReviewRequestService,
-      AuditLogService auditLogService) {
+      AuditLogRecorder auditLogRecorder) {
     this.achievementReviewRequestService = achievementReviewRequestService;
-    this.auditLogService = auditLogService;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   /**
@@ -53,9 +54,11 @@ public class AchievementReviewRequestController {
       @PathVariable("id") Long id,
       HttpServletRequest httpRequest) {
     var response = achievementReviewRequestService.approve(id, authentication.getName());
-    auditLogService.log(authentication.getName(), "APPROVE_ACHIEVEMENT",
+    auditLogRecorder.record(
+        authentication.getName(),
+        AuditActions.APPROVE_ACHIEVEMENT,
         "通过了成就审核请求 #" + id,
-        auditLogService.resolveIpAddress(httpRequest));
+        httpRequest);
     return ResponseEntity.ok(response);
   }
 
@@ -66,9 +69,11 @@ public class AchievementReviewRequestController {
       @RequestBody AchievementReviewDecisionRequest request,
       HttpServletRequest httpRequest) {
     var response = achievementReviewRequestService.reject(id, authentication.getName(), request.getReason());
-    auditLogService.log(authentication.getName(), "REJECT_ACHIEVEMENT",
+    auditLogRecorder.record(
+        authentication.getName(),
+        AuditActions.REJECT_ACHIEVEMENT,
         "驳回了成就审核请求 #" + id + "，理由：" + request.getReason(),
-        auditLogService.resolveIpAddress(httpRequest));
+        httpRequest);
     return ResponseEntity.ok(response);
   }
 

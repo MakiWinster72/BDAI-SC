@@ -12,6 +12,8 @@ import com.gcsc.studentcenter.dto.StudentProfileRequest;
 import com.gcsc.studentcenter.entity.AppUser;
 import com.gcsc.studentcenter.entity.ProfileReviewRequest;
 import com.gcsc.studentcenter.entity.UserRole;
+import com.gcsc.studentcenter.audit.AuditActions;
+import com.gcsc.studentcenter.audit.AuditLogRecorder;
 import com.gcsc.studentcenter.repository.AppUserRepository;
 import com.gcsc.studentcenter.repository.ProfileReviewRequestRepository;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class ProfileReviewRequestService {
   private final UserService userService;
   private final NotificationReadStateService notificationReadStateService;
   private final ObjectMapper objectMapper;
+  private final AuditLogRecorder auditLogRecorder;
 
   public ProfileReviewRequestService(
       ProfileReviewRequestRepository profileReviewRequestRepository,
@@ -39,7 +42,8 @@ public class ProfileReviewRequestService {
       ReviewSettingsService reviewSettingsService,
       UserService userService,
       NotificationReadStateService notificationReadStateService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      AuditLogRecorder auditLogRecorder) {
     this.profileReviewRequestRepository = profileReviewRequestRepository;
     this.appUserRepository = appUserRepository;
     this.studentProfileService = studentProfileService;
@@ -47,6 +51,7 @@ public class ProfileReviewRequestService {
     this.userService = userService;
     this.notificationReadStateService = notificationReadStateService;
     this.objectMapper = objectMapper;
+    this.auditLogRecorder = auditLogRecorder;
   }
 
   @Transactional(readOnly = true)
@@ -137,9 +142,13 @@ public class ProfileReviewRequestService {
     entity.setUpdatedAt(now);
 
     ProfileReviewRequest saved = profileReviewRequestRepository.save(entity);
+    auditLogRecorder.record(username, AuditActions.SUBMIT_PROFILE_REVIEW,
+        "提交了个人信息审核请求 #" + saved.getId());
 
     if (reviewSettingsService.isProfileReviewAutoApprove()) {
       ProfileReviewRequest applied = applyApprovedRequest(saved, null);
+      auditLogRecorder.record(username, AuditActions.AUTO_APPROVE_PROFILE,
+          "自动通过了个人信息审核请求 #" + applied.getId());
       return toResponse(applied, isRead(username, applied.getId()));
     }
     return toResponse(saved, isRead(username, saved.getId()));
@@ -194,6 +203,8 @@ public class ProfileReviewRequestService {
     if (!request.getRequester().getUsername().equals(username)) {
       throw new IllegalArgumentException("只能取消自己的申请");
     }
+    auditLogRecorder.record(username, AuditActions.CANCEL_PROFILE_REVIEW,
+        "撤销了个人信息审核请求 #" + requestId);
     profileReviewRequestRepository.delete(request);
   }
 
