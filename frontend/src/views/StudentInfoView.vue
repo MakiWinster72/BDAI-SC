@@ -8,6 +8,9 @@
           :grid-fullscreen="gridFullscreen"
           :select-menu-open="selectMenuOpen"
           :select-all-loading="selectAllLoading"
+          :has-selection="hasSelection"
+          :selected-count="selectedIds.length"
+          :action-dock-style="floatingDockStyle"
           @open-filter="openMobileFilter"
           @toggle-grid="toggleGridView"
           @toggle-fullscreen="toggleGridFullscreen"
@@ -81,7 +84,7 @@
     <StudentFloatingExportActions
       :visible="hasSelection"
       :export-label="exportLabel"
-      :bottom="floatingBottom"
+      :dock-style="floatingDockStyle"
       @cancel="cancelSelection"
       @export="openExportDialog"
     />
@@ -163,6 +166,7 @@
 </template>
 
 <script setup>import { computed, onMounted, onUnmounted, reactive, ref, watch, nextTick } from "vue";
+import { useStudentActionDock } from "@/composables/useStudentActionDock";
 import { useRoute } from "vue-router";
 import MobileCapsule from "@/components/MobileCapsule.vue";
 import StudentExportDialog from "@/components/StudentExportDialog.vue";
@@ -281,6 +285,10 @@ function resetMobileFilters() {
 }
 
 function toggleSelectMenu() {
+  if (hasSelection.value) {
+    cancelSelection();
+    return;
+  }
   selectMenuOpen.value = !selectMenuOpen.value;
 }
 
@@ -808,29 +816,26 @@ function handleCancelEdit() {
   detailEditing.value = false;
 }
 
-const floatingBottom = ref("24px");
+const {
+  actionDockStyle: floatingDockStyle,
+  updateActionDockBottom,
+  observeActionDock,
+} = useStudentActionDock();
 
-function updateFloatingBottom() {
-  const footer = document.querySelector(".dashboard-footer-wrap");
-  if (!footer) return;
-  const footerRect = footer.getBoundingClientRect();
-  const viewH = window.innerHeight;
-  if (footerRect.top < viewH) {
-    floatingBottom.value = `${viewH - footerRect.top + 16}px`;
-  } else {
-    floatingBottom.value = "24px";
+watch(hasSelection, (active) => {
+  if (active) {
+    closeSelectMenu();
   }
-}
-
-onMounted(() => {
-  window.addEventListener("scroll", updateFloatingBottom, { passive: true });
-  window.addEventListener("resize", updateFloatingBottom);
-  updateFloatingBottom();
 });
 
-onUnmounted(() => {
-  window.removeEventListener("scroll", updateFloatingBottom);
-  window.removeEventListener("resize", updateFloatingBottom);
+watch([selectMenuOpen, hasSelection], () => {
+  nextTick(() => {
+    observeActionDock();
+    requestAnimationFrame(() => {
+      updateActionDockBottom();
+      requestAnimationFrame(updateActionDockBottom);
+    });
+  });
 });
 </script>
 

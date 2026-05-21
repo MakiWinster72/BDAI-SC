@@ -308,7 +308,7 @@
 
   .dashboard-layout {
     grid-template-columns: 1fr;
-    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
   }
 
   .dashboard-left {

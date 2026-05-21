@@ -279,15 +279,57 @@
   transform: translateY(0);
 }
 
-/* Floating select menu - right side, selection actions */
-.select-float-menu {
+/* Floating action dock — centered above mobile capsule */
+.student-action-dock {
   position: fixed;
-  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
-  right: 20px;
+  z-index: 56;
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
-  z-index: 56;
+  width: fit-content;
+  max-width: min(calc(100vw - 32px), 480px);
+  pointer-events: none;
+  transition: top 0.15s ease, bottom 0.15s ease;
+}
+
+@media (max-width: 840px) {
+  .student-action-dock {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    flex-wrap: nowrap;
+    gap: 10px;
+    filter: drop-shadow(0 4px 16px rgba(100, 12, 114, 0.12));
+  }
+
+  .student-action-dock .select-float-btn,
+  .student-action-dock .floating-btn-cancel {
+    height: 38px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .student-action-dock .floating-btn-export {
+    min-width: 0;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 841px) {
+  .student-action-dock {
+    right: 20px;
+    left: auto;
+    transform: none;
+  }
+}
+
+.select-float-menu,
+.floating-actions-dock {
+  pointer-events: auto;
 }
 
 .select-float-btn {
@@ -339,14 +381,29 @@
     transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.select-float-enter-from {
-  opacity: 0;
-  transform: translateY(8px) scale(0.94);
+@media (max-width: 840px) {
+  .select-float-enter-from,
+  .select-float-leave-to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.96);
+  }
+
+  .select-float-enter-to,
+  .select-float-leave-from {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
-.select-float-leave-to {
-  opacity: 0;
-  transform: translateY(4px) scale(0.96);
+@media (min-width: 841px) {
+  .select-float-enter-from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+
+  .select-float-leave-to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
 }
 
 /* Hide desktop filter and results actions on mobile */

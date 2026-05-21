@@ -7,6 +7,15 @@ const props = defineProps({
   gridFullscreen: { type: Boolean, default: false },
   selectMenuOpen: { type: Boolean, default: false },
   selectAllLoading: { type: Boolean, default: false },
+  hasSelection: { type: Boolean, default: false },
+  selectedCount: { type: Number, default: 0 },
+  actionDockStyle: {
+    type: Object,
+    default: () => ({
+      bottom: "calc(88px + env(safe-area-inset-bottom, 0px))",
+      top: "auto",
+    }),
+  },
 });
 
 const emit = defineEmits([
@@ -42,8 +51,9 @@ onUnmounted(() => {
   <Teleport to="body">
     <Transition name="select-float">
       <div
-        v-if="selectMenuOpen && !gridViewOpen"
-        class="select-float-menu"
+        v-if="selectMenuOpen && !gridViewOpen && !hasSelection"
+        class="student-action-dock select-float-menu"
+        :style="actionDockStyle"
         @click.stop
       >
         <button class="select-float-btn" type="button" @click="emit('select-page')">
@@ -109,9 +119,9 @@ onUnmounted(() => {
   <button
     v-if="!gridViewOpen"
     class="capsule-action student-capsule-btn"
-    :class="{ 'capsule-active': selectMenuOpen }"
+    :class="{ 'capsule-active': selectMenuOpen || hasSelection }"
     type="button"
-    aria-label="选择学生"
+    :aria-label="hasSelection ? '取消选择' : '选择学生'"
     @click.stop="emit('toggle-select-menu')"
   >
     <span class="capsule-icon" aria-hidden="true">
@@ -120,7 +130,9 @@ onUnmounted(() => {
         <path d="M9 12l2 2 4-4" />
       </svg>
     </span>
-    <span class="student-capsule-label">选择</span>
+    <span class="student-capsule-label">
+      {{ hasSelection ? `已选 ${selectedCount}` : "选择" }}
+    </span>
   </button>
 </template>
 

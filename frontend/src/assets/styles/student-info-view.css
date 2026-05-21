@@ -1000,20 +1000,9 @@
 
 /* ── Floating Action Buttons ─────────────────── */
 
+/* Legacy hook — export dock uses .student-action-dock in scoped CSS */
 .floating-actions {
-  position: fixed;
-  bottom: calc(90px + env(safe-area-inset-bottom));
-  right: 20px;
-  left: auto;
-  transform: none;
-  z-index: 50;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  width: fit-content;
-  pointer-events: none;
-  transition: bottom 0.15s ease;
+  display: contents;
 }
 
 .floating-btn {
@@ -1126,16 +1115,10 @@
 
 @media (max-width: 640px) {
   .student-right-stack {
-    padding-bottom: 88px;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
     gap: 10px;
   }
 
-  .floating-actions {
-    left: auto;
-    right: 20px;
-    transform: none;
-    bottom: calc(90px + env(safe-area-inset-bottom));
-  }
 
   .student-filter-grid {
     grid-template-columns: 1fr;
@@ -1422,14 +1405,6 @@
     padding-bottom: 96px;
   }
 
-  .floating-actions {
-    left: auto;
-    right: 20px;
-    transform: none;
-    bottom: 88px;
-    gap: 8px;
-  }
-
   .student-filter-card {
     gap: 12px;
     padding: 12px 14px;
@@ -1557,7 +1532,7 @@
   .student-filter-reset,
   .student-detail-view,
   .student-achievements-view,
-  .floating-actions,
+  .student-action-dock,
   .floating-btn {
     transition: none !important;
     animation: none !important;
@@ -1570,8 +1545,8 @@
     pointer-events: auto;
   }
 
-  .floating-action-enter-active,
-  .floating-action-leave-active {
+  .select-float-enter-active,
+  .select-float-leave-active {
     transition: none !important;
   }
 }
