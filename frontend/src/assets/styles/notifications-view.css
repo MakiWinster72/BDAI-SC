@@ -535,7 +535,8 @@
   font-weight: 600;
 }
 
-.notif-change-avatar {
+.notif-change-avatar img {
+  display: block;
   width: 64px;
   height: 64px;
   object-fit: cover;

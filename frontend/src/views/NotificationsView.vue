@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AchievementReviewSnapshotCard from "@/components/AchievementReviewSnapshotCard.vue";
+import ProtectedMediaImage from "@/components/ProtectedMediaImage.vue";
 import StudentProfileEditor from "@/components/StudentProfileEditor.vue";
 import { API_BASE } from "@/api/request";
 import { useNotifications, formatNotificationEntryNumber } from "@/composables/useNotifications";
@@ -153,10 +154,9 @@ function isAvatarChange(change) {
   return change?.label === "头像";
 }
 
-function resolveAvatarUrlForChange(value) {
+function avatarChangeHasUrl(value) {
   const url = formatChangeValue(value);
-  if (!url || url === "-") return null;
-  return resolveMediaUrl(url);
+  return Boolean(url && url !== "-");
 }
 
 function resolveExtension(filename = "") {
@@ -592,12 +592,12 @@ async function handleRemoveSupportingDoc(index) {
                     <div class="notif-change-col">
                       <div class="notif-change-cap">修改前</div>
                       <template v-if="isAvatarChange(change)">
-                        <img
-                          v-if="resolveAvatarUrlForChange(change.before)"
-                          class="notif-change-avatar"
-                          :src="resolveAvatarUrlForChange(change.before)"
-                          alt="修改前头像"
-                        />
+                        <div v-if="avatarChangeHasUrl(change.before)" class="notif-change-avatar">
+                          <ProtectedMediaImage
+                            :src="formatChangeValue(change.before)"
+                            alt="修改前头像"
+                          />
+                        </div>
                         <div v-else class="notif-change-val">-</div>
                       </template>
                       <template v-else-if="isStructuredChangeValue(change.before)">
@@ -619,12 +619,12 @@ async function handleRemoveSupportingDoc(index) {
                     <div class="notif-change-col is-next">
                       <div class="notif-change-cap">修改后</div>
                       <template v-if="isAvatarChange(change)">
-                        <img
-                          v-if="resolveAvatarUrlForChange(change.after)"
-                          class="notif-change-avatar"
-                          :src="resolveAvatarUrlForChange(change.after)"
-                          alt="修改后头像"
-                        />
+                        <div v-if="avatarChangeHasUrl(change.after)" class="notif-change-avatar">
+                          <ProtectedMediaImage
+                            :src="formatChangeValue(change.after)"
+                            alt="修改后头像"
+                          />
+                        </div>
                         <div v-else class="notif-change-val">-</div>
                       </template>
                       <template v-else-if="isStructuredChangeValue(change.after)">
