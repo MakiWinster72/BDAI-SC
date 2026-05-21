@@ -80,8 +80,9 @@ Thumbs.db
 *.seed
 *.pid.lock
 
-# Logs
-logs/
+# Logs（保留目录占位，忽略实际日志文件）
+logs/*
+!logs/.gitkeep
 *.log
 
 # Coverage

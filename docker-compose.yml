@@ -29,8 +29,10 @@ services:
       BDAI_SC_CORS_ALLOWED_ORIGINS: "*"
       BDAI_SC_BACKEND_PORT: 8080
       BDAI_SC_UPLOAD_DIR: /app/uploads
+      BDAI_SC_LOG_DIR: /app/logs
     volumes:
       - ./uploads:/app/uploads
+      - ./logs:/app/logs
 
   frontend:
     build: ./frontend
