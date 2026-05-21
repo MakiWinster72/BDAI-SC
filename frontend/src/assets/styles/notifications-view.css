@@ -267,6 +267,12 @@
 }
 
 /* ── Detail Panel ────────────────────────────────────────── */
+.notif-detail-loading {
+  padding: 12px 4px 0;
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
 .notif-detail {
   border-radius: 24px;
   background: var(--card);

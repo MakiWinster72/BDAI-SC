@@ -142,11 +142,24 @@ private boolean isAdmin(String authHeader) {
 
 > 来源：[AchievementController.java](backend/src/main/java/com/gcsc/studentcenter/controller/AchievementController.java#L16-L122)
 
+### 审核收件箱 — `/api/review-inbox`
+
+通知中心与班级审核使用的分页列表与详情接口（推荐）。
+
+| 方法 | 端点 | 认证 | 描述 |
+|------|------|------|------|
+| GET | `/api/review-inbox` | 是 | 分页列表（摘要，无 payload）；查询参数：`page`、`size`、`category`、`search`、`scope` |
+| GET | `/api/review-inbox/stats` | 是 | Tab 计数与 `hasPendingProfile` |
+| GET | `/api/review-inbox/pending-achievement` | 是 | 按 `recordId`、`category` 查待审成就单 |
+| GET | `/api/review-inbox/{resourceType}/{id}` | 是 | 完整详情（懒加载） |
+
+> 来源：[ReviewInboxController.java](backend/src/main/java/com/gcsc/studentcenter/controller/ReviewInboxController.java)
+
 ### 成就审核 — `/api/achievement-review-requests`
 
 | 方法 | 端点 | 认证 | 描述 |
 |------|------|------|------|
-| GET | `/api/achievement-review-requests` | 是 | 列出当前用户的所有审核请求 |
+| GET | `/api/achievement-review-requests` | 是 | ~~列出所有审核请求~~ **已废弃**，请用 `GET /api/review-inbox` |
 | POST | `/api/achievement-review-requests` | 是 | 提交新成就供审核 |
 | POST | `/api/achievement-review-requests/{id}/approve` | 是 | 批准待审请求 |
 | POST | `/api/achievement-review-requests/{id}/reject` | 是 | 附理由驳回 |
@@ -159,7 +172,7 @@ private boolean isAdmin(String authHeader) {
 
 | 方法 | 端点 | 认证 | 描述 |
 |------|------|------|------|
-| GET | `/api/profile-review-requests` | 是 | 列出所有档案审核请求 |
+| GET | `/api/profile-review-requests` | 是 | ~~列出所有档案审核请求~~ **已废弃**，请用 `GET /api/review-inbox` |
 | POST | `/api/profile-review-requests` | 是 | 提交档案修改供审核 |
 | POST | `/api/profile-review-requests/{id}/approve` | 是 | 批准档案修改 |
 | POST | `/api/profile-review-requests/{id}/reject` | 是 | 附理由驳回 |

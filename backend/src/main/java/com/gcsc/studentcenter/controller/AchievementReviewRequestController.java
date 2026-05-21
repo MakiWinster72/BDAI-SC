@@ -27,10 +27,16 @@ public class AchievementReviewRequestController {
     this.auditLogService = auditLogService;
   }
 
+  /**
+   * @deprecated Use {@code GET /api/review-inbox} for paginated inbox listing.
+   */
+  @Deprecated
   @GetMapping
   public ResponseEntity<List<AchievementReviewRequestResponse>> list(Authentication authentication) {
-    return ResponseEntity.ok(
-        achievementReviewRequestService.listVisibleRequests(authentication.getName()));
+    return ResponseEntity.ok()
+        .header("Deprecation", "true")
+        .header("Link", "</api/review-inbox>; rel=\"successor-version\"")
+        .body(achievementReviewRequestService.listVisibleRequests(authentication.getName()));
   }
 
   @PostMapping

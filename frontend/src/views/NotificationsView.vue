@@ -24,7 +24,22 @@ const { settings: uploadLimits } = useAchievementUploadSettings();
 const route = useRoute();
 const router = useRouter();
 const profile = reactive(loadUser());
-const { inboxEntries, totalUnreadCount, readIds, unreadEntries, updateReviewRequestStatus, cancelReviewRequest, setSupportingDocuments, markProcessedEntryRead, markEntryRead, markEntryUnread, markAllRead, getEntryReadKey, classReviewEntries } = useNotifications(profile);
+const {
+  inboxEntries,
+  totalUnreadCount,
+  readIds,
+  updateReviewRequestStatus,
+  cancelReviewRequest,
+  setSupportingDocuments,
+  markProcessedEntryRead,
+  markEntryRead,
+  markEntryUnread,
+  markAllRead,
+  getEntryReadKey,
+  classReviewEntries,
+  fetchReviewRequestDetail,
+  detailLoadingKey,
+} = useNotifications(profile);
 
 const rejectEditorOpen = ref(false);
 const rejectReason = ref(localStorage.getItem(`bdai_sc_reject_draft_${route.query.entry}`) || "");
@@ -75,6 +90,13 @@ const isSelectedUnread = computed(() =>
   selectedEntry.value && !readIds.has(getEntryReadKey(selectedEntry.value)),
 );
 const selectedEntryNumber = computed(() => formatNotificationEntryNumber(selectedEntry.value));
+const isSelectedDetailLoading = computed(() => {
+  if (!selectedEntry.value || selectedEntry.value.source !== "review-request") {
+    return false;
+  }
+  const key = `${selectedEntry.value.resourceType}:${selectedEntry.value.sourceId || selectedEntry.value.id}`;
+  return detailLoadingKey.value === key;
+});
 function toggleUnreadRead() {
   if (!selectedEntry.value) return;
   if (isSelectedUnread.value) {
@@ -109,6 +131,9 @@ watch(selectedEntry, (entry) => {
   supportingDocsError.value = "";
   closeStudentDetail();
   if (!entry) return;
+  if (entry.source === "review-request") {
+    fetchReviewRequestDetail(entry.resourceType, entry.sourceId || entry.id);
+  }
   if (!readIds.has(getEntryReadKey(entry))) {
     markEntryRead(entry);
     toast.success("已标记为已读");
@@ -407,6 +432,7 @@ async function handleRemoveSupportingDoc(index) {
 
     <!-- Detail Panel -->
     <section v-else class="notif-detail">
+      <div v-if="isSelectedDetailLoading" class="notif-detail-loading">加载详情中…</div>
       <Transition name="detail-fade" mode="out-in">
         <div :key="getEntryReadKey(selectedEntry)" class="notif-detail-inner">
 

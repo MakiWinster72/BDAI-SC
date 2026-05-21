@@ -82,12 +82,14 @@ BDAI-SC 学生中心实现了一套双轨审核系统，用于管控学生对成
 
 | 方法 | 端点 | 鉴权 | 描述 |
 |------|------|------|------|
-| GET | /api/achievement-review-requests | 任何已认证用户 | 列出可见请求 |
+| GET | /api/review-inbox | 任何已认证用户 | 分页列出可见请求（摘要） |
+| GET | /api/review-inbox/{resourceType}/{id} | 任何已认证用户 | 单条完整详情 |
+| GET | /api/achievement-review-requests | 任何已认证用户 | **已废弃** — 全量列表，请用 review-inbox |
 | POST | /api/achievement-review-requests | STUDENT | 提交新的成就审核 |
 | POST | .../{id}/approve | TEACHER, ADMIN | 批准 |
 | POST | .../{id}/reject | TEACHER, ADMIN | 驳回 |
 | DELETE | .../{id} | STUDENT (所有者) | 取消 |
-| GET | /api/profile-review-requests | ... | 同上结构 |
+| GET | /api/profile-review-requests | ... | **已废弃** — 列表请用 review-inbox；提交/审批等同上 |
 | GET | /api/settings/review | 任何已认证用户 | 获取审核设置 |
 | PUT | /api/settings/review | ADMIN | 更新审核设置 |
 

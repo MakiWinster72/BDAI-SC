@@ -545,6 +545,23 @@
   font-size: 13px;
 }
 
+.menu-notification-load-more {
+  width: 100%;
+  min-height: 36px;
+  border: 1.5px dashed rgba(100, 12, 114, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menu-notification-load-more:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .menu-notification-item {
   display: grid;
   gap: 3px;

@@ -3,7 +3,6 @@ import { getSystemSettings } from "@/api/admin";
 import {
   approveAchievementReviewRequest,
   cancelAchievementReviewRequest,
-  listAchievementReviewRequests,
   rejectAchievementReviewRequest,
   setAchievementReviewRequestDocuments,
   submitAchievementReviewRequestApi,
@@ -11,11 +10,16 @@ import {
 import {
   approveProfileReviewRequest,
   cancelProfileReviewRequest,
-  listProfileReviewRequests,
   rejectProfileReviewRequest,
   setProfileReviewRequestDocuments,
   submitProfileReviewRequestApi,
 } from "@/api/profileReviewRequests";
+import {
+  findPendingAchievementReview as findPendingAchievementReviewApi,
+  getReviewInboxDetail,
+  getReviewInboxStats,
+  listReviewInbox,
+} from "@/api/reviewInbox";
 import {
   markAllNotificationsRead,
   markNotificationRead,
@@ -36,6 +40,7 @@ function getStorageKey() {
   return STORAGE_BASE;
 }
 const DEFAULT_DELAYED_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000;
+const INBOX_PAGE_SIZE = 20;
 const CATEGORY_LABELS = {
   contest: "学科竞赛、文体艺术",
   paper: "发表学术论文",
@@ -51,12 +56,24 @@ const CATEGORY_LABELS = {
 const store = reactive({
   loaded: false,
   notifications: [],
-  achievementReviewRequests: [],
-  achievementReviewFetched: false,
-  achievementReviewLoading: false,
-  profileReviewRequests: [],
-  profileReviewFetched: false,
-  profileReviewLoading: false,
+  inboxSummaries: [],
+  inboxPage: 0,
+  inboxPages: 0,
+  inboxTotal: 0,
+  inboxLoading: false,
+  inboxCategory: "pending",
+  inboxSearch: "",
+  inboxCategoryCounts: {},
+  inboxStats: null,
+  classReviewSummaries: [],
+  classReviewPage: 0,
+  classReviewPages: 0,
+  classReviewTotal: 0,
+  classReviewLoading: false,
+  classReviewCategory: "pending",
+  classReviewCategoryCounts: {},
+  detailCache: {},
+  detailLoadingKey: "",
   processedReadIds: new Set(),
   readIds: new Set(),
   delayedThresholdMs: DEFAULT_DELAYED_THRESHOLD_MS,
@@ -128,18 +145,15 @@ function syncReadIdsFromServer(entries) {
 }
 
 function syncStoredIds() {
-  if (!store.achievementReviewFetched || !store.profileReviewFetched) {
-    return;
-  }
   const allReadKeys = new Set([
-    ...store.achievementReviewRequests.map((r) => getEntryReadKey(r.id, r.resourceType || "achievement")),
-    ...store.profileReviewRequests.map((r) => getEntryReadKey(r.id, r.resourceType || "profile")),
+    ...store.inboxSummaries.map((r) => getEntryReadKey(r.id, r.resourceType)),
+    ...store.classReviewSummaries.map((r) => getEntryReadKey(r.id, r.resourceType)),
     ...store.notifications.map((n) => getEntryReadKey(n)),
   ]);
   let changed = false;
   for (const id of store.processedReadIds) {
-    const stillExists = store.achievementReviewRequests.some((r) => String(r.id) === String(id))
-      || store.profileReviewRequests.some((r) => String(r.id) === String(id));
+    const stillExists = store.inboxSummaries.some((r) => String(r.id) === String(id))
+      || store.classReviewSummaries.some((r) => String(r.id) === String(id));
     if (!stillExists) {
       store.processedReadIds.delete(id);
       changed = true;
@@ -154,6 +168,114 @@ function syncStoredIds() {
   if (changed) {
     persistStore();
   }
+}
+
+function getDetailCacheKey(resourceType, id) {
+  return `${resourceType}:${id}`;
+}
+
+function summaryToReviewRequest(summary) {
+  if (!summary) {
+    return null;
+  }
+  return {
+    id: summary.id,
+    resourceType: summary.resourceType,
+    status: summary.status,
+    action: summary.action,
+    category: summary.category,
+    categoryLabel: summary.categoryLabel,
+    recordId: summary.recordId,
+    title: summary.title,
+    summary: summary.summary,
+    rejectionReason: summary.rejectionReason,
+    requester: summary.requester,
+    reviewer: summary.reviewer,
+    targetRoles: summary.targetRoles,
+    createdAt: summary.createdAt,
+    updatedAt: summary.updatedAt,
+    read: summary.read,
+  };
+}
+
+function mergeRequestWithDetail(request) {
+  if (!request?.resourceType || request.id === undefined || request.id === null) {
+    return request;
+  }
+  const cached = store.detailCache[getDetailCacheKey(request.resourceType, request.id)];
+  if (!cached) {
+    return request;
+  }
+  return {
+    ...request,
+    payloadSnapshot: cached.payloadSnapshot ?? null,
+    changes: Array.isArray(cached.changes) ? cached.changes : [],
+    supportingDocuments: Array.isArray(cached.supportingDocuments) ? cached.supportingDocuments : [],
+    rejectionReason: cached.rejectionReason ?? request.rejectionReason,
+    status: cached.status ?? request.status,
+    reviewer: cached.reviewer ?? request.reviewer,
+    read: cached.read ?? request.read,
+  };
+}
+
+function fullResponseToSummary(request) {
+  if (!request) {
+    return null;
+  }
+  return {
+    id: request.id,
+    resourceType: request.resourceType,
+    status: request.status,
+    action: request.action,
+    category: request.category,
+    categoryLabel: request.categoryLabel,
+    recordId: request.recordId,
+    title: request.title,
+    summary: request.summary,
+    rejectionReason: request.rejectionReason,
+    requester: request.requester,
+    reviewer: request.reviewer,
+    targetRoles: request.targetRoles,
+    createdAt: request.createdAt,
+    updatedAt: request.updatedAt,
+    read: request.read,
+  };
+}
+
+function upsertSummaryInList(list, summary) {
+  const index = list.findIndex(
+    (item) => String(item.id) === String(summary.id) && item.resourceType === summary.resourceType,
+  );
+  if (index === -1) {
+    list.unshift(summary);
+    return;
+  }
+  list.splice(index, 1, summary);
+}
+
+function removeSummaryFromLists(requestId, resourceType) {
+  store.inboxSummaries = store.inboxSummaries.filter(
+    (item) => !(String(item.id) === String(requestId) && item.resourceType === resourceType),
+  );
+  store.classReviewSummaries = store.classReviewSummaries.filter(
+    (item) => !(String(item.id) === String(requestId) && item.resourceType === resourceType),
+  );
+}
+
+function dedupeSortEntries(entries) {
+  const seen = new Set();
+  return entries
+    .filter((entry) => {
+      const key = getEntryReadKey(entry);
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    })
+    .sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
 }
 
 async function fetchDelayedThreshold() {
@@ -226,37 +348,30 @@ function isReviewVisibleForUser(request, user) {
   return Array.isArray(request.targetRoles) && request.targetRoles.includes(user.role);
 }
 
-function upsertAchievementReviewRequest(nextRequest) {
-  const index = store.achievementReviewRequests.findIndex(
-    (item) => String(item.id) === String(nextRequest.id),
-  );
-  if (index === -1) {
-    store.achievementReviewRequests.unshift(nextRequest);
+function upsertReviewRequest(nextRequest) {
+  if (!nextRequest) {
     return;
   }
-  store.achievementReviewRequests.splice(index, 1, nextRequest);
-}
-
-function upsertProfileReviewRequest(nextRequest) {
-  const index = store.profileReviewRequests.findIndex(
-    (item) => String(item.id) === String(nextRequest.id),
-  );
-  if (index === -1) {
-    store.profileReviewRequests.unshift(nextRequest);
-    return;
-  }
-  store.profileReviewRequests.splice(index, 1, nextRequest);
+  const summary = fullResponseToSummary(nextRequest);
+  store.detailCache[getDetailCacheKey(summary.resourceType, summary.id)] = nextRequest;
+  upsertSummaryInList(store.inboxSummaries, summary);
+  upsertSummaryInList(store.classReviewSummaries, summary);
 }
 
 function setReviewRequestReadState(resourceType, resourceId, read) {
-  const requests = resourceType === "achievement"
-    ? store.achievementReviewRequests
-    : resourceType === "profile"
-      ? store.profileReviewRequests
-      : [];
-  const request = requests.find((item) => String(item.id) === String(resourceId));
-  if (request) {
-    request.read = read;
+  const updateList = (list) => {
+    const request = list.find(
+      (item) => String(item.id) === String(resourceId) && item.resourceType === resourceType,
+    );
+    if (request) {
+      request.read = read;
+    }
+  };
+  updateList(store.inboxSummaries);
+  updateList(store.classReviewSummaries);
+  const cacheKey = getDetailCacheKey(resourceType, resourceId);
+  if (store.detailCache[cacheKey]) {
+    store.detailCache[cacheKey] = { ...store.detailCache[cacheKey], read };
   }
 }
 
@@ -445,58 +560,112 @@ function addNotification({
   persistStore();
 }
 
-async function fetchAchievementReviewRequests(force = false) {
+async function loadInboxPage({
+  page = 1,
+  category = store.inboxCategory,
+  search = store.inboxSearch,
+  scope = "inbox",
+  append = false,
+} = {}) {
   if (typeof window === "undefined") {
-    return store.achievementReviewRequests;
+    return [];
   }
   const token = localStorage.getItem("bdai_sc_token");
   if (!token) {
-    store.achievementReviewRequests = [];
-    store.achievementReviewFetched = true;
-    return store.achievementReviewRequests;
+    if (scope === "class-reviews") {
+      store.classReviewSummaries = [];
+    } else {
+      store.inboxSummaries = [];
+    }
+    return [];
   }
-  if (store.achievementReviewLoading) {
-    return store.achievementReviewRequests;
+
+  const isClassScope = scope === "class-reviews";
+  if (isClassScope) {
+    if (store.classReviewLoading) {
+      return store.classReviewSummaries;
+    }
+    store.classReviewLoading = true;
+    store.classReviewCategory = category;
+  } else {
+    if (store.inboxLoading) {
+      return store.inboxSummaries;
+    }
+    store.inboxLoading = true;
+    store.inboxCategory = category;
+    store.inboxSearch = search;
   }
-  if (!force && store.achievementReviewFetched) {
-    return store.achievementReviewRequests;
-  }
-  store.achievementReviewLoading = true;
+
   try {
-    const { data } = await listAchievementReviewRequests();
-    store.achievementReviewRequests = Array.isArray(data) ? data : [];
-    store.achievementReviewFetched = true;
-    return store.achievementReviewRequests;
+    const { data } = await listReviewInbox({
+      page,
+      size: INBOX_PAGE_SIZE,
+      category,
+      search: search?.trim() || undefined,
+      scope,
+    });
+    const items = Array.isArray(data?.items) ? data.items : [];
+    if (isClassScope) {
+      store.classReviewSummaries = append ? [...store.classReviewSummaries, ...items] : items;
+      store.classReviewPage = data?.page || page;
+      store.classReviewPages = data?.pages || 0;
+      store.classReviewTotal = data?.total || 0;
+      store.classReviewCategoryCounts = data?.categoryCounts || {};
+    } else {
+      store.inboxSummaries = append ? [...store.inboxSummaries, ...items] : items;
+      store.inboxPage = data?.page || page;
+      store.inboxPages = data?.pages || 0;
+      store.inboxTotal = data?.total || 0;
+      store.inboxCategoryCounts = data?.categoryCounts || {};
+    }
+    return items;
   } finally {
-    store.achievementReviewLoading = false;
+    if (isClassScope) {
+      store.classReviewLoading = false;
+    } else {
+      store.inboxLoading = false;
+    }
   }
 }
 
-async function fetchProfileReviewRequests(force = false) {
+async function loadInboxStats(scope = "inbox") {
   if (typeof window === "undefined") {
-    return store.profileReviewRequests;
+    return null;
   }
   const token = localStorage.getItem("bdai_sc_token");
   if (!token) {
-    store.profileReviewRequests = [];
-    store.profileReviewFetched = true;
-    return store.profileReviewRequests;
+    store.inboxStats = null;
+    return null;
   }
-  if (store.profileReviewLoading) {
-    return store.profileReviewRequests;
+  const { data } = await getReviewInboxStats({ scope }).catch(() => ({ data: null }));
+  if (scope === "inbox") {
+    store.inboxStats = data;
   }
-  if (!force && store.profileReviewFetched) {
-    return store.profileReviewRequests;
+  return data;
+}
+
+async function fetchReviewRequestDetail(resourceType, id) {
+  const cacheKey = getDetailCacheKey(resourceType, id);
+  if (store.detailCache[cacheKey]) {
+    return store.detailCache[cacheKey];
   }
-  store.profileReviewLoading = true;
-  try {
-    const { data } = await listProfileReviewRequests();
-    store.profileReviewRequests = Array.isArray(data) ? data : [];
-    store.profileReviewFetched = true;
-    return store.profileReviewRequests;
-  } finally {
-    store.profileReviewLoading = false;
+  store.detailLoadingKey = cacheKey;
+  const { data } = await getReviewInboxDetail(resourceType, id);
+  store.detailCache[cacheKey] = data;
+  upsertReviewRequest(data);
+  store.detailLoadingKey = "";
+  return data;
+}
+
+async function fetchProfileReviewRequests(force = false) {
+  await Promise.all([
+    loadInboxPage({ page: 1, category: store.inboxCategory, append: false }),
+    loadInboxStats("inbox"),
+  ]);
+  if (force) {
+    return loadInboxPage({ page: 1, category: store.inboxCategory, append: false });
   }
+  return store.inboxSummaries;
 }
 
 async function submitAchievementReviewRequest({
@@ -520,7 +689,8 @@ async function submitAchievementReviewRequest({
     payloadSnapshot,
     changes,
   });
-  upsertAchievementReviewRequest(data);
+  upsertReviewRequest(data);
+  await loadInboxStats("inbox");
   return data;
 }
 
@@ -535,7 +705,8 @@ async function submitProfileReviewRequest({
     payloadSnapshot,
     changes,
   });
-  upsertProfileReviewRequest(data);
+  upsertReviewRequest(data);
+  await loadInboxStats("inbox");
   return data;
 }
 
@@ -554,11 +725,11 @@ async function updateReviewRequestStatus({ requestId, status, reviewer, reason =
     : (status === "approved"
         ? await approveProfileReviewRequest(requestId)
         : await rejectProfileReviewRequest(requestId, { reason: String(reason || "").trim() }));
-  if (isAch) {
-    upsertAchievementReviewRequest(response.data);
-  } else {
-    upsertProfileReviewRequest(response.data);
-  }
+  upsertReviewRequest(response.data);
+  await Promise.all([
+    loadInboxPage({ page: 1, category: store.inboxCategory, search: store.inboxSearch, append: false }),
+    loadInboxStats("inbox"),
+  ]);
   return response.data;
 }
 
@@ -570,16 +741,15 @@ async function cancelReviewRequest({ requestId, resourceType }) {
 
   if (isAch) {
     await cancelAchievementReviewRequest(requestId);
-    store.achievementReviewRequests = store.achievementReviewRequests.filter(
-      (item) => String(item.id) !== String(requestId),
-    );
-    return;
+  } else {
+    await cancelProfileReviewRequest(requestId);
   }
-
-  await cancelProfileReviewRequest(requestId);
-  store.profileReviewRequests = store.profileReviewRequests.filter(
-    (item) => String(item.id) !== String(requestId),
-  );
+  removeSummaryFromLists(requestId, resourceType);
+  delete store.detailCache[getDetailCacheKey(resourceType, requestId)];
+  await Promise.all([
+    loadInboxPage({ page: 1, category: store.inboxCategory, search: store.inboxSearch, append: false }),
+    loadInboxStats("inbox"),
+  ]);
 }
 
 async function setSupportingDocuments({ requestId, documents, resourceType }) {
@@ -590,88 +760,47 @@ async function setSupportingDocuments({ requestId, documents, resourceType }) {
   const response = isAch
     ? await setAchievementReviewRequestDocuments(requestId, documents)
     : await setProfileReviewRequestDocuments(requestId, documents);
-  if (isAch) {
-    upsertAchievementReviewRequest(response.data);
-  } else {
-    upsertProfileReviewRequest(response.data);
-  }
+  upsertReviewRequest(response.data);
   return response.data;
+}
+
+function buildEntriesFromSummaries(summaries, user) {
+  return summaries.map((summary) =>
+    buildReviewEntry(mergeRequestWithDetail(summaryToReviewRequest(summary)), user),
+  );
 }
 
 export function useNotifications(userSource) {
   ensureLoaded();
   fetchDelayedThreshold();
-  fetchAchievementReviewRequests().catch(() => {
-    store.achievementReviewFetched = true;
-  });
-  fetchProfileReviewRequests().catch(() => {
-    store.profileReviewFetched = true;
-  });
+  loadInboxPage({ page: 1, category: "pending" }).catch(() => {});
+  loadInboxStats("inbox").catch(() => {});
 
   const currentUser = computed(() => userSource || {});
-  const visibleReviewRequests = computed(() =>
-    [
-      ...store.achievementReviewRequests,
-      ...store.profileReviewRequests,
-    ].filter((item) => isReviewVisibleForUser(item, currentUser.value)),
-  );
   const visibleNotifications = computed(() =>
     store.notifications.filter((item) =>
       matchesNotificationAudience(item, currentUser.value),
     ),
   );
   const inboxEntries = computed(() => {
-    const requests = [
-      ...store.achievementReviewRequests,
-      ...store.profileReviewRequests,
-    ];
-
-    const visible = requests.filter((item) => isReviewVisibleForUser(item, currentUser.value));
-
-    const entries = [
-      ...visibleReviewRequests.value.map((item) =>
-        buildReviewEntry(item, currentUser.value),
-      ),
-      ...visibleNotifications.value.map((item) => buildNotificationEntry(item)),
-    ];
-    // Defensive dedup by sourceId+resourceType to prevent duplicate-key Vue warnings
-    const seen = new Set();
-    return entries
-      .filter((entry) => {
-        const key = getEntryReadKey(entry);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .sort(
-        (left, right) =>
-          new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-      );
+    const reviewEntries = buildEntriesFromSummaries(store.inboxSummaries, currentUser.value);
+    const localEntries = visibleNotifications.value.map((item) =>
+      buildNotificationEntry(item),
+    );
+    return dedupeSortEntries([...localEntries, ...reviewEntries]);
   });
-  const pendingCount = computed(() =>
-    visibleReviewRequests.value.filter((item) => item.status === "pending").length,
-  );
-  const categoryCounts = computed(() => {
-    const counts = {
-      pending: 0,
-      delayed: 0,
-      approved: 0,
-      rejected: 0,
-    };
-    inboxEntries.value.forEach((entry) => {
-      const key = entry.categoryKey || "pending";
-      if (counts[key] !== undefined) {
-        counts[key] += 1;
-      }
-    });
-    return counts;
-  });
+  const pendingCount = computed(() => Number(store.inboxStats?.pending ?? 0));
+  const categoryCounts = computed(() => ({
+    pending: Number(store.inboxCategoryCounts?.pending ?? 0),
+    delayed: Number(store.inboxCategoryCounts?.delayed ?? 0),
+    approved: Number(store.inboxCategoryCounts?.approved ?? 0),
+    rejected: Number(store.inboxCategoryCounts?.rejected ?? 0),
+    unread: Number(store.inboxCategoryCounts?.unread ?? 0),
+  }));
 
-  const hasPendingProfileReviewRequest = computed(() =>
-    visibleReviewRequests.value.some(
-      (item) => item.resourceType === "profile" && item.status === "pending" && item.requester?.username === currentUser.value?.username,
-    ),
-  );
+  const hasPendingProfileReviewRequest = computed(() => Boolean(store.inboxStats?.hasPendingProfile));
+  const inboxHasMore = computed(() => store.inboxPage < store.inboxPages);
+  const classReviewHasMore = computed(() => store.classReviewPage < store.classReviewPages);
 
   const processedUnreadCount = computed(() =>
     inboxEntries.value.filter(
@@ -681,26 +810,11 @@ export function useNotifications(userSource) {
     ).length,
   );
 
-  // Class review entries for CADRE role - filtered by requester's class matching current user's class
   const classReviewEntries = computed(() => {
-    if (currentUser.value.role !== "CADRE") return [];
-    const myClass = currentUser.value.className;
-    if (!myClass) return [];
-
-    const allRequests = [
-      ...store.achievementReviewRequests,
-      ...store.profileReviewRequests,
-    ].filter((r) => {
-      // Exclude own requests
-      if (r.requester?.username === currentUser.value.username) return false;
-      // Exclude other CADRE requests - only regular students need review
-      if (r.requester?.role === "CADRE") return false;
-      const requesterClass = r.requester?.className;
-      if (!requesterClass) return false;
-      return requesterClass.trim() === myClass.trim();
-    });
-
-    return allRequests.map((r) => buildReviewEntry(r, currentUser.value));
+    if (currentUser.value.role !== "CADRE") {
+      return [];
+    }
+    return buildEntriesFromSummaries(store.classReviewSummaries, currentUser.value);
   });
 
   watch(
@@ -754,40 +868,47 @@ export function useNotifications(userSource) {
   async function markAllRead() {
     inboxEntries.value.forEach((e) => {
       store.readIds.add(getEntryReadKey(e));
-      setReviewRequestReadState(e.resourceType, e.sourceId || e.id, true);
+      if (e.source === "review-request") {
+        setReviewRequestReadState(e.resourceType, e.sourceId || e.id, true);
+      }
     });
     persistStore();
     await markAllNotificationsRead().catch(() => {
       refreshNotifications();
     });
+    await loadInboxPage({ page: 1, category: store.inboxCategory, search: store.inboxSearch, append: false });
   }
 
-  const totalUnreadCount = computed(() =>
-    inboxEntries.value.filter((e) => !store.readIds.has(getEntryReadKey(e))).length,
-  );
+  const totalUnreadCount = computed(() => {
+    const serverUnread = Number(store.inboxCategoryCounts?.unread ?? store.inboxStats?.unread ?? 0);
+    const localUnread = visibleNotifications.value.filter(
+      (item) => !store.readIds.has(getEntryReadKey(item)),
+    ).length;
+    return serverUnread + localUnread;
+  });
 
   const unreadEntries = computed(() =>
     inboxEntries.value.filter((e) => !store.readIds.has(getEntryReadKey(e))),
   );
 
-  function findPendingAchievementReview(recordId, category) {
-    if (!recordId) return null;
-    return store.achievementReviewRequests.find(
-      (item) =>
-        item.resourceType === "achievement" &&
-        String(item.recordId) === String(recordId) &&
-        item.category === category &&
-        item.status === "pending",
-    ) || null;
+  async function findPendingAchievementReview(recordId, category) {
+    if (!recordId) {
+      return null;
+    }
+    const response = await findPendingAchievementReviewApi(recordId, category).catch((error) => error?.response);
+    if (!response || response.status === 204 || !response.data) {
+      return null;
+    }
+    return mergeRequestWithDetail(summaryToReviewRequest(response.data));
   }
 
   async function refreshNotifications() {
-    store.achievementReviewFetched = false;
-    store.profileReviewFetched = false;
+    store.detailCache = {};
     await Promise.all([
-      fetchAchievementReviewRequests(true).catch(() => {}),
-      fetchProfileReviewRequests(true).catch(() => {}),
-    ]);
+      loadInboxPage({ page: 1, category: store.inboxCategory, search: store.inboxSearch, append: false }),
+      loadInboxStats("inbox"),
+      loadInboxPage({ page: 1, category: store.classReviewCategory, scope: "class-reviews", append: false }),
+    ]).catch(() => {});
   }
 
   return {
@@ -799,11 +920,20 @@ export function useNotifications(userSource) {
     unreadEntries,
     processedReadIds: store.processedReadIds,
     readIds: store.readIds,
-    reviewRequests: visibleReviewRequests,
     notifications: visibleNotifications,
     hasPendingProfileReviewRequest,
     findPendingAchievementReview,
-    fetchAchievementReviewRequests,
+    fetchReviewRequestDetail,
+    detailLoadingKey: computed(() => store.detailLoadingKey),
+    loadInboxPage,
+    loadInboxStats,
+    inboxPage: computed(() => store.inboxPage),
+    inboxLoading: computed(() => store.inboxLoading),
+    inboxHasMore,
+    classReviewPage: computed(() => store.classReviewPage),
+    classReviewLoading: computed(() => store.classReviewLoading),
+    classReviewHasMore,
+    classReviewCategoryCounts: computed(() => store.classReviewCategoryCounts),
     fetchProfileReviewRequests,
     refreshNotifications,
     submitAchievementReviewRequest,

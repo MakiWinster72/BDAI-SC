@@ -1,9 +1,5 @@
 import request from "./request";
 
-export function listAchievementReviewRequests() {
-  return request.get("/api/achievement-review-requests");
-}
-
 export function submitAchievementReviewRequestApi(data) {
   return request.post("/api/achievement-review-requests", data);
 }

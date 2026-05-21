@@ -33,11 +33,11 @@ export function useAchievementView({
     }, 500);
   }
 
-  function editFromView() {
+  async function editFromView() {
     if (!viewItem.value) {
       return;
     }
-    const pending = findPendingAchievementReview(
+    const pending = await findPendingAchievementReview(
       viewItem.value.id,
       viewItem.value.category,
     );
@@ -54,12 +54,12 @@ export function useAchievementView({
     }, 500);
   }
 
-  function openDelete() {
+  async function openDelete() {
     if (deleteDialogOpen.value) {
       return;
     }
     if (viewItem.value) {
-      const pending = findPendingAchievementReview(
+      const pending = await findPendingAchievementReview(
         viewItem.value.id,
         viewItem.value.category,
       );

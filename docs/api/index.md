@@ -454,13 +454,49 @@ BDAI-SC Student Center REST API。Base URL 为 `http://localhost:8080`，所有�
 
 ---
 
+## 审核收件箱 `/api/review-inbox`
+
+通知中心、班级审核使用的接口（**推荐**）。
+
+### GET `/api/review-inbox` — 分页列表
+
+需要认证。返回摘要字段（不含 `payloadSnapshot`、`changes`）。
+
+**查询参数**
+
+| 参数 | 默认 | 说明 |
+|------|------|------|
+| `page` | `1` | 页码 |
+| `size` | `20` | 每页条数（最大 50） |
+| `category` | `pending` | `unread` / `pending` / `delayed` / `approved` / `rejected` |
+| `search` | — | 编号、标题、摘要等 |
+| `scope` | `inbox` | `inbox` 或 `class-reviews` |
+
+**响应** `ReviewInboxPageResponse`：`items`、`total`、`page`、`size`、`pages`、`categoryCounts`
+
+### GET `/api/review-inbox/stats` — 计数
+
+返回各 Tab 数量及 `hasPendingProfile`。
+
+### GET `/api/review-inbox/pending-achievement` — 待审成就
+
+查询参数：`recordId`、`category`。无待审时 `204`。
+
+### GET `/api/review-inbox/{resourceType}/{id}` — 详情
+
+`resourceType` 为 `profile` 或 `achievement`。返回完整审核单（含 payload）。
+
+---
+
 ## 成就审核请求 `/api/achievement-review-requests`
 
-学生提交成就材料给教师/管理员审核。
+学生提交成就材料给教师/管理员审核。提交、审批、驳回、取消等仍使用本路径。
 
-### GET `/api/achievement-review-requests` — 列表
+### GET `/api/achievement-review-requests` — 列表（已废弃）
 
-需要认证。返回当前用户可见的审核请求（提交者可见自己的，管理员可见全部）。
+> **已废弃**：请改用 `GET /api/review-inbox`。响应头含 `Deprecation: true` 与 `Link: </api/review-inbox>`。
+
+需要认证。返回当前用户可见的**全量**审核请求（含完整 payload，数据量大）。
 
 **响应** `List<AchievementReviewRequestResponse>`
 
@@ -533,9 +569,11 @@ BDAI-SC Student Center REST API。Base URL 为 `http://localhost:8080`，所有�
 
 学生提交档案修改给教师/管理员审核。接口结构与成就审核请求完全一致。
 
-### GET `/api/profile-review-requests` — 列表
+### GET `/api/profile-review-requests` — 列表（已废弃）
 
-需要认证。
+> **已废弃**：请改用 `GET /api/review-inbox`。
+
+需要认证。返回全量列表。
 
 **响应** `List<ProfileReviewRequestResponse>`
 

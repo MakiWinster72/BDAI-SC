@@ -140,9 +140,21 @@
             <p class="menu-notification-title">{{ entry.title }}</p>
             <p class="menu-notification-content">{{ entry.content }}</p>
           </button>
-          <div v-if="!filteredNotificationEntries.length" class="menu-notification-empty">
+          <div v-if="inboxLoading && !filteredNotificationEntries.length" class="menu-notification-empty">
+            加载中…
+          </div>
+          <div v-else-if="!filteredNotificationEntries.length" class="menu-notification-empty">
             {{ notificationSearchQuery.trim() ? '无匹配通知' : '暂无通知' }}
           </div>
+          <button
+            v-else-if="inboxHasMore"
+            class="menu-notification-load-more"
+            type="button"
+            :disabled="inboxLoading"
+            @click="loadMoreNotifications"
+          >
+            {{ inboxLoading ? '加载中…' : '加载更多' }}
+          </button>
         </div>
 
         <!-- Class Reviews Sub-Panel -->
@@ -169,7 +181,10 @@
             <p class="menu-notification-title">{{ item.title }}</p>
             <p class="menu-notification-content">{{ item.content }}</p>
           </button>
-          <div v-if="!filteredClassReviewEntries.length" class="menu-notification-empty">
+          <div v-if="classReviewLoading && !filteredClassReviewEntries.length" class="menu-notification-empty">
+            加载中…
+          </div>
+          <div v-else-if="!filteredClassReviewEntries.length" class="menu-notification-empty">
             暂无{{ classReviewCategories.find(c => c.key === classReviewActiveCategory)?.label || '' }}申请
           </div>
         </div>
@@ -202,7 +217,6 @@ import { filterMenuItemsByRole, isMenuEnabled } from "@/constants/menu";
 import {
   useNotifications,
   formatNotificationEntryNumber,
-  entryMatchesNotificationSearch,
 } from "@/composables/useNotifications";
 
 const props = defineProps({
@@ -255,19 +269,36 @@ const emit = defineEmits([
   "class-reviews-category-change",
 ]);
 
-const { inboxEntries, pendingCount, totalUnreadCount, unreadEntries, readIds, processedReadIds, markProcessedEntryRead, markEntryRead, markAllRead, getEntryReadKey, classReviewEntries } = useNotifications(props.profile);
+const {
+  inboxEntries,
+  pendingCount,
+  totalUnreadCount,
+  categoryCounts,
+  readIds,
+  markEntryRead,
+  markProcessedEntryRead,
+  markAllRead,
+  getEntryReadKey,
+  classReviewEntries,
+  loadInboxPage,
+  inboxPage,
+  inboxLoading,
+  inboxHasMore,
+  classReviewPage,
+  classReviewLoading,
+  classReviewHasMore,
+  classReviewCategoryCounts,
+} = useNotifications(props.profile);
 
 const menuItems = computed(() => filterMenuItemsByRole(props.profile.role));
 
-const notificationUnreadCounts = computed(() => {
-  const counts = { unread: 0, pending: 0, delayed: 0, approved: 0, rejected: 0 };
-  inboxEntries.value.forEach((e) => {
-    const isUnread = !readIds.has(getEntryReadKey(e));
-    if (isUnread) counts.unread++;
-    if (isUnread && counts[e.categoryKey] !== undefined) counts[e.categoryKey]++;
-  });
-  return counts;
-});
+const notificationUnreadCounts = computed(() => ({
+  unread: Number(categoryCounts.value.unread || 0),
+  pending: Number(categoryCounts.value.pending || 0),
+  delayed: Number(categoryCounts.value.delayed || 0),
+  approved: Number(categoryCounts.value.approved || 0),
+  rejected: Number(categoryCounts.value.rejected || 0),
+}));
 
 const menuMeta = computed(() => {
   const totalPending = classReviewEntries.value.filter(e => e.categoryKey === 'pending' || e.categoryKey === 'delayed').length;
@@ -288,10 +319,7 @@ const menuMeta = computed(() => {
 
 const classReviewActiveCategory = ref("pending");
 
-const filteredClassReviewEntries = computed(() => {
-  const cat = classReviewActiveCategory.value;
-  return classReviewEntries.value.filter(entry => entry.categoryKey === cat);
-});
+const filteredClassReviewEntries = computed(() => classReviewEntries.value);
 
 const classReviewCategories = [
   { key: "pending", label: "待处理" },
@@ -300,14 +328,12 @@ const classReviewCategories = [
   { key: "rejected", label: "已驳回" },
 ];
 
-const classReviewCounts = computed(() => {
-  const counts = { pending: 0, delayed: 0, approved: 0, rejected: 0 };
-  classReviewEntries.value.forEach(entry => {
-    const key = entry.categoryKey || "pending";
-    if (counts[key] !== undefined) counts[key]++;
-  });
-  return counts;
-});
+const classReviewCounts = computed(() => ({
+  pending: Number(classReviewCategoryCounts.value?.pending ?? 0),
+  delayed: Number(classReviewCategoryCounts.value?.delayed ?? 0),
+  approved: Number(classReviewCategoryCounts.value?.approved ?? 0),
+  rejected: Number(classReviewCategoryCounts.value?.rejected ?? 0),
+}));
 
 const notificationCategories = [
   { key: "unread", label: "未读" },
@@ -317,24 +343,103 @@ const notificationCategories = [
   { key: "rejected", label: "已驳回" },
 ];
 
-const notificationSearchQuery = ref("");
-
-const filteredNotificationEntries = computed(() => {
-  const cat = notificationActiveCategory.value;
-  let entries = cat === "unread"
-    ? inboxEntries.value.filter((e) => !readIds.has(getEntryReadKey(e)))
-    : inboxEntries.value.filter((e) => e.categoryKey === cat);
-  const query = notificationSearchQuery.value.trim();
-  if (query) {
-    entries = entries.filter((entry) => entryMatchesNotificationSearch(entry, query));
-  }
-  return entries;
-});
-
 const currentPanel = ref("menu");
 const panelDirection = ref("back");
 const menuBodyRef = ref(null);
 const showBottomFade = ref(false);
+
+const notificationSearchQuery = ref("");
+let notificationSearchTimer = null;
+
+const filteredNotificationEntries = computed(() => {
+  if (notificationActiveCategory.value === "unread") {
+    return inboxEntries.value.filter((entry) => !readIds.has(getEntryReadKey(entry)));
+  }
+  return inboxEntries.value.filter((entry) => entry.source === "review-request" || entry.categoryKey !== "system");
+});
+
+function reloadNotificationList() {
+  return loadInboxPage({
+    page: 1,
+    category: notificationActiveCategory.value,
+    search: notificationSearchQuery.value,
+    append: false,
+  });
+}
+
+function loadMoreNotifications() {
+  if (!inboxHasMore.value || inboxLoading.value) {
+    return;
+  }
+  return loadInboxPage({
+    page: inboxPage.value + 1,
+    category: notificationActiveCategory.value,
+    search: notificationSearchQuery.value,
+    append: true,
+  });
+}
+
+watch(notificationActiveCategory, () => {
+  if (currentPanel.value === "notifications") {
+    reloadNotificationList();
+  }
+});
+
+watch(notificationSearchQuery, () => {
+  if (currentPanel.value !== "notifications") {
+    return;
+  }
+  clearTimeout(notificationSearchTimer);
+  notificationSearchTimer = setTimeout(() => {
+    reloadNotificationList();
+  }, 300);
+});
+
+watch(currentPanel, (panel) => {
+  if (panel === "notifications") {
+    reloadNotificationList();
+  } else if (panel === "class-reviews") {
+    loadInboxPage({
+      page: 1,
+      category: classReviewActiveCategory.value,
+      scope: "class-reviews",
+      append: false,
+    });
+  }
+});
+
+watch(classReviewActiveCategory, () => {
+  if (currentPanel.value === "class-reviews") {
+    loadInboxPage({
+      page: 1,
+      category: classReviewActiveCategory.value,
+      scope: "class-reviews",
+      append: false,
+    });
+  }
+});
+
+function handleBodyScroll(event) {
+  const target = event.target;
+  if (!target || target !== menuBodyRef.value) {
+    return;
+  }
+  const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 48;
+  if (!nearBottom) {
+    return;
+  }
+  if (currentPanel.value === "notifications") {
+    loadMoreNotifications();
+  } else if (currentPanel.value === "class-reviews" && classReviewHasMore.value && !classReviewLoading.value) {
+    loadInboxPage({
+      page: classReviewPage.value + 1,
+      category: classReviewActiveCategory.value,
+      scope: "class-reviews",
+      append: true,
+    });
+  }
+  updateBodyFadeState();
+}
 
 const isSubPanelVisible = computed(() =>
   currentPanel.value === "achievements" || currentPanel.value === "notifications" || currentPanel.value === "class-reviews",
@@ -460,10 +565,6 @@ function formatClassReviewTime(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
-function handleBodyScroll() {
-  updateBodyFadeState();
 }
 
 function isItemActive(key) {

@@ -1,9 +1,5 @@
 import request from "./request";
 
-export function listProfileReviewRequests() {
-  return request.get("/api/profile-review-requests");
-}
-
 export function submitProfileReviewRequestApi(data) {
   return request.post("/api/profile-review-requests", data);
 }

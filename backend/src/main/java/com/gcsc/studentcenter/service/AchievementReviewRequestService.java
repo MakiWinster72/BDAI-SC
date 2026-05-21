@@ -47,6 +47,20 @@ public class AchievementReviewRequestService {
   }
 
   @Transactional(readOnly = true)
+  public AchievementReviewRequestResponse getVisibleRequest(String username, Long requestId) {
+    AppUser user = loadUser(username);
+    AchievementReviewRequest request = loadRequest(requestId);
+    if (!isVisibleToUser(user, username, request)) {
+      throw new IllegalArgumentException("无权查看该审核请求");
+    }
+    return toResponse(request, isRead(username, request.getId()));
+  }
+
+  /**
+   * @deprecated Use {@link com.gcsc.studentcenter.service.ReviewInboxService} instead.
+   */
+  @Deprecated
+  @Transactional(readOnly = true)
   public List<AchievementReviewRequestResponse> listVisibleRequests(String username) {
     AppUser user = loadUser(username);
     List<AchievementReviewRequest> requests = isReviewer(user)
@@ -56,34 +70,32 @@ public class AchievementReviewRequestService {
         username,
         NotificationReadStateService.RESOURCE_ACHIEVEMENT);
     return requests.stream()
-        .filter(r -> {
-          if ("pending".equals(r.getStatus())) {
-            // pending: requester can always see their own pending request
-            if (r.getRequester().getUsername().equals(username))
-              return true;
-            // pending: only reviewers (TEACHER/ADMIN/CADRE) can see, not regular students
-            if (!isReviewer(user))
-              return false;
-            // ADMIN can see all pending
-            if (user.getRole() == UserRole.ADMIN) {
-              return true;
-            }
-            // TEACHER can only see their assigned class students
-            if (user.getRole() == UserRole.TEACHER) {
-              return userService.isStudentInTeacherAssignedClass(user, r.getRequester());
-            }
-            // CADRE can only see their own class students
-            if (user.getRole() == UserRole.CADRE) {
-              return isStudentInCadreOwnClass(user, r.getRequester());
-            }
-            return true;
-          }
-          // processed: only requester or reviewer can see
-          return r.getRequester().getUsername().equals(username)
-              || (r.getReviewer() != null && r.getReviewer().getUsername().equals(username));
-        })
+        .filter(r -> isVisibleToUser(user, username, r))
         .map(request -> toResponse(request, readIds.contains(request.getId())))
         .toList();
+  }
+
+  private boolean isVisibleToUser(AppUser user, String username, AchievementReviewRequest request) {
+    if ("pending".equals(request.getStatus())) {
+      if (request.getRequester().getUsername().equals(username)) {
+        return true;
+      }
+      if (!isReviewer(user)) {
+        return false;
+      }
+      if (user.getRole() == UserRole.ADMIN) {
+        return true;
+      }
+      if (user.getRole() == UserRole.TEACHER) {
+        return userService.isStudentInTeacherAssignedClass(user, request.getRequester());
+      }
+      if (user.getRole() == UserRole.CADRE) {
+        return isStudentInCadreOwnClass(user, request.getRequester());
+      }
+      return true;
+    }
+    return request.getRequester().getUsername().equals(username)
+        || (request.getReviewer() != null && request.getReviewer().getUsername().equals(username));
   }
 
   private boolean isStudentInCadreOwnClass(AppUser cadre, AppUser student) {
