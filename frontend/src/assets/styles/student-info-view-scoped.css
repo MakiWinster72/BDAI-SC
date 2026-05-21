@@ -416,8 +416,8 @@
 
 @media (max-width: 768px) {
   .student-detail-capsule {
-    position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    position: absolute;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -431,7 +431,11 @@
     border-radius: 50px;
     border: 2px solid rgba(100, 12, 114, 0.15);
     box-shadow: 0 4px 20px rgba(100, 12, 114, 0.15);
-    z-index: 56;
+    z-index: 2;
+  }
+
+  .student-detail-view {
+    position: fixed;
   }
 
   .student-detail-capsule .capsule-action {

@@ -1285,19 +1285,23 @@
   }
 
   .student-detail-view {
-    bottom: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
     left: 16px;
     right: 16px;
     width: auto;
-    max-height: 84vh;
-    border-radius: 22px 22px 0 0;
-    transform: translateY(100%);
-    padding: max(0px, env(safe-area-inset-top, 0px)) 0 max(16px, env(safe-area-inset-bottom));
+    max-height: min(92dvh, calc(100dvh - 32px));
+    border-radius: 22px;
+    transform: translateY(calc(100% + 24px));
+    padding: 0;
+    overflow: hidden;
+    isolation: isolate;
   }
 
   .student-detail-body {
-    padding-left: 18px;
-    padding-right: 18px;
+    flex: 1;
+    min-height: 0;
+    padding: 12px 18px 0;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 
   .student-detail-view.open {
@@ -1305,15 +1309,15 @@
   }
 
   .student-detail-view.closing {
-    transform: translateY(100%);
+    transform: translateY(calc(100% + 24px));
   }
 
   .student-detail-view.split {
     left: 16px;
     right: 16px;
     width: auto;
-    max-height: 84vh;
-    transform: translateY(100%);
+    max-height: min(92dvh, calc(100dvh - 32px));
+    transform: translateY(calc(100% + 24px));
   }
 
   .student-detail-view.split.open {
@@ -1321,20 +1325,44 @@
   }
 
   .student-detail-view.split.closing {
-    transform: translateY(100%);
+    transform: translateY(calc(100% + 24px));
   }
 
   .student-achievements-view {
-    bottom: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
     left: 16px;
     right: 16px;
     width: auto;
-    height: auto;
-    max-height: 84vh;
-    border-radius: 22px 22px 0 0;
-    transform: translateY(100%);
+    height: min(92dvh, calc(100dvh - 32px));
+    max-height: min(92dvh, calc(100dvh - 32px));
+    border-radius: 22px;
+    transform: translateY(calc(100% + 24px));
     z-index: 70;
-    padding: max(0px, env(safe-area-inset-top, 0px)) 0 max(16px, env(safe-area-inset-bottom));
+    padding: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .student-achievements-view > :not(.student-detail-handle):not(.student-detail-header) {
+    padding-left: 0;
+    padding-right: 0;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .student-achievements-body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .student-achievements-frame {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    border-radius: 0;
   }
 
   .student-achievements-view.open {
@@ -1342,7 +1370,7 @@
   }
 
   .student-achievements-view.closing {
-    transform: translateY(100%);
+    transform: translateY(calc(100% + 24px));
   }
 
   .floating-btn-export {
