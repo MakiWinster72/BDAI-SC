@@ -34,6 +34,9 @@
   flex-direction: column;
   gap: 20px;
   padding: 0 0 4rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* ── Header ────────────────────────────────────────────── */
@@ -49,20 +52,33 @@
   letter-spacing: -0.3px;
 }
 
-/* ── Tab Bar ───────────────────────────────────────────── */
-.admin-tabs {
+/* ── Tab Bar（限定在 .admin-shell 内，避免与 cards.css 通知面板 .admin-tabs 冲突） */
+.admin-shell .admin-tabs {
   display: flex;
+  flex-wrap: nowrap;
   gap: 4px;
   padding: 5px;
   margin: 0 20px;
   border-radius: 18px;
   background: rgba(100, 12, 114, 0.05);
   border: 1px solid var(--line);
+  box-sizing: border-box;
   width: fit-content;
+  max-width: calc(100% - 40px);
+  align-self: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-.admin-tab {
+.admin-shell .admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-shell .admin-tab {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 7px;
   padding: 9px 20px;
@@ -88,44 +104,35 @@
   transition: opacity 200ms ease;
 }
 
-.admin-tab:hover:not(.active) {
+.admin-shell .admin-tab:hover:not(.active) {
   background: rgba(100, 12, 114, 0.08);
   color: var(--primary);
 }
 
-.admin-tab:hover:not(.active) .tab-icon {
+.admin-shell .admin-tab:hover:not(.active) .tab-icon {
   opacity: 1;
 }
 
-.admin-tab.active {
+.admin-shell .admin-tab.active {
   background: rgba(255, 255, 255, 0.92);
   color: var(--primary-dark);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(100, 12, 114, 0.1);
 }
 
-.admin-tab.active .tab-icon {
+.admin-shell .admin-tab.active .tab-icon {
   opacity: 1;
   color: var(--primary);
 }
 
-.admin-tab:active {
+.admin-shell .admin-tab:active {
   transform: scale(0.97);
 }
 
-@media (max-width: 600px) {
-  .admin-tabs {
-    width: calc(100% - 40px);
-    margin: 0 20px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .admin-tabs::-webkit-scrollbar { display: none; }
-  .admin-tab {
-    flex: 1;
-    justify-content: center;
-    padding: 9px 14px;
-    font-size: 13px;
+/* 与 layout.css 中 .mobile-capsule 的 840px 断点一致：窄屏只保留底部胶囊 */
+@media (max-width: 840px) {
+  .admin-shell .admin-tabs {
+    display: none;
   }
 }
 
@@ -1949,9 +1956,6 @@
   }
   .admin-content {
     padding: 0 14px;
-  }
-  .admin-tabs {
-    display: none;
   }
   .card-header {
     padding: 16px 16px 0;
