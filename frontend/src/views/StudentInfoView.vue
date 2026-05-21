@@ -115,6 +115,7 @@
     />
 
     <StudentDetailDrawer
+      v-if="viewOpen || viewClosing"
       ref="detailDrawerRef"
       :open="viewOpen"
       :closing="viewClosing"

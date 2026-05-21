@@ -770,24 +770,28 @@
   padding: 0 0 16px;
 }
 
-.student-detail-view > :not(.student-detail-handle):not(.student-detail-header) {
-  padding-left: 14px;
-  padding-right: 14px;
+.student-detail-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px 0;
+  pointer-events: auto;
 }
 
-.student-detail-view > :last-child {
-  padding-bottom: 16px;
+.student-detail-body .info-shell.student-profile-editor {
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 .student-detail-view .empty-tip {
-  padding: 32px 14px;
+  padding: 32px 0;
 }
 
-.student-detail-view > .student-detail-header + * {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  padding-top: 12px;
+.student-detail-view > .student-detail-capsule {
+  flex-shrink: 0;
 }
 
 .student-detail-view.split {
@@ -1291,7 +1295,7 @@
     padding: max(0px, env(safe-area-inset-top, 0px)) 0 max(16px, env(safe-area-inset-bottom));
   }
 
-  .student-detail-view > :not(.student-detail-handle):not(.student-detail-header) {
+  .student-detail-body {
     padding-left: 18px;
     padding-right: 18px;
   }
