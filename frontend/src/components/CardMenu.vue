@@ -101,7 +101,14 @@
           v-else-if="currentPanel === 'notifications'"
           key="notifications-panel"
           class="menu-panel menu-notification-list"
+          :class="{ 'is-busy': inboxLoading && filteredNotificationEntries.length > 0 }"
         >
+          <div
+            v-if="inboxLoading && filteredNotificationEntries.length > 0"
+            class="menu-notification-list-busy"
+          >
+            <LoadingIndicator label="更新中…" size="sm" />
+          </div>
           <div class="menu-notification-search">
             <svg class="menu-notification-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -141,7 +148,7 @@
             <p class="menu-notification-content">{{ entry.content }}</p>
           </button>
           <div v-if="inboxLoading && !filteredNotificationEntries.length" class="menu-notification-empty">
-            加载中…
+            <LoadingIndicator label="加载通知中…" size="md" block />
           </div>
           <div v-else-if="!filteredNotificationEntries.length" class="menu-notification-empty">
             {{ notificationSearchQuery.trim() ? '无匹配通知' : '暂无通知' }}
@@ -153,7 +160,12 @@
             :disabled="inboxLoading"
             @click="loadMoreNotifications"
           >
-            {{ inboxLoading ? '加载中…' : '加载更多' }}
+            <LoadingIndicator
+              v-if="inboxLoading"
+              label="加载中…"
+              size="sm"
+            />
+            <span v-else>加载更多</span>
           </button>
         </div>
 
@@ -162,7 +174,14 @@
           v-else-if="currentPanel === 'class-reviews'"
           key="class-reviews-panel"
           class="menu-panel menu-notification-list"
+          :class="{ 'is-busy': classReviewLoading && filteredClassReviewEntries.length > 0 }"
         >
+          <div
+            v-if="classReviewLoading && filteredClassReviewEntries.length > 0"
+            class="menu-notification-list-busy"
+          >
+            <LoadingIndicator label="更新中…" size="sm" />
+          </div>
           <button
             v-for="item in filteredClassReviewEntries"
             :key="item.id + '-' + item.resourceType"
@@ -182,7 +201,7 @@
             <p class="menu-notification-content">{{ item.content }}</p>
           </button>
           <div v-if="classReviewLoading && !filteredClassReviewEntries.length" class="menu-notification-empty">
-            加载中…
+            <LoadingIndicator label="加载审核中…" size="md" block />
           </div>
           <div v-else-if="!filteredClassReviewEntries.length" class="menu-notification-empty">
             暂无{{ classReviewCategories.find(c => c.key === classReviewActiveCategory)?.label || '' }}申请
@@ -214,6 +233,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onUpdated, ref, toRefs, watch } from "vue";
 import { filterMenuItemsByRole, isMenuEnabled } from "@/constants/menu";
+import LoadingIndicator from "@/components/LoadingIndicator.vue";
 import {
   useNotifications,
   formatNotificationEntryNumber,

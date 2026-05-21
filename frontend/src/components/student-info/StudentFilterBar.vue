@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from "vue";
+import LoadingIndicator from "@/components/LoadingIndicator.vue";
 
 const props = defineProps({
   filters: {
@@ -236,7 +237,12 @@ const specialStudentType = createFilterModel("specialStudentType");
       >
         {{ sheet.label }}
       </button>
-      <span v-if="gridLoading" class="student-grid-status">加载中...</span>
+      <LoadingIndicator
+        v-if="gridLoading"
+        class="student-grid-status"
+        label="加载表格中…"
+        size="sm"
+      />
       <span v-else class="student-grid-status">共 {{ gridRowCount }} 条</span>
     </div>
   </section>

@@ -1,4 +1,5 @@
 <script setup>
+import LoadingIndicator from "@/components/LoadingIndicator.vue";
 import { computed } from "vue";
 import PaginationBar from "@/components/PaginationBar.vue";
 import ProtectedMediaImage from "@/components/ProtectedMediaImage.vue";
@@ -99,7 +100,7 @@ const selectedIdsModel = computed({
   </div>
 
   <div v-if="loading" class="empty-tip student-results-loading">
-    加载学生信息中...
+    <LoadingIndicator label="加载学生信息中…" size="lg" block />
   </div>
   <div v-else-if="students.length" class="student-list">
     <div

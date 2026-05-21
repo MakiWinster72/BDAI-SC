@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AchievementReviewSnapshotCard from "@/components/AchievementReviewSnapshotCard.vue";
+import LoadingIndicator from "@/components/LoadingIndicator.vue";
 import ProtectedMediaImage from "@/components/ProtectedMediaImage.vue";
 import StudentProfileEditor from "@/components/StudentProfileEditor.vue";
 import { API_BASE } from "@/api/request";
@@ -431,8 +432,14 @@ async function handleRemoveSupportingDoc(index) {
     </div>
 
     <!-- Detail Panel -->
-    <section v-else class="notif-detail">
-      <div v-if="isSelectedDetailLoading" class="notif-detail-loading">加载详情中…</div>
+    <section
+      v-else
+      class="notif-detail"
+      :class="{ 'is-loading': isSelectedDetailLoading }"
+    >
+      <div v-if="isSelectedDetailLoading" class="loading-overlay">
+        <LoadingIndicator label="加载详情中…" size="md" block />
+      </div>
       <Transition name="detail-fade" mode="out-in">
         <div :key="getEntryReadKey(selectedEntry)" class="notif-detail-inner">
 
@@ -726,7 +733,9 @@ async function handleRemoveSupportingDoc(index) {
             <div class="sheet-modal-title">学生详情</div>
             <button class="sheet-modal-close" type="button" @click="closeStudentDetail">关闭</button>
           </header>
-          <div v-if="studentDetailLoading" class="sheet-modal-loading">加载中...</div>
+          <div v-if="studentDetailLoading" class="sheet-modal-loading">
+            <LoadingIndicator label="加载学生信息中…" size="lg" block />
+          </div>
           <StudentProfileEditor
             v-else-if="studentDetailItem"
             :student="studentDetailItem"

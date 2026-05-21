@@ -1,5 +1,8 @@
 <script setup>
-defineProps({
+import { ref, watch } from "vue";
+import LoadingIndicator from "@/components/LoadingIndicator.vue";
+
+const props = defineProps({
   open: { type: Boolean, default: false },
   closing: { type: Boolean, default: false },
   achievementUrl: { type: String, required: true },
@@ -7,6 +10,20 @@ defineProps({
 });
 
 const emit = defineEmits(["close"]);
+
+const iframeLoading = ref(false);
+
+watch(
+  () => [props.open, props.achievementUrl, props.hasStudent],
+  ([open, url, hasStudent]) => {
+    iframeLoading.value = Boolean(open && hasStudent && url);
+  },
+  { immediate: true },
+);
+
+function handleIframeLoad() {
+  iframeLoading.value = false;
+}
 </script>
 
 <template>
@@ -25,12 +42,19 @@ const emit = defineEmits(["close"]);
       </button>
     </header>
     <div v-if="hasStudent" class="student-achievements-body">
+      <div v-if="iframeLoading" class="student-achievements-loading">
+        <LoadingIndicator label="加载个人成就中…" size="lg" block />
+      </div>
       <iframe
         class="student-achievements-frame"
         :key="achievementUrl"
         :src="achievementUrl"
         title="学生个人成就"
+        @load="handleIframeLoad"
       />
+    </div>
+    <div v-else class="empty-tip">
+      <LoadingIndicator v-if="open" label="准备加载…" size="md" block />
     </div>
   </section>
 </template>

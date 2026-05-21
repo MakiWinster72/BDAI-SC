@@ -1,0 +1,111 @@
+/* ── Shared loading indicator ─────────────────────────── */
+
+.loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-sub);
+}
+
+.loading-indicator.is-block {
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 120px;
+}
+
+.loading-indicator-spinner {
+  animation: spin 0.9s linear infinite;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.loading-indicator.is-sm .loading-indicator-spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.loading-indicator.is-md .loading-indicator-spinner {
+  width: 22px;
+  height: 22px;
+}
+
+.loading-indicator.is-lg .loading-indicator-spinner {
+  width: 28px;
+  height: 28px;
+}
+
+.loading-indicator-label {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.loading-indicator.is-sm .loading-indicator-label {
+  font-size: 12px;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.loading-overlay.is-sheet {
+  border-radius: 24px 24px 0 0;
+}
+
+.menu-notification-list.is-busy {
+  position: relative;
+}
+
+.menu-notification-list.is-busy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
+
+.menu-notification-list-busy {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.menu-notification-load-more .loading-indicator {
+  justify-content: center;
+}
+
+.student-achievements-body {
+  position: relative;
+}
+
+.student-achievements-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.notif-detail.is-loading .notif-detail-inner {
+  opacity: 0.42;
+  pointer-events: none;
+  filter: blur(1px);
+}

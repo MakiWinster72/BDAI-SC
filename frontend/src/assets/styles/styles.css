@@ -92,7 +92,13 @@
  */
 @import './utils.css';
 
-/* ── 13. Info Pages Styles ─────────────────────────────────────────────────── */
+/* ── 13. Loading Styles ─────────────────────────────────────────────────────── */
+/**
+ * loading.css - 通用加载指示器与遮罩
+ */
+@import './loading.css';
+
+/* ── 14. Info Pages Styles ─────────────────────────────────────────────────── */
 /**
  * info-pages.css - 信息页面样式 (设置页/个人信息页)
  * 包含: Info Shell 信息页面容器、Settings Card 设置项卡片、Settings Actions 设置操作按钮、Info Hero 信息页头部区域、Avatar Square 方形头像上传区、Info Form Grid 信息表单网格布局、Education Record/Cadre Record 教育/干部经历记录、Education Period/Cadres 时间段、Education Controls 教育记录控制按钮、Info Choice 单选/多选选项、Info Actions 信息页操作按钮

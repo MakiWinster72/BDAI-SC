@@ -1,5 +1,6 @@
 <script setup>
 import { nextTick, onMounted, ref, watch } from "vue";
+import LoadingIndicator from "@/components/LoadingIndicator.vue";
 import StudentProfileEditor from "@/components/StudentProfileEditor.vue";
 
 const props = defineProps({
@@ -97,7 +98,7 @@ defineExpose({ triggerSave, triggerPdfExport, cancelEdit, profileEditorRef });
     </header>
 
     <div class="student-detail-body">
-      <div v-if="loading" class="empty-tip">加载中...</div>
+      <LoadingIndicator v-if="loading" label="加载学生详情中…" size="lg" block />
       <StudentProfileEditor
         v-else-if="student"
         ref="profileEditorRef"
