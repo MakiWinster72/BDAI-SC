@@ -2,9 +2,9 @@
  * useAchievementUpload - 成就上传配置 composable
  *
  * 管理上传限制配置、文件输入引用、文件类型/大小校验。
- * 事件监听在 onMounted/onBeforeUnmount 中注册/注销。
+ * 全局事件 achievement-upload-settings-updated 由使用方在 setup 中注册（如 AchievementsView）。
  */
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { ATTACHMENT_TYPE_META } from "@/constants/achievementConstants";
 import { resolveMediaTypeByExtension } from "@/utils/media";
 
@@ -63,20 +63,6 @@ function setUploadLimits({
   if (attachmentArchiveExts) {
     uploadLimitConfig.attachmentArchiveExts = splitExtText(attachmentArchiveExts);
   }
-}
-
-function handleUploadSettingsUpdated(event) {
-  const next = event.detail || {};
-  setUploadLimits({
-    imageMaxCount: next.imageMaxCount,
-    mediaMaxMB: next.imageMaxSizeMb,
-    attachmentMaxCount: next.attachmentMaxCount,
-    attachmentMaxMB: next.attachmentMaxSizeMb,
-    attachmentDocumentExts: next.attachmentDocumentExts,
-    attachmentVideoExts: next.attachmentVideoExts,
-    attachmentImageExts: next.attachmentImageExts,
-    attachmentArchiveExts: next.attachmentArchiveExts,
-  });
 }
 
 function attachmentExtsByType(typeKey) {
@@ -138,16 +124,6 @@ const enabledAttachmentTypes = computed(() =>
     exts: attachmentExtsByType(type.key),
   })).filter((item) => item.exts.length),
 );
-
-// ── lifecycle ─────────────────────────────────────────
-
-onMounted(() => {
-  window.addEventListener("achievement-upload-settings-updated", handleUploadSettingsUpdated);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("achievement-upload-settings-updated", handleUploadSettingsUpdated);
-});
 
 export function useAchievementUpload() {
   return {

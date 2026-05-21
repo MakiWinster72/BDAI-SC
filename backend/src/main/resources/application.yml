@@ -30,13 +30,13 @@ app:
   backend-url: "${BDAI_SC_BACKEND_URL:http://localhost:8080}"
   upload-dir: "${BDAI_SC_UPLOAD_DIR:./uploads}"
   log-dir: "${BDAI_SC_LOG_DIR:../logs}"
-
-logging:
-  config: classpath:logback-spring.xml
   init-admin:
     username: "${BDAI_SC_INIT_ADMIN_USERNAME:bdai}"
     password: "${BDAI_SC_INIT_ADMIN_PASSWORD:bdai2026}"
     display-name: "${BDAI_SC_INIT_ADMIN_DISPLAY_NAME:管理员}"
+
+logging:
+  config: classpath:logback-spring.xml
 
 security:
   cors:
