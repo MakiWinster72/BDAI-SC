@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-const backendPort = import.meta.env.VITE_BACKEND_PORT || '8080'
 const apiBaseFromEnv = import.meta.env.VITE_API_BASE?.trim()
-const API_BASE = apiBaseFromEnv || (import.meta.env.DEV ? '' : `http://${window.location.hostname}:${backendPort}`)
+// 默认走当前站点同源 /api（dev 经 Vite 反代，生产经 Nginx），才能带上真实客户端 IP
+const API_BASE = apiBaseFromEnv || ''
 
 const request = axios.create({
   baseURL: API_BASE,
