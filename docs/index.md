@@ -65,6 +65,7 @@ features:
   83 commits  █████████████████████████████                                     04-25 W4
   65 commits  █████████████████████████                                        04-29 W5
   39 commits  ████████████                                                     05-01 W1
+  66 commits  ████████████████████████                                         05-22 W4
 ```
 
 ### 2026-03-06
@@ -843,3 +844,103 @@ features:
 
 - docs: update myinfos
 - docs: 设计规范
+
+### 2026-05-08
+
+- docs: deploy in windows
+
+### 2026-05-11
+
+- feat: 添加了docker compose support,希望那电脑能用把
+- docs: 无语了要用古老服务器，就选windows了
+
+### 2026-05-12
+
+- fix: 在性能较差的设备上，若关闭了动效（windows），会造成achievementview强制弹出
+
+### 2026-05-15
+
+- feat: 导出文件增加三下乡
+- feat: 添加个人成果：暑期"三下乡"社会实践活动
+- style: 移动端侧边栏移出时添加动画
+- feat: 审核页面的附件使用blob预览
+- fix: 修复 android edge的card-menu无法滚动的问题
+- feat: 已读未读用数据库标记
+- fix: 保留原生日历选择件
+- style: 为添加用户的示例图片添加背景
+- fix: 导出pdf时仅会使用已通过审核的头像，而不是前端临时的未审核头像
+- fix: 将static修正为image, 示例图片使用本地图片
+- fix: 驳回理由草稿
+- fix: achievement-sheet open 修复上下圆角
+- fix: 修复移动端弹窗过高的问题
+- fix: 弹窗距离屏幕边缘应当有合适的距离
+- style: 让弹窗左右保持合适间距
+- fix: 导出文件重命名
+- fix: 刷新按钮动画仅在悬停设备上使用
+- fix: 收紧上传文件访问权限
+- feat: 新增 GET /api/auth/captcha：后端生成验证码图片和 captchaId
+- feat: 前端验证码
+- docs: test data
+
+### 2026-05-16
+
+- fix: 修复管理按钮被裁剪问题
+
+### 2026-05-17
+
+- fix: card-menu在桌面段无法滚动的bug
+- fix: try fix file path for this fking old windows
+- merge branch 'main' into dev
+- feat: 导出页面增加手势退出
+- style: 选择悬浮按钮和导出悬浮按钮靠右
+- feat: 移动端筛选添加重置按钮
+- style: 重排布studentinfos的capsule
+- style: 优化筛选弹窗为屏幕高度80%
+
+### 2026-05-18
+
+- feat: 完善 quickstart
+- style: 弹窗退出动画
+
+### 2026-05-19
+
+- chore: 拆分myinfosView
+- fix: gpt5.5还是太权威了，没了27$, 让他整理了一些漏洞
+- chore: 拆分adminview
+- fix: 统一班级审核入口
+- rm: 删除未引用的js
+- chore: 删除myinfosview中的一些重复实现
+- chore: 新增统一管理表单选项，移除重复配置
+- fix: 现在学生不能通过id读取无关学生档案了
+- fix: 统一后端授权模型
+- fix: 审核流程避免通过api直写
+- fix: 修复学生档案权限增加操作者参数和权限判断
+- fix: 修复删除匿名上传接口，头像无法再匿名访问
+- style: 我居然忘记改注册页的样式了
+- style: 图形验证码改为验证码
+- style: 修改了站点名字，以及facivon修正了长宽比
+
+### 2026-05-20
+
+- chore: 让伟大的gpt拆了一下巨型文件
+- chore: 拆分studentInfoView并迁移组件到子目录
+
+### 2026-05-21
+
+- fix: studentinfo筛选和选择按钮位置
+- feat: 添加加载动画
+- fix: 修复移动端student-info底部无圆角的问题
+- fix: 把头像改成 ProtectedMediaImage：内部用 fetch + token 拉取，再显示为 blob: URL
+- feat: 审核收件箱分页+懒加载，废除旧的全量列表接口
+- feat: 通知详情显示通知编号，然后可搜索编号和正文内容
+- fix: 学生信息无法预览
+- feat: 登录提示使用icon
+- fix: firefox 联动滚动warning
+- fix: onMounted warn
+- feat: 添加存储日志
+- fix: admin-tab style
+
+### 2026-05-22
+
+- feat: 表格视图设置分页，选择学生人数较多时给出警告
+- feat: 审计日志记录更多事务，如登录失败，创建用户
