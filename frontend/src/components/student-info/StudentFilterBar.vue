@@ -51,7 +51,11 @@ const props = defineProps({
     type: String,
     default: "main",
   },
-  gridRowCount: {
+  gridTotalItems: {
+    type: Number,
+    default: 0,
+  },
+  gridPageCount: {
     type: Number,
     default: 0,
   },
@@ -243,7 +247,9 @@ const specialStudentType = createFilterModel("specialStudentType");
         label="加载表格中…"
         size="sm"
       />
-      <span v-else class="student-grid-status">共 {{ gridRowCount }} 条</span>
+      <span v-else class="student-grid-status">
+        共 {{ gridTotalItems }} 条<span v-if="gridPageCount < gridTotalItems">，本页 {{ gridPageCount }} 条</span>
+      </span>
     </div>
   </section>
 </template>

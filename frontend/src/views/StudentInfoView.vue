@@ -41,7 +41,8 @@
         :grid-loading="gridLoading"
         :grid-sheets="gridSheets"
         :grid-active-sheet="gridActiveSheet"
-        :grid-row-count="gridActiveSheetData.rowData.length"
+        :grid-total-items="totalItems"
+        :grid-page-count="gridActiveSheetData.rowData.length"
         @update-filter="updateStudentFilter"
         @reset-filters="resetFilters"
         @toggle-hmt="toggleHmt"
@@ -50,16 +51,27 @@
       />
 
       <section class="card student-results-card">
-        <StudentGridPanel
-          v-if="gridViewOpen"
-          ref="gridPanelRef"
-          :row-data="gridActiveSheetData.rowData"
-          :column-defs="gridActiveSheetData.colDefs"
-          :default-col-def="gridDefaultColDef"
-          :locale-text="gridLocaleTextMap"
-          :locale-text-func="gridLocaleTextFunc"
-          :fullscreen="gridFullscreen"
-        />
+        <template v-if="gridViewOpen">
+          <StudentGridPanel
+            ref="gridPanelRef"
+            :row-data="gridActiveSheetData.rowData"
+            :column-defs="gridActiveSheetData.colDefs"
+            :default-col-def="gridDefaultColDef"
+            :locale-text="gridLocaleTextMap"
+            :locale-text-func="gridLocaleTextFunc"
+            :fullscreen="gridFullscreen"
+          />
+          <PaginationBar
+            v-if="!gridFullscreen"
+            :current-page="currentPage"
+            :page-size="pageSize"
+            :total-pages="totalPages"
+            :page-size-options="pageSizeOptions"
+            mode="full"
+            @update:current-page="setPage"
+            @update:page-size="pageSize = $event"
+          />
+        </template>
         <StudentListPanel
           v-else
           v-model:selected-ids="selectedIds"
@@ -151,16 +163,10 @@
       :open="exportDialogOpen"
       preview-title="导出预览(仅显示前三人)"
       empty-message="没有获取到学生详情，请稍后再试。"
+      :export-count="selectedIds.length"
       :load-rows="loadExportRows"
       @close="closeExportDialog"
       @export-success="handleStudentExportSuccess"
-    />
-
-    <StudentGridViewConfirmSheet
-      :open="gridViewConfirmOpen"
-      :total-items="totalItems"
-      @close="closeGridViewConfirm"
-      @confirm="confirmGridView"
     />
   </main>
 </template>
@@ -177,7 +183,8 @@ import StudentAchievementsPanel from "@/components/student-info/StudentAchieveme
 import StudentDetailDrawer from "@/components/student-info/StudentDetailDrawer.vue";
 import StudentFloatingExportActions from "@/components/student-info/StudentFloatingExportActions.vue";
 import StudentGridFieldDialog from "@/components/student-info/StudentGridFieldDialog.vue";
-import StudentGridViewConfirmSheet from "@/components/student-info/StudentGridViewConfirmSheet.vue";
+import PaginationBar from "@/components/PaginationBar.vue";
+import { STUDENT_BATCH_HEAVY_THRESHOLD } from "@/constants/studentInfo";
 import StudentInfoCapsuleToolbar from "@/components/student-info/StudentInfoCapsuleToolbar.vue";
 import StudentMobileFilterSheet from "@/components/student-info/StudentMobileFilterSheet.vue";
 import { recordAuditEvent } from "@/api/auditLog";
@@ -212,7 +219,7 @@ import { loadUser } from "@/utils/userStorage";
 
 const route = useRoute();
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
-const { success: toastSuccess } = useToast();
+const { success: toastSuccess, info: toastInfo } = useToast();
 
 const profile = reactive(loadUser());
 const selectedIds = ref([]);
@@ -238,7 +245,6 @@ const gridFieldDialogOpen = ref(false);
 const gridFieldDialogClosing = ref(false);
 const gridActiveSheet = ref("main");
 const gridFullscreen = ref(false);
-const gridViewConfirmOpen = ref(false);
 const gridPanelRef = ref(null);
 const gridHasFullDetail = ref(false);
 let gridRequestId = 0;
@@ -368,14 +374,21 @@ watch(
 );
 
 watch(currentPage, () => {
-  if (!gridViewOpen.value) {
-    fetchStudents();
+  if (gridViewOpen.value) {
+    fetchGridStudents();
+    return;
   }
+  fetchStudents();
 });
 
 watch(pageSize, () => {
   pageInput.value = null;
   if (gridViewOpen.value) {
+    if (currentPage.value === 1) {
+      fetchGridStudents();
+    } else {
+      currentPage.value = 1;
+    }
     return;
   }
   if (currentPage.value === 1) {
@@ -411,22 +424,15 @@ async function fetchGridStudents() {
   gridLoading.value = true;
   const requestId = ++gridRequestId;
   try {
-    const size = 200;
-    const { data } = await searchStudentProfiles(buildSearchParams(1, size));
+    const { data } = await searchStudentProfiles(
+      buildSearchParams(currentPage.value, pageSize.value),
+    );
     if (requestId !== gridRequestId) {
       return;
     }
     const items = [...(data?.items || [])];
-    const pages = data?.totalPages || 1;
-    for (let page = 2; page <= pages; page += 1) {
-      const { data: pageData } = await searchStudentProfiles(
-        buildSearchParams(page, size),
-      );
-      if (requestId !== gridRequestId) {
-        return;
-      }
-      items.push(...(pageData?.items || []));
-    }
+    totalPages.value = Math.max(1, data?.totalPages || 1);
+    totalItems.value = data?.total || 0;
     gridDetailRows.value = items;
     gridHasFullDetail.value = false;
     gridAchievementData.value = [];
@@ -464,24 +470,12 @@ async function fetchGridDetails(items, requestId) {
 }
 
 function toggleGridView() {
-  if (!gridViewOpen.value && totalItems.value > 100) {
-    gridViewConfirmOpen.value = true;
-    return;
-  }
   gridViewOpen.value = !gridViewOpen.value;
   if (gridViewOpen.value) {
     fetchGridStudents();
+  } else {
+    fetchStudents();
   }
-}
-
-function confirmGridView() {
-  gridViewConfirmOpen.value = false;
-  gridViewOpen.value = true;
-  fetchGridStudents();
-}
-
-function closeGridViewConfirm() {
-  gridViewConfirmOpen.value = false;
 }
 
 function toggleGridFullscreen() {
@@ -688,9 +682,12 @@ async function selectAllFiltered() {
   if (selectAllLoading.value) {
     return;
   }
+  const total = totalItems.value || 0;
+  if (total > STUDENT_BATCH_HEAVY_THRESHOLD) {
+    toastInfo(`已选 ${total} 人，全选需要一点时间，请稍候`);
+  }
   selectAllLoading.value = true;
   try {
-    const total = totalItems.value || 0;
     if (!total) {
       selectedIds.value = [];
       return;

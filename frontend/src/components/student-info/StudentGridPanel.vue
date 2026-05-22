@@ -52,8 +52,7 @@ defineExpose({
       :locale-text="localeText"
       :locale-text-func="localeTextFunc"
       :animate-rows="true"
-      :pagination="true"
-      :pagination-page-size="100"
+      :pagination="false"
       :suppress-cell-focus="true"
     />
   </div>

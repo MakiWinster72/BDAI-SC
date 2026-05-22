@@ -9,6 +9,7 @@ import {
   fetchAchievementsForStudents,
   getSelectedExportKeys,
 } from "@/utils/studentProfileExport";
+import { STUDENT_BATCH_HEAVY_THRESHOLD } from "@/constants/studentInfo";
 
 const props = defineProps({
   open: {
@@ -43,6 +44,10 @@ const props = defineProps({
     type: Function,
     required: true,
   },
+  exportCount: {
+    type: Number,
+    default: 0,
+  },
   onExportSuccess: {
     type: Function,
     default: null,
@@ -76,6 +81,16 @@ const previewTouchCurrentY = ref(0);
 const previewIsDragging = ref(false);
 const previewDragTranslateY = ref(0);
 const PREVIEW_DRAG_THRESHOLD = 80;
+
+const confirmExportLabel = computed(() => {
+  if (!exporting.value) {
+    return `确认导出${exportFormat.value === "pdf" ? " PDF" : ""}`;
+  }
+  if (props.exportCount > STUDENT_BATCH_HEAVY_THRESHOLD) {
+    return "人数较多，导出中…";
+  }
+  return "导出中…";
+});
 
 const showPdfOption = computed(
   () => props.enablePdf && typeof props.exportPdf === "function",
@@ -490,7 +505,7 @@ async function handleConfirm() {
         @click="handleConfirm"
       >
         <span v-if="exporting" class="spinner spinner-sm" aria-hidden="true"></span>
-        {{ exporting ? "导出中..." : `确认导出${exportFormat === 'pdf' ? ' PDF' : ''}` }}
+        {{ confirmExportLabel }}
       </button>
     </footer>
   </section>
