@@ -24,16 +24,8 @@ spring:
 server:
   address: "${BDAI_SC_BACKEND_HOST:0.0.0.0}"
   port: ${BDAI_SC_BACKEND_PORT:8080}
-  # 与 tomcat.remoteip 配合；勿与 framework 双开，避免转发头被处理两次
-  forward-headers-strategy: native
-  tomcat:
-    remoteip:
-      remote-ip-header: x-forwarded-for
-      protocol-header: x-forwarded-proto
-      # 仅信任本机反代（Vite / 同机 Nginx）。勿把 172.16–172.31 / 10.x 等写进来——MotionPro 等 VPN 客户端常为 172.x，会被误判为「代理」从而记成 127.0.0.1
-      internal-proxies: "127\\.0\\.0\\.1|::1|0:0:0:0:0:0:0:1|::ffff:127\\.0\\.0\\.1"
-      # Docker 等远端 Nginx（可选，见 .env.example）
-      trusted-proxies: "${BDAI_SC_TRUSTED_PROXIES:}"
+  # 由 ClientIpResolver 读取 X-Real-IP / X-Forwarded-For，避免 Tomcat RemoteIp 误把 172.x VPN 当代理
+  forward-headers-strategy: none
 
 app:
   site-url: "${BDAI_SC_SITE_URL:http://localhost:5173}"

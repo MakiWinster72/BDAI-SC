@@ -11,6 +11,7 @@ import com.gcsc.studentcenter.service.AuthService;
 import com.gcsc.studentcenter.service.CaptchaService;
 import com.gcsc.studentcenter.service.LoginHistoryService;
 import com.gcsc.studentcenter.service.SystemSettingsService;
+import com.gcsc.studentcenter.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -34,13 +35,15 @@ public class AuthController {
   private final CaptchaService captchaService;
   private final LoginHistoryService loginHistoryService;
   private final SystemSettingsService systemSettingsService;
+  private final ClientIpResolver clientIpResolver;
 
   public AuthController(AuthService authService, CaptchaService captchaService, LoginHistoryService loginHistoryService,
-      SystemSettingsService systemSettingsService) {
+      SystemSettingsService systemSettingsService, ClientIpResolver clientIpResolver) {
     this.authService = authService;
     this.captchaService = captchaService;
     this.loginHistoryService = loginHistoryService;
     this.systemSettingsService = systemSettingsService;
+    this.clientIpResolver = clientIpResolver;
   }
 
   @PostMapping("/register")
@@ -62,6 +65,20 @@ public class AuthController {
   public ResponseEntity<Map<String, Object>> publicConfig() {
     return ResponseEntity.ok(Map.of(
         "allowRegistration", systemSettingsService.isRegistrationAllowed()));
+  }
+
+  /** 排查 IP 记录：看后端实际收到的地址与转发头（无需登录） */
+  @GetMapping("/ip-probe")
+  public ResponseEntity<Map<String, String>> ipProbe(HttpServletRequest request) {
+    return ResponseEntity.ok(Map.of(
+        "resolved", nullToEmpty(clientIpResolver.resolve(request)),
+        "remoteAddr", nullToEmpty(request.getRemoteAddr()),
+        "xForwardedFor", nullToEmpty(request.getHeader("X-Forwarded-For")),
+        "xRealIp", nullToEmpty(request.getHeader("X-Real-IP"))));
+  }
+
+  private static String nullToEmpty(String value) {
+    return value == null ? "" : value;
   }
 
   @PostMapping("/login")
