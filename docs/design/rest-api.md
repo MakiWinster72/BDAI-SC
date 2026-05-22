@@ -69,7 +69,7 @@ private boolean isAdmin(String authHeader) {
 |---------|---------|------|------|
 | `/api/auth/register` | POST | `permitAll` | 用户自助注册（受系统设置门控） |
 | `/api/auth/login` | POST | `permitAll` | 基于凭据的身份认证 |
-| `/api/settings/system` | GET | `permitAll` | 公开系统设置（注册状态、品牌信息） |
+| `/api/auth/public-config` | GET | `permitAll` | 是否开放注册（登录页） |
 | `/api/achievements/**` | 全部 | `permitAll` | 公开浏览成就（Controller 层强制认证） |
 | `/uploads/**` | GET | `permitAll` | 上传媒体的静态文件服务 |
 | `OPTIONS /**` | OPTIONS | `permitAll` | CORS 预检处理 |
@@ -220,7 +220,8 @@ private boolean isAdmin(String authHeader) {
 | PUT | `/api/settings/review` | 是 | 更新审核设置 |
 | GET | `/api/settings/achievement-upload` | 否 | 获取成就上传设置 |
 | PUT | `/api/settings/achievement-upload` | 是 | 更新成就上传设置 |
-| GET | `/api/settings/system` | 否 | 获取公开系统设置 |
+| GET | `/api/auth/public-config` | 否 | 是否开放注册 |
+| GET | `/api/settings/system` | 是 | 获取系统设置（含迟交阈值等） |
 | PUT | `/api/admin/settings/system` | 管理员 | 更新系统设置 |
 
 注意 `SystemSettingsController` 使用基础 `@RequestMapping("/api")` 而非 `/api/settings`，因此其 PUT 端点映射到 `/api/admin/settings/system`。

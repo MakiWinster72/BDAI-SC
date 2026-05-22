@@ -289,7 +289,7 @@
 import { onMounted, reactive, ref, shallowRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getCaptcha, login } from "@/api/auth";
-import { getSystemSettings } from "@/api/admin";
+import { getPublicConfig } from "@/api/auth";
 import { useToast } from "@/composables/useToast";
 import { parseBrowserOsFromDeviceName } from "@/utils/loginDeviceIcons";
 
@@ -314,7 +314,7 @@ const captchaImage = shallowRef("");
 
 async function fetchSystemSettings() {
   try {
-    const res = await getSystemSettings();
+    const res = await getPublicConfig();
     allowRegistration.value = res.data.allowRegistration === true;
     localStorage.setItem('gcsc_allowRegistration', allowRegistration.value ? '1' : '0');
   } catch (e) {

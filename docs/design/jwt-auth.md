@@ -14,7 +14,7 @@
 
 `SecurityConfig` 在一个 `@Bean` 方法中确立整个后端安全态势。明确禁用 CSRF 防护，因为系统基于 Token 而非 Cookie——不存在可供攻击者伪造的 Cookie。会话管理设置为 `STATELESS`，确保 Spring Security 永不创建 `HttpSession`。自定义 `authenticationEntryPoint` 替换默认的 HTML 重定向行为，在未认证请求访问受保护端点时返回结构化 JSON 响应：`{"success":false,"message":"未登录或登录已过期"}`，HTTP 状态码 401。
 
-过滤器链明确将 `JwtAuthenticationFilter` 插入 `UsernamePasswordAuthenticationFilter` 之前，在 Spring Security 内置表单登录机制有机会运行之前拦截每个请求。端点白名单使用 `requestMatchers` 授予五组路由未认证访问权限：认证端点（`/api/auth/register`、`/api/auth/login`）、系统设置公开端点（`/api/settings/system`）、所有上传文件资源（`/uploads/**`）和所有成就公开视图（`/api/achievements/**`）。
+过滤器链明确将 `JwtAuthenticationFilter` 插入 `UsernamePasswordAuthenticationFilter` 之前，在 Spring Security 内置表单登录机制有机会运行之前拦截每个请求。端点白名单使用 `requestMatchers` 授予未认证访问权限：认证端点（`/api/auth/register`、`/api/auth/login`、`/api/auth/captcha`、`/api/auth/public-config`）、所有上传文件资源（`/uploads/**`）和所有成就公开视图（`/api/achievements/**`）。完整系统设置 `GET /api/settings/system` 需登录。
 
 `JwtAuthenticationFilter` 通过 `addFilterBefore` 而非 `addFilterAt` 添加。这确保它对每个请求都执行——而非仅对通常触发基于表单认证的请求执行。结合 `STATELESS` 会话管理，这创建了一种纯粹的 Token 门控架构，过滤器是**唯一**填充 `SecurityContext` 的机制。
 

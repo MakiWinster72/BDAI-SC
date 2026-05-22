@@ -103,7 +103,7 @@ npm run dev
 
 ### 认证与审核（与代码一致）
 
-**无需 JWT 的接口**（节选）：`POST /api/auth/login`、`POST /api/auth/register`、`GET /api/auth/captcha`、`GET /api/settings/system`，以及前端静态资源。其余 API 默认需登录。
+**无需 JWT 的接口**（节选）：`POST /api/auth/login`、`POST /api/auth/register`、`GET /api/auth/captcha`、`GET /api/auth/public-config`，以及前端静态资源。其余 API 默认需登录。
 
 **成果类型（9 类）**：`contest`、`research`、`paper`、`patent`、`certificate`、`works`、`journal`、`double-hundred`、`ieer-training`（实体名 `AchievementIeerTraining`）。
 

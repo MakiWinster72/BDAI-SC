@@ -12,6 +12,11 @@ export function getCaptcha() {
   return request.get('/api/auth/captcha')
 }
 
+/** 未登录可访问：是否开放注册 */
+export function getPublicConfig() {
+  return request.get('/api/auth/public-config')
+}
+
 export function getMe() {
   return request.get('/api/auth/me')
 }

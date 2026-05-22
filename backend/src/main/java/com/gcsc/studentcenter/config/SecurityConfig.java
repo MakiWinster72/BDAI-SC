@@ -35,7 +35,7 @@ public class SecurityConfig {
         }))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/", "/login", "/register", "/api/auth/register", "/api/auth/login", "/api/auth/captcha", "/api/settings/system")
+            .requestMatchers("/", "/login", "/register", "/api/auth/register", "/api/auth/login", "/api/auth/captcha", "/api/auth/public-config")
             .permitAll()
             .anyRequest().authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

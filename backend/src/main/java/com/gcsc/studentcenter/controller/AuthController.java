@@ -57,6 +57,13 @@ public class AuthController {
     return ResponseEntity.ok(captchaService.createCaptcha());
   }
 
+  /** 登录/注册页用：仅返回是否开放注册，不含其它系统配置 */
+  @GetMapping("/public-config")
+  public ResponseEntity<Map<String, Object>> publicConfig() {
+    return ResponseEntity.ok(Map.of(
+        "allowRegistration", systemSettingsService.isRegistrationAllowed()));
+  }
+
   @PostMapping("/login")
   public ResponseEntity<AuthResponse> login(
       @Valid @RequestBody LoginRequest request,
