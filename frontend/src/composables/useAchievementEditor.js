@@ -103,7 +103,7 @@ export function useAchievementEditor({
     async (urls) => {
       imagePreviews.value = await Promise.all(
         urls.map((url) =>
-          resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url)),
+          resolveMediaObjectUrl(url).catch(() => ""),
         ),
       );
     },

@@ -4,7 +4,7 @@
  * 在多个视图和组件中重复定义（SettingsView、AchievementsView、NotificationsView 等），
  * 统一管理后复用。
  */
-import { API_BASE } from '@/api/request';
+import request, { API_BASE } from '@/api/request';
 
 const privateMediaBlobUrls = new Map();
 const MEDIA_API_PREFIX = '/api/media';
@@ -24,8 +24,11 @@ export function resolveMediaUrl(url) {
 }
 
 export function isPrivateUploadUrl(url) {
-  const path = toUploadPath(normalizeUploadPath(url));
-  return path.startsWith('/uploads/');
+  const path = normalizeUploadPath(url);
+  return (
+    path.startsWith('/uploads/') ||
+    path.startsWith(`${MEDIA_API_PREFIX}/uploads/`)
+  );
 }
 
 export function resolveProtectedMediaUrl(url) {
@@ -35,18 +38,47 @@ export function resolveProtectedMediaUrl(url) {
   return resolveMediaApiUrl(url);
 }
 
-export async function fetchMedia(url, options = {}) {
-  const headers = { ...(options.headers || {}) };
-  if (isPrivateUploadUrl(url)) {
-    const token = localStorage.getItem('bdai_sc_token');
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+/** 与 fetch Response 兼容，供 PDF/导出等复用 */
+class MediaBlobResponse {
+  constructor(blob, status = 200) {
+    this.blobData = blob;
+    this.status = status;
+    this.ok = status >= 200 && status < 300;
   }
-  return fetch(resolveProtectedMediaUrl(url), {
-    ...options,
-    headers,
-  });
+
+  blob() {
+    return Promise.resolve(this.blobData);
+  }
+}
+
+/**
+ * 受保护媒体走 axios（与登录/API 同源、同 Token 拦截器），避免生产环境 fetch 跨域不带 JWT。
+ */
+export async function fetchMedia(url, options = {}) {
+  if (!isPrivateUploadUrl(url)) {
+    return fetch(resolveProtectedMediaUrl(url), {
+      ...options,
+      mode: options.mode || 'cors',
+    });
+  }
+
+  const path = toMediaRequestPath(url);
+  try {
+    const response = await request.get(path, {
+      responseType: 'blob',
+      timeout: options.timeout ?? 120000,
+      headers: options.headers,
+      skipAuthRedirect: true,
+    });
+    return new MediaBlobResponse(response.data, response.status);
+  } catch (error) {
+    const status = error?.response?.status ?? 0;
+    const blob = error?.response?.data;
+    if (blob instanceof Blob) {
+      return new MediaBlobResponse(blob, status);
+    }
+    return new MediaBlobResponse(new Blob(), status);
+  }
 }
 
 export async function resolveMediaObjectUrl(url) {
@@ -83,11 +115,17 @@ export function revokePrivateMediaObjectUrls() {
 }
 
 function resolveMediaApiUrl(url) {
+  const path = toMediaRequestPath(url);
+  return `${API_BASE}${path}`;
+}
+
+/** axios 请求用相对路径，与 baseURL 一致 */
+function toMediaRequestPath(url) {
   const path = normalizeUploadPath(url);
   if (path.startsWith(`${MEDIA_API_PREFIX}/uploads/`)) {
-    return `${API_BASE}${path}`;
+    return path;
   }
-  return `${API_BASE}${MEDIA_API_PREFIX}${toUploadPath(path)}`;
+  return `${MEDIA_API_PREFIX}${toUploadPath(path)}`;
 }
 
 function normalizeUploadPath(url) {

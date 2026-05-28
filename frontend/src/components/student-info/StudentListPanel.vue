@@ -3,7 +3,6 @@ import LoadingIndicator from "@/components/LoadingIndicator.vue";
 import { computed } from "vue";
 import PaginationBar from "@/components/PaginationBar.vue";
 import ProtectedMediaImage from "@/components/ProtectedMediaImage.vue";
-import { resolveMediaUrl } from "@/utils/media";
 
 const props = defineProps({
   loading: {
@@ -119,7 +118,7 @@ const selectedIdsModel = computed({
       <div class="student-avatar">
         <ProtectedMediaImage
           v-if="item.avatarUrl"
-          :src="resolveMediaUrl(item.avatarUrl)"
+          :src="item.avatarUrl"
           :alt="item.name"
         />
         <span v-else>{{ (item.name || "?")[0] }}</span>

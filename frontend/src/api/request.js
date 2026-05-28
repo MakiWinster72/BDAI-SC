@@ -20,7 +20,7 @@ request.interceptors.request.use((config) => {
 request.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
+    if (error?.response?.status === 401 && !error.config?.skipAuthRedirect) {
       localStorage.removeItem('bdai_sc_token')
       localStorage.removeItem('bdai_sc_user')
       if (window.location.pathname !== '/login') {

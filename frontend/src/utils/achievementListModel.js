@@ -1,7 +1,6 @@
 import {
   parseJsonArray,
   resolveMediaObjectUrl,
-  resolveMediaUrl,
   stripMediaUrl,
 } from "@/utils/media";
 import {
@@ -74,7 +73,7 @@ export async function hydrateAchievementMedia(list) {
     list.map(async (item) => {
       item.imageUrls = await Promise.all(
         (item.rawImageUrls || item.imageUrls || []).map((url) =>
-          resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url)),
+          resolveMediaObjectUrl(url).catch(() => ""),
         ),
       );
       item.image = item.imageUrls[0] || "";
@@ -84,9 +83,7 @@ export async function hydrateAchievementMedia(list) {
           return {
             ...file,
             rawUrl,
-            url: await resolveMediaObjectUrl(file.url).catch(() =>
-              resolveMediaUrl(file.url),
-            ),
+            url: await resolveMediaObjectUrl(file.url).catch(() => ""),
           };
         }),
       );

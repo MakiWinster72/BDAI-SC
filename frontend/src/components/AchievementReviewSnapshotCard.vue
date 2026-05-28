@@ -30,12 +30,14 @@ watch(
       delete imageSources[key];
     });
     urls.forEach((url) => {
-      imageSources[url] = resolveMediaUrl(url);
+      imageSources[url] = "";
       resolveMediaObjectUrl(url)
         .then((blobUrl) => {
           imageSources[url] = blobUrl;
         })
-        .catch(() => {});
+        .catch(() => {
+          imageSources[url] = "";
+        });
     });
   },
   { immediate: true },
@@ -62,8 +64,10 @@ async function openAsset(url) {
   if (!url || typeof window === "undefined") {
     return;
   }
-  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
-  window.open(targetUrl, "_blank", "noopener,noreferrer");
+  const targetUrl = await resolveMediaObjectUrl(url);
+  if (targetUrl) {
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  }
 }
 </script>
 
@@ -86,7 +90,7 @@ async function openAsset(url) {
           type="button"
           @click="openAsset(url)"
         >
-          <img :src="imageSources[url] || resolveMediaUrl(url)" alt="成就图片" />
+          <img v-if="imageSources[url]" :src="imageSources[url]" alt="成就图片" />
         </button>
       </div>
 

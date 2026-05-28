@@ -183,7 +183,7 @@ function isDocPreviewable(doc) {
 }
 
 async function openSupportingDocPreview(url) {
-  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
+  const targetUrl = await resolveMediaObjectUrl(url).catch(() => "");
   window.open(targetUrl, "_blank", "noopener,noreferrer");
 }
 
@@ -331,7 +331,7 @@ function closeStudentDetail() {
 }
 
 async function openSupportingDoc(url) {
-  const targetUrl = await resolveMediaObjectUrl(url).catch(() => resolveMediaUrl(url));
+  const targetUrl = await resolveMediaObjectUrl(url).catch(() => "");
   window.open(targetUrl, "_blank", "noopener,noreferrer");
 }
 

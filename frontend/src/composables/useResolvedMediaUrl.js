@@ -14,9 +14,13 @@ export function useResolvedMediaUrl(source) {
         return;
       }
 
-      const nextUrl = await resolveMediaObjectUrl(url).catch(() =>
-        resolveMediaUrl(url),
-      );
+      let nextUrl = "";
+      try {
+        nextUrl = await resolveMediaObjectUrl(url);
+      } catch {
+        // 受保护媒体不能回退为裸 URL（<img> 无法带 Authorization，会 401）
+        nextUrl = "";
+      }
       if (currentRequest === requestId) {
         resolvedUrl.value = nextUrl;
       }

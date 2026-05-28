@@ -1,7 +1,6 @@
 <script setup>
 import ProtectedMediaImage from "@/components/ProtectedMediaImage.vue";
 import { useProfileAvatarUpload } from "@/composables/useProfileAvatarUpload";
-import { resolveMediaUrl } from "@/utils/media";
 
 const props = defineProps({
   info: {
@@ -45,7 +44,7 @@ async function onAvatarChange(event) {
     >
       <ProtectedMediaImage
         v-if="info.avatarUrl"
-        :src="resolveMediaUrl(info.avatarUrl)"
+        :src="info.avatarUrl"
         alt="头像"
       />
       <span v-else>{{ avatarPlaceholder }}</span>

@@ -26,7 +26,7 @@
           <div v-if="!isMobile || expanded" key="avatar" class="chip-avatar">
             <ProtectedMediaImage
               v-if="profile.avatarUrl"
-              :src="resolveMediaUrl(profile.avatarUrl)"
+              :src="profile.avatarUrl"
               alt="头像"
             />
             <span v-else>{{ avatarText }}</span>
@@ -94,7 +94,6 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { resolveMediaUrl } from "@/utils/media";
 import ProtectedMediaImage from "./ProtectedMediaImage.vue";
 
 const props = defineProps({
