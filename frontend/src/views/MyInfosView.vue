@@ -163,6 +163,10 @@ import { useNotifications } from "@/composables/useNotifications";
 import { useReviewSettings } from "@/composables/useReviewSettings";
 import { useToast } from "@/composables/useToast";
 import { loadUser } from "@/utils/userStorage";
+import {
+  checkProfileSaveRequiresReview,
+  getProfileSaveActionLabel,
+} from "@/config/profileReviewConfig";
 
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
 
@@ -264,18 +268,12 @@ const PROFILE_CHANGE_FIELDS = [
   { key: "motherWorkUnit", label: "母亲工作单位", section: "家庭信息" },
   { key: "motherTitle", label: "母亲职务", section: "家庭信息" },
 ];
-const hasSavedProfileBefore = computed(() =>
-  Boolean(savedProfileData.value?.id),
+const saveActionLabel = computed(() =>
+  getProfileSaveActionLabel(
+    reviewSettings.profileReviewEnabled,
+    profile.role || "STUDENT",
+  ),
 );
-const isReviewer = computed(
-  () => profile.role === "ADMIN" || profile.role === "TEACHER",
-);
-const saveActionLabel = computed(() => {
-  if (isReviewer.value) return "保存";
-  return hasSavedProfileBefore.value && reviewSettings.profileReviewEnabled
-    ? "请求审核"
-    : "保存";
-});
 
 const { educationItems, cadreItems } = createProfileExperienceRows();
 
@@ -334,10 +332,11 @@ async function confirmEdit() {
     toastError("请先选择班级");
     return;
   }
-  const requiresReview =
-    hasSavedProfileBefore.value &&
-    reviewSettings.profileReviewEnabled &&
-    !isReviewer.value;
+  await fetchReviewSettings().catch(() => {});
+  const requiresReview = checkProfileSaveRequiresReview(
+    reviewSettings.profileReviewEnabled,
+    profile.role || "STUDENT",
+  );
   const payload = buildProfileSavePayload({
     info,
     educationItems,
@@ -348,26 +347,30 @@ async function confirmEdit() {
   try {
     if (requiresReview) {
       const { data: requestData } = await submitProfileReviewRequest({
-        actor: profile.value?.username,
+        actor: profile.username,
         payloadSnapshot: payload,
         changes,
       });
+      await fetchProfileReviewRequests(true);
       if (
         reviewSettings.profileReviewAutoApprove &&
         requestData?.status === "approved"
       ) {
-        await fetchProfileReviewRequests(true);
         const updatedProfile = await getStudentProfile();
         applyProfileResponse(updatedProfile.data);
+        toastSuccess("个人信息已更新");
+      } else {
+        toastSuccess("已提交审核，请等待审核结果");
       }
       isEditing.value = false;
       return;
     }
     const { data } = await saveStudentProfile(payload);
     applyProfileResponse(data);
+    toastSuccess("保存成功");
     isEditing.value = false;
-  } catch (err) {
-    console.error(err);
+  } catch {
+    // 错误文案由 request 拦截器统一 toast
   }
 }
 
@@ -548,12 +551,13 @@ function saveUser(data) {
 }
 
 onMounted(async () => {
-  fetchReviewSettings().catch(() => {});
   try {
-    const { data } = await getStudentProfile();
-    applyProfileResponse(data);
-  } catch (err) {
-    console.error(err);
+    await Promise.all([
+      fetchReviewSettings().catch(() => {}),
+      getStudentProfile().then(({ data }) => applyProfileResponse(data)),
+    ]);
+  } catch {
+    // 错误文案由 request 拦截器统一 toast
   }
 });
 </script>

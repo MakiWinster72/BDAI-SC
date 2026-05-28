@@ -69,6 +69,7 @@ export async function fetchMedia(url, options = {}) {
       timeout: options.timeout ?? 120000,
       headers: options.headers,
       skipAuthRedirect: true,
+      skipErrorToast: true,
     });
     return new MediaBlobResponse(response.data, response.status);
   } catch (error) {

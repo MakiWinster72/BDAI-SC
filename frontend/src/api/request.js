@@ -1,4 +1,8 @@
 import axios from 'axios'
+import { useToast } from '@/composables/useToast'
+import { getApiErrorMessage } from '@/utils/apiError'
+
+const { error: toastError } = useToast()
 
 const apiBaseFromEnv = import.meta.env.VITE_API_BASE?.trim()
 // 默认走当前站点同源 /api（dev 经 Vite 反代，生产经 Nginx），才能带上真实客户端 IP
@@ -25,6 +29,11 @@ request.interceptors.response.use(
       localStorage.removeItem('bdai_sc_user')
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
+      }
+    } else if (!error.config?.skipErrorToast) {
+      const status = error?.response?.status
+      if (status && status >= 400 && status < 500 && status !== 401) {
+        toastError(getApiErrorMessage(error))
       }
     }
     return Promise.reject(error)
