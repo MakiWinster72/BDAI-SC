@@ -93,8 +93,6 @@
 
       <ProfileFormFamilySection :info="info" :is-editing="isEditing" />
 
-      <ProfileFormSpecialStudentSection :info="info" :is-editing="isEditing" />
-
     </section>
     <MobileCapsule @open-sidebar="openDashboardSidebar">
       <template v-if="isEditing" #right>
@@ -135,7 +133,6 @@ import ProfileFormPartySection from "@/components/profile-form/ProfileFormPartyS
 import ProfileFormEducationSection from "@/components/profile-form/ProfileFormEducationSection.vue";
 import ProfileFormCadreSection from "@/components/profile-form/ProfileFormCadreSection.vue";
 import ProfileFormFamilySection from "@/components/profile-form/ProfileFormFamilySection.vue";
-import ProfileFormSpecialStudentSection from "@/components/profile-form/ProfileFormSpecialStudentSection.vue";
 import {
   FIXED_COLLEGE,
   majorOptionsByCategory,
@@ -256,9 +253,6 @@ const PROFILE_CHANGE_FIELDS = [
   { key: "isHk", label: "香港身份", section: "身份信息" },
   { key: "isMo", label: "澳门身份", section: "身份信息" },
   { key: "isTw", label: "台湾身份", section: "身份信息" },
-  { key: "specialStudent", label: "特殊学生", section: "身份信息" },
-  { key: "specialStudentType", label: "特殊学生类型", section: "身份信息" },
-  { key: "specialStudentRemark", label: "特殊学生备注", section: "身份信息" },
   { key: "fatherName", label: "父亲姓名", section: "家庭信息" },
   { key: "fatherPhone", label: "父亲电话", section: "家庭信息" },
   { key: "fatherWorkUnit", label: "父亲工作单位", section: "家庭信息" },
@@ -302,6 +296,7 @@ const { buildPdfStudentSnapshot, buildCurrentProfileState } = useProfileSnapshot
   cadreItems,
   isEducationRowEmpty,
   isCadreRowEmpty,
+  includeSpecialStudentFields: false,
 });
 
 
@@ -342,6 +337,7 @@ async function confirmEdit() {
     educationItems,
     cadreItems,
     sanitizePartyPayload,
+    includeSpecialStudentFields: false,
   });
   const changes = buildProfileChanges(originalProfileData.value, payload);
   try {

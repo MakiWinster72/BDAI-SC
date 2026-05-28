@@ -14,6 +14,7 @@ export function buildProfileSavePayload({
   educationItems,
   cadreItems,
   sanitizePartyPayload,
+  includeSpecialStudentFields = true,
 }) {
   const className = buildClassName(
     info.classYear,
@@ -97,12 +98,15 @@ export function buildProfileSavePayload({
     isHk: info.isHk,
     isMo: info.isMo,
     isTw: info.isTw,
-    specialStudent: info.specialStudent,
-    specialStudentType: info.specialStudentType || "",
-    specialStudentRemark: info.specialStudentRemark || "",
     educationExperiences,
     cadreExperiences,
   };
+
+  if (includeSpecialStudentFields) {
+    payload.specialStudent = info.specialStudent;
+    payload.specialStudentType = info.specialStudentType || "";
+    payload.specialStudentRemark = info.specialStudentRemark || "";
+  }
 
   if (info.offCampusLiving) {
     payload.dormCampus = null;

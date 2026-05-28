@@ -57,6 +57,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showSpecialStudentSection: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(["saved", "openAchievements", "start-edit", "cancel-edit"]);
@@ -295,7 +299,11 @@ defineExpose({
 
     <ProfileFormFamilySection :info="info" :is-editing="isEditing" />
 
-    <ProfileFormSpecialStudentSection :info="info" :is-editing="isEditing" />
+    <ProfileFormSpecialStudentSection
+      v-if="showSpecialStudentSection"
+      :info="info"
+      :is-editing="isEditing"
+    />
 
     <transition name="edit-dock">
       <div v-if="isEditing" class="edit-dock">

@@ -7,6 +7,7 @@ export function useProfileSnapshot({
   cadreItems,
   isEducationRowEmpty,
   isCadreRowEmpty,
+  includeSpecialStudentFields = true,
 }) {
   function buildEducationSnapshot() {
     return educationItems
@@ -58,7 +59,7 @@ export function useProfileSnapshot({
       info.offCampusDetail,
       info.offCampusAddress,
     );
-    return {
+    const snapshot = {
       fullName: studentName,
       studentNo,
       classYear: info.classYear,
@@ -115,17 +116,20 @@ export function useProfileSnapshot({
       isHk: info.isHk,
       isMo: info.isMo,
       isTw: info.isTw,
-      specialStudent: info.specialStudent,
-      specialStudentType: info.specialStudentType,
-      specialStudentRemark: info.specialStudentRemark,
       educationExperiences: buildEducationSnapshot(),
       cadreExperiences: buildCadreSnapshot(),
       avatarUrl: info.avatarUrl,
     };
+    if (includeSpecialStudentFields) {
+      snapshot.specialStudent = info.specialStudent;
+      snapshot.specialStudentType = info.specialStudentType;
+      snapshot.specialStudentRemark = info.specialStudentRemark;
+    }
+    return snapshot;
   }
 
   function buildCurrentProfileState() {
-    return {
+    const state = {
       fullName: info.name,
       avatarUrl: info.avatarUrl,
       studentNo: info.studentNo,
@@ -200,9 +204,6 @@ export function useProfileSnapshot({
       isHk: info.isHk,
       isMo: info.isMo,
       isTw: info.isTw,
-      specialStudent: info.specialStudent,
-      specialStudentType: info.specialStudentType,
-      specialStudentRemark: info.specialStudentRemark,
       educationExperiences: educationItems
         .filter((item) => !isEducationRowEmpty(item))
         .map((item) => ({ ...item })),
@@ -210,6 +211,12 @@ export function useProfileSnapshot({
         .filter((item) => !isCadreRowEmpty(item))
         .map((item) => ({ ...item })),
     };
+    if (includeSpecialStudentFields) {
+      state.specialStudent = info.specialStudent;
+      state.specialStudentType = info.specialStudentType;
+      state.specialStudentRemark = info.specialStudentRemark;
+    }
+    return state;
   }
 
   return { buildPdfStudentSnapshot, buildCurrentProfileState };

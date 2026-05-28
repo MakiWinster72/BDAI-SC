@@ -107,6 +107,7 @@ defineExpose({ triggerSave, triggerPdfExport, cancelEdit, profileEditorRef });
         :save-profile="saveProfile"
         :can-edit="canEdit"
         :show-achievements="true"
+        :show-special-student-section="canEdit"
         :editing="editing"
         @saved="emit('saved', $event)"
         @open-achievements="emit('open-achievements')"

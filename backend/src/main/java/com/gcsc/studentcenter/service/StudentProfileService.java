@@ -81,7 +81,7 @@ public class StudentProfileService {
           return created;
         });
 
-    StudentProfile saved = saveProfileInternal(user, profile, request);
+    StudentProfile saved = saveProfileInternal(user, profile, request, false);
     auditLogRecorder.record(username, AuditActions.DIRECT_UPDATE_PROFILE,
         "直接更新了本人档案（用户 #" + user.getId() + "）");
     return toResponse(user, saved);
@@ -98,7 +98,7 @@ public class StudentProfileService {
           return created;
         });
 
-    StudentProfile saved = saveProfileInternal(user, profile, request);
+    StudentProfile saved = saveProfileInternal(user, profile, request, false);
     return toResponse(user, saved);
   }
 
@@ -112,7 +112,7 @@ public class StudentProfileService {
     StudentProfile profile = studentProfileRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("学生档案不存在"));
     AppUser user = profile.getUser();
-    StudentProfile saved = saveProfileInternal(user, profile, request);
+    StudentProfile saved = saveProfileInternal(user, profile, request, true);
     auditLogRecorder.record(operatorUsername, AuditActions.ADMIN_UPDATE_PROFILE,
         "管理员直接更新了学生档案 #" + id + "（" + user.getUsername() + "）");
     return toResponse(user, saved);
@@ -184,7 +184,8 @@ public class StudentProfileService {
   private StudentProfile saveProfileInternal(
       AppUser user,
       StudentProfile profile,
-      StudentProfileRequest request) {
+      StudentProfileRequest request,
+      boolean allowSpecialStudentFields) {
 
     profile.setFullName(normalize(request.getFullName()));
     profile.setStudentNo(normalize(request.getStudentNo()));
@@ -234,7 +235,11 @@ public class StudentProfileService {
     profile.setIsHk(request.getIsHk());
     profile.setIsMo(request.getIsMo());
     profile.setIsTw(request.getIsTw());
-    profile.setSpecialStudent(request.getSpecialStudent());
+    if (allowSpecialStudentFields) {
+      profile.setSpecialStudent(request.getSpecialStudent());
+      profile.setSpecialStudentType(normalize(request.getSpecialStudentType()));
+      profile.setSpecialStudentRemark(normalize(request.getSpecialStudentRemark()));
+    }
     profile.setFatherName(normalize(request.getFatherName()));
     profile.setFatherPhone(normalize(request.getFatherPhone()));
     profile.setFatherWorkUnit(normalize(request.getFatherWorkUnit()));
@@ -243,8 +248,6 @@ public class StudentProfileService {
     profile.setMotherPhone(normalize(request.getMotherPhone()));
     profile.setMotherWorkUnit(normalize(request.getMotherWorkUnit()));
     profile.setMotherTitle(normalize(request.getMotherTitle()));
-    profile.setSpecialStudentType(normalize(request.getSpecialStudentType()));
-    profile.setSpecialStudentRemark(normalize(request.getSpecialStudentRemark()));
     syncEducationExperiences(profile, request.getEducationExperiences());
     syncCadreExperiences(profile, request.getCadreExperiences());
 
