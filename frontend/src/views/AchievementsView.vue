@@ -94,6 +94,7 @@
       :media-limit-label="editor.mediaLimitLabel"
       :attachment-limit-label="editor.attachmentLimitLabel"
       :enabled-attachment-types="editor.enabledAttachmentTypes"
+      :save-action-label="achievementSaveActionLabel"
       @close="editor.closeEditor"
       @save="editor.saveAchievement"
       @toggle-hint="toggleEditorHint"
@@ -145,7 +146,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import MobileCapsule from "@/components/MobileCapsule.vue";
 import AchievementCardBody from "@/components/AchievementCardBody.vue";
@@ -173,6 +174,7 @@ import {
   revokePrivateMediaObjectUrls,
 } from "@/utils/media";
 import { loadUser } from "@/utils/userStorage";
+import { getAchievementSaveActionLabel } from "@/config/achievementReviewConfig";
 
 const router = useRouter();
 const route = useRoute();
@@ -182,6 +184,12 @@ const { submitAchievementReviewRequest, findPendingAchievementReview } =
   useNotifications(profile);
 const { settings: reviewSettings, fetchSettings: fetchReviewSettings } =
   useReviewSettings();
+const achievementSaveActionLabel = computed(() =>
+  getAchievementSaveActionLabel(
+    reviewSettings.achievementReviewEnabled,
+    profile.role || "STUDENT",
+  ),
+);
 const errorMessage = ref("");
 
 const {
@@ -212,6 +220,7 @@ const editor = reactive(
   useAchievementEditor({
     profile,
     reviewSettings,
+    fetchReviewSettings,
     submitAchievementReviewRequest,
     achievements: listResult.achievements,
     viewItem,

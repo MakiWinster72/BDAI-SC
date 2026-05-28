@@ -96,7 +96,7 @@ const achievementReviewAutoApprove = createFieldModel("achievementReviewAutoAppr
           <div class="toggle-row" :class="{ muted: !reviewForm.achievementReviewEnabled }">
             <div class="toggle-copy">
               <span class="toggle-title">开启成就审核</span>
-              <span class="toggle-hint">关闭后，新增和修改成就都会直接生效</span>
+              <span class="toggle-hint">开启后，学生/干部每次保存均走审核；关闭后显示「保存」并直接生效</span>
             </div>
             <label class="toggle-switch" :aria-label="`开启成就审核: ${reviewForm.achievementReviewEnabled ? '已开启' : '已关闭'}`">
               <input

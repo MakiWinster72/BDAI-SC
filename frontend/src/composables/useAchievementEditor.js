@@ -12,6 +12,12 @@ import {
   IMAGE_URLS_FIELD,
   ATTACHMENTS_FIELD,
 } from "@/constants/achievementConstants";
+import { checkAchievementSaveRequiresReview } from "@/config/achievementReviewConfig";
+import {
+  buildAchievementChanges,
+  buildAchievementDraftSourceFromPayload,
+  buildAchievementReviewPayloadSnapshot,
+} from "@/composables/useAchievementReviewPayload";
 import {
   resolveMediaObjectUrl,
   resolveMediaUrl,
@@ -29,6 +35,7 @@ import {
 export function useAchievementEditor({
   profile,
   reviewSettings,
+  fetchReviewSettings,
   submitAchievementReviewRequest,
   achievements,
   viewItem,
@@ -39,7 +46,7 @@ export function useAchievementEditor({
   uploadLimitConfig,
   uploadHelpers,
 }) {
-  const { info: toastInfo, warn: toastWarn } = useToast();
+  const { info: toastInfo, success: toastSuccess, warn: toastWarn } = useToast();
   const { uploadWithProgress } = useUploadProgress();
 
   const editorOpen = ref(false);
@@ -326,8 +333,14 @@ export function useAchievementEditor({
       existingItem,
     });
     try {
-      if (profile.role !== "ADMIN" && reviewSettings.achievementReviewEnabled) {
-        toastInfo("已提交审核，请等待审核成功后显示");
+      if (fetchReviewSettings) {
+        await fetchReviewSettings().catch(() => {});
+      }
+      const requiresReview = checkAchievementSaveRequiresReview(
+        reviewSettings.achievementReviewEnabled,
+        profile.role || "STUDENT",
+      );
+      if (requiresReview) {
         const reviewRequest = await submitAchievementReviewRequest({
           actor: profile,
           action: editId.value ? "update" : "create",
@@ -347,6 +360,9 @@ export function useAchievementEditor({
           reviewRequest?.status === "approved"
         ) {
           await fetchAchievements();
+          toastSuccess("个人成果已更新");
+        } else {
+          toastInfo("已提交审核，请等待审核成功后显示");
         }
         resetForm();
         closeEditor();
@@ -374,7 +390,7 @@ export function useAchievementEditor({
           ...achievements.value,
         ]);
       }
-      toastInfo("保存成功");
+      toastSuccess("保存成功");
       resetForm();
       closeEditor();
       errorMessage.value = "";

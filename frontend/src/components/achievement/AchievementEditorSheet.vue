@@ -299,7 +299,7 @@
             取消
           </button>
           <button class="action-button" type="button" @click="emit('save')">
-            提交审核
+            {{ saveActionLabel }}
           </button>
         </div>
       </div>
@@ -327,6 +327,7 @@ defineProps({
   mediaLimitLabel: { type: String, required: true },
   attachmentLimitLabel: { type: String, required: true },
   enabledAttachmentTypes: { type: Array, required: true },
+  saveActionLabel: { type: String, default: "保存" },
 });
 
 const emit = defineEmits([
