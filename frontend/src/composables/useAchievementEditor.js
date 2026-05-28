@@ -26,11 +26,6 @@ import {
 } from "@/utils/media";
 import { dedupeAchievements } from "@/utils/achievement";
 import { normalizeAchievement } from "@/utils/achievementListModel";
-import {
-  buildAchievementChanges,
-  buildAchievementDraftSourceFromPayload,
-  buildAchievementReviewPayloadSnapshot,
-} from "@/composables/useAchievementReviewPayload";
 
 export function useAchievementEditor({
   profile,
