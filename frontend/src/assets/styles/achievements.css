@@ -1974,6 +1974,9 @@
     border-color 180ms ease,
     background 180ms ease,
     box-shadow 180ms ease;
+}
+
+.form-input:not([type="date"]) {
   appearance: none;
   -webkit-appearance: none;
 }

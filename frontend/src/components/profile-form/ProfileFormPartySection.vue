@@ -1,4 +1,6 @@
 <script setup>
+import DateFieldInput from "@/components/DateFieldInput.vue";
+
 defineProps({
   info: { type: Object, required: true },
   isEditing: { type: Boolean, default: false },
@@ -46,11 +48,8 @@ defineProps({
       <template v-if="info.leagueJoined">
         <label class="field-card field-full">
           <span class="info-label">提交入团申请书时间</span>
-          <input
+          <DateFieldInput
             v-model="info.leagueApplicationDate"
-            class="info-input"
-            type="date"
-            lang="zh-CN"
             :max="today"
             :disabled="leagueApplicationDisabled"
           />
@@ -58,11 +57,8 @@ defineProps({
         <label class="field-card field-full">
           <span class="info-label">入团时间</span>
           <div class="info-inline">
-            <input
+            <DateFieldInput
               v-model="info.leagueJoinDate"
-              class="info-input"
-              type="date"
-              lang="zh-CN"
               :max="today"
               :disabled="leagueJoinDisabled"
             />
@@ -112,11 +108,8 @@ defineProps({
         <template v-if="info.partyApplied">
           <label class="field-card field-full">
             <span class="info-label">提交入党申请书时间</span>
-            <input
+            <DateFieldInput
               v-model="info.applicationDate"
-              class="info-input"
-              type="date"
-              lang="zh-CN"
               :max="today"
               :disabled="applicationDateDisabled"
             />
@@ -124,11 +117,8 @@ defineProps({
           <label class="field-card field-full">
             <span class="info-label">确定积极分子时间</span>
             <div class="info-inline">
-              <input
+              <DateFieldInput
                 v-model="info.activistDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
                 :max="today"
                 :disabled="activistDateDisabled"
               />
@@ -145,11 +135,8 @@ defineProps({
           <label class="field-card field-full">
             <span class="info-label">上党课时间</span>
             <div class="info-inline">
-              <input
+              <DateFieldInput
                 v-model="info.partyTrainingDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
                 :max="today"
                 :disabled="partyTrainingDisabled"
               />
@@ -166,11 +153,8 @@ defineProps({
           <label class="field-card field-full">
             <span class="info-label">确定发展对象时间</span>
             <div class="info-inline">
-              <input
+              <DateFieldInput
                 v-model="info.developmentTargetDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
                 :max="today"
                 :disabled="developmentTargetDisabled"
               />
@@ -187,11 +171,8 @@ defineProps({
           <label class="field-card field-full">
             <span class="info-label">接收为预备党员时间</span>
             <div class="info-inline">
-              <input
+              <DateFieldInput
                 v-model="info.probationaryMemberDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
                 :max="today"
                 :disabled="probationaryDisabled"
               />
@@ -208,11 +189,8 @@ defineProps({
           <label class="field-card field-full">
             <span class="info-label">转为正式党员时间</span>
             <div class="info-inline">
-              <input
+              <DateFieldInput
                 v-model="info.fullMemberDate"
-                class="info-input"
-                type="date"
-                lang="zh-CN"
                 :max="today"
                 :disabled="fullMemberDisabled"
               />

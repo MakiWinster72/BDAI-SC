@@ -6,6 +6,7 @@ import {
 } from "@/constants/profileOptions";
 import { useProfileIdNo } from "@/composables/useProfileIdNo";
 import { useProfileRegionCascade } from "@/composables/useProfileRegionCascade";
+import DateFieldInput from "@/components/DateFieldInput.vue";
 
 const props = defineProps({
   info: {
@@ -118,11 +119,8 @@ const {
       </label>
       <label class="field-card">
         <span class="info-label">出生年月</span>
-        <input
+        <DateFieldInput
           v-model="info.birthDate"
-          class="info-input"
-          type="date"
-          lang="zh-CN"
           :max="today"
           :disabled="!isEditing"
         />

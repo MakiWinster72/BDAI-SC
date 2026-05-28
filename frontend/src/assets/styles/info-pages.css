@@ -325,20 +325,35 @@
   background-color: #f2f2f2;
 }
 
-/* ── Date Input Calendar Icon ─────────────────────────────── */
-input[type="date"].info-input {
-  width: 100%;
-  max-width: 100%;
-}
-
-/* Hide native picker indicator — transparent but still clickable */
-input[type="date"].info-input::-webkit-calendar-picker-indicator {
-  opacity: 0;
+/* ── Date Input ─────────────────────────────────────────── */
+input[type="date"].info-input,
+input[type="date"].form-input {
+  position: relative;
   cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: auto;
+  min-height: 42px;
 }
 
-input[type="date"].info-input::-moz-calendar-picker-indicator {
-  opacity: 0;
+input[type="date"].info-input::-webkit-calendar-picker-indicator,
+input[type="date"].form-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+}
+
+input[type="date"].info-input::-webkit-datetime-edit-year-field::after,
+input[type="date"].form-input::-webkit-datetime-edit-year-field::after {
+  content: "年";
+}
+
+input[type="date"].info-input::-webkit-datetime-edit-month-field::after,
+input[type="date"].form-input::-webkit-datetime-edit-month-field::after {
+  content: "月";
+}
+
+input[type="date"].info-input::-webkit-datetime-edit-day-field::after,
+input[type="date"].form-input::-webkit-datetime-edit-day-field::after {
+  content: "日";
 }
 
 /* ── Info Inline ────────────────────────────────────────── */

@@ -1,4 +1,6 @@
 <script setup>
+import DateFieldInput from "@/components/DateFieldInput.vue";
+
 /**
  * RecordRow - 教育经历 / 学生干部经历行组件
  *
@@ -24,12 +26,12 @@ function endDateDisabled() {
   return props.disabled || props.item.isCurrent
 }
 
-function onStartDateChange(e) {
-  emit('update:item', { ...props.item, startDate: e.target.value })
+function onStartDateChangeValue(value) {
+  emit('update:item', { ...props.item, startDate: value })
 }
 
-function onEndDateChange(e) {
-  emit('update:item', { ...props.item, endDate: e.target.value })
+function onEndDateChangeValue(value) {
+  emit('update:item', { ...props.item, endDate: value })
 }
 
 function onCurrentChange(e) {
@@ -48,24 +50,18 @@ function onFieldChange(key, e) {
       <div class="record-field record-field-time">
         <span class="info-label">时间段</span>
         <div class="record-period">
-          <input
-            :value="item.startDate"
-            class="info-input"
-            type="date"
-            lang="zh-CN"
+          <DateFieldInput
+            :model-value="item.startDate"
             :max="today"
             :disabled="disabled"
-            @change="onStartDateChange"
+            @update:model-value="onStartDateChangeValue"
           />
           <span class="record-sep">至</span>
-          <input
-            :value="item.endDate"
-            class="info-input"
-            type="date"
-            lang="zh-CN"
+          <DateFieldInput
+            :model-value="item.endDate"
             :max="today"
             :disabled="endDateDisabled()"
-            @change="onEndDateChange"
+            @update:model-value="onEndDateChangeValue"
           />
           <label class="info-choice info-choice-muted">
             <input

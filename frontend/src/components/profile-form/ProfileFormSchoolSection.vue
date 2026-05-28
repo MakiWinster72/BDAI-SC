@@ -1,4 +1,5 @@
 <script setup>
+import DateFieldInput from "@/components/DateFieldInput.vue";
 import YearPicker from "@/components/YearPicker.vue";
 
 defineProps({
@@ -135,11 +136,8 @@ defineProps({
       </label>
       <label class="field-card field-full">
         <span class="info-label">入学时间</span>
-        <input
+        <DateFieldInput
           v-model="info.enrollmentDate"
-          class="info-input"
-          type="date"
-          lang="zh-CN"
           :max="today"
           :disabled="!isEditing"
         />

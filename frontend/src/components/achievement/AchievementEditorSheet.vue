@@ -197,8 +197,14 @@
                 >?</span
               >
             </label>
+            <DateFieldInput
+              v-if="field.kind === 'input' && field.type === 'date'"
+              v-model="form.fields[field.key]"
+              input-class="form-input"
+              :placeholder="field.placeholder || ''"
+            />
             <input
-              v-if="field.kind === 'input'"
+              v-else-if="field.kind === 'input'"
               v-model="form.fields[field.key]"
               class="form-input"
               :type="field.type || 'text'"
@@ -309,6 +315,7 @@
 
 <script setup>
 import { nextTick, onMounted, ref } from "vue";
+import DateFieldInput from "@/components/DateFieldInput.vue";
 
 const SHEET_CLOSE_MS = 480;
 
