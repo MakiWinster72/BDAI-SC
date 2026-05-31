@@ -1,58 +1,101 @@
 <template>
-  <div class="auth-layout change-password-layout">
-    <div class="auth-card change-password-card">
-      <div class="auth-brand">
-        <h1 class="auth-title">修改初始密码</h1>
-        <p class="auth-subtitle">
-          为保障账号安全，首次使用管理员下发的密码登录后，请先设置个人新密码。
-        </p>
+  <div class="auth-layout change-password-page">
+    <div class="page-orb page-orb--1" aria-hidden="true"></div>
+    <div class="page-orb page-orb--2" aria-hidden="true"></div>
+
+    <div class="split-panel">
+      <div class="brand-panel" aria-hidden="true">
+        <div class="brand-bg-orb brand-bg-orb--1"></div>
+        <div class="brand-bg-orb brand-bg-orb--2"></div>
+        <div class="brand-content">
+          <div class="brand-emblem">
+            <img
+              src="/assets/icons/xylogo.png"
+              alt="XY"
+              class="brand-emblem-img"
+            />
+            <div class="brand-emblem-ring"></div>
+          </div>
+          <div class="brand-text">
+            <div class="brand-name">大数据与人工智能学院</div>
+            <div class="brand-tagline">学生信息管理中心</div>
+          </div>
+        </div>
       </div>
 
-      <form class="auth-form" @submit.prevent="handleSubmit">
-        <div class="form-row">
-          <label class="form-label" for="oldPassword">当前密码</label>
-          <input
-            id="oldPassword"
-            v-model="form.oldPassword"
-            class="form-input"
-            type="password"
-            autocomplete="current-password"
-            placeholder="请输入当前密码"
-          />
-        </div>
-        <div class="form-row">
-          <label class="form-label" for="newPassword">新密码</label>
-          <input
-            id="newPassword"
-            v-model="form.newPassword"
-            class="form-input"
-            type="password"
-            autocomplete="new-password"
-            placeholder="6-32 位"
-          />
-        </div>
-        <div class="form-row">
-          <label class="form-label" for="confirmPassword">确认新密码</label>
-          <input
-            id="confirmPassword"
-            v-model="form.confirmPassword"
-            class="form-input"
-            type="password"
-            autocomplete="new-password"
-            placeholder="再次输入新密码"
-          />
-        </div>
+      <div class="form-panel">
+        <div class="form-card">
+          <div class="form-header">
+            <h1 class="form-title">修改初始密码</h1>
+            <p class="form-subtitle">
+              使用管理员下发的密码登录后，请先设置个人新密码再进入系统
+            </p>
+          </div>
 
-        <p v-if="errorMessage" class="feedback error">{{ errorMessage }}</p>
+          <form @submit.prevent="handleSubmit" novalidate>
+            <div class="form-row">
+              <label class="form-label" for="oldPassword">当前密码</label>
+              <input
+                id="oldPassword"
+                v-model="form.oldPassword"
+                class="form-input"
+                type="password"
+                autocomplete="current-password"
+                placeholder="请输入当前密码"
+                required
+              />
+            </div>
 
-        <button class="action-button auth-submit" type="submit" :disabled="loading">
-          {{ loading ? "保存中..." : "确认修改" }}
-        </button>
-      </form>
+            <div class="form-row">
+              <label class="form-label" for="newPassword">新密码</label>
+              <input
+                id="newPassword"
+                v-model="form.newPassword"
+                class="form-input"
+                type="password"
+                autocomplete="new-password"
+                placeholder="6-32 位"
+                required
+              />
+            </div>
 
-      <button class="change-password-logout" type="button" @click="handleLogout">
-        退出登录
-      </button>
+            <div class="form-row">
+              <label class="form-label" for="confirmPassword">确认新密码</label>
+              <input
+                id="confirmPassword"
+                v-model="form.confirmPassword"
+                class="form-input"
+                type="password"
+                autocomplete="new-password"
+                placeholder="再次输入新密码"
+                required
+              />
+            </div>
+
+            <p v-if="errorMessage" class="feedback error" role="alert">
+              {{ errorMessage }}
+            </p>
+
+            <button
+              class="action-button"
+              type="submit"
+              :disabled="loading"
+            >
+              {{ loading ? "保存中..." : "确认修改" }}
+            </button>
+          </form>
+
+          <p class="switch-line">
+            <button
+              class="switch-link change-password-logout-btn"
+              type="button"
+              @click="handleLogout"
+            >
+              退出登录
+            </button>
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -123,56 +166,18 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-.change-password-layout {
-  padding: 24px 16px;
-}
+@import "@/assets/styles/login-view.css";
 
-.change-password-card {
-  width: min(440px, calc(100vw - 32px));
-}
-
-.auth-brand {
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-.auth-title {
-  margin: 0 0 8px;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--primary-dark);
-}
-
-.auth-subtitle {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-sub);
-}
-
-.auth-form {
-  display: grid;
-  gap: 14px;
-}
-
-.auth-submit {
-  width: 100%;
-  margin-top: 4px;
-}
-
-.change-password-logout {
-  display: block;
-  width: 100%;
-  margin-top: 16px;
-  padding: 10px;
+.change-password-logout-btn {
+  background: none;
   border: none;
-  background: transparent;
-  color: var(--text-sub);
-  font-size: 13px;
+  padding: 0;
+  font: inherit;
   cursor: pointer;
 }
 
-.change-password-logout:hover {
-  color: var(--primary);
+.feedback.error {
+  margin: 0 0 12px;
+  font-size: 13px;
 }
 </style>
