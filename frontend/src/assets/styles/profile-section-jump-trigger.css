@@ -1,0 +1,44 @@
+/**
+ * 我的信息 · 大纲触发按钮（由 ProfileSectionJumpTrigger 引入）
+ */
+
+.profile-jump-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.profile-jump-trigger--ghost {
+  height: 44px !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  border-radius: 12px !important;
+  margin-top: 0 !important;
+}
+
+.profile-jump-trigger--capsule {
+  padding: 8px 10px !important;
+}
+
+.profile-jump-trigger--active.profile-jump-trigger--ghost,
+.profile-jump-trigger--active.profile-jump-trigger--capsule {
+  background: rgba(100, 12, 114, 0.1);
+  color: var(--primary-dark);
+}
+
+.profile-jump-trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-jump-trigger-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-jump-trigger-label {
+  font-size: 14px;
+  font-weight: 700;
+}

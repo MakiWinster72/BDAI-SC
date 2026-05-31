@@ -20,7 +20,9 @@ defineProps({
 
 <template>
   <div class="card info-card">
-    <div class="info-section-title">团组织与入党信息</div>
+    <div id="profile-section-party" class="info-section-title profile-jump-anchor">
+      团组织与入党信息
+    </div>
     <div class="info-form-grid three">
       <div class="field-card field-full">
         <span class="info-label">是否入团</span>

@@ -57,7 +57,9 @@ async function onAvatarChange(event) {
       />
     </button>
     <div class="info-hero-text">
-      <div class="info-hero-title">基础信息</div>
+      <div id="profile-section-hero" class="info-hero-title profile-jump-anchor">
+        基础信息
+      </div>
       <div class="info-hero-subtitle">
         <slot name="subtitle">请使用真实照片，确保五官清晰。</slot>
       </div>

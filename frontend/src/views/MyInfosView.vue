@@ -23,6 +23,11 @@
             </button>
           </div>
           <div v-else class="float-btn-group" key="viewing">
+            <ProfileSectionJumpTrigger
+              :active="sectionJumpOpen"
+              show-label
+              @click="toggleSectionJump"
+            />
             <ExportPdfButton
               :get-student="buildPdfStudentSnapshot"
               :resolve-media-url="resolveMediaUrl"
@@ -94,7 +99,21 @@
       <ProfileFormFamilySection :info="info" :is-editing="isEditing" />
 
     </section>
+    <ProfileSectionJumpPanel
+      :open="sectionJumpOpen"
+      :items="sectionJumpItems"
+      @close="closeSectionJump"
+      @jump="jumpToProfileSection"
+    />
+
     <MobileCapsule @open-sidebar="openDashboardSidebar">
+      <template #left-extra>
+        <ProfileSectionJumpTrigger
+          variant="capsule"
+          :active="sectionJumpOpen"
+          @click="toggleSectionJump"
+        />
+      </template>
       <template v-if="isEditing" #right>
         <div class="capsule-action" @click="cancelEdit">取消</div>
         <div class="capsule-primary" @click="confirmEdit">
@@ -133,6 +152,9 @@ import ProfileFormPartySection from "@/components/profile-form/ProfileFormPartyS
 import ProfileFormEducationSection from "@/components/profile-form/ProfileFormEducationSection.vue";
 import ProfileFormCadreSection from "@/components/profile-form/ProfileFormCadreSection.vue";
 import ProfileFormFamilySection from "@/components/profile-form/ProfileFormFamilySection.vue";
+import ProfileSectionJumpPanel from "@/components/profile-form/ProfileSectionJumpPanel.vue";
+import ProfileSectionJumpTrigger from "@/components/profile-form/ProfileSectionJumpTrigger.vue";
+import { useProfileSectionJump } from "@/composables/useProfileSectionJump";
 import {
   FIXED_COLLEGE,
   majorOptionsByCategory,
@@ -166,6 +188,14 @@ import {
 } from "@/config/profileReviewConfig";
 
 const { openSidebar: openDashboardSidebar } = useDashboardShell();
+
+const {
+  open: sectionJumpOpen,
+  items: sectionJumpItems,
+  toggle: toggleSectionJump,
+  close: closeSectionJump,
+  jumpTo: jumpToProfileSection,
+} = useProfileSectionJump();
 
 const profile = reactive({ ...loadUser(), college: FIXED_COLLEGE });
 const isEditing = ref(false);
@@ -546,7 +576,14 @@ function saveUser(data) {
   localStorage.setItem("bdai_sc_user", JSON.stringify(user));
 }
 
+function resetMyInfosScroll() {
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 onMounted(async () => {
+  resetMyInfosScroll();
   try {
     await Promise.all([
       fetchReviewSettings().catch(() => {}),
@@ -554,6 +591,8 @@ onMounted(async () => {
     ]);
   } catch {
     // 错误文案由 request 拦截器统一 toast
+  } finally {
+    requestAnimationFrame(resetMyInfosScroll);
   }
 });
 </script>

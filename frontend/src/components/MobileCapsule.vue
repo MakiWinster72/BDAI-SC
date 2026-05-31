@@ -24,6 +24,7 @@
             </svg>
           </span>
         </div>
+        <slot name="left-extra" />
       </div>
       <div class="capsule-right">
         <slot name="right" />

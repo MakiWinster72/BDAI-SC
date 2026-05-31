@@ -17,7 +17,7 @@ function handleDigitsInput(field, maxLength, event) {
 <template>
   <div class="card info-card">
     <!-- TODO: 单亲/离异等待现场演示求助 -->
-    <div class="info-section-title">
+    <div id="profile-section-family" class="info-section-title profile-jump-anchor">
       家庭信息
       <button
         class="hint-button"
@@ -159,7 +159,9 @@ function handleDigitsInput(field, maxLength, event) {
   </div>
 
   <div class="card info-card">
-    <div class="info-section-title">紧急联系人（除亲戚外）</div>
+    <div id="profile-section-emergency" class="info-section-title profile-jump-anchor">
+      紧急联系人（除亲戚外）
+    </div>
     <div class="info-form-grid">
       <label class="field-card">
         <span class="info-label">紧急联系人电话</span>

@@ -36,7 +36,12 @@ const {
 
 <template>
   <div class="card info-card">
-    <div class="info-section-title">个人证件与联系方式</div>
+    <div
+      id="profile-section-identity"
+      class="info-section-title profile-jump-anchor"
+    >
+      个人证件与联系方式
+    </div>
     <div class="info-form-grid">
       <label class="field-card">
         <span class="info-label">民族</span>

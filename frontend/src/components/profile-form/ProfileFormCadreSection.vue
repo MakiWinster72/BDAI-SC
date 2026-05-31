@@ -31,7 +31,9 @@ const {
 
 <template>
   <div class="card info-card">
-    <div class="info-section-title">学生干部经历</div>
+    <div id="profile-section-cadre" class="info-section-title profile-jump-anchor">
+      学生干部经历
+    </div>
     <div ref="tableWrapRef" class="record-list-wrap">
       <transition-group name="education-row" tag="div" class="record-list">
         <RecordRow

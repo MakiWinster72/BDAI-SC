@@ -19,6 +19,9 @@ const router = createRouter({
     if (savedPosition) {
       return savedPosition
     }
+    if (to.name === 'myinfos' && from.name !== 'myinfos') {
+      return { top: 0, left: 0, behavior: 'instant' }
+    }
     // 保持当前滚动位置不变
     return { top: window.scrollY, left: window.scrollX, behavior: 'instant' }
   },

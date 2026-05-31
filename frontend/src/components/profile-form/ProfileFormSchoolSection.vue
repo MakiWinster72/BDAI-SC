@@ -32,7 +32,9 @@ defineProps({
 
 <template>
   <div class="card info-card">
-    <div class="info-section-title">学籍信息</div>
+    <div id="profile-section-school" class="info-section-title profile-jump-anchor">
+      学籍信息
+    </div>
     <div class="info-form-grid">
       <label class="field-card">
         <span class="info-label">名字</span>

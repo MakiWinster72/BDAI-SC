@@ -1,21 +1,22 @@
 /* ── Staggered Card Entrance ──────────────────────────── */
 /* cardEnter 已在 _base.css 全局定义，此处仅引用并设置错开延迟 */
-.info-shell > .info-card {
+.info-shell .info-card {
   animation: cardEnter var(--duration-slow) var(--ease-page) both;
 }
 
-.info-shell > .info-card:nth-child(1) { animation-delay: 40ms; }
-.info-shell > .info-card:nth-child(2) { animation-delay: 80ms; }
-.info-shell > .info-card:nth-child(3) { animation-delay: 120ms; }
-.info-shell > .info-card:nth-child(4) { animation-delay: 160ms; }
-.info-shell > .info-card:nth-child(5) { animation-delay: 200ms; }
-.info-shell > .info-card:nth-child(6) { animation-delay: 240ms; }
-.info-shell > .info-card:nth-child(7) { animation-delay: 280ms; }
-.info-shell > .info-card:nth-child(8) { animation-delay: 320ms; }
-.info-shell > .info-card:nth-child(9) { animation-delay: 360ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(3) .info-card { animation-delay: 40ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(4) .info-card { animation-delay: 80ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(5) .info-card { animation-delay: 120ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(6) .info-card { animation-delay: 160ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(7) .info-card { animation-delay: 200ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(8) .info-card { animation-delay: 240ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(9) .info-card { animation-delay: 280ms; }
+.info-shell > .profile-jump-anchor:nth-of-type(10) .info-card { animation-delay: 320ms; }
+.info-shell > .info-card { animation-delay: 360ms; }
 
 /* ── Info Hero Entrance ────────────────────────────────── */
-.info-shell > .info-hero {
+.info-shell > .info-hero,
+.info-shell > .profile-jump-anchor > .info-hero {
   animation: cardEnter var(--duration-slow) var(--ease-page) both;
   animation-delay: 0ms;
 }
@@ -198,4 +199,9 @@
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
+}
+
+/* ── Profile section jump anchors (in-page scroll targets) ─ */
+.profile-jump-anchor {
+  scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px));
 }

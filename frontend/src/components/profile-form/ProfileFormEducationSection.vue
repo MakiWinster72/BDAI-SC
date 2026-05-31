@@ -31,7 +31,12 @@ const {
 
 <template>
   <div class="card info-card">
-    <div class="info-section-title">教育经历</div>
+    <div
+      id="profile-section-education"
+      class="info-section-title profile-jump-anchor"
+    >
+      教育经历
+    </div>
     <div class="info-hint">从小学开始填</div>
     <div ref="tableWrapRef" class="record-list-wrap">
       <transition-group name="education-row" tag="div" class="record-list">

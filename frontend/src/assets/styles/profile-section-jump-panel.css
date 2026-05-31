@@ -1,0 +1,174 @@
+/**
+ * 我的信息 · 页面大纲浮层（Teleport 到 body，须全局样式）
+ */
+
+.profile-jump-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  pointer-events: none;
+}
+
+.profile-jump-dismiss {
+  position: fixed;
+  inset: 0;
+  pointer-events: auto;
+  background: transparent;
+}
+
+.profile-jump-panel {
+  position: fixed;
+  top: calc(72px + env(safe-area-inset-top, 0px));
+  right: 12px;
+  z-index: 1;
+  width: min(272px, 78vw);
+  max-height: min(
+    520px,
+    calc(100vh - 160px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+  );
+  margin: 0;
+  padding: 14px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  border: 1px solid rgba(100, 12, 114, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 12px 40px rgba(100, 12, 114, 0.14),
+    0 2px 8px rgba(100, 12, 114, 0.06);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  will-change: transform, opacity;
+}
+
+.profile-jump-panel-header {
+  flex-shrink: 0;
+  padding: 2px 8px 6px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--primary-dark);
+}
+
+.profile-jump-tree {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 4px 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.profile-jump-tree::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(100, 12, 114, 0.08) 0%,
+    rgba(100, 12, 114, 0.22) 12%,
+    rgba(100, 12, 114, 0.22) 88%,
+    rgba(100, 12, 114, 0.08) 100%
+  );
+}
+
+.profile-jump-tree-node {
+  margin: 0;
+  padding: 0;
+}
+
+.profile-jump-tree-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px 7px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.profile-jump-tree-link:hover {
+  background: rgba(100, 12, 114, 0.07);
+}
+
+.profile-jump-tree-branch {
+  position: relative;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border: 1.5px solid rgba(100, 12, 114, 0.45);
+  border-radius: 2px;
+  background: var(--card);
+}
+
+.profile-jump-tree-branch::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 100%;
+  width: 8px;
+  height: 1px;
+  background: rgba(100, 12, 114, 0.28);
+}
+
+.profile-jump-tree-label {
+  flex: 1;
+}
+
+/* 面板自右侧滑入 + 淡入；退出反向。遮罩层不参与位移。 */
+.profile-jump-slide-enter-active .profile-jump-panel,
+.profile-jump-slide-leave-active .profile-jump-panel {
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.38s ease;
+}
+
+.profile-jump-slide-enter-from .profile-jump-panel,
+.profile-jump-slide-leave-to .profile-jump-panel {
+  transform: translate3d(calc(100% + 28px), 0, 0);
+  opacity: 0;
+}
+
+.profile-jump-slide-enter-to .profile-jump-panel,
+.profile-jump-slide-leave-from .profile-jump-panel {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+}
+
+@media (max-width: 840px) {
+  .profile-jump-panel {
+    top: auto;
+    right: 10px;
+    bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+    max-height: min(420px, calc(100vh - 220px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-jump-tree-link,
+  .profile-jump-slide-enter-active .profile-jump-panel,
+  .profile-jump-slide-leave-active .profile-jump-panel {
+    transition: none;
+  }
+
+  .profile-jump-slide-enter-from .profile-jump-panel,
+  .profile-jump-slide-leave-to .profile-jump-panel {
+    transform: none;
+    opacity: 1;
+  }
+}

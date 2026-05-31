@@ -34,7 +34,9 @@ const {
 
 <template>
   <div class="card info-card">
-    <div class="info-section-title">住宿信息</div>
+    <div id="profile-section-dorm" class="info-section-title profile-jump-anchor">
+      住宿信息
+    </div>
     <div class="info-form-grid">
       <div class="field-card field-full">
         <span class="info-label">是否在外居住</span>
