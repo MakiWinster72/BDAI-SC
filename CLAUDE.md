@@ -32,7 +32,7 @@ npm run build        # Production build
 npm run preview      # Preview production build
 ```
 
-From repo root: `npm --prefix frontend run build`. Full local check: `./scripts/verify.sh` (frontend build + backend tests).
+From repo root: `./scripts/verify.sh` (frontend build + backend tests).
 
 ### Database Setup
 ```sql
@@ -41,6 +41,14 @@ CREATE USER IF NOT EXISTS 'bdai_sc'@'localhost' IDENTIFIED BY 'bdai_sc';
 GRANT ALL PRIVILEGES ON bdai_sc.* TO 'bdai_sc'@'localhost';
 FLUSH PRIVILEGES;
 ```
+
+### Environment Setup
+```bash
+cp .env.example .env      # create .env from template
+source .env              # load env vars (required before every backend run)
+```
+
+Key env vars: `BDAI_SC_DB_*` (MySQL), `BDAI_SC_JWT_SECRET`, `BDAI_SC_UPLOAD_DIR` (upload root, default `backend/uploads/` relative to `backend/`), `BDAI_SC_CORS_ALLOWED_ORIGINS`, `VITE_API_BASE` (frontend API base; empty = Vite proxy).
 
 ## Architecture
 
@@ -74,7 +82,7 @@ All share a common structure: title, description, media attachments, user associ
 1. **Login/Register**: `AuthService` generates JWT with `sub` (username), `displayName`, and `role` claims
 2. **Request**: Frontend `request.js` interceptor adds `Authorization: Bearer <token>` header
 3. **Filter**: `JwtAuthenticationFilter.doFilterInternal()` parses token, extracts role, sets `ROLE_<role>` authority in SecurityContext
-4. **SecurityConfig**: Public routes include `/api/auth/register`, `/api/auth/login`, `/api/auth/captcha`, `/api/settings/system`. All other API routes require JWT. Achievement CRUD and uploads are **not** public.
+4. **SecurityConfig**: Public routes include `/api/auth/register`, `/api/auth/login`, `/api/auth/captcha`, `/api/settings/system`, `/api/auth/public-config`. All other API routes require JWT. Achievement CRUD and uploads are **not** public.
 5. **Media access**: Files are read via `GET /api/media/uploads/{userId}/{folder}/{filename}` with authentication and object-level checks. No public `/uploads/**` static mapping.
 6. **Username validation**: `^[a-zA-Z0-9_]{4,32}$` (4-32 chars, alphanumeric and underscore)
 
@@ -144,6 +152,19 @@ Views support `?embed=1` query param to hide the sidebar, footer, and top bar �
 4. Cancel: requester can cancel own pending request
 5. Auto-approve: if `reviewSettings.achievementReviewAutoApprove` or `profileReviewAutoApprove`
 6. When profile/achievement review is **enabled**, STUDENT and CADRE cannot direct-write via profile/achievement APIs; they must use review requests. TEACHER/ADMIN can still direct-write. Approved reviews persist via dedicated service methods (`saveProfileFromApprovedReview`, `createFromApprovedReview`, etc.)
+
+### Role Permissions
+| 功能 | STUDENT | CADRE | TEACHER | ADMIN |
+| ---- | ------- | ----- | ------- | ----- |
+| 登录/注册 | ✅ | ✅ | ✅ | ✅ |
+| 管理个人档案 | ✅（提交审核） | ✅ | ✅ | ✅ |
+| 提交成果 | ✅ | ✅ | ✅ | ✅ |
+| 审核成果 | ❌ | 本班 | ✅ | ✅ |
+| 审核档案变更 | ❌ | 本班 | ✅ | ✅ |
+| 查看学生档案 | 仅本人 | 本班 | 所管 | 全部 |
+| 导出学生信息 | ❌ | ❌ | ✅ | ✅ |
+| 系统设置 | ❌ | ❌ | ❌ | ✅ |
+| 管理用户角色 | ❌ | ❌ | ❌ | ✅ |
 
 ### Frontend
 - Views in `frontend/src/views/`
