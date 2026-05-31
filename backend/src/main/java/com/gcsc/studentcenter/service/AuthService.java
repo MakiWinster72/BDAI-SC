@@ -84,6 +84,7 @@ public class AuthService {
     user.setClassName(normalizeOptional(request.getClassName()));
     user.setCollege(FIXED_COLLEGE);
     user.setCreatedAt(LocalDateTime.now());
+    user.setMustChangePassword(false);
     AppUser savedUser = appUserRepository.save(user);
     auditLogRecorder.record(savedUser.getUsername(), AuditActions.REGISTER, "新用户注册");
 
@@ -110,7 +111,8 @@ public class AuthService {
         savedUser.getCollege(),
         resolveAvatarUrl(savedUser),
         token,
-        null);
+        null,
+        false);
   }
 
   public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest, String userAgent) {
@@ -153,7 +155,8 @@ public class AuthService {
         user.getCollege(),
         avatarUrl,
         token,
-        lastLoginInfo);
+        lastLoginInfo,
+        mustChangePasswordFor(user));
   }
 
   public UserProfileResponse getProfile(String username) {
@@ -168,7 +171,8 @@ public class AuthService {
         user.getStudentNo(),
         user.getClassName(),
         user.getCollege(),
-        avatarUrl);
+        avatarUrl,
+        mustChangePasswordFor(user));
   }
 
   private void recordLoginFailed(String username, HttpServletRequest httpRequest, String detail) {
@@ -184,6 +188,7 @@ public class AuthService {
     }
 
     user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+    user.setMustChangePassword(false);
     appUserRepository.save(user);
     auditLogRecorder.record(username, AuditActions.CHANGE_PASSWORD, "修改登录密码");
   }
@@ -201,6 +206,10 @@ private String normalizeOptional(String value) {
     }
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;
+  }
+
+  private boolean mustChangePasswordFor(AppUser user) {
+    return user.getRole() == UserRole.STUDENT && user.isMustChangePassword();
   }
 
   private UserRole roleOrDefault(AppUser user) {

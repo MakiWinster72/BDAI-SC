@@ -8,7 +8,7 @@ const STORAGE_KEY = 'bdai_sc_user';
 
 /**
  * 从 localStorage 加载当前用户信息
- * @returns {{ username: string, displayName: string, avatarUrl: string, role: string, studentNo: string, className: string, college: string, studentCategory: string }}
+ * @returns {{ username: string, displayName: string, avatarUrl: string, role: string, studentNo: string, className: string, college: string, studentCategory: string, mustChangePassword: boolean }}
  */
 export function loadUser() {
   try {
@@ -22,6 +22,7 @@ export function loadUser() {
       className: raw.className || '',
       college: raw.college || '',
       studentCategory: raw.studentCategory || '',
+      mustChangePassword: Boolean(raw.mustChangePassword),
     };
   } catch {
     return {
@@ -33,6 +34,7 @@ export function loadUser() {
       className: '',
       college: '',
       studentCategory: '',
+      mustChangePassword: false,
     };
   }
 }

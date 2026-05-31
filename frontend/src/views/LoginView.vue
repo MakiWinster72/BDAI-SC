@@ -386,6 +386,26 @@ async function handleLogin() {
     feedback.text = data.message || "登录成功";
     feedback.type = "success";
 
+    const mustChangePassword = Boolean(data.mustChangePassword);
+    localStorage.setItem(
+      "bdai_sc_user",
+      JSON.stringify({
+        username: data.username,
+        displayName: data.displayName,
+        avatarUrl: data.avatarUrl || "",
+        role: data.role,
+        studentNo: data.studentNo,
+        className: data.className,
+        college: data.college,
+        mustChangePassword,
+      }),
+    );
+    localStorage.setItem("bdai_sc_token", data.token || "");
+    if (mustChangePassword) {
+      toast.info("请先修改初始密码后再使用系统");
+      router.push("/change-password");
+      return;
+    }
     if (data.lastLoginInfo) {
       const { ipAddress, deviceName, browser, os, loginTime } = data.lastLoginInfo;
       const parsed = parseBrowserOsFromDeviceName(deviceName);
@@ -398,20 +418,6 @@ async function handleLogin() {
     } else {
       toast.info("欢迎使用！请先去「个人信息」填写你的个人资料～");
     }
-
-    localStorage.setItem(
-      "bdai_sc_user",
-      JSON.stringify({
-        username: data.username,
-        displayName: data.displayName,
-        avatarUrl: data.avatarUrl || "",
-        role: data.role,
-        studentNo: data.studentNo,
-        className: data.className,
-        college: data.college,
-      }),
-    );
-    localStorage.setItem("bdai_sc_token", data.token || "");
     router.push("/myinfos");
   } catch (error) {
     feedback.text = parseError(error);

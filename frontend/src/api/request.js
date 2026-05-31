@@ -30,6 +30,17 @@ request.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
+    } else if (
+      error?.response?.status === 403
+      && error?.response?.data?.message === '请先修改初始密码'
+      && window.location.pathname !== '/change-password'
+    ) {
+      const user = JSON.parse(localStorage.getItem('bdai_sc_user') || '{}')
+      localStorage.setItem(
+        'bdai_sc_user',
+        JSON.stringify({ ...user, mustChangePassword: true }),
+      )
+      window.location.href = '/change-password'
     } else if (!error.config?.skipErrorToast) {
       const status = error?.response?.status
       if (status && status >= 400 && status < 500 && status !== 401) {

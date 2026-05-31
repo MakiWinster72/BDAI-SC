@@ -57,6 +57,7 @@ public class UserService {
     user.setStudentNo(request.getStudentNo() != null ? request.getStudentNo().trim() : null);
     user.setClassName(request.getClassName() != null ? request.getClassName().trim() : null);
     user.setCreatedAt(LocalDateTime.now());
+    user.setMustChangePassword(true);
     return userRepository.save(user);
   }
 
@@ -172,6 +173,9 @@ public class UserService {
 
     if (request.getPassword() != null && !request.getPassword().isBlank()) {
       user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+      if (user.getRole() == UserRole.STUDENT) {
+        user.setMustChangePassword(true);
+      }
     }
 
     if (request.getRole() != null) {

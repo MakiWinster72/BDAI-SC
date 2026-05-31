@@ -13,6 +13,7 @@ public class AuthResponse {
   private final String token;
   private final String tokenType;
   private final LastLoginInfo lastLoginInfo;
+  private final boolean mustChangePassword;
 
   public AuthResponse(
       boolean success,
@@ -25,7 +26,8 @@ public class AuthResponse {
       String college,
       String avatarUrl,
       String token,
-      LastLoginInfo lastLoginInfo) {
+      LastLoginInfo lastLoginInfo,
+      boolean mustChangePassword) {
     this.success = success;
     this.message = message;
     this.username = username;
@@ -38,6 +40,7 @@ public class AuthResponse {
     this.token = token;
     this.tokenType = "Bearer";
     this.lastLoginInfo = lastLoginInfo;
+    this.mustChangePassword = mustChangePassword;
   }
 
   public boolean isSuccess() {
@@ -86,5 +89,9 @@ public class AuthResponse {
 
   public LastLoginInfo getLastLoginInfo() {
     return lastLoginInfo;
+  }
+
+  public boolean isMustChangePassword() {
+    return mustChangePassword;
   }
 }

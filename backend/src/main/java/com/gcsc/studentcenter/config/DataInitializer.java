@@ -47,6 +47,7 @@ public class DataInitializer implements CommandLineRunner {
     admin.setDisplayName(initAdminDisplayName);
     admin.setRole(UserRole.ADMIN);
     admin.setCreatedAt(LocalDateTime.now());
+    admin.setMustChangePassword(false);
 
     appUserRepository.save(admin);
     log.info("已创建初始管理员账户: username={}", initAdminUsername);

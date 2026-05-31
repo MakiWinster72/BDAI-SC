@@ -18,9 +18,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final MustChangePasswordFilter mustChangePasswordFilter;
 
-  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+  public SecurityConfig(
+      JwtAuthenticationFilter jwtAuthenticationFilter,
+      MustChangePasswordFilter mustChangePasswordFilter) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    this.mustChangePasswordFilter = mustChangePasswordFilter;
   }
 
   @Bean
@@ -38,7 +42,8 @@ public class SecurityConfig {
             .requestMatchers("/", "/login", "/register", "/api/auth/register", "/api/auth/login", "/api/auth/captcha", "/api/auth/public-config", "/api/auth/ip-probe")
             .permitAll()
             .anyRequest().authenticated())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(mustChangePasswordFilter, JwtAuthenticationFilter.class);
 
     return http.build();
   }

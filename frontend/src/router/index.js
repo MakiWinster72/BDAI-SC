@@ -9,6 +9,8 @@ import SettingsView from '@/views/SettingsView.vue'
 import AdminView from '@/views/AdminView.vue'
 import LogsView from '@/views/LogsView.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import ChangePasswordView from '@/views/ChangePasswordView.vue'
+import { checkStudentMustChangePassword } from '@/config/authConfig'
 import { loadUser } from '@/utils/userStorage'
 
 const router = createRouter({
@@ -57,17 +59,41 @@ const router = createRouter({
       ]
     },
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
-    { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } }
+    { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } },
+    {
+      path: '/change-password',
+      name: 'change-password',
+      component: ChangePasswordView,
+      meta: { requiresAuth: true, forcePasswordChange: true },
+    },
   ]
 })
 
 router.beforeEach((to) => {
   const isLoggedIn = Boolean(localStorage.getItem('bdai_sc_token'))
+  const user = loadUser()
+  const mustChangePassword = checkStudentMustChangePassword(user)
+
   if (to.meta.requiresAuth && !isLoggedIn) {
     return '/login'
   }
+
+  if (isLoggedIn && mustChangePassword && to.path !== '/change-password') {
+    return '/change-password'
+  }
+
+  if (to.path === '/change-password') {
+    if (!isLoggedIn) {
+      return '/login'
+    }
+    if (!mustChangePassword) {
+      return '/myinfos'
+    }
+    return true
+  }
+
   if (to.meta.guestOnly && isLoggedIn) {
-    return '/myinfos'
+    return mustChangePassword ? '/change-password' : '/myinfos'
   }
   if (to.meta.allowedRoles) {
     const role = loadUser().role

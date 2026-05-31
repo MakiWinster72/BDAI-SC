@@ -104,11 +104,14 @@ public class AuthController {
   }
 
   @PostMapping("/change-password")
-  public ResponseEntity<Void> changePassword(
+  public ResponseEntity<Map<String, Object>> changePassword(
       Authentication authentication,
       @Valid @RequestBody ChangePasswordRequest request) {
     authService.changePassword(authentication.getName(), request);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok(Map.of(
+        "success", true,
+        "message", "密码修改成功",
+        "mustChangePassword", false));
   }
 
 }

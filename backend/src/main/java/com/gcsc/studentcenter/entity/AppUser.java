@@ -46,6 +46,10 @@ public class AppUser {
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
+  /** 学生使用初始/管理员下发密码登录后须改密；改密成功或自助注册后置为 false */
+  @Column(name = "must_change_password", nullable = false)
+  private boolean mustChangePassword;
+
   public Long getId() {
     return id;
   }
@@ -136,5 +140,13 @@ public class AppUser {
 
   public void setRemark(String remark) {
     this.remark = remark;
+  }
+
+  public boolean isMustChangePassword() {
+    return mustChangePassword;
+  }
+
+  public void setMustChangePassword(boolean mustChangePassword) {
+    this.mustChangePassword = mustChangePassword;
   }
 }

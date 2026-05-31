@@ -8,6 +8,7 @@ public class UserProfileResponse {
   private final String className;
   private final String college;
   private final String avatarUrl;
+  private final boolean mustChangePassword;
 
   public UserProfileResponse(
       String username,
@@ -16,7 +17,8 @@ public class UserProfileResponse {
       String studentNo,
       String className,
       String college,
-      String avatarUrl) {
+      String avatarUrl,
+      boolean mustChangePassword) {
     this.username = username;
     this.displayName = displayName;
     this.role = role;
@@ -24,6 +26,7 @@ public class UserProfileResponse {
     this.className = className;
     this.college = college;
     this.avatarUrl = avatarUrl;
+    this.mustChangePassword = mustChangePassword;
   }
 
   public String getUsername() {
@@ -52,5 +55,9 @@ public class UserProfileResponse {
 
   public String getAvatarUrl() {
     return avatarUrl;
+  }
+
+  public boolean isMustChangePassword() {
+    return mustChangePassword;
   }
 }

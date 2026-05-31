@@ -220,7 +220,7 @@ import { navigateWithViewTransition } from "@/utils/viewTransition";
 import { useDashboardShell } from "@/composables/useDashboardShell";
 import { useToast } from "@/composables/useToast";
 import { resolveMediaUrl } from "@/utils/media";
-import { loadUser } from "@/utils/userStorage";
+import { loadUser, saveUser } from "@/utils/userStorage";
 import { browserIconSrc, osIconSrc } from "@/utils/loginDeviceIcons";
 
 const router = useRouter();
@@ -404,6 +404,8 @@ async function handleChangePassword() {
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword,
     });
+    const user = loadUser();
+    saveUser({ ...user, mustChangePassword: false });
     passwordSuccess.value = "密码修改成功";
     toastSuccess("密码修改成功");
     setTimeout(() => {
